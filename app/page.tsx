@@ -3,19 +3,70 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const BUILDINGS = [
-  { id: 1, name: 'Flow Brickell', neighborhood: 'Brickell', address: '275 SW 6th St, Miami, FL 33130', lat: 25.7580, lng: -80.1933, priceMin: 2790, priceTier: '$$', concession: '1 month free on select units', units: ['Studio', '1B', '2B', '3B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60, 90], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'] },
-  { id: 2, name: 'Modera Riverside', neighborhood: 'Brickell', address: '300 SW 2nd Ave, Miami, FL 33130', lat: 25.7576, lng: -80.1949, priceMin: 2500, priceTier: '$$', concession: '50% off first 60 days', units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60], images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Parking'] },
-  { id: 3, name: 'Maizon', neighborhood: 'Brickell', address: '221 SW 12th St, Miami, FL 33130', lat: 25.7554, lng: -80.1944, priceMin: 2235, priceTier: '$', concession: '$500 move-in credit', units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60], images: ['https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Lounge'] },
-  { id: 4, name: 'Solitair', neighborhood: 'Brickell', address: '86 SW 8th St, Miami, FL 33130', lat: 25.7585, lng: -80.1936, priceMin: 2654, priceTier: '$$', concession: 'Free first month + parking', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [30, 60, 90], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Bar Lounge', 'Billiards'] },
-  { id: 5, name: 'Miro Brickell', neighborhood: 'Brickell', address: '255 SW 11th St, Miami, FL 33130', lat: 25.7560, lng: -80.1920, priceMin: 2425, priceTier: '$', concession: '1 month free on leases 12+ months', units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60], images: ['https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Dog Wash', 'Yoga Studio'] },
-  { id: 6, name: 'Brickell First', neighborhood: 'Brickell', address: '110 SW 12th St, Miami, FL 33130', lat: 25.7555, lng: -80.1945, priceMin: 3045, priceTier: '$$', concession: '2 months free on 12-month lease', units: ['1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [30, 60], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Spa', 'Gym', 'Concierge', 'Valet'] },
-  { id: 7, name: 'CMPND', neighborhood: 'Downtown', address: '55 NE 2nd St, Miami, FL 33132', lat: 25.7650, lng: -80.1866, priceMin: 1950, priceTier: '$', concession: 'Two months free on select units', units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60, 90], images: ['https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Pet-Friendly', 'Coworking'] },
-  { id: 8, name: 'Miami World Tower', neighborhood: 'Downtown', address: '710 NE 1st Ave, Miami, FL 33132', lat: 25.7660, lng: -80.1875, priceMin: 2410, priceTier: '$$', concession: 'Up to two months free on select apartments', units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'] },
-  { id: 9, name: 'Muze at Met', neighborhood: 'Downtown', address: '340 SE 3rd St, Miami, FL 33131', lat: 25.7594, lng: -80.1850, priceMin: 2627, priceTier: '$$', concession: '1.5 months free on 1Bs, 1 month on 2/3 beds', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'] },
-  { id: 10, name: 'Flow Miami World', neighborhood: 'Downtown', address: '698 NE 1st Ave, Miami, FL 33132', lat: 25.7670, lng: -80.1880, priceMin: 2223, priceTier: '$$', concession: '3 months free on all apartments', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'] },
-  { id: 11, name: 'Monarc at Met', neighborhood: 'Downtown', address: '201 SE 2nd Ave, Miami, FL 33131', lat: 25.7580, lng: -80.1840, priceMin: 2692, priceTier: '$$', concession: 'No current concessions', units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'] },
-  { id: 12, name: 'Parkline', neighborhood: 'Downtown', address: '100 NW 6th St, Miami, FL 33136', lat: 25.7700, lng: -80.1900, priceMin: 2120, priceTier: '$', concession: 'Up to 3 months free', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [14], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'] },
+  { id: 1, name: 'Flow Brickell', neighborhood: 'Brickell', address: '275 SW 6th St, Miami, FL 33130', lat: 25.7580, lng: -80.1933, priceMin: 2790, priceTier: '$$', concession: '1 month free on select units', units: ['Studio', '1B', '2B', '3B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60, 90], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,790', application: '$75', admin: '$150', parking: '$150/car', misc: 'Pet fee: $35/mo' } },
+  { id: 2, name: 'Modera Riverside', neighborhood: 'Brickell', address: '300 SW 2nd Ave, Miami, FL 33130', lat: 25.7576, lng: -80.1949, priceMin: 2500, priceTier: '$$', concession: '50% off first 60 days', units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60], images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Parking'], fees: { deposit: '$2,500', application: '$50', admin: '$100', parking: '$125/car', misc: 'Renters insurance required' } },
+  { id: 3, name: 'Maizon', neighborhood: 'Brickell', address: '221 SW 12th St, Miami, FL 33130', lat: 25.7554, lng: -80.1944, priceMin: 2235, priceTier: '$', concession: '$500 move-in credit', units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60], images: ['https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Lounge'], fees: { deposit: '$2,235', application: '$60', admin: '$120', parking: '$140/car', misc: 'None' } },
+  { id: 4, name: 'Solitair', neighborhood: 'Brickell', address: '86 SW 8th St, Miami, FL 33130', lat: 25.7585, lng: -80.1936, priceMin: 2654, priceTier: '$$', concession: 'Free first month + parking', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [30, 60, 90], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Bar Lounge', 'Billiards'], fees: { deposit: '$2,654', application: '$75', admin: '$150', parking: 'Free', misc: 'Concierge fee: $25/mo' } },
+  { id: 5, name: 'Miro Brickell', neighborhood: 'Brickell', address: '255 SW 11th St, Miami, FL 33130', lat: 25.7560, lng: -80.1920, priceMin: 2425, priceTier: '$', concession: '1 month free on leases 12+ months', units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60], images: ['https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Dog Wash', 'Yoga Studio'], fees: { deposit: '$2,425', application: '$65', admin: '$130', parking: '$135/car', misc: 'Pet fee: $50/mo' } },
+  { id: 6, name: 'Brickell First', neighborhood: 'Brickell', address: '110 SW 12th St, Miami, FL 33130', lat: 25.7555, lng: -80.1945, priceMin: 3045, priceTier: '$$', concession: '2 months free on 12-month lease', units: ['1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [30, 60], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Spa', 'Gym', 'Concierge', 'Valet'], fees: { deposit: '$3,045', application: '$100', admin: '$200', parking: '$175/car', misc: 'Valet required: $60/mo' } },
+  { id: 7, name: 'CMPND', neighborhood: 'Downtown', address: '55 NE 2nd St, Miami, FL 33132', lat: 25.7650, lng: -80.1866, priceMin: 1950, priceTier: '$', concession: 'Two months free on select units', units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60, 90], images: ['https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Pet-Friendly', 'Coworking'], fees: { deposit: '$1,950', application: '$50', admin: '$100', parking: '$120/car', misc: 'None' } },
+  { id: 8, name: 'Miami World Tower', neighborhood: 'Downtown', address: '710 NE 1st Ave, Miami, FL 33132', lat: 25.7660, lng: -80.1875, priceMin: 2410, priceTier: '$$', concession: 'Up to two months free on select apartments', units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,410', application: '$75', admin: '$150', parking: '$160/car', misc: 'Concierge fee: $30/mo' } },
+  { id: 9, name: 'Muze at Met', neighborhood: 'Downtown', address: '340 SE 3rd St, Miami, FL 33131', lat: 25.7594, lng: -80.1850, priceMin: 2627, priceTier: '$$', concession: '1.5 months free on 1Bs, 1 month on 2/3 beds', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,627', application: '$80', admin: '$160', parking: '$165/car', misc: 'Pet fee: $40/mo' } },
+  { id: 10, name: 'Flow Miami World', neighborhood: 'Downtown', address: '698 NE 1st Ave, Miami, FL 33132', lat: 25.7670, lng: -80.1880, priceMin: 2223, priceTier: '$$', concession: '3 months free on all apartments', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,223', application: '$70', admin: '$140', parking: '$145/car', misc: 'None' } },
+  { id: 11, name: 'Monarc at Met', neighborhood: 'Downtown', address: '201 SE 2nd Ave, Miami, FL 33131', lat: 25.7580, lng: -80.1840, priceMin: 2692, priceTier: '$$', concession: 'No current concessions', units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,692', application: '$85', admin: '$170', parking: '$170/car', misc: 'Concierge fee: $35/mo' } },
+  { id: 12, name: 'Parkline', neighborhood: 'Downtown', address: '100 NW 6th St, Miami, FL 33136', lat: 25.7700, lng: -80.1900, priceMin: 2120, priceTier: '$', concession: 'Up to 3 months free', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [14], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,120', application: '$60', admin: '$120', parking: '$130/car', misc: 'None' } },
 ];
+
+const NEIGHBORHOODS = ['Brickell', 'Downtown', 'Midtown', 'Edgewater', 'Wynwood'];
+
+const Tooltip = ({ text }) => {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative inline-block">
+      <button className="w-5 h-5 rounded-full border border-gray-400 text-gray-600 text-xs flex items-center justify-center hover:border-gray-600" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>i</button>
+      {show && <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 bg-gray-900 text-white text-xs p-2 rounded shadow-lg z-50">A co-signer on your lease who guarantees payment if you can't pay rent.</div>}
+    </div>
+  );
+};
+
+const ImageCarousel = ({ images }) => {
+  const [current, setCurrent] = useState(0);
+  const next = () => setCurrent((current + 1) % images.length);
+  const prev = () => setCurrent((current - 1 + images.length) % images.length);
+  return (
+    <div className="relative w-full h-64 bg-gray-200 rounded-lg overflow-hidden group">
+      <img src={images[current]} alt={`Building ${current + 1}`} className="w-full h-full object-cover" />
+      {images.length > 1 && (
+        <>
+          <button onClick={prev} className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition z-10">←</button>
+          <button onClick={next} className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition z-10">→</button>
+          <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">{current + 1}/{images.length}</div>
+        </>
+      )}
+    </div>
+  );
+};
+
+const FeesDropdown = ({ fees }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="border rounded-lg">
+      <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition font-semibold text-gray-900">
+        <span>Fees & Policies</span>
+        <span className={`transition transform ${isOpen ? 'rotate-90' : ''}`}>›</span>
+      </button>
+      {isOpen && (
+        <div className="p-4 space-y-3 border-t">
+          <div className="flex justify-between"><span className="text-gray-600">Deposit</span><span className="font-semibold">{fees.deposit}</span></div>
+          <div className="flex justify-between"><span className="text-gray-600">Application Fee</span><span className="font-semibold">{fees.application}</span></div>
+          <div className="flex justify-between"><span className="text-gray-600">Admin Fee</span><span className="font-semibold">{fees.admin}</span></div>
+          <div className="flex justify-between"><span className="text-gray-600">Parking (per car)</span><span className="font-semibold">{fees.parking}</span></div>
+          <div className="flex justify-between"><span className="text-gray-600">Misc Monthly Fees</span><span className="font-semibold">{fees.misc}</span></div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const TalkTodonModal = ({ building, onClose }) => {
   const [step, setStep] = useState('form');
@@ -38,8 +89,7 @@ const TalkTodonModal = ({ building, onClose }) => {
 
   const handleContactSubmit = (e) => {
     e.preventDefault();
-    const leadData = { buildingName: building.name, income: parseInt(formData.income), creditScore: parseInt(formData.credit), moveInDate: formData.moveInDate, qualificationStatus: result, firstName: formData.firstName, phone: formData.phone, timestamp: new Date().toISOString() };
-    console.log('Lead captured:', leadData);
+    console.log('Lead:', { ...formData, building: building.name, status: result });
     setStep('contact');
   };
 
@@ -52,110 +102,49 @@ const TalkTodonModal = ({ building, onClose }) => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Monthly Income</label>
-                <input
-                  type="number"
-                  required
-                  value={formData.income}
-                  onChange={(e) => setFormData({ ...formData, income: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="e.g., 5000"
-                />
+                <input type="number" required value={formData.income} onChange={(e) => setFormData({ ...formData, income: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., 5000" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Credit Score</label>
-                <input
-                  type="number"
-                  required
-                  value={formData.credit}
-                  onChange={(e) => setFormData({ ...formData, credit: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="e.g., 680"
-                />
+                <input type="number" required value={formData.credit} onChange={(e) => setFormData({ ...formData, credit: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., 680" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Move-In Date</label>
-                <input
-                  type="date"
-                  required
-                  value={formData.moveInDate}
-                  onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
+                <input type="date" required value={formData.moveInDate} onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
               </div>
-              <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">
-                Get My Results
-              </button>
+              <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Get My Results</button>
             </form>
-            <button onClick={onClose} className="mt-4 w-full text-gray-600 py-2 hover:text-gray-900">
-              Close
-            </button>
+            <button onClick={onClose} className="mt-4 w-full text-gray-600 py-2 hover:text-gray-900">Close</button>
           </>
         )}
         {step === 'results' && (
           <>
             <div className="text-center mb-6">
-              {result === 'qualify' && (
-                <>
-                  <div className="text-5xl mb-3">✓</div>
-                  <h2 className="text-3xl font-bold text-green-600">You Qualify!</h2>
-                  <p className="text-gray-600 mt-2">Great news — you meet the requirements for {building.name}</p>
-                </>
-              )}
-              {result === 'close' && (
-                <>
-                  <div className="text-5xl mb-3">⚠</div>
-                  <h2 className="text-3xl font-bold text-yellow-600">You're Close</h2>
-                  <p className="text-gray-600 mt-2">You're slightly below requirements. Let us help you find solutions!</p>
-                </>
-              )}
-              {result === 'not-fit' && (
-                <>
-                  <div className="text-5xl mb-3">✗</div>
-                  <h2 className="text-3xl font-bold text-red-600">Not a Fit</h2>
-                  <p className="text-gray-600 mt-2">You don't currently meet the requirements for {building.name}</p>
-                </>
-              )}
+              {result === 'qualify' && <><div className="text-5xl mb-3">✓</div><h2 className="text-3xl font-bold text-green-600">You Qualify!</h2></>}
+              {result === 'close' && <><div className="text-5xl mb-3">⚠</div><h2 className="text-3xl font-bold text-yellow-600">You're Close</h2></>}
+              {result === 'not-fit' && <><div className="text-5xl mb-3">✗</div><h2 className="text-3xl font-bold text-red-600">Not a Fit</h2></>}
             </div>
-            <form onSubmit={handleContactSubmit} className="space-y-4 mt-6">
-              <div>
-                <label className="block text-sm font-medium mb-1">First Name</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="John"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Phone</label>
-                <input
-                  type="tel"
-                  required
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="(305) 123-4567"
-                />
-              </div>
-              <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">
-                Get Callback
-              </button>
-            </form>
-            <button onClick={onClose} className="mt-4 w-full text-gray-600 py-2 hover:text-gray-900">
-              Close
-            </button>
+            <button onClick={() => setStep('contact')} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 mb-3">Continue</button>
+            <button onClick={onClose} className="w-full text-gray-600 py-2 hover:text-gray-900">Back</button>
           </>
         )}
-        {step === 'contact' && (
-          <div className="text-center">
+        {step === 'contact' && !result && (
+          <>
+            <h2 className="text-2xl font-bold mb-2">One more thing...</h2>
+            <p className="text-gray-600 mb-6">Don will reach out directly with personalized options.</p>
+            <form onSubmit={handleContactSubmit} className="space-y-4">
+              <input type="text" required value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} className="w-full px-4 py-2 border rounded-lg" placeholder="First Name" />
+              <input type="tel" required value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-4 py-2 border rounded-lg" placeholder="Phone" />
+              <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Submit</button>
+            </form>
+          </>
+        )}
+        {step === 'contact' && result && (
+          <div className="text-center py-8">
             <div className="text-5xl mb-3">✓</div>
-            <h2 className="text-2xl font-bold text-green-600">Thanks {formData.firstName}!</h2>
-            <p className="text-gray-600 mt-2">We'll call you soon at {formData.phone}</p>
-            <button onClick={onClose} className="mt-6 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
-              Done
-            </button>
+            <h3 className="text-xl font-bold mb-2">Thanks!</h3>
+            <p className="text-gray-600 mb-6">Don will reach out soon.</p>
+            <button onClick={onClose} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold">Back to Buildings</button>
           </div>
         )}
       </div>
@@ -163,9 +152,10 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-const MapComponent = ({ buildings, selectedBuilding, onBuildingClick }) => {
+const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const markersRef = useRef([]);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -184,22 +174,9 @@ const MapComponent = ({ buildings, selectedBuilding, onBuildingClick }) => {
         
         map.current = new window.mapboxgl.Map({
           container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/streets-v12',
-          center: [-80.195, 25.76],
+          style: 'mapbox://styles/mapbox/light-v11',
+          center: [-80.188, 25.765],
           zoom: 13,
-        });
-
-        buildings.forEach((building) => {
-          const el = document.createElement('div');
-          el.className = 'w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold cursor-pointer hover:bg-blue-800';
-          el.textContent = building.id;
-          el.style.border = selectedBuilding?.id === building.id ? '3px solid yellow' : 'none';
-          
-          new window.mapboxgl.Marker({ element: el })
-            .setLngLat([building.lng, building.lat])
-            .addTo(map.current)
-            .getElement()
-            .addEventListener('click', () => onBuildingClick(building));
         });
       }
     };
@@ -211,176 +188,172 @@ const MapComponent = ({ buildings, selectedBuilding, onBuildingClick }) => {
         map.current = null;
       }
     };
-  }, [buildings, selectedBuilding, onBuildingClick]);
+  }, []);
+
+  useEffect(() => {
+    if (!map.current || !window.mapboxgl) return;
+
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+
+    const buildingsToShow = BUILDINGS.filter(b => expandedNeighborhoods.includes(b.neighborhood));
+
+    buildingsToShow.forEach((building) => {
+      const el = document.createElement('div');
+      el.style.width = '32px';
+      el.style.height = '32px';
+      el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
+      el.style.borderRadius = '50%';
+      el.style.cursor = 'pointer';
+      el.style.border = '3px solid white';
+      el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+      el.style.transition = 'all 0.2s';
+      el.onclick = () => onPinClick(building);
+
+      const marker = new window.mapboxgl.Marker(el)
+        .setLngLat([building.lng, building.lat])
+        .addTo(map.current);
+      
+      markersRef.current.push(marker);
+    });
+  }, [expandedNeighborhoods, selectedBuilding, onPinClick]);
 
   return <div ref={mapContainer} className="w-full h-full" />;
 };
 
-export default function Home() {
+export default function MiamiApp() {
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState({
-    price: 'all',
-    units: [],
-    income: 'all',
-    credit: 'all',
-    guarantor: false,
-    holdDays: 'all',
-  });
+  const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell']);
 
-  const filtered = BUILDINGS.filter((b) => {
-    if (searchTerm && !b.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-    if (filters.price !== 'all') {
-      const [min, max] = filters.price.split('-').map(Number);
-      if (b.priceMin > max) return false;
-    }
-    if (filters.units.length > 0 && !filters.units.some((u) => b.units.includes(u))) return false;
-    if (filters.income !== 'all' && b.incomeReq !== filters.income) return false;
-    if (filters.credit !== 'all' && b.creditReq !== filters.credit) return false;
-    if (filters.guarantor && !b.guarantor) return false;
-    if (filters.holdDays !== 'all' && !b.holdDays.includes(parseInt(filters.holdDays))) return false;
-    return true;
-  });
+  const toggleNeighborhood = (neighborhood) => {
+    setExpandedNeighborhoods(prev =>
+      prev.includes(neighborhood)
+        ? prev.filter(n => n !== neighborhood)
+        : [...prev, neighborhood]
+    );
+  };
+
+  const getNeighborhoodBuildings = (neighborhood) => {
+    return BUILDINGS.filter(b => b.neighborhood === neighborhood);
+  };
 
   return (
-    <div className="h-screen flex flex-col bg-white">
-      <div className="bg-white border-b p-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Miami Rentals</h1>
-        <input
-          type="text"
-          placeholder="Search buildings..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="px-4 py-2 border rounded-lg"
-        />
+    <div className="flex h-screen bg-gray-50">
+      <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center px-6 z-40 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"><span className="text-white font-bold">M</span></div>
+          <h1 className="text-xl font-semibold">Miami Rentals</h1>
+        </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="w-80 border-r bg-gray-50 p-4 overflow-y-auto">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold mb-2">Price Range</label>
-              <select
-                value={filters.price}
-                onChange={(e) => setFilters({ ...filters, price: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
-              >
-                <option value="all">All</option>
-                <option value="0-2500">$0 - $2,500</option>
-                <option value="2500-3500">$2,500 - $3,500</option>
-                <option value="3500-999999">$3,500+</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2">Unit Type</label>
-              <div className="space-y-2">
-                {['Studio', '1B', '2B', '3B'].map((unit) => (
-                  <label key={unit} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={filters.units.includes(unit)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setFilters({ ...filters, units: [...filters.units, unit] });
-                        } else {
-                          setFilters({ ...filters, units: filters.units.filter((u) => u !== unit) });
-                        }
-                      }}
-                    />
-                    {unit}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2">Guarantor Support</label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={filters.guarantor}
-                  onChange={(e) => setFilters({ ...filters, guarantor: e.target.checked })}
-                />
-                Required
-              </label>
-            </div>
-
-            <div className="pt-4 border-t">
-              <h3 className="font-semibold mb-3">Buildings ({filtered.length})</h3>
-              <div className="space-y-2">
-                {filtered.map((b) => (
-                  <button
-                    key={b.id}
-                    onClick={() => setSelectedBuilding(b)}
-                    className={`w-full text-left p-3 rounded-lg transition ${
-                      selectedBuilding?.id === b.id ? 'bg-blue-100 border-2 border-blue-600' : 'bg-white border border-gray-200 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="font-semibold">{b.name}</div>
-                    <div className="text-sm text-gray-600">${b.priceMin.toLocaleString()}/mo</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <div className="flex flex-1 mt-16">
         <div className="flex-1">
-          <MapComponent buildings={filtered} selectedBuilding={selectedBuilding} onBuildingClick={setSelectedBuilding} />
+          <MapComponent expandedNeighborhoods={expandedNeighborhoods} selectedBuilding={selectedBuilding} onPinClick={setSelectedBuilding} />
         </div>
 
-        {selectedBuilding && (
-          <div className="w-80 border-l bg-white p-4 overflow-y-auto">
-            <button onClick={() => setSelectedBuilding(null)} className="text-gray-500 mb-4">
-              X
-            </button>
-            <div>
-              <h2 className="text-2xl font-bold mb-2">{selectedBuilding.name}</h2>
-              <p className="text-gray-600 text-sm mb-4">{selectedBuilding.address}</p>
-
-              <div className="mb-4 h-40 bg-gray-200 rounded-lg overflow-hidden">
-                <img src={selectedBuilding.images[0]} alt={selectedBuilding.name} className="w-full h-full object-cover" />
-              </div>
-
-              <div className="space-y-3">
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <div className="text-sm text-gray-600">Price Range</div>
-                  <div className="font-bold">${selectedBuilding.priceMin.toLocaleString()} - ${selectedBuilding.priceMin + 1500}/mo</div>
-                </div>
-
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-sm text-gray-600">Requirements</div>
-                  <div className="font-bold">{selectedBuilding.incomeReq} income • {selectedBuilding.creditReq} credit</div>
-                </div>
-
-                <div className="bg-green-50 p-3 rounded-lg">
-                  <div className="text-sm text-gray-600">Concession</div>
-                  <div className="font-bold">{selectedBuilding.concession}</div>
-                </div>
-
-                <div>
-                  <div className="text-sm font-semibold mb-2">Amenities</div>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedBuilding.amenities.map((a) => (
-                      <span key={a} className="bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded">
-                        {a}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700"
-                >
-                  Talk To Don
-                </button>
+        <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
+          {!selectedBuilding ? (
+            <div className="p-6">
+              <h2 className="text-lg font-semibold mb-6">Neighborhoods</h2>
+              <div className="space-y-2">
+                {NEIGHBORHOODS.map((neighborhood) => {
+                  const buildings = getNeighborhoodBuildings(neighborhood);
+                  const isExpanded = expandedNeighborhoods.includes(neighborhood);
+                  return (
+                    <div key={neighborhood}>
+                      <button
+                        onClick={() => toggleNeighborhood(neighborhood)}
+                        className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
+                      >
+                        <span className="font-semibold text-gray-900">{neighborhood} ({buildings.length})</span>
+                        <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
+                      </button>
+                      {isExpanded && (
+                        <div className="ml-4 mt-2 space-y-2">
+                          {buildings.map((building) => (
+                            <div
+                              key={building.id}
+                              onClick={() => setSelectedBuilding(building)}
+                              className="p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition"
+                            >
+                              <h3 className="font-semibold text-gray-900">{building.name}</h3>
+                              <p className="text-sm font-semibold text-gray-900">${building.priceMin}+</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="p-6">
+              <button onClick={() => setSelectedBuilding(null)} className="text-blue-600 hover:text-blue-700 text-sm mb-4">← Back</button>
+              <ImageCarousel images={selectedBuilding.images} />
+              <h1 className="text-2xl font-bold mt-4 mb-2">{selectedBuilding.name}</h1>
+              <div className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs font-medium mb-4">{selectedBuilding.neighborhood}</div>
+              <p className="text-gray-600 text-sm mb-6">📍 {selectedBuilding.address}</p>
+              
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <p className="text-xl font-bold text-gray-900">${selectedBuilding.priceMin}+/mo</p>
+              </div>
+              
+              <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-500 rounded-lg">
+                <p className="text-sm font-semibold text-blue-900">Current Offer</p>
+                <p className="text-lg font-bold text-blue-600">{selectedBuilding.concession}</p>
+              </div>
+
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600 mb-1">Income Requirement</p>
+                <p className="font-semibold text-gray-900">{selectedBuilding.incomeReq}</p>
+              </div>
+
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600 mb-1">Credit Requirement</p>
+                <p className="font-semibold text-gray-900">{selectedBuilding.creditReq}</p>
+              </div>
+
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-sm text-gray-600">Works w/ Guarantors</p>
+                  <Tooltip />
+                </div>
+                <p className="font-semibold text-gray-900">{selectedBuilding.guarantor ? 'Yes' : 'No'}</p>
+              </div>
+
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600 mb-1">Hold Days</p>
+                <p className="font-semibold text-gray-900">{selectedBuilding.holdDays.join(', ')} days</p>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-sm font-semibold text-gray-900 mb-2">Bedrooms</p>
+                <div className="flex gap-2 flex-wrap">
+                  {selectedBuilding.units.map((unit) => (
+                    <span key={unit} className="text-xs bg-gray-100 px-3 py-1 rounded">{unit}</span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-sm font-semibold text-gray-900 mb-2">Amenities</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedBuilding.amenities.map((a) => (
+                    <span key={a} className="text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded">{a}</span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <FeesDropdown fees={selectedBuilding.fees} />
+              </div>
+
+              <button onClick={() => setShowModal(true)} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Talk to Don</button>
+            </div>
+          )}
+        </div>
       </div>
 
       {showModal && <TalkTodonModal building={selectedBuilding} onClose={() => setShowModal(false)} />}
