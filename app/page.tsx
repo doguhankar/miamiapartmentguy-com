@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const BUILDINGS = [
   {
@@ -12,7 +13,6 @@ const BUILDINGS = [
     lat: 25.7580,
     lng: -80.1933,
     priceMin: 2790,
-    priceMax: 18086,
     priceTier: '$$',
     concession: '1 month free on select units',
     units: ['Studio', '1B', '2B', '3B'],
@@ -20,11 +20,7 @@ const BUILDINGS = [
     creditReq: '>650',
     guarantor: true,
     holdDays: [30, 60, 90],
-    images: [
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop',
-    ],
+    images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
     amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'],
   },
   {
@@ -35,7 +31,6 @@ const BUILDINGS = [
     lat: 25.7576,
     lng: -80.1949,
     priceMin: 2500,
-    priceMax: 15000,
     priceTier: '$$',
     concession: '50% off first 60 days',
     units: ['Studio', '1B', '2B'],
@@ -43,11 +38,7 @@ const BUILDINGS = [
     creditReq: '>650',
     guarantor: true,
     holdDays: [30, 60],
-    images: [
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop',
-    ],
+    images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
     amenities: ['Pool', 'Gym', 'Parking'],
   },
   {
@@ -58,7 +49,6 @@ const BUILDINGS = [
     lat: 25.7554,
     lng: -80.1944,
     priceMin: 2235,
-    priceMax: 5000,
     priceTier: '$',
     concession: '$500 move-in credit',
     units: ['Studio', '1B', '2B'],
@@ -66,11 +56,7 @@ const BUILDINGS = [
     creditReq: '>650',
     guarantor: true,
     holdDays: [14, 30, 60],
-    images: [
-      'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop',
-    ],
+    images: ['https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
     amenities: ['Pool', 'Gym', 'Lounge'],
   },
   {
@@ -81,7 +67,6 @@ const BUILDINGS = [
     lat: 25.7585,
     lng: -80.1936,
     priceMin: 2654,
-    priceMax: 12000,
     priceTier: '$$',
     concession: 'Free first month + parking',
     units: ['Studio', '1B', '2B', '3B'],
@@ -89,11 +74,7 @@ const BUILDINGS = [
     creditReq: '>650',
     guarantor: false,
     holdDays: [30, 60, 90],
-    images: [
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop',
-    ],
+    images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
     amenities: ['Pool', 'Gym', 'Bar Lounge', 'Billiards'],
   },
   {
@@ -104,7 +85,6 @@ const BUILDINGS = [
     lat: 25.7560,
     lng: -80.1920,
     priceMin: 2425,
-    priceMax: 6500,
     priceTier: '$',
     concession: '1 month free on leases 12+ months',
     units: ['Studio', '1B', '2B'],
@@ -112,11 +92,7 @@ const BUILDINGS = [
     creditReq: '>650',
     guarantor: true,
     holdDays: [14, 30, 60],
-    images: [
-      'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop',
-    ],
+    images: ['https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
     amenities: ['Pool', 'Gym', 'Dog Wash', 'Yoga Studio'],
   },
   {
@@ -127,7 +103,6 @@ const BUILDINGS = [
     lat: 25.7555,
     lng: -80.1945,
     priceMin: 3045,
-    priceMax: 7500,
     priceTier: '$$',
     concession: '2 months free on 12-month lease',
     units: ['1B', '2B', '3B'],
@@ -135,11 +110,7 @@ const BUILDINGS = [
     creditReq: '>650',
     guarantor: false,
     holdDays: [30, 60],
-    images: [
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop',
-    ],
+    images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
     amenities: ['Pool', 'Spa', 'Gym', 'Concierge', 'Valet'],
   },
   {
@@ -149,21 +120,106 @@ const BUILDINGS = [
     address: '55 NE 2nd St, Miami, FL 33132',
     lat: 25.7650,
     lng: -80.1866,
-    priceMin: 2478,
-    priceMax: 5500,
+    priceMin: 1950,
     priceTier: '$',
     concession: 'Two months free on select units',
     units: ['Studio', '1B', '2B'],
-    incomeReq: '2.5x',
-    creditReq: '>600',
+    incomeReq: '3x',
+    creditReq: '>650',
     guarantor: true,
-    holdDays: [14, 30, 60],
-    images: [
-      'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop',
-    ],
+    holdDays: [14, 30, 60, 90],
+    images: ['https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
     amenities: ['Pool', 'Gym', 'Pet-Friendly', 'Coworking'],
+  },
+  {
+    id: 8,
+    name: 'Miami World Tower',
+    neighborhood: 'Downtown',
+    address: '710 NE 1st Ave, Miami, FL 33132',
+    lat: 25.7650,
+    lng: -80.1866,
+    priceMin: 2410,
+    priceTier: '$$',
+    concession: 'Up to two months free on select apartments',
+    units: ['Studio', '1B', '2B'],
+    incomeReq: '3x',
+    creditReq: '>650',
+    guarantor: true,
+    holdDays: [30],
+    images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
+    amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'],
+  },
+  {
+    id: 9,
+    name: 'Muze at Met',
+    neighborhood: 'Downtown',
+    address: '340 SE 3rd St, Miami, FL 33131',
+    lat: 25.7594,
+    lng: -80.1850,
+    priceMin: 2627,
+    priceTier: '$$',
+    concession: '1.5 months free on 1Bs, 1 month on 2/3 beds',
+    units: ['Studio', '1B', '2B', '3B'],
+    incomeReq: '3x',
+    creditReq: '>650',
+    guarantor: true,
+    holdDays: [14],
+    images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
+    amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'],
+  },
+  {
+    id: 10,
+    name: 'Flow Miami World',
+    neighborhood: 'Downtown',
+    address: '698 NE 1st Ave, Miami, FL 33132',
+    lat: 25.7660,
+    lng: -80.1870,
+    priceMin: 2223,
+    priceTier: '$$',
+    concession: '3 months free on all apartments',
+    units: ['Studio', '1B', '2B', '3B'],
+    incomeReq: '3x',
+    creditReq: '>650',
+    guarantor: true,
+    holdDays: [30],
+    images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
+    amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'],
+  },
+  {
+    id: 11,
+    name: 'Monarc at Met',
+    neighborhood: 'Downtown',
+    address: '201 SE 2nd Ave, Miami, FL 33131',
+    lat: 25.7580,
+    lng: -80.1840,
+    priceMin: 2692,
+    priceTier: '$$',
+    concession: 'No current concessions',
+    units: ['Studio', '1B', '2B'],
+    incomeReq: '3x',
+    creditReq: '>650',
+    guarantor: true,
+    holdDays: [14],
+    images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
+    amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'],
+  },
+  {
+    id: 12,
+    name: 'Parkline',
+    neighborhood: 'Downtown',
+    address: '100 NW 6th St, Miami, FL 33136',
+    lat: 25.7700,
+    lng: -80.1900,
+    priceMin: 2120,
+    priceTier: '$',
+    concession: 'Up to 3 months free',
+    units: ['Studio', '1B', '2B', '3B'],
+    incomeReq: '3x',
+    creditReq: '>650',
+    guarantor: false,
+    holdDays: [14],
+    images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'],
+    amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'],
   },
 ];
 
@@ -181,7 +237,6 @@ const ImageCarousel = ({ images }: { images: string[] }) => {
   const [current, setCurrent] = useState(0);
   const next = () => setCurrent((current + 1) % images.length);
   const prev = () => setCurrent((current - 1 + images.length) % images.length);
-
   return (
     <div className="relative w-full h-64 bg-gray-200 rounded-lg overflow-hidden group">
       <img src={images[current]} alt={`Building ${current + 1}`} className="w-full h-full object-cover" />
@@ -196,7 +251,7 @@ const ImageCarousel = ({ images }: { images: string[] }) => {
   );
 };
 
-const TalkTodonModal = ({ building, onClose }: { building: any; onClose: () => void }) => {
+const TalkTodonModal = ({ building, onClose }: { building: (typeof BUILDINGS)[0]; onClose: () => void }) => {
   const [step, setStep] = useState('form');
   const [formData, setFormData] = useState({ income: '', credit: '', moveInDate: '', firstName: '', phone: '' });
   const [result, setResult] = useState<string | null>(null);
@@ -297,11 +352,78 @@ const TalkTodonModal = ({ building, onClose }: { building: any; onClose: () => v
   );
 };
 
+const MapComponent = ({ buildings, selectedBuilding, onBuildingClick }: { buildings: (typeof BUILDINGS); selectedBuilding: (typeof BUILDINGS)[0] | null; onBuildingClick: (building: (typeof BUILDINGS)[0]) => void }) => {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<{ [key: number]: { marker: L.Marker; element: HTMLElement } }>({});
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    try {
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+      });
+
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+      }
+
+      const map = L.map(mapRef.current).setView([25.760, -80.195], 13);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors',
+      }).addTo(map);
+
+      buildings.forEach((building) => {
+        const blueIcon = L.divIcon({
+          html: `<div class="w-10 h-10 bg-blue-500 rounded-full border-4 border-white shadow-lg flex items-center justify-center text-white font-bold text-xs">${building.id}</div>`,
+          className: 'custom-marker',
+          iconSize: [40, 40],
+          iconAnchor: [20, 20],
+        });
+
+        const marker = L.marker([building.lat, building.lng], { icon: blueIcon })
+          .bindPopup(`<div class="text-sm font-semibold">${building.name}</div>`)
+          .on('click', () => onBuildingClick(building))
+          .addTo(map);
+
+        markersRef.current[building.id] = { marker, element: marker._icon as HTMLElement };
+      });
+
+      mapInstanceRef.current = map;
+
+      return () => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.remove();
+        }
+      };
+    } catch (error) {
+      console.error('Map error:', error);
+    }
+  }, [buildings, onBuildingClick]);
+
+  useEffect(() => {
+    Object.values(markersRef.current).forEach(({ element }) => {
+      if (element) {
+        element.style.filter = 'brightness(1)';
+      }
+    });
+
+    if (selectedBuilding && markersRef.current[selectedBuilding.id]?.element) {
+      markersRef.current[selectedBuilding.id].element.style.filter = 'brightness(0.5) saturate(2) hue-rotate(-30deg)';
+    }
+  }, [selectedBuilding]);
+
+  return <div ref={mapRef} className="w-full h-full" />;
+};
+
 export default function MiamiApp() {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<any[]>([]);
-  const [selectedBuilding, setSelectedBuilding] = useState<typeof BUILDINGS[0] | null>(null);
+  const [selectedBuilding, setSelectedBuilding] = useState<(typeof BUILDINGS)[0] | null>(null);
   const [showTalkToDonModal, setShowTalkToDonModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPrice, setSelectedPrice] = useState('all');
@@ -310,80 +432,6 @@ export default function MiamiApp() {
   const [selectedCredit, setSelectedCredit] = useState('all');
   const [guarantorOnly, setGuarantorOnly] = useState(false);
   const [selectedHold, setSelectedHold] = useState('all');
-
-  useEffect(() => {
-    if (!mapContainer.current) return;
-
-    const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-    
-    if (!MAPBOX_TOKEN) {
-      console.error('Mapbox token not found. Make sure NEXT_PUBLIC_MAPBOX_TOKEN is set in environment variables.');
-      return;
-    }
-
-    mapboxgl.accessToken = MAPBOX_TOKEN;
-
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/light-v11',
-        center: [-80.19, 25.76],
-        zoom: 12,
-      });
-
-      BUILDINGS.forEach((building) => {
-        const el = document.createElement('div');
-        el.className = 'marker';
-        el.style.width = '40px';
-        el.style.height = '40px';
-        el.style.backgroundColor = '#3B82F6';
-        el.style.borderRadius = '50%';
-        el.style.cursor = 'pointer';
-        el.style.display = 'flex';
-        el.style.alignItems = 'center';
-        el.style.justifyContent = 'center';
-        el.style.color = 'white';
-        el.style.fontSize = '12px';
-        el.style.fontWeight = 'bold';
-        el.style.border = '2px solid white';
-        el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-        el.style.transition = 'all 0.2s';
-        el.textContent = building.id.toString();
-
-        el.onclick = () => setSelectedBuilding(building);
-        el.onmouseover = () => {
-          el.style.transform = 'scale(1.2)';
-        };
-        el.onmouseout = () => {
-          el.style.transform = 'scale(1)';
-        };
-
-        const marker = new mapboxgl.Marker({ element: el })
-          .setLngLat([building.lng, building.lat])
-          .addTo(map.current!);
-
-        markersRef.current.push({ marker, element: el, building });
-      });
-
-      return () => {
-        if (map.current) map.current.remove();
-      };
-    } catch (error) {
-      console.error('Error initializing map:', error);
-    }
-  }, []);
-
-  useEffect(() => {
-    markersRef.current.forEach(({ element, building }: any) => {
-      if (selectedBuilding?.id === building.id) {
-        element.style.backgroundColor = '#FF8C00';
-        element.style.transform = 'scale(1.3)';
-      } else {
-        element.style.backgroundColor = '#3B82F6';
-        element.style.transform = 'scale(1)';
-      }
-    });
-  }, [selectedBuilding]);
 
   const filtered = BUILDINGS.filter((b) => {
     if (searchTerm && !b.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
@@ -424,7 +472,9 @@ export default function MiamiApp() {
           <div className="mb-6"><label className="block text-sm font-medium text-gray-900 mb-3">Hold Duration</label><div className="space-y-2">{[14, 30, 60, 90].map((days) => (<label key={days} className="flex items-center gap-3 cursor-pointer"><input type="radio" name="hold" value={String(days)} checked={selectedHold === String(days)} onChange={(e) => setSelectedHold(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">{days} days</span></label>))}<label className="flex items-center gap-3 cursor-pointer"><input type="radio" name="hold" value="all" checked={selectedHold === 'all'} onChange={(e) => setSelectedHold(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">All</span></label></div></div>
         </div>
 
-        <div className="flex-1 relative" ref={mapContainer} />
+        <div className="flex-1 relative">
+          <MapComponent buildings={filtered} selectedBuilding={selectedBuilding} onBuildingClick={setSelectedBuilding} />
+        </div>
 
         <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
           {!selectedBuilding ? (
@@ -438,6 +488,7 @@ export default function MiamiApp() {
                       <span className="text-sm font-bold">{building.priceTier}</span>
                     </div>
                     <p className="text-xs text-gray-600">{building.neighborhood}</p>
+                    <p className="text-sm font-semibold text-gray-900 mt-1">${building.priceMin}+</p>
                   </div>
                 ))}
               </div>
@@ -449,7 +500,7 @@ export default function MiamiApp() {
               <h1 className="text-2xl font-bold mt-4 mb-2">{selectedBuilding.name}</h1>
               <div className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs font-medium mb-4">{selectedBuilding.neighborhood}</div>
               <div className="flex items-center gap-2 text-gray-600 text-sm mb-6"><span>📍</span><span>{selectedBuilding.address}</span></div>
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg"><div className="flex items-center gap-2 mb-2"><span className="text-2xl">$</span><span className="text-sm text-gray-600">Price Range</span><InfoTooltip text="Pricing fluctuates daily based on neighborhood market rates" /></div><p className="text-xl font-bold text-gray-900">${selectedBuilding.priceMin.toLocaleString()} - ${selectedBuilding.priceMax.toLocaleString()}</p></div>
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg"><div className="flex items-center gap-2 mb-2"><span className="text-2xl">$</span><span className="text-sm text-gray-600">Starting Price</span><InfoTooltip text="Pricing fluctuates daily based on neighborhood market rates" /></div><p className="text-xl font-bold text-gray-900">${selectedBuilding.priceMin}+</p></div>
               <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-500 rounded-lg"><p className="text-sm font-semibold text-blue-900">Current Offer</p><p className="text-lg font-bold text-blue-600">{selectedBuilding.concession}</p></div>
               <div className="mb-6 p-4 bg-gray-50 rounded-lg"><p className="text-sm text-gray-600 mb-1">Requirements</p><p className="font-semibold text-gray-900">Income: {selectedBuilding.incomeReq} | Credit: {selectedBuilding.creditReq}</p></div>
               <div className="mb-6 p-4 bg-gray-50 rounded-lg"><p className="text-sm text-gray-600 mb-1">Hold Days</p><p className="font-semibold text-gray-900">{selectedBuilding.holdDays.join(', ')} days available</p></div>
@@ -461,7 +512,7 @@ export default function MiamiApp() {
         </div>
       </div>
 
-      {showTalkToDonModal && <TalkTodonModal building={selectedBuilding} onClose={() => setShowTalkToDonModal(false)} />}
+      {showTalkToDonModal && <TalkTodonModal building={selectedBuilding!} onClose={() => setShowTalkToDonModal(false)} />}
     </div>
   );
 }
