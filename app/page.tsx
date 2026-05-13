@@ -175,24 +175,8 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
         map.current = new window.mapboxgl.Map({
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/light-v11',
-          center: [-80.195, 25.760],
-          zoom: 13,
-        });
-
-        // Once map is fully loaded, fit to all buildings
-        map.current.on('load', () => {
-          const buildingsToShow = BUILDINGS.filter(b => ['Brickell', 'Downtown'].includes(b.neighborhood));
-          if (buildingsToShow.length > 0) {
-            const lngs = buildingsToShow.map(b => b.lng);
-            const lats = buildingsToShow.map(b => b.lat);
-            const minLng = Math.min(...lngs);
-            const maxLng = Math.max(...lngs);
-            const minLat = Math.min(...lats);
-            const maxLat = Math.max(...lats);
-            
-            const bounds = new window.mapboxgl.LngLatBounds([minLng, minLat], [maxLng, maxLat]);
-            map.current.fitBounds(bounds, { padding: 80 });
-          }
+          center: [-80.188, 25.761],
+          zoom: 12.5,
         });
       }
     };
