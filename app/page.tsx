@@ -3,18 +3,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const BUILDINGS = [
-  { id: 1, name: 'Flow Brickell', neighborhood: 'Brickell', address: '275 SW 6th St, Miami, FL 33130', lat: 25.75835, lng: -80.19584, priceMin: 2790, priceTier: '$$', concession: '1 month free on select units', units: ['Studio', '1B', '2B', '3B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60, 90], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,790', application: '$75', admin: '$150', parking: '$150/car', misc: 'Pet fee: $35/mo' } },
-  { id: 2, name: 'Modera Riverside', neighborhood: 'Brickell', address: '300 SW 2nd Ave, Miami, FL 33130', lat: 25.75927, lng: -80.19445, priceMin: 2500, priceTier: '$$', concession: '50% off first 60 days', units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60], images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Parking'], fees: { deposit: '$2,500', application: '$50', admin: '$100', parking: '$125/car', misc: 'Renters insurance required' } },
-  { id: 3, name: 'Maizon', neighborhood: 'Brickell', address: '221 SW 12th St, Miami, FL 33130', lat: 25.75487, lng: -80.19453, priceMin: 2235, priceTier: '$', concession: '$500 move-in credit', units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60], images: ['https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Lounge'], fees: { deposit: '$2,235', application: '$60', admin: '$120', parking: '$140/car', misc: 'None' } },
-  { id: 4, name: 'Solitair', neighborhood: 'Brickell', address: '86 SW 8th St, Miami, FL 33130', lat: 25.75727, lng: -80.19634, priceMin: 2654, priceTier: '$$', concession: 'Free first month + parking', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [30, 60, 90], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Bar Lounge', 'Billiards'], fees: { deposit: '$2,654', application: '$75', admin: '$150', parking: 'Free', misc: 'Concierge fee: $25/mo' } },
-  { id: 5, name: 'Miro Brickell', neighborhood: 'Brickell', address: '255 SW 11th St, Miami, FL 33130', lat: 25.75509, lng: -80.19512, priceMin: 2425, priceTier: '$', concession: '1 month free on leases 12+ months', units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60], images: ['https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Dog Wash', 'Yoga Studio'], fees: { deposit: '$2,425', application: '$65', admin: '$130', parking: '$135/car', misc: 'Pet fee: $50/mo' } },
-  { id: 6, name: 'Brickell First', neighborhood: 'Brickell', address: '110 SW 12th St, Miami, FL 33130', lat: 25.75451, lng: -80.19479, priceMin: 3045, priceTier: '$$', concession: '2 months free on 12-month lease', units: ['1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [30, 60], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Spa', 'Gym', 'Concierge', 'Valet'], fees: { deposit: '$3,045', application: '$100', admin: '$200', parking: '$175/car', misc: 'Valet required: $60/mo' } },
-  { id: 7, name: 'CMPND', neighborhood: 'Downtown', address: '55 NE 2nd St, Miami, FL 33132', lat: 25.76873, lng: -80.18334, priceMin: 1950, priceTier: '$', concession: 'Two months free on select units', units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60, 90], images: ['https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Pet-Friendly', 'Coworking'], fees: { deposit: '$1,950', application: '$50', admin: '$100', parking: '$120/car', misc: 'None' } },
-  { id: 8, name: 'Miami World Tower', neighborhood: 'Downtown', address: '710 NE 1st Ave, Miami, FL 33132', lat: 25.76993, lng: -80.18364, priceMin: 2410, priceTier: '$$', concession: 'Up to two months free on select apartments', units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,410', application: '$75', admin: '$150', parking: '$160/car', misc: 'Concierge fee: $30/mo' } },
-  { id: 9, name: 'Muze at Met', neighborhood: 'Downtown', address: '340 SE 3rd St, Miami, FL 33131', lat: 25.76097, lng: -80.18284, priceMin: 2627, priceTier: '$$', concession: '1.5 months free on 1Bs, 1 month on 2/3 beds', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,627', application: '$80', admin: '$160', parking: '$165/car', misc: 'Pet fee: $40/mo' } },
-  { id: 10, name: 'Flow Miami World', neighborhood: 'Downtown', address: '698 NE 1st Ave, Miami, FL 33132', lat: 25.76943, lng: -80.18369, priceMin: 2223, priceTier: '$$', concession: '3 months free on all apartments', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,223', application: '$70', admin: '$140', parking: '$145/car', misc: 'None' } },
-  { id: 11, name: 'Monarc at Met', neighborhood: 'Downtown', address: '201 SE 2nd Ave, Miami, FL 33131', lat: 25.76176, lng: -80.18167, priceMin: 2692, priceTier: '$$', concession: 'No current concessions', units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,692', application: '$85', admin: '$170', parking: '$170/car', misc: 'Concierge fee: $35/mo' } },
-  { id: 12, name: 'Parkline', neighborhood: 'Downtown', address: '100 NW 6th St, Miami, FL 33136', lat: 25.77283, lng: -80.19134, priceMin: 2120, priceTier: '$', concession: 'Up to 3 months free', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [14], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,120', application: '$60', admin: '$120', parking: '$130/car', misc: 'None' } },
+  { id: 1, name: 'Flow Brickell', neighborhood: 'Brickell', address: '275 SW 6th St, Miami, FL 33130', lat: 25.7580, lng: -80.1933, priceMin: 2790, priceTier: '$$', concession: '1 month free on select units', units: ['Studio', '1B', '2B', '3B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60, 90], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,790', application: '$75', admin: '$150', parking: '$150/car', misc: 'Pet fee: $35/mo' } },
+  { id: 2, name: 'Modera Riverside', neighborhood: 'Brickell', address: '300 SW 2nd Ave, Miami, FL 33130', lat: 25.7576, lng: -80.1949, priceMin: 2500, priceTier: '$$', concession: '50% off first 60 days', units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60], images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Parking'], fees: { deposit: '$2,500', application: '$50', admin: '$100', parking: '$125/car', misc: 'Renters insurance required' } },
+  { id: 3, name: 'Maizon', neighborhood: 'Brickell', address: '221 SW 12th St, Miami, FL 33130', lat: 25.7554, lng: -80.1944, priceMin: 2235, priceTier: '$', concession: '$500 move-in credit', units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60], images: ['https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Lounge'], fees: { deposit: '$2,235', application: '$60', admin: '$120', parking: '$140/car', misc: 'None' } },
+  { id: 4, name: 'Solitair', neighborhood: 'Brickell', address: '86 SW 8th St, Miami, FL 33130', lat: 25.7585, lng: -80.1936, priceMin: 2654, priceTier: '$$', concession: 'Free first month + parking', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [30, 60, 90], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Bar Lounge', 'Billiards'], fees: { deposit: '$2,654', application: '$75', admin: '$150', parking: 'Free', misc: 'Concierge fee: $25/mo' } },
+  { id: 5, name: 'Miro Brickell', neighborhood: 'Brickell', address: '255 SW 11th St, Miami, FL 33130', lat: 25.7560, lng: -80.1920, priceMin: 2425, priceTier: '$', concession: '1 month free on leases 12+ months', units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60], images: ['https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Dog Wash', 'Yoga Studio'], fees: { deposit: '$2,425', application: '$65', admin: '$130', parking: '$135/car', misc: 'Pet fee: $50/mo' } },
+  { id: 6, name: 'Brickell First', neighborhood: 'Brickell', address: '110 SW 12th St, Miami, FL 33130', lat: 25.7555, lng: -80.1945, priceMin: 3045, priceTier: '$$', concession: '2 months free on 12-month lease', units: ['1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [30, 60], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Spa', 'Gym', 'Concierge', 'Valet'], fees: { deposit: '$3,045', application: '$100', admin: '$200', parking: '$175/car', misc: 'Valet required: $60/mo' } },
+  { id: 7, name: 'CMPND', neighborhood: 'Downtown', address: '55 NE 2nd St, Miami, FL 33132', lat: 25.7650, lng: -80.1866, priceMin: 1950, priceTier: '$', concession: 'Two months free on select units', units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60, 90], images: ['https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Pet-Friendly', 'Coworking'], fees: { deposit: '$1,950', application: '$50', admin: '$100', parking: '$120/car', misc: 'None' } },
+  { id: 8, name: 'Miami World Tower', neighborhood: 'Downtown', address: '710 NE 1st Ave, Miami, FL 33132', lat: 25.7660, lng: -80.1875, priceMin: 2410, priceTier: '$$', concession: 'Up to two months free on select apartments', units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,410', application: '$75', admin: '$150', parking: '$160/car', misc: 'Concierge fee: $30/mo' } },
+  { id: 9, name: 'Muze at Met', neighborhood: 'Downtown', address: '340 SE 3rd St, Miami, FL 33131', lat: 25.7594, lng: -80.1850, priceMin: 2627, priceTier: '$$', concession: '1.5 months free on 1Bs, 1 month on 2/3 beds', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,627', application: '$80', admin: '$160', parking: '$165/car', misc: 'Pet fee: $40/mo' } },
+  { id: 10, name: 'Flow Miami World', neighborhood: 'Downtown', address: '698 NE 1st Ave, Miami, FL 33132', lat: 25.7670, lng: -80.1880, priceMin: 2223, priceTier: '$$', concession: '3 months free on all apartments', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,223', application: '$70', admin: '$140', parking: '$145/car', misc: 'None' } },
+  { id: 11, name: 'Monarc at Met', neighborhood: 'Downtown', address: '201 SE 2nd Ave, Miami, FL 33131', lat: 25.7580, lng: -80.1840, priceMin: 2692, priceTier: '$$', concession: 'No current concessions', units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,692', application: '$85', admin: '$170', parking: '$170/car', misc: 'Concierge fee: $35/mo' } },
+  { id: 12, name: 'Parkline', neighborhood: 'Downtown', address: '100 NW 6th St, Miami, FL 33136', lat: 25.7700, lng: -80.1900, priceMin: 2120, priceTier: '$', concession: 'Up to 3 months free', units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [14], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,120', application: '$60', admin: '$120', parking: '$130/car', misc: 'None' } },
 ];
 
 const NEIGHBORHOODS = ['Brickell', 'Downtown', 'Midtown', 'Edgewater', 'Wynwood'];
@@ -152,34 +152,48 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) => {
+export default function MiamiApp() {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
 
+  const [selectedBuilding, setSelectedBuilding] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell']);
+
+  // Initialize map and load Mapbox
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || map.current) return;
 
     const script = document.createElement('script');
     script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js';
     script.async = true;
+
     script.onload = () => {
       const linkEl = document.createElement('link');
       linkEl.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
       linkEl.rel = 'stylesheet';
       document.head.appendChild(linkEl);
 
-      if (window.mapboxgl && mapContainer.current && !map.current) {
-        window.mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-        
-        map.current = new window.mapboxgl.Map({
-          container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/light-v11',
-          center: [-80.188, 25.761],
-          zoom: 12.5,
-        });
-      }
+      setTimeout(() => {
+        if (window.mapboxgl && mapContainer.current) {
+          window.mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+          
+          map.current = new window.mapboxgl.Map({
+            container: mapContainer.current,
+            style: 'mapbox://styles/mapbox/light-v11',
+            center: [-80.188, 25.765],
+            zoom: 13,
+          });
+
+          // Add pins after map is ready
+          map.current.on('load', () => {
+            addPins();
+          });
+        }
+      }, 100);
     };
+
     document.body.appendChild(script);
 
     return () => {
@@ -190,9 +204,10 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
     };
   }, []);
 
-  useEffect(() => {
+  const addPins = () => {
     if (!map.current || !window.mapboxgl) return;
 
+    // Clear existing markers
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
@@ -208,33 +223,23 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
       el.style.border = '3px solid white';
       el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
       el.style.transition = 'all 0.2s';
-      el.onclick = () => onPinClick(building);
+
+      el.onclick = () => setSelectedBuilding(building);
 
       const marker = new window.mapboxgl.Marker(el)
         .setLngLat([building.lng, building.lat])
         .addTo(map.current);
-      
+
       markersRef.current.push(marker);
     });
-  }, [expandedNeighborhoods, selectedBuilding, onPinClick]);
+  };
 
-  return <div ref={mapContainer} className="w-full h-full" />;
-};
-
-export default function MiamiApp() {
-  const [selectedBuilding, setSelectedBuilding] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell', 'Downtown']);
-  
-  // Filter state
-  const [filters, setFilters] = useState({
-    priceRange: 'all',
-    unitTypes: [],
-    incomeReq: 'all',
-    creditReq: 'all',
-    guarantorOnly: false,
-    holdDays: 'all',
-  });
+  // Update pins when neighborhoods or selected building changes
+  useEffect(() => {
+    if (map.current && window.mapboxgl) {
+      addPins();
+    }
+  }, [expandedNeighborhoods, selectedBuilding]);
 
   const toggleNeighborhood = (neighborhood) => {
     setExpandedNeighborhoods(prev =>
@@ -244,51 +249,9 @@ export default function MiamiApp() {
     );
   };
 
-  const toggleUnitType = (unit) => {
-    setFilters(prev => ({
-      ...prev,
-      unitTypes: prev.unitTypes.includes(unit)
-        ? prev.unitTypes.filter(u => u !== unit)
-        : [...prev.unitTypes, unit]
-    }));
-  };
-
   const getNeighborhoodBuildings = (neighborhood) => {
     return BUILDINGS.filter(b => b.neighborhood === neighborhood);
   };
-
-  const getFilteredBuildings = () => {
-    let filtered = BUILDINGS.filter(b => expandedNeighborhoods.includes(b.neighborhood));
-    
-    // Price filter
-    if (filters.priceRange === 'low') filtered = filtered.filter(b => b.priceMin < 2500);
-    if (filters.priceRange === 'mid') filtered = filtered.filter(b => b.priceMin >= 2500 && b.priceMin < 3000);
-    if (filters.priceRange === 'high') filtered = filtered.filter(b => b.priceMin >= 3000);
-    
-    // Unit types filter
-    if (filters.unitTypes.length > 0) {
-      filtered = filtered.filter(b => b.units.some(u => filters.unitTypes.includes(u)));
-    }
-    
-    // Income requirement filter
-    if (filters.incomeReq === '2.5x') filtered = filtered.filter(b => b.incomeReq === '2.5x');
-    if (filters.incomeReq === '3x') filtered = filtered.filter(b => b.incomeReq === '3x');
-    
-    // Credit requirement filter
-    if (filters.creditReq === '600') filtered = filtered.filter(b => parseInt(b.creditReq) >= 600);
-    if (filters.creditReq === '650') filtered = filtered.filter(b => parseInt(b.creditReq) >= 650);
-    
-    // Guarantor filter
-    if (filters.guarantorOnly) filtered = filtered.filter(b => b.guarantor);
-    
-    // Hold days filter
-    if (filters.holdDays === '14') filtered = filtered.filter(b => b.holdDays.includes(14));
-    if (filters.holdDays === '30') filtered = filtered.filter(b => b.holdDays.includes(30));
-    
-    return filtered;
-  };
-
-  const filteredBuildings = getFilteredBuildings();
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -300,147 +263,42 @@ export default function MiamiApp() {
       </div>
 
       <div className="flex flex-1 mt-16">
-        {/* LEFT SIDEBAR - FILTERS */}
-        <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto">
-          <div className="p-6 space-y-6">
-            <h2 className="text-lg font-bold">Filters</h2>
-            
-            {/* Price Range */}
-            <div>
-              <label className="block text-sm font-semibold mb-3">Price Range</label>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="price" value="all" checked={filters.priceRange === 'all'} onChange={(e) => setFilters({...filters, priceRange: e.target.value})} className="w-4 h-4" />
-                  <span className="text-sm">All</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="price" value="low" checked={filters.priceRange === 'low'} onChange={(e) => setFilters({...filters, priceRange: e.target.value})} className="w-4 h-4" />
-                  <span className="text-sm">Under $2,500</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="price" value="mid" checked={filters.priceRange === 'mid'} onChange={(e) => setFilters({...filters, priceRange: e.target.value})} className="w-4 h-4" />
-                  <span className="text-sm">$2,500 - $3,000</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="price" value="high" checked={filters.priceRange === 'high'} onChange={(e) => setFilters({...filters, priceRange: e.target.value})} className="w-4 h-4" />
-                  <span className="text-sm">$3,000+</span>
-                </label>
-              </div>
-            </div>
+        <div className="flex-1" ref={mapContainer} style={{ minHeight: 0 }} />
 
-            {/* Unit Types */}
-            <div>
-              <label className="block text-sm font-semibold mb-3">Unit Type</label>
-              <div className="space-y-2">
-                {['Studio', '1B', '2B', '3B'].map(unit => (
-                  <label key={unit} className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={filters.unitTypes.includes(unit)} onChange={() => toggleUnitType(unit)} className="w-4 h-4 rounded" />
-                    <span className="text-sm">{unit}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Income Requirement */}
-            <div>
-              <label className="block text-sm font-semibold mb-3">Income Required</label>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="income" value="all" checked={filters.incomeReq === 'all'} onChange={(e) => setFilters({...filters, incomeReq: e.target.value})} className="w-4 h-4" />
-                  <span className="text-sm">Any</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="income" value="2.5x" checked={filters.incomeReq === '2.5x'} onChange={(e) => setFilters({...filters, incomeReq: e.target.value})} className="w-4 h-4" />
-                  <span className="text-sm">2.5x rent</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="income" value="3x" checked={filters.incomeReq === '3x'} onChange={(e) => setFilters({...filters, incomeReq: e.target.value})} className="w-4 h-4" />
-                  <span className="text-sm">3x rent</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Credit Requirement */}
-            <div>
-              <label className="block text-sm font-semibold mb-3">Credit Score</label>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="credit" value="all" checked={filters.creditReq === 'all'} onChange={(e) => setFilters({...filters, creditReq: e.target.value})} className="w-4 h-4" />
-                  <span className="text-sm">Any</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="credit" value="600" checked={filters.creditReq === '600'} onChange={(e) => setFilters({...filters, creditReq: e.target.value})} className="w-4 h-4" />
-                  <span className="text-sm">600+</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="credit" value="650" checked={filters.creditReq === '650'} onChange={(e) => setFilters({...filters, creditReq: e.target.value})} className="w-4 h-4" />
-                  <span className="text-sm">650+</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Guarantor */}
-            <div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={filters.guarantorOnly} onChange={(e) => setFilters({...filters, guarantorOnly: e.target.checked})} className="w-4 h-4 rounded" />
-                <span className="text-sm font-semibold">Works w/ Guarantors</span>
-              </label>
-            </div>
-
-            {/* Hold Days */}
-            <div>
-              <label className="block text-sm font-semibold mb-3">Hold Days</label>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="hold" value="all" checked={filters.holdDays === 'all'} onChange={(e) => setFilters({...filters, holdDays: e.target.value})} className="w-4 h-4" />
-                  <span className="text-sm">Any</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="hold" value="14" checked={filters.holdDays === '14'} onChange={(e) => setFilters({...filters, holdDays: e.target.value})} className="w-4 h-4" />
-                  <span className="text-sm">14 days</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="hold" value="30" checked={filters.holdDays === '30'} onChange={(e) => setFilters({...filters, holdDays: e.target.value})} className="w-4 h-4" />
-                  <span className="text-sm">30+ days</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Reset */}
-            <button 
-              onClick={() => {
-                setFilters({ priceRange: 'all', unitTypes: [], incomeReq: 'all', creditReq: 'all', guarantorOnly: false, holdDays: 'all' });
-                setExpandedNeighborhoods(['Brickell', 'Downtown']);
-              }}
-              className="w-full py-2 text-center text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Reset Filters
-            </button>
-          </div>
-        </div>
-
-        {/* CENTER - MAP */}
-        <div className="flex-1">
-          <MapComponent expandedNeighborhoods={expandedNeighborhoods} selectedBuilding={selectedBuilding} onPinClick={setSelectedBuilding} />
-        </div>
-
-        {/* RIGHT SIDEBAR - BUILDING LIST & DETAILS */}
         <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
           {!selectedBuilding ? (
             <div className="p-6">
-              <h2 className="text-lg font-semibold mb-4">Buildings ({filteredBuildings.length})</h2>
+              <h2 className="text-lg font-semibold mb-6">Neighborhoods</h2>
               <div className="space-y-2">
-                {filteredBuildings.map((building) => (
-                  <div
-                    key={building.id}
-                    onClick={() => setSelectedBuilding(building)}
-                    className="p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition"
-                  >
-                    <h3 className="font-semibold text-gray-900">{building.name}</h3>
-                    <p className="text-sm text-gray-600">{building.neighborhood}</p>
-                    <p className="text-sm font-semibold text-gray-900">${building.priceMin}+</p>
-                  </div>
-                ))}
+                {NEIGHBORHOODS.map((neighborhood) => {
+                  const buildings = getNeighborhoodBuildings(neighborhood);
+                  const isExpanded = expandedNeighborhoods.includes(neighborhood);
+                  return (
+                    <div key={neighborhood}>
+                      <button
+                        onClick={() => toggleNeighborhood(neighborhood)}
+                        className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
+                      >
+                        <span className="font-semibold text-gray-900">{neighborhood} ({buildings.length})</span>
+                        <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
+                      </button>
+                      {isExpanded && (
+                        <div className="ml-4 mt-2 space-y-2 mb-4">
+                          {buildings.map((building) => (
+                            <div
+                              key={building.id}
+                              onClick={() => setSelectedBuilding(building)}
+                              className="p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition"
+                            >
+                              <h3 className="font-semibold text-gray-900">{building.name}</h3>
+                              <p className="text-sm font-semibold text-gray-900">${building.priceMin}+</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ) : (
@@ -494,21 +352,24 @@ export default function MiamiApp() {
 
               <div className="mb-6">
                 <p className="text-sm font-semibold text-gray-900 mb-2">Amenities</p>
-                <div className="flex gap-2 flex-wrap">
-                  {selectedBuilding.amenities.map((amenity) => (
-                    <span key={amenity} className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded">{amenity}</span>
+                <div className="flex flex-wrap gap-2">
+                  {selectedBuilding.amenities.map((a) => (
+                    <span key={a} className="text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded">{a}</span>
                   ))}
                 </div>
               </div>
 
-              <FeesDropdown fees={selectedBuilding.fees} />
+              <div className="mb-6">
+                <FeesDropdown fees={selectedBuilding.fees} />
+              </div>
 
-              <button onClick={() => setShowModal(true)} className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Talk to Don</button>
-              {showModal && <TalkTodonModal building={selectedBuilding} onClose={() => setShowModal(false)} />}
+              <button onClick={() => setShowModal(true)} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Talk to Don</button>
             </div>
           )}
         </div>
       </div>
+
+      {showModal && <TalkTodonModal building={selectedBuilding} onClose={() => setShowModal(false)} />}
     </div>
   );
 }
