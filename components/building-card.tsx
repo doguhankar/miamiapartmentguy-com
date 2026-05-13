@@ -1,42 +1,36 @@
 "use client"
 
-import { X, MapPin, DollarSign, CreditCard, Sparkles } from "lucide-react"
+import { MapPin, DollarSign, CreditCard } from "lucide-react"
 import { Building, neighborhoodColors } from "@/lib/buildings"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 
 interface BuildingCardProps {
   building: Building
-  onClose: () => void
-  onQualify: () => void
 }
 
-export function BuildingCard({ building, onClose, onQualify }: BuildingCardProps) {
+export function BuildingCard({ building }: BuildingCardProps) {
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-card">
-      <div className="relative">
+    <div className="space-y-4">
+      <div>
         <img
           src={building.image}
           alt={building.name}
-          className="h-48 w-full object-cover sm:h-56"
+          className="w-full h-40 object-cover rounded-lg"
         />
-        <button
-          onClick={onClose}
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 text-foreground shadow-md hover:bg-background"
-        >
-          <X className="h-4 w-4" />
-        </button>
-        <div className="absolute bottom-3 left-3">
-          <Badge className={neighborhoodColors[building.neighborhood]}>
-            {building.neighborhood}
-          </Badge>
-        </div>
       </div>
 
-      <div className="flex flex-1 flex-col overflow-y-auto p-4">
-        <h2 className="text-xl font-semibold text-foreground">{building.name}</h2>
-        <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-          <MapPin className="h-3.5 w-3.5" />
+      <div>
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">{building.name}</h2>
+            <Badge className={`${neighborhoodColors[building.neighborhood]} mt-1`}>
+              {building.neighborhood}
+            </Badge>
+          </div>
+          <span className="text-sm font-bold text-foreground">{building.priceTier}</span>
+        </div>
+        <div className="mt-2 flex items-start gap-1 text-xs text-muted-foreground">
+          <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0" />
           <span>{building.address}</span>
         </div>
 
@@ -76,37 +70,6 @@ export function BuildingCard({ building, onClose, onQualify }: BuildingCardProps
           </div>
         </div>
 
-        <div className="mt-4">
-          <p className="mb-2 text-sm font-medium text-foreground">Amenities</p>
-          <div className="flex flex-wrap gap-1.5">
-            {building.amenities.map((amenity) => (
-              <Badge key={amenity} variant="secondary" className="text-xs">
-                {amenity}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <p className="mb-2 text-sm font-medium text-foreground">Available Units</p>
-          <div className="flex flex-wrap gap-2">
-            {building.units.map((unit) => (
-              <Badge key={unit} variant="outline">
-                {unit}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-auto pt-4">
-          <Button
-            onClick={onQualify}
-            className="w-full bg-[#0066CC] text-white hover:bg-[#0055AA]"
-            size="lg"
-          >
-            See If You Qualify
-          </Button>
-        </div>
       </div>
     </div>
   )

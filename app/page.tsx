@@ -1,110 +1,148 @@
 "use client"
 
-import { useState } from "react"
-import { Menu, Building2 } from "lucide-react"
-import { Building, buildings } from "@/lib/buildings"
+import { useState, useEffect } from "react"
+import { Search, Settings } from "lucide-react"
+import { buildings } from "@/lib/buildings"
 import { MapView } from "@/components/map-view"
 import { BuildingCard } from "@/components/building-card"
-import { QualifyModal } from "@/components/qualify-modal"
-import { MobileMenu } from "@/components/mobile-menu"
+import { FilterPanel } from "@/components/filter-panel"
 
 export default function Home() {
-  const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null)
-  const [showQualifyModal, setShowQualifyModal] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [mobileCardOpen, setMobileCardOpen] = useState(false)
+  const [selectedBuilding, setSelectedBuilding] = useState(buildings[0])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filters, setFilters] = useState({
+    price: "all",
+    units: [] as string[],
+    income: "all",
+    credit: "all",
+    guarantorOnly: false,
+    holdDays: "all",
+  })
 
-  const handleSelectBuilding = (building: Building) => {
-    setSelectedBuilding(building)
-    setMobileCardOpen(true)
-  }
-
-  const handleCloseCard = () => {
-    setSelectedBuilding(null)
-    setMobileCardOpen(false)
-  }
+  const filteredBuildings = buildings.filter((b) => {
+    if (searchTerm && !b.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false
+    }
+    if (filters.price !== "all" && b.priceTier !== filters.price) {
+      return false
+    }
+    if (filters.units.length > 0 && !filters.units.some((u) => b.units.includes(u))) {
+      return false
+    }
+    if (filters.income !== "all" && b.incomeReq !== filters.income) {
+      return false
+    }
+    if (filters.credit !== "all" && b.creditReq !== filters.credit) {
+      return false
+    }
+    if (filters.guarantorOnly && !b.guarantor) {
+      return false
+    }
+    if (filters.holdDays !== "all" && !b.holdDays.includes(parseInt(filters.holdDays))) {
+      return false
+    }
+    return true
+  })
 
   return (
     <div className="flex h-screen flex-col bg-background">
       {/* Header */}
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4">
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-6 shadow-sm">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setMobileMenuOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted lg:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <div className="flex items-center gap-2">
-            <Building2 className="h-6 w-6 text-[#0066CC]" />
-            <span className="text-lg font-semibold text-foreground">Miami Rentals</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0066CC]">
+            <span className="text-sm font-bold text-white">M</span>
+          </div>
+          <h1 className="text-xl font-semibold text-foreground">Miami Rentals</h1>
+        </div>
+
+        <div className="hidden flex-1 mx-8 md:block">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search buildings..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 rounded-lg bg-muted text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#0066CC]"
+            />
           </div>
         </div>
-        <div className="hidden text-sm text-muted-foreground lg:block">
-          {buildings.length} buildings available
+
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground">{filteredBuildings.length} results</span>
+          <button className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted">
+            <Settings className="h-4 w-4 text-muted-foreground" />
+          </button>
         </div>
       </header>
 
       {/* Main Content */}
       <div className="relative flex flex-1 overflow-hidden">
-        {/* Map - Full width on mobile, 70% on desktop */}
-        <div className="h-full w-full lg:w-[70%]">
+        {/* Filters Sidebar */}
+        <FilterPanel filters={filters} setFilters={setFilters} />
+
+        {/* Map */}
+        <div className="flex-1">
           <MapView
             selectedBuilding={selectedBuilding}
-            onSelectBuilding={handleSelectBuilding}
+            onSelectBuilding={setSelectedBuilding}
+            buildings={filteredBuildings}
           />
         </div>
 
-        {/* Desktop Side Panel */}
-        <div className="hidden w-[30%] border-l border-border bg-card lg:block">
-          {selectedBuilding ? (
-            <BuildingCard
-              building={selectedBuilding}
-              onClose={handleCloseCard}
-              onQualify={() => setShowQualifyModal(true)}
-            />
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center p-8 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                <Building2 className="h-8 w-8 text-muted-foreground" />
+        {/* Right Panel - Building List & Details */}
+        <div className="hidden w-96 border-l border-border bg-card lg:flex lg:flex-col">
+          <div className="flex-1 overflow-y-auto p-6">
+            <h2 className="mb-4 text-lg font-semibold text-foreground">
+              Buildings ({filteredBuildings.length})
+            </h2>
+
+            {filteredBuildings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-sm text-muted-foreground">No buildings match your filters</p>
               </div>
-              <h3 className="mb-2 font-semibold text-foreground">Select a Building</h3>
-              <p className="text-sm text-muted-foreground">
-                Click on a pin on the map to view building details, pricing, and check
-                your eligibility.
-              </p>
+            ) : (
+              <div className="space-y-3 mb-6">
+                {filteredBuildings.map((building) => (
+                  <button
+                    key={building.id}
+                    onClick={() => setSelectedBuilding(building)}
+                    className={`w-full rounded-lg border-2 p-3 text-left transition ${
+                      selectedBuilding?.id === building.id
+                        ? "border-[#0066CC] bg-blue-50"
+                        : "border-border hover:border-muted-foreground/50"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="font-semibold text-foreground text-sm">{building.name}</h3>
+                        <p className="text-xs text-muted-foreground">{building.neighborhood}</p>
+                      </div>
+                      <span className="text-xs font-bold text-foreground">{building.priceTier}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      ${building.priceMin.toLocaleString()} - ${building.priceMax.toLocaleString()}
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {building.units.map((unit) => (
+                        <span key={unit} className="text-xs bg-muted px-2 py-0.5 rounded">
+                          {unit}
+                        </span>
+                      ))}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {selectedBuilding && filteredBuildings.includes(selectedBuilding) && (
+            <div className="border-t border-border p-6">
+              <BuildingCard building={selectedBuilding} />
             </div>
           )}
         </div>
-
-        {/* Mobile Bottom Card */}
-        {selectedBuilding && mobileCardOpen && (
-          <div className="fixed inset-x-0 bottom-0 z-40 max-h-[70vh] overflow-hidden rounded-t-2xl bg-card shadow-2xl lg:hidden">
-            <div className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-border" />
-            <BuildingCard
-              building={selectedBuilding}
-              onClose={handleCloseCard}
-              onQualify={() => setShowQualifyModal(true)}
-            />
-          </div>
-        )}
       </div>
-
-      {/* Mobile Menu */}
-      <MobileMenu
-        isOpen={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
-        onSelectBuilding={handleSelectBuilding}
-        selectedBuilding={selectedBuilding}
-      />
-
-      {/* Qualify Modal */}
-      {showQualifyModal && selectedBuilding && (
-        <QualifyModal
-          building={selectedBuilding}
-          onClose={() => setShowQualifyModal(false)}
-        />
-      )}
     </div>
   )
 }
