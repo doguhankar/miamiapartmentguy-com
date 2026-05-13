@@ -218,12 +218,24 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
     });
 
     // Auto-fit all markers in view
-    if (buildingsToShow.length > 0) {
-      const bounds = buildingsToShow.reduce((bounds, building) => {
-        return bounds.extend([building.lng, building.lat]);
-      }, new window.mapboxgl.LngLatBounds([buildingsToShow[0].lng, buildingsToShow[0].lat], [buildingsToShow[0].lng, buildingsToShow[0].lat]));
-      
-      map.current.fitBounds(bounds, { padding: 50 });
+    if (buildingsToShow.length > 0 && window.mapboxgl) {
+      try {
+        const lngs = buildingsToShow.map(b => b.lng);
+        const lats = buildingsToShow.map(b => b.lat);
+        const minLng = Math.min(...lngs);
+        const maxLng = Math.max(...lngs);
+        const minLat = Math.min(...lats);
+        const maxLat = Math.max(...lats);
+        
+        const bounds = new window.mapboxgl.LngLatBounds(
+          [minLng, minLat],
+          [maxLng, maxLat]
+        );
+        
+        map.current.fitBounds(bounds, { padding: 60, duration: 500 });
+      } catch (e) {
+        console.error('[v0] Error fitting bounds:', e);
+      }
     }
   }, [expandedNeighborhoods, selectedBuilding, onPinClick]);
 
