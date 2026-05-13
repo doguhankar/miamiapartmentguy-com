@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 
 const BUILDINGS = [
   { id: 1, name: 'Flow Brickell', neighborhood: 'Brickell', address: '275 SW 6th St, Miami, FL 33130', lat: 25.7580, lng: -80.1933, priceMin: 2790, priceTier: '$$', concession: '1 month free on select units', units: ['Studio', '1B', '2B', '3B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60, 90], images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop', 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'] },
@@ -19,14 +19,14 @@ const BUILDINGS = [
 
 const InfoTooltip = ({ text }) => {
   const [show, setShow] = useState(false);
-  return (<div className="relative inline-block"><button className="w-5 h-5 rounded-full border border-gray-400 text-gray-600 text-xs flex items-center justify-center hover:border-gray-600" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>i</button>{show && <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 bg-gray-900 text-white text-xs p-2 rounded shadow-lg z-50">{text}</div>}</div>);
+  return <div className="relative inline-block"><button className="w-5 h-5 rounded-full border border-gray-400 text-gray-600 text-xs flex items-center justify-center hover:border-gray-600" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>i</button>{show && <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 bg-gray-900 text-white text-xs p-2 rounded shadow-lg z-50">{text}</div>}</div>;
 };
 
 const ImageCarousel = ({ images }) => {
   const [current, setCurrent] = useState(0);
   const next = () => setCurrent((current + 1) % images.length);
   const prev = () => setCurrent((current - 1 + images.length) % images.length);
-  return (<div className="relative w-full h-64 bg-gray-200 rounded-lg overflow-hidden group"><img src={images[current]} alt={`Building ${current + 1}`} className="w-full h-full object-cover" />{images.length > 1 && (<><button onClick={prev} className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition z-10">←</button><button onClick={next} className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition z-10">→</button><div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">{current + 1}/{images.length}</div></>)}</div>);
+  return <div className="relative w-full h-64 bg-gray-200 rounded-lg overflow-hidden group"><img src={images[current]} alt={`Building ${current + 1}`} className="w-full h-full object-cover" />{images.length > 1 && <><button onClick={prev} className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition z-10">←</button><button onClick={next} className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition z-10">→</button><div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">{current + 1}/{images.length}</div></>}</div>;
 };
 
 const TalkTodonModal = ({ building, onClose }) => {
@@ -55,17 +55,10 @@ const TalkTodonModal = ({ building, onClose }) => {
     setStep('contact');
   };
 
-  return (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><div className="bg-white rounded-lg p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">{step === 'form' && (<><h2 className="text-2xl font-bold mb-6">{building.name}</h2><form onSubmit={handleSubmit} className="space-y-4"><div><label className="block text-sm font-medium mb-1">Monthly Income</label><input type="number" required value={formData.income} onChange={(e) => setFormData({ ...formData, income: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., 5000" /></div><div><label className="block text-sm font-medium mb-1">Credit Score</label><input type="number" required value={formData.credit} onChange={(e) => setFormData({ ...formData, credit: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., 680" /></div><div><label className="block text-sm font-medium mb-1">Move-In Date</label><input type="date" required value={formData.moveInDate} onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div><button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Get My Results</button></form><button onClick={onClose} className="mt-4 w-full text-gray-600 py-2 hover:text-gray-900">Close</button></>)}{step === 'results' && (<><div className="text-center mb-6">{result === 'qualify' && (<><div className="text-5xl mb-3">✓</div><h2 className="text-3xl font-bold text-green-600">You Qualify!</h2><p className="text-gray-600 mt-2">Great news — you meet the requirements for {building.name}</p></>)}{result === 'close' && (<><div className="text-5xl mb-3">⚠</div><h2 className="text-3xl font-bold text-yellow-600">You're Close</h2><p className="text-gray-600 mt-2">You're close on income. Let's talk about your options</p></>)}{result === 'not-fit' && (<><div className="text-5xl mb-3">✗</div><h2 className="text-3xl font-bold text-red-600">Not a Fit</h2><p className="text-gray-600 mt-2">This building may not be the right fit right now. We have other options</p></>)}</div><button onClick={() => setStep('contact')} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 mb-3">Continue</button><button onClick={onClose} className="w-full text-gray-600 py-2 hover:text-gray-900">Back</button></>)}{step === 'contact' && !result && (<><h2 className="text-2xl font-bold mb-2">One more thing...</h2><p className="text-gray-600 mb-6">Don will reach out directly with personalized options based on your situation.</p><form onSubmit={handleContactSubmit} className="space-y-4"><div><label className="block text-sm font-medium mb-1">First Name</label><input type="text" required value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="John" /></div><div><label className="block text-sm font-medium mb-1">Phone Number</label><input type="tel" required value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="(305) 555-0000" /></div><button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Submit</button></form><button onClick={() => setStep('results')} className="mt-4 w-full text-gray-600 py-2 hover:text-gray-900">Back</button></>)}{step === 'contact' && result && (<div className="text-center py-8"><div className="text-5xl mb-3">✓</div><h3 className="text-xl font-bold mb-2">Thanks, {formData.firstName}!</h3><p className="text-gray-600 mb-6">Don will reach out soon with next steps for {building.name}</p><button onClick={onClose} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Back to Buildings</button></div>)}
-      </div>
-    </div>
-  );
+  return <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"><div className="bg-white rounded-lg p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">{step === 'form' && <><h2 className="text-2xl font-bold mb-6">{building.name}</h2><form onSubmit={handleSubmit} className="space-y-4"><div><label className="block text-sm font-medium mb-1">Monthly Income</label><input type="number" required value={formData.income} onChange={(e) => setFormData({ ...formData, income: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., 5000" /></div><div><label className="block text-sm font-medium mb-1">Credit Score</label><input type="number" required value={formData.credit} onChange={(e) => setFormData({ ...formData, credit: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., 680" /></div><div><label className="block text-sm font-medium mb-1">Move-In Date</label><input type="date" required value={formData.moveInDate} onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" /></div><button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Get My Results</button></form><button onClick={onClose} className="mt-4 w-full text-gray-600 py-2 hover:text-gray-900">Close</button></> }{step === 'results' && <><div className="text-center mb-6">{result === 'qualify' && <><div className="text-5xl mb-3">✓</div><h2 className="text-3xl font-bold text-green-600">You Qualify!</h2><p className="text-gray-600 mt-2">Great news — you meet the requirements for {building.name}</p></> }{result === 'close' && <><div className="text-5xl mb-3">⚠</div><h2 className="text-3xl font-bold text-yellow-600">You're Close</h2><p className="text-gray-600 mt-2">You almost qualify! Talk to Don about your options.</p></> }{result === 'not-fit' && <><div className="text-5xl mb-3">✗</div><h2 className="text-3xl font-bold text-red-600">Not a Fit</h2><p className="text-gray-600 mt-2">Unfortunately, you don't meet the current requirements. Let's see other options.</p></> }</div><form onSubmit={handleContactSubmit} className="space-y-4"><div><label className="block text-sm font-medium mb-1">First Name</label><input type="text" required value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="John" /></div><div><label className="block text-sm font-medium mb-1">Phone</label><input type="tel" required value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="(305) 555-0123" /></div><button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Talk to Don</button></form></> }{step === 'contact' && <><div className="text-center"><div className="text-5xl mb-3">📞</div><h2 className="text-2xl font-bold mb-2">Thanks!</h2><p className="text-gray-600 mb-4">Don will reach out to you shortly to discuss your options.</p><button onClick={onClose} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Done</button></div></> }</div></div>;
 };
 
 export default function MiamiApp() {
-  const mapContainer = useRef(null);
-  const map = useRef(null);
-  const markersRef = useRef([]);
-  
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [showTalkToDonModal, setShowTalkToDonModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -75,70 +68,6 @@ export default function MiamiApp() {
   const [selectedCredit, setSelectedCredit] = useState('all');
   const [guarantorOnly, setGuarantorOnly] = useState(false);
   const [selectedHold, setSelectedHold] = useState('all');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.mapboxgl && mapContainer.current && !map.current) {
-      window.mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-      
-      map.current = new window.mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/light-v11',
-        center: [-80.188, 25.765],
-        zoom: 13,
-      });
-
-      BUILDINGS.forEach((building) => {
-        const el = document.createElement('div');
-        el.style.width = '40px';
-        el.style.height = '40px';
-        el.style.backgroundColor = '#3B82F6';
-        el.style.borderRadius = '50%';
-        el.style.cursor = 'pointer';
-        el.style.display = 'flex';
-        el.style.alignItems = 'center';
-        el.style.justifyContent = 'center';
-        el.style.color = 'white';
-        el.style.fontSize = '14px';
-        el.style.fontWeight = 'bold';
-        el.style.border = '3px solid white';
-        el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-        el.textContent = building.id;
-        el.onclick = (e) => {
-          e.stopPropagation();
-          setSelectedBuilding(building);
-        };
-        
-        const marker = new window.mapboxgl.Marker(el)
-          .setLngLat([building.lng, building.lat])
-          .addTo(map.current);
-        
-        markersRef.current.push({ marker, element: el, id: building.id });
-      });
-    }
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    markersRef.current.forEach(({ element, id }) => {
-      if (selectedBuilding?.id === id) {
-        element.style.backgroundColor = '#FF8C00';
-        element.style.width = '50px';
-        element.style.height = '50px';
-        element.style.fontSize = '16px';
-      } else {
-        element.style.backgroundColor = '#3B82F6';
-        element.style.width = '40px';
-        element.style.height = '40px';
-        element.style.fontSize = '14px';
-      }
-    });
-  }, [selectedBuilding]);
 
   const filtered = BUILDINGS.filter((b) => {
     if (searchTerm && !b.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
@@ -151,6 +80,44 @@ export default function MiamiApp() {
     return true;
   });
 
+  const MapWithPins = () => {
+    const centerLat = 25.765;
+    const centerLng = -80.188;
+    const latRange = 0.1;
+    const lngRange = 0.15;
+
+    return (
+      <div className="relative w-full h-full bg-gray-300">
+        <img
+          src={`https://api.mapbox.com/styles/v1/mapbox/light-v11/static/${centerLng},${centerLat},12,0/1000x800@2x?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycW1zMWlieHRmMzAifQ.rJcFIG214AriISLbB6B5aw`}
+          alt="Miami map"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0">
+          {filtered.map((building) => {
+            const x = ((building.lng - (centerLng - lngRange / 2)) / lngRange) * 100;
+            const y = (((centerLat + latRange / 2) - building.lat) / latRange) * 100;
+            const isSelected = selectedBuilding?.id === building.id;
+
+            return (
+              <button
+                key={building.id}
+                onClick={() => setSelectedBuilding(building)}
+                className={`absolute w-10 h-10 rounded-full transform -translate-x-1/2 -translate-y-1/2 transition flex items-center justify-center text-white text-xs font-bold ${
+                  isSelected ? 'bg-orange-500 ring-4 ring-orange-300 scale-125' : 'bg-blue-500 hover:scale-110'
+                }`}
+                style={{ left: `${x}%`, top: `${y}%` }}
+                title={building.name}
+              >
+                {building.id}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center px-6 z-40 shadow-sm">
@@ -162,66 +129,86 @@ export default function MiamiApp() {
       <div className="flex flex-1 mt-16">
         <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto p-6">
           <h2 className="text-lg font-semibold mb-6 text-gray-900">Filters</h2>
-          <div className="mb-6"><label className="block text-sm font-medium text-gray-900 mb-3">Pricing</label><div className="space-y-2">{['$', '$$', '$$$'].map((price) => (<label key={price} className="flex items-center gap-3 cursor-pointer"><input type="radio" name="price" value={price} checked={selectedPrice === price} onChange={(e) => setSelectedPrice(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">{price}</span></label>))}<label className="flex items-center gap-3 cursor-pointer"><input type="radio" name="price" value="all" checked={selectedPrice === 'all'} onChange={(e) => setSelectedPrice(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">All</span></label></div></div>
-          <div className="mb-6"><label className="block text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">Unit Type <InfoTooltip text="Select the number of bedrooms you need" /></label><div className="space-y-2">{['Studio', '1B', '2B', '3B'].map((unit) => (<label key={unit} className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={selectedUnits.includes(unit)} onChange={(e) => setSelectedUnits(e.target.checked ? [...selectedUnits, unit] : selectedUnits.filter((u) => u !== unit))} className="w-4 h-4" /><span className="text-sm text-gray-700">{unit}</span></label>))}</div></div>
-          <div className="mb-6"><label className="block text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">Income <InfoTooltip text="Rent should be 2.5-3x your monthly income" /></label><div className="space-y-2">{['2.5x', '3x', '3.5x'].map((req) => (<label key={req} className="flex items-center gap-3 cursor-pointer"><input type="radio" name="income" value={req} checked={selectedIncome === req} onChange={(e) => setSelectedIncome(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">{req}</span></label>))}<label className="flex items-center gap-3 cursor-pointer"><input type="radio" name="income" value="all" checked={selectedIncome === 'all'} onChange={(e) => setSelectedIncome(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">All</span></label></div></div>
-          <div className="mb-6"><label className="block text-sm font-medium text-gray-900 mb-3">Credit Score</label><div className="space-y-2">{['>600', '>650', '>700'].map((req) => (<label key={req} className="flex items-center gap-3 cursor-pointer"><input type="radio" name="credit" value={req} checked={selectedCredit === req} onChange={(e) => setSelectedCredit(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">{req}</span></label>))}<label className="flex items-center gap-3 cursor-pointer"><input type="radio" name="credit" value="all" checked={selectedCredit === 'all'} onChange={(e) => setSelectedCredit(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">All</span></label></div></div>
-          <div className="mb-6"><label className="block text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">Guarantor <InfoTooltip text="Properties that accept guarantors for lower income" /></label><label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={guarantorOnly} onChange={(e) => setGuarantorOnly(e.target.checked)} className="w-4 h-4" /><span className="text-sm text-gray-700">Guarantor-Friendly</span></label></div>
-          <div className="mb-6"><label className="block text-sm font-medium text-gray-900 mb-3">Hold Days</label><div className="space-y-2">{[14, 30, 60, 90].map((days) => (<label key={days} className="flex items-center gap-3 cursor-pointer"><input type="radio" name="hold" value={days} checked={selectedHold === String(days)} onChange={(e) => setSelectedHold(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">{days} days</span></label>))}<label className="flex items-center gap-3 cursor-pointer"><input type="radio" name="hold" value="all" checked={selectedHold === 'all'} onChange={(e) => setSelectedHold(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">All</span></label></div></div>
+          <div className="mb-6"><label className="block text-sm font-medium text-gray-900 mb-3">Pricing</label><div className="space-y-2">{['$', '$$', '$$$'].map((price) => <label key={price} className="flex items-center gap-3 cursor-pointer"><input type="radio" name="price" value={price} checked={selectedPrice === price} onChange={(e) => setSelectedPrice(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">{price}</span></label> )}<label className="flex items-center gap-3 cursor-pointer"><input type="radio" name="price" value="all" checked={selectedPrice === 'all'} onChange={(e) => setSelectedPrice(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">All</span></label></div></div>
+          <div className="mb-6"><label className="block text-sm font-medium text-gray-900 mb-3">Unit Type</label><div className="space-y-2">{['Studio', '1B', '2B', '3B'].map((unit) => <label key={unit} className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={selectedUnits.includes(unit)} onChange={(e) => { if (e.target.checked) { setSelectedUnits([...selectedUnits, unit]); } else { setSelectedUnits(selectedUnits.filter((u) => u !== unit)); } }} className="w-4 h-4" /><span className="text-sm text-gray-700">{unit}</span></label> )}</div></div>
+          <div className="mb-6"><label className="block text-sm font-medium text-gray-900 mb-3">Income Requirement</label><div className="space-y-2">{['2.5x', '3x'].map((income) => <label key={income} className="flex items-center gap-3 cursor-pointer"><input type="radio" name="income" value={income} checked={selectedIncome === income} onChange={(e) => setSelectedIncome(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">{income}</span></label> )}<label className="flex items-center gap-3 cursor-pointer"><input type="radio" name="income" value="all" checked={selectedIncome === 'all'} onChange={(e) => setSelectedIncome(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">All</span></label></div></div>
+          <div className="mb-6"><label className="block text-sm font-medium text-gray-900 mb-3">Credit Requirement</label><div className="space-y-2">{['>650', '>600'].map((credit) => <label key={credit} className="flex items-center gap-3 cursor-pointer"><input type="radio" name="credit" value={credit} checked={selectedCredit === credit} onChange={(e) => setSelectedCredit(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">{credit}</span></label> )}<label className="flex items-center gap-3 cursor-pointer"><input type="radio" name="credit" value="all" checked={selectedCredit === 'all'} onChange={(e) => setSelectedCredit(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">All</span></label></div></div>
+          <div className="mb-6"><label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={guarantorOnly} onChange={(e) => setGuarantorOnly(e.target.checked)} className="w-4 h-4" /><span className="text-sm font-medium text-gray-700">Works w/ Guarantors</span></label></div>
+          <div className="mb-6"><label className="block text-sm font-medium text-gray-900 mb-3">Hold Duration</label><div className="space-y-2">{[14, 30, 60, 90].map((days) => <label key={days} className="flex items-center gap-3 cursor-pointer"><input type="radio" name="hold" value={String(days)} checked={selectedHold === String(days)} onChange={(e) => setSelectedHold(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">{days} days</span></label> )}<label className="flex items-center gap-3 cursor-pointer"><input type="radio" name="hold" value="all" checked={selectedHold === 'all'} onChange={(e) => setSelectedHold(e.target.value)} className="w-4 h-4" /><span className="text-sm text-gray-700">All</span></label></div></div>
         </div>
 
-        <div className="flex-1 flex flex-col">
-          <div ref={mapContainer} className="flex-1 bg-gray-300"></div>
+        <div className="flex-1 bg-gray-300">
+          <MapWithPins />
+        </div>
 
-          <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto p-6 shadow-lg">
-            {selectedBuilding ? (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{selectedBuilding.name}</h2>
-                  <p className="text-sm text-gray-600">{selectedBuilding.address}</p>
-                  <div className="flex gap-2 mt-3">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">{selectedBuilding.neighborhood}</span>
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">{selectedBuilding.priceTier}</span>
+        <div className="w-96 bg-white border-l border-gray-200 flex flex-col overflow-hidden">
+          {selectedBuilding ? (
+            <>
+              <div className="p-6 overflow-y-auto flex-1">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{selectedBuilding.name}</h2>
+                    <p className="text-sm text-gray-600 mt-1">{selectedBuilding.neighborhood} · {selectedBuilding.priceTier}</p>
                   </div>
+                  <button onClick={() => setSelectedBuilding(null)} className="text-gray-500 hover:text-gray-900">×</button>
                 </div>
 
                 <ImageCarousel images={selectedBuilding.images} />
 
-                <div className="border-t pt-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">Pricing & Offers</h3>
-                  <p className="text-sm text-gray-700">From ${selectedBuilding.priceMin.toLocaleString()}/month</p>
-                  <p className="text-xs text-green-600 font-semibold mt-1">✓ {selectedBuilding.concession}</p>
-                </div>
+                <div className="mt-6 space-y-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <p className="text-xs text-blue-600 font-medium mb-1">Price Range</p>
+                    <p className="text-lg font-bold text-blue-900">${selectedBuilding.priceMin.toLocaleString()} - ${(selectedBuilding.priceMin + 5000).toLocaleString()}</p>
+                  </div>
 
-                <div className="border-t pt-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">Requirements</h3>
-                  <p className="text-sm text-gray-700">Income: {selectedBuilding.incomeReq}</p>
-                  <p className="text-sm text-gray-700">Credit: {selectedBuilding.creditReq}</p>
-                  <p className="text-sm text-gray-700">Guarantor: {selectedBuilding.guarantor ? 'Accepted' : 'Not Required'}</p>
-                </div>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <p className="text-xs text-green-600 font-medium mb-1">Move-In Special</p>
+                    <p className="text-sm font-semibold text-green-900">{selectedBuilding.concession}</p>
+                  </div>
 
-                <div className="border-t pt-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">Units</h3>
-                  <div className="flex flex-wrap gap-2">{selectedBuilding.units.map((unit) => <span key={unit} className="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded">{unit}</span>)}</div>
-                </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="border border-gray-200 p-3 rounded-lg">
+                      <p className="text-xs text-gray-600 font-medium">Income</p>
+                      <p className="text-lg font-bold text-gray-900">{selectedBuilding.incomeReq}</p>
+                    </div>
+                    <div className="border border-gray-200 p-3 rounded-lg">
+                      <p className="text-xs text-gray-600 font-medium">Credit</p>
+                      <p className="text-lg font-bold text-gray-900">{selectedBuilding.creditReq}</p>
+                    </div>
+                  </div>
 
-                <div className="border-t pt-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">Amenities</h3>
-                  <div className="flex flex-wrap gap-2">{selectedBuilding.amenities.map((amenity) => <span key={amenity} className="px-3 py-1 bg-blue-50 text-blue-700 text-xs rounded">{amenity}</span>)}</div>
-                </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 mb-2">Unit Types</p>
+                    <div className="flex flex-wrap gap-2">{selectedBuilding.units.map((unit) => <span key={unit} className="bg-gray-200 text-gray-700 text-xs font-semibold px-3 py-1 rounded">{unit}</span> )}</div>
+                  </div>
 
-                <button onClick={() => setShowTalkToDonModal(true)} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Talk to Don</button>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 mb-2">Amenities</p>
+                    <div className="flex flex-wrap gap-2">{selectedBuilding.amenities.map((amenity) => <span key={amenity} className="bg-gray-100 text-gray-700 text-xs px-3 py-1 rounded">{amenity}</span> )}</div>
+                  </div>
+
+                  <p className="text-xs text-gray-600">{selectedBuilding.address}</p>
+                </div>
               </div>
-            ) : (
-              <div className="text-center text-gray-500 py-8">
-                <p>Select a building to see details</p>
-              </div>
-            )}
-          </div>
+
+              <button
+                onClick={() => setShowTalkToDonModal(true)}
+                className="m-6 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700"
+              >
+                Talk to Don
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              <p>Select a building to see details</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {showTalkToDonModal && selectedBuilding && <TalkTodonModal building={selectedBuilding} onClose={() => setShowTalkToDonModal(false)} />}
+      {showTalkToDonModal && selectedBuilding && (
+        <TalkTodonModal building={selectedBuilding} onClose={() => setShowTalkToDonModal(false)} />
+      )}
     </div>
   );
 }
