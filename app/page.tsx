@@ -175,8 +175,8 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
         map.current = new window.mapboxgl.Map({
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/light-v11',
-          center: [-80.191, 25.761],
-          zoom: 13.5,
+          center: [-80.195, 25.760],
+          zoom: 13,
         });
       }
     };
