@@ -46,9 +46,9 @@ export function BuildingCard({ building, onClose, onQualify }: BuildingCardProps
               <DollarSign className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Income Requirement</p>
+              <p className="text-xs text-muted-foreground">Price Range</p>
               <p className="font-medium text-foreground">
-                ${building.incomeRequirement.toLocaleString()}/mo
+                ${building.priceMin.toLocaleString()} - ${building.priceMax.toLocaleString()}
               </p>
             </div>
           </div>
@@ -58,18 +58,20 @@ export function BuildingCard({ building, onClose, onQualify }: BuildingCardProps
               <CreditCard className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Credit Score</p>
-              <p className="font-medium text-foreground">{building.creditRequirement}+</p>
+              <p className="text-xs text-muted-foreground">Requirements</p>
+              <p className="font-medium text-foreground">
+                Income: {building.incomeReq} | Credit: {building.creditReq}
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 rounded-lg bg-emerald-50 p-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100">
-              <Sparkles className="h-4 w-4 text-emerald-600" />
+          <div className="flex items-center gap-3 rounded-lg bg-blue-50 p-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100">
+              <Sparkles className="h-4 w-4 text-blue-600" />
             </div>
             <div>
-              <p className="text-xs text-emerald-600">Move-in Special</p>
-              <p className="font-medium text-emerald-700">{building.moveInSpecial}</p>
+              <p className="text-xs text-blue-600">Hold Days</p>
+              <p className="font-medium text-blue-700">{building.holdDays.join(", ")} days available</p>
             </div>
           </div>
         </div>
@@ -86,16 +88,12 @@ export function BuildingCard({ building, onClose, onQualify }: BuildingCardProps
         </div>
 
         <div className="mt-4">
-          <p className="mb-2 text-sm font-medium text-foreground">Pricing</p>
-          <div className="space-y-1.5">
+          <p className="mb-2 text-sm font-medium text-foreground">Available Units</p>
+          <div className="flex flex-wrap gap-2">
             {building.units.map((unit) => (
-              <div
-                key={unit.type}
-                className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-sm"
-              >
-                <span className="text-muted-foreground">{unit.type}</span>
-                <span className="font-medium text-foreground">{unit.priceRange}</span>
-              </div>
+              <Badge key={unit} variant="outline">
+                {unit}
+              </Badge>
             ))}
           </div>
         </div>
