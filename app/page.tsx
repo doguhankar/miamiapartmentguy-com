@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { Search, Settings } from "lucide-react"
-import { buildings } from "@/lib/buildings"
+import { buildings, Building } from "@/lib/buildings"
 import { MapView } from "@/components/map-view"
 import { BuildingCard } from "@/components/building-card"
 import { FilterPanel } from "@/components/filter-panel"
 
 export default function Home() {
-  const [selectedBuilding, setSelectedBuilding] = useState(buildings[0])
+  const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(buildings[0] || null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filters, setFilters] = useState({
     price: "all",

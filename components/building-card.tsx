@@ -1,6 +1,6 @@
 "use client"
 
-import { MapPin, DollarSign, CreditCard } from "lucide-react"
+import { MapPin, DollarSign, CreditCard, Calendar } from "lucide-react"
 import { Building, neighborhoodColors } from "@/lib/buildings"
 import { Badge } from "@/components/ui/badge"
 
@@ -61,7 +61,7 @@ export function BuildingCard({ building }: BuildingCardProps) {
 
           <div className="flex items-center gap-3 rounded-lg bg-blue-50 p-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100">
-              <Sparkles className="h-4 w-4 text-blue-600" />
+              <Calendar className="h-4 w-4 text-blue-600" />
             </div>
             <div>
               <p className="text-xs text-blue-600">Hold Days</p>
