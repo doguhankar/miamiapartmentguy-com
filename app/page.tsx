@@ -197,7 +197,6 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
     markersRef.current = [];
 
     const buildingsToShow = BUILDINGS.filter(b => expandedNeighborhoods.includes(b.neighborhood));
-    console.log('[v0] Buildings to show:', buildingsToShow.map(b => ({ id: b.id, name: b.name, lat: b.lat, lng: b.lng })));
 
     buildingsToShow.forEach((building) => {
       const el = document.createElement('div');
@@ -215,7 +214,6 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
         .setLngLat([building.lng, building.lat])
         .addTo(map.current);
       
-      console.log('[v0] Added marker:', building.name, 'at', building.lat, building.lng);
       markersRef.current.push(marker);
     });
   }, [expandedNeighborhoods, selectedBuilding, onPinClick]);
