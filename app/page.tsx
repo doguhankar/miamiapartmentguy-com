@@ -224,7 +224,17 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
 export default function MiamiApp() {
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell']);
+  const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell', 'Downtown']);
+  
+  // Filter state
+  const [filters, setFilters] = useState({
+    priceRange: 'all',
+    unitTypes: [],
+    incomeReq: 'all',
+    creditReq: 'all',
+    guarantorOnly: false,
+    holdDays: 'all',
+  });
 
   const toggleNeighborhood = (neighborhood) => {
     setExpandedNeighborhoods(prev =>
@@ -234,9 +244,51 @@ export default function MiamiApp() {
     );
   };
 
+  const toggleUnitType = (unit) => {
+    setFilters(prev => ({
+      ...prev,
+      unitTypes: prev.unitTypes.includes(unit)
+        ? prev.unitTypes.filter(u => u !== unit)
+        : [...prev.unitTypes, unit]
+    }));
+  };
+
   const getNeighborhoodBuildings = (neighborhood) => {
     return BUILDINGS.filter(b => b.neighborhood === neighborhood);
   };
+
+  const getFilteredBuildings = () => {
+    let filtered = BUILDINGS.filter(b => expandedNeighborhoods.includes(b.neighborhood));
+    
+    // Price filter
+    if (filters.priceRange === 'low') filtered = filtered.filter(b => b.priceMin < 2500);
+    if (filters.priceRange === 'mid') filtered = filtered.filter(b => b.priceMin >= 2500 && b.priceMin < 3000);
+    if (filters.priceRange === 'high') filtered = filtered.filter(b => b.priceMin >= 3000);
+    
+    // Unit types filter
+    if (filters.unitTypes.length > 0) {
+      filtered = filtered.filter(b => b.units.some(u => filters.unitTypes.includes(u)));
+    }
+    
+    // Income requirement filter
+    if (filters.incomeReq === '2.5x') filtered = filtered.filter(b => b.incomeReq === '2.5x');
+    if (filters.incomeReq === '3x') filtered = filtered.filter(b => b.incomeReq === '3x');
+    
+    // Credit requirement filter
+    if (filters.creditReq === '600') filtered = filtered.filter(b => parseInt(b.creditReq) >= 600);
+    if (filters.creditReq === '650') filtered = filtered.filter(b => parseInt(b.creditReq) >= 650);
+    
+    // Guarantor filter
+    if (filters.guarantorOnly) filtered = filtered.filter(b => b.guarantor);
+    
+    // Hold days filter
+    if (filters.holdDays === '14') filtered = filtered.filter(b => b.holdDays.includes(14));
+    if (filters.holdDays === '30') filtered = filtered.filter(b => b.holdDays.includes(30));
+    
+    return filtered;
+  };
+
+  const filteredBuildings = getFilteredBuildings();
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -248,44 +300,147 @@ export default function MiamiApp() {
       </div>
 
       <div className="flex flex-1 mt-16">
+        {/* LEFT SIDEBAR - FILTERS */}
+        <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto">
+          <div className="p-6 space-y-6">
+            <h2 className="text-lg font-bold">Filters</h2>
+            
+            {/* Price Range */}
+            <div>
+              <label className="block text-sm font-semibold mb-3">Price Range</label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="price" value="all" checked={filters.priceRange === 'all'} onChange={(e) => setFilters({...filters, priceRange: e.target.value})} className="w-4 h-4" />
+                  <span className="text-sm">All</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="price" value="low" checked={filters.priceRange === 'low'} onChange={(e) => setFilters({...filters, priceRange: e.target.value})} className="w-4 h-4" />
+                  <span className="text-sm">Under $2,500</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="price" value="mid" checked={filters.priceRange === 'mid'} onChange={(e) => setFilters({...filters, priceRange: e.target.value})} className="w-4 h-4" />
+                  <span className="text-sm">$2,500 - $3,000</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="price" value="high" checked={filters.priceRange === 'high'} onChange={(e) => setFilters({...filters, priceRange: e.target.value})} className="w-4 h-4" />
+                  <span className="text-sm">$3,000+</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Unit Types */}
+            <div>
+              <label className="block text-sm font-semibold mb-3">Unit Type</label>
+              <div className="space-y-2">
+                {['Studio', '1B', '2B', '3B'].map(unit => (
+                  <label key={unit} className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={filters.unitTypes.includes(unit)} onChange={() => toggleUnitType(unit)} className="w-4 h-4 rounded" />
+                    <span className="text-sm">{unit}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Income Requirement */}
+            <div>
+              <label className="block text-sm font-semibold mb-3">Income Required</label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="income" value="all" checked={filters.incomeReq === 'all'} onChange={(e) => setFilters({...filters, incomeReq: e.target.value})} className="w-4 h-4" />
+                  <span className="text-sm">Any</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="income" value="2.5x" checked={filters.incomeReq === '2.5x'} onChange={(e) => setFilters({...filters, incomeReq: e.target.value})} className="w-4 h-4" />
+                  <span className="text-sm">2.5x rent</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="income" value="3x" checked={filters.incomeReq === '3x'} onChange={(e) => setFilters({...filters, incomeReq: e.target.value})} className="w-4 h-4" />
+                  <span className="text-sm">3x rent</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Credit Requirement */}
+            <div>
+              <label className="block text-sm font-semibold mb-3">Credit Score</label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="credit" value="all" checked={filters.creditReq === 'all'} onChange={(e) => setFilters({...filters, creditReq: e.target.value})} className="w-4 h-4" />
+                  <span className="text-sm">Any</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="credit" value="600" checked={filters.creditReq === '600'} onChange={(e) => setFilters({...filters, creditReq: e.target.value})} className="w-4 h-4" />
+                  <span className="text-sm">600+</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="credit" value="650" checked={filters.creditReq === '650'} onChange={(e) => setFilters({...filters, creditReq: e.target.value})} className="w-4 h-4" />
+                  <span className="text-sm">650+</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Guarantor */}
+            <div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={filters.guarantorOnly} onChange={(e) => setFilters({...filters, guarantorOnly: e.target.checked})} className="w-4 h-4 rounded" />
+                <span className="text-sm font-semibold">Works w/ Guarantors</span>
+              </label>
+            </div>
+
+            {/* Hold Days */}
+            <div>
+              <label className="block text-sm font-semibold mb-3">Hold Days</label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="hold" value="all" checked={filters.holdDays === 'all'} onChange={(e) => setFilters({...filters, holdDays: e.target.value})} className="w-4 h-4" />
+                  <span className="text-sm">Any</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="hold" value="14" checked={filters.holdDays === '14'} onChange={(e) => setFilters({...filters, holdDays: e.target.value})} className="w-4 h-4" />
+                  <span className="text-sm">14 days</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="hold" value="30" checked={filters.holdDays === '30'} onChange={(e) => setFilters({...filters, holdDays: e.target.value})} className="w-4 h-4" />
+                  <span className="text-sm">30+ days</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Reset */}
+            <button 
+              onClick={() => {
+                setFilters({ priceRange: 'all', unitTypes: [], incomeReq: 'all', creditReq: 'all', guarantorOnly: false, holdDays: 'all' });
+                setExpandedNeighborhoods(['Brickell', 'Downtown']);
+              }}
+              className="w-full py-2 text-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Reset Filters
+            </button>
+          </div>
+        </div>
+
+        {/* CENTER - MAP */}
         <div className="flex-1">
           <MapComponent expandedNeighborhoods={expandedNeighborhoods} selectedBuilding={selectedBuilding} onPinClick={setSelectedBuilding} />
         </div>
 
+        {/* RIGHT SIDEBAR - BUILDING LIST & DETAILS */}
         <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
           {!selectedBuilding ? (
             <div className="p-6">
-              <h2 className="text-lg font-semibold mb-6">Neighborhoods</h2>
+              <h2 className="text-lg font-semibold mb-4">Buildings ({filteredBuildings.length})</h2>
               <div className="space-y-2">
-                {NEIGHBORHOODS.map((neighborhood) => {
-                  const buildings = getNeighborhoodBuildings(neighborhood);
-                  const isExpanded = expandedNeighborhoods.includes(neighborhood);
-                  return (
-                    <div key={neighborhood}>
-                      <button
-                        onClick={() => toggleNeighborhood(neighborhood)}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
-                      >
-                        <span className="font-semibold text-gray-900">{neighborhood} ({buildings.length})</span>
-                        <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
-                      </button>
-                      {isExpanded && (
-                        <div className="ml-4 mt-2 space-y-2">
-                          {buildings.map((building) => (
-                            <div
-                              key={building.id}
-                              onClick={() => setSelectedBuilding(building)}
-                              className="p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition"
-                            >
-                              <h3 className="font-semibold text-gray-900">{building.name}</h3>
-                              <p className="text-sm font-semibold text-gray-900">${building.priceMin}+</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                {filteredBuildings.map((building) => (
+                  <div
+                    key={building.id}
+                    onClick={() => setSelectedBuilding(building)}
+                    className="p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition"
+                  >
+                    <h3 className="font-semibold text-gray-900">{building.name}</h3>
+                    <p className="text-sm text-gray-600">{building.neighborhood}</p>
+                    <p className="text-sm font-semibold text-gray-900">${building.priceMin}+</p>
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
@@ -339,24 +494,21 @@ export default function MiamiApp() {
 
               <div className="mb-6">
                 <p className="text-sm font-semibold text-gray-900 mb-2">Amenities</p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedBuilding.amenities.map((a) => (
-                    <span key={a} className="text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded">{a}</span>
+                <div className="flex gap-2 flex-wrap">
+                  {selectedBuilding.amenities.map((amenity) => (
+                    <span key={amenity} className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded">{amenity}</span>
                   ))}
                 </div>
               </div>
 
-              <div className="mb-6">
-                <FeesDropdown fees={selectedBuilding.fees} />
-              </div>
+              <FeesDropdown fees={selectedBuilding.fees} />
 
-              <button onClick={() => setShowModal(true)} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Talk to Don</button>
+              <button onClick={() => setShowModal(true)} className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Talk to Don</button>
+              {showModal && <TalkTodonModal building={selectedBuilding} onClose={() => setShowModal(false)} />}
             </div>
           )}
         </div>
       </div>
-
-      {showModal && <TalkTodonModal building={selectedBuilding} onClose={() => setShowModal(false)} />}
     </div>
   );
 }
