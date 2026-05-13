@@ -178,6 +178,22 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
           center: [-80.195, 25.760],
           zoom: 13,
         });
+
+        // Once map is fully loaded, fit to all buildings
+        map.current.on('load', () => {
+          const buildingsToShow = BUILDINGS.filter(b => ['Brickell', 'Downtown'].includes(b.neighborhood));
+          if (buildingsToShow.length > 0) {
+            const lngs = buildingsToShow.map(b => b.lng);
+            const lats = buildingsToShow.map(b => b.lat);
+            const minLng = Math.min(...lngs);
+            const maxLng = Math.max(...lngs);
+            const minLat = Math.min(...lats);
+            const maxLat = Math.max(...lats);
+            
+            const bounds = new window.mapboxgl.LngLatBounds([minLng, minLat], [maxLng, maxLat]);
+            map.current.fitBounds(bounds, { padding: 80 });
+          }
+        });
       }
     };
     document.body.appendChild(script);
@@ -216,27 +232,6 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
       
       markersRef.current.push(marker);
     });
-
-    // Auto-fit all markers in view
-    if (buildingsToShow.length > 0 && window.mapboxgl) {
-      try {
-        const lngs = buildingsToShow.map(b => b.lng);
-        const lats = buildingsToShow.map(b => b.lat);
-        const minLng = Math.min(...lngs);
-        const maxLng = Math.max(...lngs);
-        const minLat = Math.min(...lats);
-        const maxLat = Math.max(...lats);
-        
-        const bounds = new window.mapboxgl.LngLatBounds(
-          [minLng, minLat],
-          [maxLng, maxLat]
-        );
-        
-        map.current.fitBounds(bounds, { padding: 60, duration: 500 });
-      } catch (e) {
-        console.error('[v0] Error fitting bounds:', e);
-      }
-    }
   }, [expandedNeighborhoods, selectedBuilding, onPinClick]);
 
   return <div ref={mapContainer} className="w-full h-full" />;
