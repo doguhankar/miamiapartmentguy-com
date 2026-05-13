@@ -14,7 +14,7 @@ export function ImageCarousel({ images }: ImageCarouselProps) {
   const prev = () => setCurrent((current - 1 + images.length) % images.length)
 
   return (
-    <div className="relative w-full h-64 bg-muted rounded-lg overflow-hidden group">
+    <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden group">
       <img
         src={images[current]}
         alt={`Building image ${current + 1}`}
@@ -25,17 +25,17 @@ export function ImageCarousel({ images }: ImageCarouselProps) {
         <>
           <button
             onClick={prev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition z-10"
+            className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition z-10"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={next}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition z-10"
+            className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition z-10"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
-          <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+          <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded">
             {current + 1}/{images.length}
           </div>
         </>

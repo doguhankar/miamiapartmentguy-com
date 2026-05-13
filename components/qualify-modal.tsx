@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { X } from "lucide-react"
 import { Building } from "@/lib/buildings"
-import { Button } from "@/components/ui/button"
 
 interface QualifyModalProps {
   building: Building
@@ -42,53 +41,54 @@ export function QualifyModal({ building, onClose }: QualifyModalProps) {
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const leadData = {
+    console.log("[v0] Lead captured:", {
       buildingName: building.name,
-      income: parseInt(formData.income),
-      creditScore: parseInt(formData.credit),
+      income: formData.income,
+      creditScore: formData.credit,
       moveInDate: formData.moveInDate,
       qualificationStatus: result,
       firstName: formData.firstName,
       phone: formData.phone,
-      timestamp: new Date().toISOString(),
-    }
+    })
 
-    console.log("[v0] Lead captured:", leadData)
     setStep("contact")
   }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-card rounded-lg p-8 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-lg">
-        {step === "form" && (
-          <>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-foreground">{building.name}</h2>
-              <button
-                onClick={onClose}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+      <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <h2 className="text-lg font-bold text-gray-900">
+            {step === "form" && `See If You Qualify for ${building.name}`}
+            {step === "results" && "Your Results"}
+            {step === "contact" && "Great!"}
+          </h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
+        {/* Content */}
+        <div className="p-6">
+          {step === "form" && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
-                  Monthly Income
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Annual Income
                 </label>
                 <input
                   type="number"
                   required
                   value={formData.income}
                   onChange={(e) => setFormData({ ...formData, income: e.target.value })}
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="e.g., 5000"
+                  placeholder="$0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Credit Score
                 </label>
                 <input
@@ -96,97 +96,73 @@ export function QualifyModal({ building, onClose }: QualifyModalProps) {
                   required
                   value={formData.credit}
                   onChange={(e) => setFormData({ ...formData, credit: e.target.value })}
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="e.g., 680"
+                  placeholder="000"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
-                  Move-In Date
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Move-in Date
                 </label>
                 <input
                   type="date"
                   required
                   value={formData.moveInDate}
                   onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })}
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 />
               </div>
 
-              <Button
+              <button
                 type="submit"
-                className="w-full bg-[#0066CC] text-white hover:bg-[#0055AA] py-2 rounded-lg font-semibold"
+                className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition mt-6"
               >
-                Get My Results
-              </Button>
+                Check Qualification
+              </button>
             </form>
+          )}
 
-            <button
-              onClick={onClose}
-              className="mt-4 w-full text-muted-foreground hover:text-foreground py-2"
-            >
-              Close
-            </button>
-          </>
-        )}
+          {step === "results" && result && (
+            <div className="space-y-4">
+              <div className={`p-4 rounded-lg ${
+                result === "qualify" ? "bg-green-50" :
+                result === "close" ? "bg-yellow-50" :
+                "bg-red-50"
+              }`}>
+                <p className={`text-sm font-medium mb-1 ${
+                  result === "qualify" ? "text-green-900" :
+                  result === "close" ? "text-yellow-900" :
+                  "text-red-900"
+                }`}>
+                  {result === "qualify" && "✓ You Qualify!"}
+                  {result === "close" && "⚠ You're Close"}
+                  {result === "not-fit" && "✗ Not a Fit"}
+                </p>
+                <p className={`text-sm ${
+                  result === "qualify" ? "text-green-700" :
+                  result === "close" ? "text-yellow-700" :
+                  "text-red-700"
+                }`}>
+                  {result === "qualify" && "Great news! You meet the qualification requirements."}
+                  {result === "close" && "You're close to qualifying. Consider increasing income or credit score."}
+                  {result === "not-fit" && "Unfortunately, you don't meet the current requirements. Try again later!"}
+                </p>
+              </div>
 
-        {step === "results" && (
-          <>
-            <div className="text-center mb-6">
-              {result === "qualify" && (
-                <>
-                  <div className="text-5xl mb-3">✓</div>
-                  <h2 className="text-3xl font-bold text-green-600">You Qualify!</h2>
-                  <p className="text-muted-foreground mt-2">
-                    Great news — you meet the requirements for {building.name}
-                  </p>
-                </>
-              )}
-              {result === "close" && (
-                <>
-                  <div className="text-5xl mb-3">⚠</div>
-                  <h2 className="text-3xl font-bold text-yellow-600">You&apos;re Close</h2>
-                  <p className="text-muted-foreground mt-2">
-                    You&apos;re close on income. Let&apos;s talk about your options
-                  </p>
-                </>
-              )}
-              {result === "not-fit" && (
-                <>
-                  <div className="text-5xl mb-3">✗</div>
-                  <h2 className="text-3xl font-bold text-red-600">Not a Fit</h2>
-                  <p className="text-muted-foreground mt-2">
-                    This building may not be the right fit right now. We have other options
-                  </p>
-                </>
-              )}
+              <button
+                onClick={() => setStep("contact")}
+                className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+              >
+                Continue
+              </button>
             </div>
+          )}
 
-            <Button
-              onClick={() => setStep("contact")}
-              className="w-full bg-[#0066CC] text-white hover:bg-[#0055AA] py-2 rounded-lg font-semibold mb-3"
-            >
-              Continue
-            </Button>
-
-            <button
-              onClick={onClose}
-              className="w-full text-muted-foreground hover:text-foreground py-2"
-            >
-              Back
-            </button>
-          </>
-        )}
-
-        {step === "contact" && !result && (
-          <>
-            <h2 className="text-2xl font-bold mb-2 text-foreground">One more thing...</h2>
-            <p className="text-muted-foreground mb-6">Enter your contact info so we can reach out</p>
-
+          {step === "contact" && (
             <form onSubmit={handleContactSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   First Name
                 </label>
                 <input
@@ -194,13 +170,13 @@ export function QualifyModal({ building, onClose }: QualifyModalProps) {
                   required
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   placeholder="John"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Phone Number
                 </label>
                 <input
@@ -208,41 +184,20 @@ export function QualifyModal({ building, onClose }: QualifyModalProps) {
                   required
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="(305) 555-0000"
+                  placeholder="(305) 555-1234"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 />
               </div>
 
-              <Button
+              <button
                 type="submit"
-                className="w-full bg-[#0066CC] text-white hover:bg-[#0055AA] py-2 rounded-lg font-semibold"
+                className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition mt-6"
               >
                 Submit
-              </Button>
+              </button>
             </form>
-
-            <button
-              onClick={() => setStep("results")}
-              className="mt-4 w-full text-muted-foreground hover:text-foreground py-2"
-            >
-              Back
-            </button>
-          </>
-        )}
-
-        {step === "contact" && result && (
-          <div className="text-center py-8">
-            <div className="text-5xl mb-3">✓</div>
-            <h3 className="text-xl font-bold mb-2 text-foreground">Thanks, {formData.firstName}!</h3>
-            <p className="text-muted-foreground mb-6">We&apos;ll be in touch soon with next steps</p>
-            <Button
-              onClick={onClose}
-              className="w-full bg-[#0066CC] text-white hover:bg-[#0055AA] py-2 rounded-lg font-semibold"
-            >
-              Back to Buildings
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )
