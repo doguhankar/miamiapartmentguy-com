@@ -156,19 +156,6 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
-  const [lng, setLng] = useState(-80.188);
-  const [lat, setLat] = useState(25.761);
-  const [zoom, setZoom] = useState(12.5);
-
-  const handleMapUpdate = () => {
-    if (map.current) {
-      map.current.flyTo({
-        center: [parseFloat(lng), parseFloat(lat)],
-        zoom: parseFloat(zoom),
-        duration: 500
-      });
-    }
-  };
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -188,15 +175,8 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
         map.current = new window.mapboxgl.Map({
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/light-v11',
-          center: [lng, lat],
-          zoom: zoom,
-        });
-
-        map.current.on('move', () => {
-          const center = map.current.getCenter();
-          setLng(parseFloat(center.lng.toFixed(4)));
-          setLat(parseFloat(center.lat.toFixed(4)));
-          setZoom(parseFloat(map.current.getZoom().toFixed(2)));
+          center: [-80.188, 25.761],
+          zoom: 12.5,
         });
       }
     };
@@ -238,31 +218,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
     });
   }, [expandedNeighborhoods, selectedBuilding, onPinClick]);
 
-  return (
-    <div className="w-full h-full flex flex-col">
-      <div className="bg-white border-b p-3 flex gap-2 items-end">
-        <div className="flex gap-2">
-          <div>
-            <label className="block text-xs font-semibold mb-1">Longitude</label>
-            <input type="number" step="0.0001" value={lng} onChange={(e) => setLng(e.target.value)} className="border px-2 py-1 text-sm w-24" />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold mb-1">Latitude</label>
-            <input type="number" step="0.0001" value={lat} onChange={(e) => setLat(e.target.value)} className="border px-2 py-1 text-sm w-24" />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold mb-1">Zoom</label>
-            <input type="number" step="0.1" value={zoom} onChange={(e) => setZoom(e.target.value)} className="border px-2 py-1 text-sm w-20" />
-          </div>
-          <button onClick={handleMapUpdate} className="bg-blue-600 text-white px-4 py-1 rounded text-sm font-semibold">Apply</button>
-        </div>
-        <div className="text-xs text-gray-600 ml-auto">
-          Current: lng={lng}, lat={lat}, zoom={zoom}
-        </div>
-      </div>
-      <div ref={mapContainer} className="w-full flex-1" />
-    </div>
-  );
+  return <div ref={mapContainer} className="w-full h-full" />;
 };
 
 export default function MiamiApp() {
