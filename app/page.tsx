@@ -216,6 +216,15 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
       
       markersRef.current.push(marker);
     });
+
+    // Auto-fit all markers in view
+    if (buildingsToShow.length > 0) {
+      const bounds = buildingsToShow.reduce((bounds, building) => {
+        return bounds.extend([building.lng, building.lat]);
+      }, new window.mapboxgl.LngLatBounds([buildingsToShow[0].lng, buildingsToShow[0].lat], [buildingsToShow[0].lng, buildingsToShow[0].lat]));
+      
+      map.current.fitBounds(bounds, { padding: 50 });
+    }
   }, [expandedNeighborhoods, selectedBuilding, onPinClick]);
 
   return <div ref={mapContainer} className="w-full h-full" />;
