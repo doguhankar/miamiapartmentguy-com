@@ -8,12 +8,13 @@ export interface Building {
   priceMin: number
   priceMax: number
   priceTier: string
+  concession: string
   units: string[]
   incomeReq: string
   creditReq: string
   guarantor: boolean
   holdDays: number[]
-  image: string
+  images: string[]
   amenities: string[]
 }
 
@@ -28,13 +29,18 @@ export const buildings: Building[] = [
     priceMin: 2790,
     priceMax: 18086,
     priceTier: "$$",
+    concession: "1 month free on select units",
     units: ["Studio", "1B", "2B", "3B"],
     incomeReq: "2.5x",
     creditReq: ">650",
     guarantor: true,
     holdDays: [30, 60, 90],
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop",
-    amenities: ["Pool", "Gym", "Concierge", "Parking"],
+    images: [
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
+    ],
+    amenities: ["Pool", "Gym", "Concierge", "Parking", "Rooftop"],
   },
   {
     id: "modera-riverside",
@@ -46,12 +52,17 @@ export const buildings: Building[] = [
     priceMin: 2500,
     priceMax: 15000,
     priceTier: "$$",
+    concession: "50% off first 60 days",
     units: ["Studio", "1B", "2B"],
     incomeReq: "2.5x",
     creditReq: ">650",
     guarantor: true,
     holdDays: [30, 60],
-    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop",
+    images: [
+      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
+    ],
     amenities: ["Pool", "Gym", "Parking"],
   },
   {
@@ -64,12 +75,17 @@ export const buildings: Building[] = [
     priceMin: 2235,
     priceMax: 5000,
     priceTier: "$",
+    concession: "$500 move-in credit",
     units: ["Studio", "1B", "2B"],
     incomeReq: "2.5x",
     creditReq: ">650",
     guarantor: true,
     holdDays: [14, 30, 60],
-    image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop",
+    images: [
+      "https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
+    ],
     amenities: ["Pool", "Gym", "Lounge"],
   },
   {
@@ -82,13 +98,18 @@ export const buildings: Building[] = [
     priceMin: 2654,
     priceMax: 12000,
     priceTier: "$$",
+    concession: "Free first month + parking",
     units: ["Studio", "1B", "2B", "3B"],
     incomeReq: "3x",
     creditReq: ">650",
     guarantor: false,
     holdDays: [30, 60, 90],
-    image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&h=600&fit=crop",
-    amenities: ["Pool", "Gym", "Bar Lounge"],
+    images: [
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
+    ],
+    amenities: ["Pool", "Gym", "Bar Lounge", "Billiards"],
   },
   {
     id: "miro-brickell",
@@ -100,13 +121,18 @@ export const buildings: Building[] = [
     priceMin: 2425,
     priceMax: 6500,
     priceTier: "$",
+    concession: "1 month free on leases 12+ months",
     units: ["Studio", "1B", "2B"],
     incomeReq: "2.5x",
     creditReq: ">650",
     guarantor: true,
     holdDays: [14, 30, 60],
-    image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop",
-    amenities: ["Pool", "Gym", "Dog Wash"],
+    images: [
+      "https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
+    ],
+    amenities: ["Pool", "Gym", "Dog Wash", "Yoga Studio"],
   },
   {
     id: "brickell-first",
@@ -118,13 +144,18 @@ export const buildings: Building[] = [
     priceMin: 3045,
     priceMax: 7500,
     priceTier: "$$",
+    concession: "2 months free on 12-month lease",
     units: ["1B", "2B", "3B"],
     incomeReq: "3x",
     creditReq: ">650",
     guarantor: false,
     holdDays: [30, 60],
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop",
-    amenities: ["Pool", "Spa", "Gym", "Concierge"],
+    images: [
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
+    ],
+    amenities: ["Pool", "Spa", "Gym", "Concierge", "Valet"],
   },
   {
     id: "cmpnd",
@@ -136,13 +167,18 @@ export const buildings: Building[] = [
     priceMin: 2478,
     priceMax: 5500,
     priceTier: "$",
+    concession: "Two months free on select units",
     units: ["Studio", "1B", "2B"],
     incomeReq: "2.5x",
     creditReq: ">600",
     guarantor: true,
     holdDays: [14, 30, 60],
-    image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&h=600&fit=crop",
-    amenities: ["Pool", "Gym", "Pet-Friendly"],
+    images: [
+      "https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
+    ],
+    amenities: ["Pool", "Gym", "Pet-Friendly", "Coworking"],
   },
 ]
 
