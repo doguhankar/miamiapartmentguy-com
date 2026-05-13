@@ -1,8 +1,18 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import L from 'leaflet';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import 'leaflet/dist/leaflet.css';
+
+let L: any = null;
+
+// Dynamically import leaflet only on client side
+const initLeaflet = async () => {
+  if (!L) {
+    const leaflet = await import('leaflet');
+    L = leaflet.default;
+  }
+  return L;
+};
 
 const BUILDINGS = [
   {
@@ -354,58 +364,66 @@ const TalkTodonModal = ({ building, onClose }: { building: (typeof BUILDINGS)[0]
 
 const MapComponent = ({ buildings, selectedBuilding, onBuildingClick }: { buildings: (typeof BUILDINGS); selectedBuilding: (typeof BUILDINGS)[0] | null; onBuildingClick: (building: (typeof BUILDINGS)[0]) => void }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
-  const markersRef = useRef<{ [key: number]: { marker: L.Marker; element: HTMLElement } }>({});
+  const mapInstanceRef = useRef<any>(null);
+  const markersRef = useRef<{ [key: number]: { marker: any; element: HTMLElement } }>({});
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || mapLoaded) return;
 
-    try {
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-      });
-
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-      }
-
-      const map = L.map(mapRef.current).setView([25.760, -80.195], 13);
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors',
-      }).addTo(map);
-
-      buildings.forEach((building) => {
-        const blueIcon = L.divIcon({
-          html: `<div class="w-10 h-10 bg-blue-500 rounded-full border-4 border-white shadow-lg flex items-center justify-center text-white font-bold text-xs">${building.id}</div>`,
-          className: 'custom-marker',
-          iconSize: [40, 40],
-          iconAnchor: [20, 20],
+    const initializeMap = async () => {
+      try {
+        const leaflet = await initLeaflet();
+        
+        delete (leaflet.Icon.Default.prototype as any)._getIconUrl;
+        leaflet.Icon.Default.mergeOptions({
+          iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+          iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
         });
 
-        const marker = L.marker([building.lat, building.lng], { icon: blueIcon })
-          .bindPopup(`<div class="text-sm font-semibold">${building.name}</div>`)
-          .on('click', () => onBuildingClick(building))
-          .addTo(map);
-
-        markersRef.current[building.id] = { marker, element: marker._icon as HTMLElement };
-      });
-
-      mapInstanceRef.current = map;
-
-      return () => {
         if (mapInstanceRef.current) {
           mapInstanceRef.current.remove();
         }
-      };
-    } catch (error) {
-      console.error('Map error:', error);
-    }
-  }, [buildings, onBuildingClick]);
+
+        const map = leaflet.map(mapRef.current).setView([25.760, -80.195], 13);
+
+        leaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap contributors',
+        }).addTo(map);
+
+        buildings.forEach((building) => {
+          const blueIcon = leaflet.divIcon({
+            html: `<div class="w-10 h-10 bg-blue-500 rounded-full border-4 border-white shadow-lg flex items-center justify-center text-white font-bold text-xs">${building.id}</div>`,
+            className: 'custom-marker',
+            iconSize: [40, 40],
+            iconAnchor: [20, 20],
+          });
+
+          const marker = leaflet.marker([building.lat, building.lng], { icon: blueIcon })
+            .bindPopup(`<div class="text-sm font-semibold">${building.name}</div>`)
+            .on('click', () => onBuildingClick(building))
+            .addTo(map);
+
+          markersRef.current[building.id] = { marker, element: marker._icon as HTMLElement };
+        });
+
+        mapInstanceRef.current = map;
+        setMapLoaded(true);
+      } catch (error) {
+        console.error('Map error:', error);
+      }
+    };
+
+    initializeMap();
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+      }
+    };
+  }, [buildings, onBuildingClick, mapLoaded]);
 
   useEffect(() => {
     Object.values(markersRef.current).forEach(({ element }) => {
