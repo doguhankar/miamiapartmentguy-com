@@ -153,44 +153,242 @@ const TalkTodonModal = ({ building, onClose }) => {
 };
 
 export default function MiamiApp() {
-  const mapContainer = useRef(null);
-  const map = useRef(null);
-  const markersRef = useRef([]);
-
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell']);
+  const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell', 'Downtown']);
+  const [activeTab, setActiveTab] = useState('map');
 
-  // Initialize map and load Mapbox
-  useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+  const toggleNeighborhood = (neighborhood) => {
+    setExpandedNeighborhoods(prev =>
+      prev.includes(neighborhood)
+        ? prev.filter(n => n !== neighborhood)
+        : [...prev, neighborhood]
+    );
+  };
 
-    const script = document.createElement('script');
-    script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js';
-    script.async = true;
+  const getNeighborhoodBuildings = (neighborhood) => {
+    return BUILDINGS.filter(b => b.neighborhood === neighborhood);
+  };
 
-    script.onload = () => {
-      const linkEl = document.createElement('link');
-      linkEl.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
-      linkEl.rel = 'stylesheet';
-      document.head.appendChild(linkEl);
+  return (
+    <div className="flex flex-col h-screen bg-gray-50">
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center px-4 md:px-6 z-40 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"><span className="text-white font-bold text-sm">M</span></div>
+          <h1 className="text-lg md:text-xl font-semibold truncate">Miami Apartment Guy</h1>
+        </div>
+      </div>
 
-      setTimeout(() => {
-        if (window.mapboxgl && mapContainer.current) {
-          window.mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-          
-          map.current = new window.mapboxgl.Map({
-            container: mapContainer.current,
-            style: 'mapbox://styles/mapbox/light-v11',
-            center: [-80.188, 25.765],
-            zoom: 13,
-          });
+      {/* Main Content */}
+      <div className="flex flex-1 mt-16 gap-0 md:gap-0 overflow-hidden">
+        {/* Left Sidebar - Hidden on mobile, visible on md+ */}
+        <div className="hidden md:flex md:w-80 bg-white border-r border-gray-200 overflow-y-auto flex-col">
+          <div className="p-6">
+            <h2 className="text-lg font-semibold mb-6">Neighborhoods</h2>
+            <div className="space-y-2">
+              {NEIGHBORHOODS.map((neighborhood) => {
+                const buildings = getNeighborhoodBuildings(neighborhood);
+                const isExpanded = expandedNeighborhoods.includes(neighborhood);
+                return (
+                  <div key={neighborhood}>
+                    <button
+                      onClick={() => toggleNeighborhood(neighborhood)}
+                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
+                    >
+                      <span className="font-semibold text-gray-900 text-sm">{neighborhood} ({buildings.length})</span>
+                      <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
+                    </button>
+                    {isExpanded && (
+                      <div className="ml-4 mt-2 space-y-2 mb-4">
+                        {buildings.map((building) => (
+                          <div
+                            key={building.id}
+                            onClick={() => {
+                              setSelectedBuilding(building);
+                              setActiveTab('details');
+                            }}
+                            className="p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition"
+                          >
+                            <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
+                            <p className="text-xs font-semibold text-gray-900">${building.priceMin}+</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
-          // Add pins after map is ready
-          map.current.on('load', () => {
-            addPins();
-          });
-        }
+        {/* Center Map - Full width on mobile, flex on desktop */}
+        <div className="flex-1 md:flex-1 flex flex-col min-w-0">
+          <MapComponent expandedNeighborhoods={expandedNeighborhoods} selectedBuilding={selectedBuilding} onPinClick={setSelectedBuilding} />
+        </div>
+
+        {/* Right Sidebar - Hidden on mobile, visible on md+ */}
+        <div className="hidden md:flex md:w-96 bg-white border-l border-gray-200 overflow-y-auto flex-col">
+          {!selectedBuilding ? (
+            <div className="p-6">
+              <h2 className="text-lg font-semibold">Select a Building</h2>
+              <p className="text-gray-600 text-sm mt-2">Click on the map pins or choose from the list on the left</p>
+            </div>
+          ) : (
+            <BuildingDetails building={selectedBuilding} onClose={() => setSelectedBuilding(null)} onTalkToDon={() => setShowModal(true)} />
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Bottom Sheet Tabs */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <div className="flex gap-0">
+          <button
+            onClick={() => setActiveTab('map')}
+            className={`flex-1 py-3 px-4 font-semibold text-sm transition ${activeTab === 'map' ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
+          >
+            Map
+          </button>
+          <button
+            onClick={() => setActiveTab('list')}
+            className={`flex-1 py-3 px-4 font-semibold text-sm transition ${activeTab === 'list' ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
+          >
+            Buildings
+          </button>
+          {selectedBuilding && (
+            <button
+              onClick={() => setActiveTab('details')}
+              className={`flex-1 py-3 px-4 font-semibold text-sm transition ${activeTab === 'details' ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
+            >
+              Details
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Content Area */}
+      <div className="md:hidden flex-1 pb-16 overflow-y-auto">
+        {activeTab === 'map' && <div className="w-full h-full" />}
+        
+        {activeTab === 'list' && (
+          <div className="p-4 space-y-4">
+            {NEIGHBORHOODS.map((neighborhood) => {
+              const buildings = getNeighborhoodBuildings(neighborhood);
+              const isExpanded = expandedNeighborhoods.includes(neighborhood);
+              return (
+                <div key={neighborhood}>
+                  <button
+                    onClick={() => toggleNeighborhood(neighborhood)}
+                    className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
+                  >
+                    <span className="font-semibold text-gray-900 text-sm">{neighborhood} ({buildings.length})</span>
+                    <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
+                  </button>
+                  {isExpanded && (
+                    <div className="mt-2 space-y-2 mb-4">
+                      {buildings.map((building) => (
+                        <div
+                          key={building.id}
+                          onClick={() => {
+                            setSelectedBuilding(building);
+                            setActiveTab('details');
+                          }}
+                          className="p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition"
+                        >
+                          <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
+                          <p className="text-xs font-semibold text-gray-900">${building.priceMin}+</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        
+        {activeTab === 'details' && selectedBuilding && (
+          <div className="p-4">
+            <button onClick={() => { setSelectedBuilding(null); setActiveTab('map'); }} className="text-blue-600 hover:text-blue-700 text-sm mb-4">← Back</button>
+            <BuildingDetails building={selectedBuilding} onClose={() => { setSelectedBuilding(null); setActiveTab('map'); }} onTalkToDon={() => setShowModal(true)} />
+          </div>
+        )}
+      </div>
+
+      {showModal && <TalkTodonModal building={selectedBuilding} onClose={() => setShowModal(false)} />}
+    </div>
+  );
+}
+
+const BuildingDetails = ({ building, onClose, onTalkToDon }) => {
+  return (
+    <>
+      <ImageCarousel images={building.images} />
+      <div className="p-4 space-y-4">
+        <div>
+          <h1 className="text-2xl font-bold">{building.name}</h1>
+          <div className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs font-medium mt-2">{building.neighborhood}</div>
+          <p className="text-gray-600 text-sm mt-2">📍 {building.address}</p>
+        </div>
+        
+        <div className="p-4 bg-gray-50 rounded-lg">
+          <p className="text-xl font-bold text-gray-900">${building.priceMin}+/mo</p>
+        </div>
+        
+        <div className="p-4 bg-blue-50 border-2 border-blue-500 rounded-lg">
+          <p className="text-sm font-semibold text-blue-900">Current Offer</p>
+          <p className="text-lg font-bold text-blue-600">{building.concession}</p>
+        </div>
+
+        <div className="p-4 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-600 mb-1">Income Requirement</p>
+          <p className="font-semibold text-gray-900">{building.incomeReq}</p>
+        </div>
+
+        <div className="p-4 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-600 mb-1">Credit Requirement</p>
+          <p className="font-semibold text-gray-900">{building.creditReq}</p>
+        </div>
+
+        <div className="p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-sm text-gray-600">Works w/ Guarantors</p>
+            <Tooltip />
+          </div>
+          <p className="font-semibold text-gray-900">{building.guarantor ? 'Yes' : 'No'}</p>
+        </div>
+
+        <div className="p-4 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-600 mb-1">Hold Days</p>
+          <p className="font-semibold text-gray-900">{building.holdDays.join(', ')} days</p>
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-gray-900 mb-2">Bedrooms</p>
+          <div className="flex gap-2 flex-wrap">
+            {building.units.map((unit) => (
+              <span key={unit} className="text-xs bg-gray-100 px-3 py-1 rounded">{unit}</span>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-gray-900 mb-2">Amenities</p>
+          <div className="flex flex-wrap gap-2">
+            {building.amenities.map((a) => (
+              <span key={a} className="text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded">{a}</span>
+            ))}
+          </div>
+        </div>
+
+        <FeesDropdown fees={building.fees} />
+
+        <button onClick={onTalkToDon} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Talk to Don</button>
+      </div>
+    </>
+  );
+};
       }, 100);
     };
 
