@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 
 const BUILDINGS = [
   {
@@ -352,11 +350,66 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-export default function MiamiApp() {
+const SimpleMap = ({ buildings, selectedBuilding, onBuildingClick }) => {
   const mapRef = useRef(null);
-  const mapInstanceRef = useRef(null);
-  const markersRef = useRef({});
+  const [mapWidth, setMapWidth] = useState(0);
 
+  useEffect(() => {
+    if (mapRef.current) {
+      setMapWidth(mapRef.current.offsetWidth);
+    }
+  }, []);
+
+  return (
+    <div ref={mapRef} className="w-full h-full bg-gray-300 relative flex items-center justify-center">
+      <iframe
+        width="100%"
+        height="100%"
+        frameBorder="0"
+        src={`https://www.google.com/maps/embed/v1/view?key=AIzaSyAqVnVKF0lqjGkYEpFnkcV6rLIydveSQsw&center=${25.765},-${80.188}&zoom=13`}
+        style={{ border: 0 }}
+        allowFullScreen=""
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+      ></iframe>
+      
+      <div className="absolute inset-0 pointer-events-none">
+        {buildings.map((building) => {
+          const mapHeight = window.innerHeight;
+          const centerLat = 25.765;
+          const centerLng = -80.188;
+          
+          const latRange = 40.315;
+          const lngRange = 68.75;
+          
+          const pixelsPerDegreeLat = mapHeight / latRange;
+          const pixelsPerDegreeLng = mapWidth / lngRange;
+          
+          const x = ((building.lng - (centerLng - lngRange / 2)) * pixelsPerDegreeLng);
+          const y = (((centerLat + latRange / 2) - building.lat) * pixelsPerDegreeLat);
+          
+          const isSelected = selectedBuilding?.id === building.id;
+          
+          return (
+            <button
+              key={building.id}
+              onClick={() => onBuildingClick(building)}
+              className={`absolute w-10 h-10 rounded-full transform -translate-x-1/2 -translate-y-1/2 transition pointer-events-auto ${
+                isSelected ? 'bg-orange-500 ring-4 ring-orange-300 scale-125' : 'bg-blue-500 hover:scale-110'
+              }`}
+              style={{ left: `${x}px`, top: `${y}px` }}
+              title={building.name}
+            >
+              <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">{building.id}</div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+export default function MiamiApp() {
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [showTalkToDonModal, setShowTalkToDonModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -366,68 +419,6 @@ export default function MiamiApp() {
   const [selectedCredit, setSelectedCredit] = useState('all');
   const [guarantorOnly, setGuarantorOnly] = useState(false);
   const [selectedHold, setSelectedHold] = useState('all');
-
-  useEffect(() => {
-    if (!mapRef.current) return;
-
-    try {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-      }
-
-      const map = L.map(mapRef.current).setView([25.765, -80.188], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap',
-      }).addTo(map);
-
-      BUILDINGS.forEach((building) => {
-        const marker = L.circleMarker([building.lat, building.lng], {
-          radius: 12,
-          fillColor: '#3B82F6',
-          color: '#fff',
-          weight: 2,
-          opacity: 1,
-          fillOpacity: 0.8,
-        })
-          .bindPopup(building.name)
-          .on('click', () => setSelectedBuilding(building))
-          .addTo(map);
-
-        const label = L.divIcon({
-          html: `<div style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: white; font-weight: bold; font-size: 12px;">${building.id}</div>`,
-          className: 'text-label',
-          iconSize: [24, 24],
-          iconAnchor: [12, 12],
-        });
-
-        L.marker([building.lat, building.lng], { icon: label }).addTo(map);
-        markersRef.current[building.id] = marker;
-      });
-
-      mapInstanceRef.current = map;
-    } catch (error) {
-      console.error('Map init error:', error);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (selectedBuilding && markersRef.current[selectedBuilding.id]) {
-      markersRef.current[selectedBuilding.id].setStyle({
-        fillColor: '#FF8C00',
-        radius: 16,
-      });
-    }
-
-    Object.entries(markersRef.current).forEach(([id, marker]) => {
-      if (parseInt(id) !== selectedBuilding?.id) {
-        marker.setStyle({
-          fillColor: '#3B82F6',
-          radius: 12,
-        });
-      }
-    });
-  }, [selectedBuilding]);
 
   const filtered = BUILDINGS.filter((b) => {
     if (searchTerm && !b.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
@@ -444,149 +435,156 @@ export default function MiamiApp() {
     <div className="flex h-screen bg-gray-50">
       <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center px-6 z-40 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">M</div>
-          <div>
-            <h1 className="font-bold text-lg text-gray-900">Miami Rentals</h1>
-            <p className="text-xs text-gray-500">Find Your Perfect Apartment</p>
-          </div>
+          <div className="w-8 h-8 bg-blue-600 rounded text-white flex items-center justify-center font-bold">M</div>
+          <h1 className="text-xl font-bold">Miami Rentals</h1>
         </div>
-        <input type="text" placeholder="Search buildings..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="ml-auto px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <div className="ml-auto flex items-center gap-4">
+          <input type="text" placeholder="Search buildings..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+        </div>
       </div>
 
-      <div className="flex-1 flex pt-16">
-        <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto">
-          <div className="p-6 space-y-6">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <label className="text-sm font-semibold text-gray-900">Price Range</label>
-                <InfoTooltip text="Filter buildings by price tier: $ = Budget-friendly, $$ = Mid-range" />
-              </div>
-              <div className="space-y-2">
-                {['all', '$', '$$'].map((price) => (
-                  <label key={price} className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="price" value={price} checked={selectedPrice === price} onChange={(e) => setSelectedPrice(e.target.value)} className="w-4 h-4" />
-                    <span className="text-sm text-gray-700">{price === 'all' ? 'Any Price' : price}</span>
-                  </label>
-                ))}
-              </div>
+      <div className="mt-16 flex flex-1 gap-0">
+        <div className="w-64 bg-white border-r border-gray-200 overflow-y-auto p-6 space-y-6">
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="font-semibold">Price</h3>
+              <InfoTooltip text="Filter buildings by price tier" />
             </div>
-
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <label className="text-sm font-semibold text-gray-900">Unit Type</label>
-                <InfoTooltip text="Select the bedroom types you're interested in" />
-              </div>
-              <div className="space-y-2">
-                {['Studio', '1B', '2B', '3B'].map((unit) => (
-                  <label key={unit} className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={selectedUnits.includes(unit)} onChange={(e) => setSelectedUnits(e.target.checked ? [...selectedUnits, unit] : selectedUnits.filter((u) => u !== unit))} className="w-4 h-4" />
-                    <span className="text-sm text-gray-700">{unit}</span>
-                  </label>
-                ))}
-              </div>
+            <div className="space-y-2">
+              {['all', '$', '$$'].map((price) => (
+                <label key={price} className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="price" value={price} checked={selectedPrice === price} onChange={(e) => setSelectedPrice(e.target.value)} className="w-4 h-4" />
+                  <span className="text-sm">{price === 'all' ? 'All Prices' : price}</span>
+                </label>
+              ))}
             </div>
+          </div>
 
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <label className="text-sm font-semibold text-gray-900">Income Requirement</label>
-                <InfoTooltip text="Buildings require income to be X times the rent" />
-              </div>
-              <div className="space-y-2">
-                {['all', '2.5x', '3x'].map((income) => (
-                  <label key={income} className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="income" value={income} checked={selectedIncome === income} onChange={(e) => setSelectedIncome(e.target.value)} className="w-4 h-4" />
-                    <span className="text-sm text-gray-700">{income === 'all' ? 'Any Income' : income}</span>
-                  </label>
-                ))}
-              </div>
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="font-semibold">Unit Type</h3>
+              <InfoTooltip text="Select unit sizes available" />
             </div>
-
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <label className="text-sm font-semibold text-gray-900">Credit Score</label>
-                <InfoTooltip text="Minimum credit score required" />
-              </div>
-              <div className="space-y-2">
-                {['all', '>600', '>650'].map((credit) => (
-                  <label key={credit} className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="credit" value={credit} checked={selectedCredit === credit} onChange={(e) => setSelectedCredit(e.target.value)} className="w-4 h-4" />
-                    <span className="text-sm text-gray-700">{credit === 'all' ? 'Any Credit' : credit}</span>
-                  </label>
-                ))}
-              </div>
+            <div className="space-y-2">
+              {['Studio', '1B', '2B', '3B'].map((unit) => (
+                <label key={unit} className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={selectedUnits.includes(unit)} onChange={(e) => setSelectedUnits(e.target.checked ? [...selectedUnits, unit] : selectedUnits.filter((u) => u !== unit))} className="w-4 h-4" />
+                  <span className="text-sm">{unit}</span>
+                </label>
+              ))}
             </div>
+          </div>
 
-            <div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={guarantorOnly} onChange={(e) => setGuarantorOnly(e.target.checked)} className="w-4 h-4" />
-                <span className="text-sm text-gray-700">Guarantor Not Required</span>
-              </label>
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="font-semibold">Income</h3>
+              <InfoTooltip text="Income multiplier requirement (e.g., 3x means income should be 3x rent)" />
             </div>
+            <div className="space-y-2">
+              {['all', '2.5x', '3x'].map((income) => (
+                <label key={income} className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="income" value={income} checked={selectedIncome === income} onChange={(e) => setSelectedIncome(e.target.value)} className="w-4 h-4" />
+                  <span className="text-sm">{income === 'all' ? 'All Income' : income}</span>
+                </label>
+              ))}
+            </div>
+          </div>
 
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <label className="text-sm font-semibold text-gray-900">Hold Days</label>
-                <InfoTooltip text="How many days the property will hold your application" />
-              </div>
-              <div className="space-y-2">
-                {['all', '14', '30', '60', '90'].map((hold) => (
-                  <label key={hold} className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="hold" value={hold} checked={selectedHold === hold} onChange={(e) => setSelectedHold(e.target.value)} className="w-4 h-4" />
-                    <span className="text-sm text-gray-700">{hold === 'all' ? 'Any Hold' : `${hold} Days`}</span>
-                  </label>
-                ))}
-              </div>
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="font-semibold">Credit Score</h3>
+              <InfoTooltip text="Minimum credit score requirement" />
+            </div>
+            <div className="space-y-2">
+              {['all', '>650'].map((credit) => (
+                <label key={credit} className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="credit" value={credit} checked={selectedCredit === credit} onChange={(e) => setSelectedCredit(e.target.value)} className="w-4 h-4" />
+                  <span className="text-sm">{credit === 'all' ? 'All Credit' : credit}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={guarantorOnly} onChange={(e) => setGuarantorOnly(e.target.checked)} className="w-4 h-4" />
+              <span className="text-sm font-medium">Guarantor Accepted</span>
+            </label>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="font-semibold">Hold Days</h3>
+              <InfoTooltip text="How many days you can hold the unit" />
+            </div>
+            <div className="space-y-2">
+              {['all', '14', '30', '60', '90'].map((hold) => (
+                <label key={hold} className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="hold" value={hold} checked={selectedHold === hold} onChange={(e) => setSelectedHold(e.target.value)} className="w-4 h-4" />
+                  <span className="text-sm">{hold === 'all' ? 'All Hold Days' : `${hold} days`}</span>
+                </label>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="flex-1 relative">
-          <div ref={mapRef} className="w-full h-full"></div>
+        <div className="flex-1">
+          <SimpleMap buildings={filtered} selectedBuilding={selectedBuilding} onBuildingClick={setSelectedBuilding} />
         </div>
 
-        <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
+        <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto p-6 space-y-6">
           {selectedBuilding ? (
             <>
-              <div className="p-6 pb-4 border-b border-gray-200 flex-1 overflow-y-auto">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">{selectedBuilding.name}</h2>
-                <p className="text-sm text-gray-600 mb-4">{selectedBuilding.address}</p>
-                <ImageCarousel images={selectedBuilding.images} />
-                <div className="mt-6 space-y-4">
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold">Price Range</p>
-                    <p className="text-xl font-bold text-gray-900">${selectedBuilding.priceMin}/mo</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold">Move-In Special</p>
-                    <p className="text-sm text-gray-900">{selectedBuilding.concession}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold">Requirements</p>
-                    <p className="text-sm text-gray-900">Income: {selectedBuilding.incomeReq} | Credit: {selectedBuilding.creditReq}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold">Units</p>
-                    <div className="flex gap-2 flex-wrap mt-2">{selectedBuilding.units.map((unit) => (<span key={unit} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">{unit}</span>))}</div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 uppercase font-semibold">Amenities</p>
-                    <div className="flex gap-2 flex-wrap mt-2">{selectedBuilding.amenities.map((amenity) => (<span key={amenity} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">{amenity}</span>))}</div>
-                  </div>
+              <ImageCarousel images={selectedBuilding.images} />
+              <div>
+                <h2 className="text-2xl font-bold">{selectedBuilding.name}</h2>
+                <p className="text-sm text-gray-600">{selectedBuilding.address}</p>
+                <div className="mt-2 inline-block bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded">{selectedBuilding.neighborhood}</div>
+              </div>
+
+              <div>
+                <p className="text-3xl font-bold text-blue-600">${selectedBuilding.priceMin}/mo</p>
+                <p className="text-sm text-gray-600">{selectedBuilding.concession}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-3 rounded">
+                  <p className="text-xs text-gray-600">Income</p>
+                  <p className="font-semibold">{selectedBuilding.incomeReq}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded">
+                  <p className="text-xs text-gray-600">Credit</p>
+                  <p className="font-semibold">{selectedBuilding.creditReq}</p>
                 </div>
               </div>
-              <div className="p-6 border-t border-gray-200">
-                <button onClick={() => setShowTalkToDonModal(true)} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Talk to Don</button>
+
+              <div>
+                <p className="font-semibold text-sm mb-2">Units</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedBuilding.units.map((unit) => (
+                    <span key={unit} className="bg-gray-200 text-gray-800 text-xs px-3 py-1 rounded">{unit}</span>
+                  ))}
+                </div>
               </div>
+
+              <div>
+                <p className="font-semibold text-sm mb-2">Amenities</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedBuilding.amenities.map((amenity) => (
+                    <span key={amenity} className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded">{amenity}</span>
+                  ))}
+                </div>
+              </div>
+
+              <button onClick={() => setShowTalkToDonModal(true)} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Talk to Don</button>
             </>
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-600">
-              <p>Select a building on the map</p>
-            </div>
+            <div className="text-center text-gray-600 py-8">Select a building on the map to view details</div>
           )}
         </div>
       </div>
 
-      {showTalkToDonModal && <TalkTodonModal building={selectedBuilding} onClose={() => setShowTalkToDonModal(false)} />}
+      {showTalkToDonModal && selectedBuilding && <TalkTodonModal building={selectedBuilding} onClose={() => setShowTalkToDonModal(false)} />}
     </div>
   );
 }
