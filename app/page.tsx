@@ -197,6 +197,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
     markersRef.current = [];
 
     const buildingsToShow = BUILDINGS.filter(b => expandedNeighborhoods.includes(b.neighborhood));
+    console.log('[v0] Buildings to show:', buildingsToShow.map(b => ({ name: b.name, lat: b.lat, lng: b.lng })));
 
     buildingsToShow.forEach((building) => {
       const el = document.createElement('div');
