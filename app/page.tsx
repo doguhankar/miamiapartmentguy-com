@@ -264,22 +264,14 @@ export default function MiamiApp() {
         });
 
         map.current.on('load', () => {
-          console.log("[v0] Map load event fired");
-          console.log("[v0] map.current:", !!map.current);
-          console.log("[v0] BUILDINGS array length:", BUILDINGS.length);
-          console.log("[v0] First building:", BUILDINGS[0]);
-          console.log("[v0] window.mapboxgl.LngLatBounds:", !!window.mapboxgl.LngLatBounds);
-          
           try {
             const bounds = BUILDINGS.reduce((acc, building) => {
-              console.log("[v0] Processing building:", building.name, building.lat, building.lng);
               return acc.extend([building.lng, building.lat]);
             }, new window.mapboxgl.LngLatBounds([BUILDINGS[0].lng, BUILDINGS[0].lat], [BUILDINGS[0].lng, BUILDINGS[0].lat]));
             
-            console.log("[v0] Final bounds:", bounds);
-            console.log("[v0] Calling fitBounds...");
-            map.current.fitBounds(bounds, { padding: 80 });
-            console.log("[v0] fitBounds called successfully");
+            setTimeout(() => {
+              map.current.fitBounds(bounds, { padding: 80 });
+            }, 100);
           } catch (error) {
             console.error("[v0] Error in fitBounds:", error.message);
           }
