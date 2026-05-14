@@ -408,6 +408,11 @@ export default function MiamiApp() {
                   <div className="mb-4 p-4 bg-gray-50 rounded-lg"><p className="text-sm text-gray-600 mb-1">Credit Requirement</p><p className="font-semibold text-gray-900">{selectedBuilding.creditReq}</p></div>
                   <div className="mb-4"><p className="text-sm font-semibold text-gray-900 mb-2">Bedrooms</p><div className="flex gap-2 flex-wrap">{selectedBuilding.units.map((unit) => (<span key={unit} className="text-xs bg-gray-100 px-3 py-1 rounded">{unit}</span>))}</div></div>
                   <div className="mb-4"><p className="text-sm font-semibold text-gray-900 mb-2">Amenities</p><div className="flex flex-wrap gap-2">{selectedBuilding.amenities.map((a) => (<span key={a} className="text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded">{a}</span>))}</div></div>
+                  
+                  <div className="mb-4">
+                    <FeesDropdown fees={selectedBuilding.fees} />
+                  </div>
+                  
                   <button onClick={() => setShowModal(true)} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 mb-4">Talk to Don</button>
                 </div>
               )}
@@ -417,8 +422,8 @@ export default function MiamiApp() {
       </div>
 
       {/* Desktop Layout */}
-      <div className="hidden md:flex flex-1 mt-16">
-        <div className="flex-1">
+      <div className="hidden md:flex flex-1">
+        <div className="flex-1 relative">
           <MapComponent expandedNeighborhoods={expandedNeighborhoods} selectedBuilding={selectedBuilding} onPinClick={setSelectedBuilding} />
         </div>
 
