@@ -165,7 +165,6 @@ export default function MiamiApp() {
 
   // Initialize map and load Mapbox
   useEffect(() => {
-    console.log("[v0] Map init - mapContainer:", mapContainer.current, "map.current:", map.current);
     if (!mapContainer.current || map.current) return;
 
     const script = document.createElement('script');
@@ -173,14 +172,12 @@ export default function MiamiApp() {
     script.async = true;
 
     script.onload = () => {
-      console.log("[v0] Mapbox script loaded");
       const linkEl = document.createElement('link');
       linkEl.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
       linkEl.rel = 'stylesheet';
       document.head.appendChild(linkEl);
 
       setTimeout(() => {
-        console.log("[v0] Creating map instance", window.mapboxgl, mapContainer.current);
         if (window.mapboxgl && mapContainer.current) {
           window.mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
           
@@ -193,7 +190,6 @@ export default function MiamiApp() {
 
           // Add pins after map is ready
           map.current.on('load', () => {
-            console.log("[v0] Map loaded, adding pins");
             addPins();
           });
         }
@@ -299,10 +295,10 @@ export default function MiamiApp() {
       </div>
 
       {/* Mobile Layout */}
-      <div className="flex md:hidden flex-col w-full h-full relative">
+      <div className="flex md:hidden flex-col w-full h-full relative bg-white">
         {/* Map takes full screen on mobile */}
-        <div className="flex-1 w-full">
-          <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
+        <div className="absolute inset-0 w-full" style={{ height: 'calc(100vh - 55vh)' }}>
+          <div ref={mapContainer} className="w-full h-full" />
           
           {/* Mobile Search Bar Overlay */}
           <div className="absolute top-4 left-4 right-4 z-30 flex gap-3 items-center">
