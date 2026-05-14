@@ -297,6 +297,41 @@ export default function MiamiApp() {
     }
   };
 
+  const addPins = () => {
+    if (!map.current || !window.mapboxgl) return;
+
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+
+    BUILDINGS.forEach((building) => {
+      const el = document.createElement('div');
+      el.style.width = '32px';
+      el.style.height = '32px';
+      el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
+      el.style.borderRadius = '50%';
+      el.style.cursor = 'pointer';
+      el.style.border = '3px solid white';
+      el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+      el.style.transition = 'all 0.2s';
+      el.onclick = () => {
+        setSelectedBuilding(building);
+        setIsBottomSheetExpanded(true);
+      };
+
+      const marker = new window.mapboxgl.Marker(el)
+        .setLngLat([building.lng, building.lat])
+        .addTo(map.current);
+      
+      markersRef.current.push(marker);
+    });
+  };
+
+  useEffect(() => {
+    if (map.current) {
+      addPins();
+    }
+  }, [selectedBuilding]);
+
   return (
     <div className="flex h-screen bg-gray-50">
       <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center px-6 z-40 shadow-sm">
