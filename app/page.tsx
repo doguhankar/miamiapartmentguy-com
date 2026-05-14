@@ -161,7 +161,7 @@ export default function MiamiApp() {
 
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell']);
+  const [expandedNeighborhoods, setExpandedNeighborhoods] = useState([]);
   const [isBottomSheetExpanded, setIsBottomSheetExpanded] = useState(false);
 
   // Initialize map and load Mapbox
@@ -286,7 +286,7 @@ export default function MiamiApp() {
       {/* Mobile Layout */}
       <div className="flex md:hidden flex-col w-full h-full bg-white">
         {/* Full-screen map */}
-        <div className="flex-1 relative w-full overflow-hidden">
+        <div className="flex-1 relative w-full overflow-hidden min-h-0">
           <div ref={mapContainer} className="w-full h-full" />
           
           {/* Search Bar Overlay */}
@@ -309,7 +309,7 @@ export default function MiamiApp() {
           onTouchEnd={handleBottomSheetDrag}
           className={`fixed left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-40 transition-all duration-300 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing ${
             isBottomSheetExpanded 
-              ? 'bottom-0 h-[50vh]' 
+              ? 'bottom-0 h-[45vh]' 
               : 'bottom-0 h-20'
           }`}
         >
@@ -332,7 +332,7 @@ export default function MiamiApp() {
 
           {/* Expanded State - Full content */}
           {isBottomSheetExpanded && (
-            <div className="overflow-y-auto flex-1 px-4 pb-6">
+            <div className="overflow-hidden flex-1 px-4 pb-4">
               {!selectedBuilding ? (
                 <div className="pt-2">
                   <h2 className="text-lg font-semibold mb-4">Neighborhoods</h2>
