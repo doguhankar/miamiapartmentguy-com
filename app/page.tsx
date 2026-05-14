@@ -156,6 +156,8 @@ export default function MiamiApp() {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
+  const bottomSheetRef = useRef(null);
+  const [dragOffset, setDragOffset] = useState(0);
 
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -253,6 +255,35 @@ export default function MiamiApp() {
     return BUILDINGS.filter(b => b.neighborhood === neighborhood);
   };
 
+  const handleBottomSheetDrag = (e) => {
+    if (!bottomSheetRef.current) return;
+    const touchY = e.touches?.[0]?.clientY || e.clientY;
+    const sheetTop = bottomSheetRef.current.getBoundingClientRect().top;
+    const maxDragDown = window.innerHeight * 0.6; // Can drag down to show 40% of map
+    const maxDragUp = window.innerHeight * 0.15; // Can drag up to show 85% of sheet
+
+    if (e.type === 'touchstart' || e.type === 'mousedown') {
+      const startY = touchY;
+      const handleMove = (moveEvent) => {
+        const currentY = moveEvent.touches?.[0]?.clientY || moveEvent.clientY;
+        const diff = currentY - startY;
+        const newOffset = Math.max(0, Math.min(diff, maxDragDown - maxDragUp));
+        setDragOffset(newOffset);
+      };
+      const handleEnd = () => {
+        document.removeEventListener('touchmove', handleMove);
+        document.removeEventListener('mousemove', handleMove);
+        document.removeEventListener('touchend', handleEnd);
+        document.removeEventListener('mouseup', handleEnd);
+        setDragOffset(0); // Snap back
+      };
+      document.addEventListener('touchmove', handleMove);
+      document.addEventListener('mousemove', handleMove);
+      document.addEventListener('touchend', handleEnd);
+      document.addEventListener('mouseup', handleEnd);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Desktop Header */}
@@ -264,9 +295,9 @@ export default function MiamiApp() {
       </div>
 
       {/* Mobile Layout */}
-      <div className="flex md:hidden flex-col w-full h-full">
+      <div className="flex md:hidden flex-col w-full h-full relative">
         {/* Map takes full screen on mobile */}
-        <div className="flex-1 relative">
+        <div className="flex-1 w-full">
           <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
           
           {/* Mobile Search Bar Overlay */}
@@ -282,75 +313,85 @@ export default function MiamiApp() {
           </div>
         </div>
 
-        {/* Bottom Sheet with Building Cards */}
-        <div className="absolute bottom-0 left-0 right-0 max-h-[60vh] bg-white rounded-t-3xl shadow-2xl overflow-y-auto z-20">
-          <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 mb-4"></div>
+        {/* Bottom Sheet with Building Cards - Draggable */}
+        <div 
+          ref={bottomSheetRef}
+          onTouchStart={handleBottomSheetDrag}
+          onMouseDown={handleBottomSheetDrag}
+          style={{ transform: `translateY(${dragOffset}px)`, transition: dragOffset === 0 ? 'transform 0.3s ease-out' : 'none' }}
+          className="fixed bottom-0 left-0 right-0 h-[55vh] bg-white rounded-t-3xl shadow-2xl z-40 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing"
+        >
+          {/* Drag Handle */}
+          <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 mb-2 flex-shrink-0"></div>
           
-          {!selectedBuilding ? (
-            <div className="p-4">
-              <h2 className="text-lg font-semibold mb-4">Neighborhoods</h2>
-              <div className="space-y-3">
-                {NEIGHBORHOODS.map((neighborhood) => {
-                  const buildings = getNeighborhoodBuildings(neighborhood);
-                  const isExpanded = expandedNeighborhoods.includes(neighborhood);
-                  return (
-                    <div key={neighborhood}>
-                      <button
-                        onClick={() => toggleNeighborhood(neighborhood)}
-                        className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
-                      >
-                        <span className="font-semibold text-gray-900 text-sm">{neighborhood} ({buildings.length})</span>
-                        <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
-                      </button>
-                      {isExpanded && (
-                        <div className="mt-2 space-y-2 mb-3">
-                          {buildings.map((building) => (
-                            <div
-                              key={building.id}
-                              onClick={() => setSelectedBuilding(building)}
-                              className="p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition bg-white"
-                            >
-                              <div className="flex justify-between items-start mb-1">
-                                <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
-                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
+          {/* Content */}
+          <div className="overflow-y-auto flex-1">
+            {!selectedBuilding ? (
+              <div className="p-4">
+                <h2 className="text-lg font-semibold mb-4">Neighborhoods</h2>
+                <div className="space-y-3">
+                  {NEIGHBORHOODS.map((neighborhood) => {
+                    const buildings = getNeighborhoodBuildings(neighborhood);
+                    const isExpanded = expandedNeighborhoods.includes(neighborhood);
+                    return (
+                      <div key={neighborhood}>
+                        <button
+                          onClick={() => toggleNeighborhood(neighborhood)}
+                          className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
+                        >
+                          <span className="font-semibold text-gray-900 text-sm">{neighborhood} ({buildings.length})</span>
+                          <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
+                        </button>
+                        {isExpanded && (
+                          <div className="mt-2 space-y-2 mb-3">
+                            {buildings.map((building) => (
+                              <div
+                                key={building.id}
+                                onClick={() => setSelectedBuilding(building)}
+                                className="p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition bg-white"
+                              >
+                                <div className="flex justify-between items-start mb-1">
+                                  <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
+                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
+                                </div>
+                                <p className="text-sm font-bold text-gray-900">${building.priceMin}+/mo</p>
+                                <p className="text-xs text-gray-600 mt-1">{building.concession}</p>
                               </div>
-                              <p className="text-sm font-bold text-gray-900">${building.priceMin}+/mo</p>
-                              <p className="text-xs text-gray-600 mt-1">{building.concession}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <div className="p-4 pb-6">
-              <button onClick={() => setSelectedBuilding(null)} className="text-blue-600 hover:text-blue-700 text-sm mb-3 font-semibold">← Back</button>
-              <ImageCarousel images={selectedBuilding.images} />
-              <h1 className="text-xl font-bold mt-3 mb-1">{selectedBuilding.name}</h1>
-              <p className="text-xs text-gray-600 mb-3">{selectedBuilding.address}</p>
-              
-              <div className="mb-3 p-3 bg-blue-50 border-2 border-blue-500 rounded-lg">
-                <p className="text-xs text-blue-900 font-semibold">Current Offer</p>
-                <p className="text-sm font-bold text-blue-600">{selectedBuilding.concession}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-600">Price</p>
-                  <p className="font-bold text-gray-900 text-sm">${selectedBuilding.priceMin}+</p>
-                </div>
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-600">Income</p>
-                  <p className="font-bold text-gray-900 text-sm">{selectedBuilding.incomeReq}</p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
+            ) : (
+              <div className="p-4 pb-6">
+                <button onClick={() => setSelectedBuilding(null)} className="text-blue-600 hover:text-blue-700 text-sm mb-3 font-semibold">← Back</button>
+                <ImageCarousel images={selectedBuilding.images} />
+                <h1 className="text-xl font-bold mt-3 mb-1">{selectedBuilding.name}</h1>
+                <p className="text-xs text-gray-600 mb-3">{selectedBuilding.address}</p>
+                
+                <div className="mb-3 p-3 bg-blue-50 border-2 border-blue-500 rounded-lg">
+                  <p className="text-xs text-blue-900 font-semibold">Current Offer</p>
+                  <p className="text-sm font-bold text-blue-600">{selectedBuilding.concession}</p>
+                </div>
 
-              <button onClick={() => setShowModal(true)} className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 text-sm">Talk to Don</button>
-            </div>
-          )}
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="p-2 bg-gray-50 rounded-lg">
+                    <p className="text-xs text-gray-600">Price</p>
+                    <p className="font-bold text-gray-900 text-sm">${selectedBuilding.priceMin}+</p>
+                  </div>
+                  <div className="p-2 bg-gray-50 rounded-lg">
+                    <p className="text-xs text-gray-600">Income</p>
+                    <p className="font-bold text-gray-900 text-sm">{selectedBuilding.incomeReq}</p>
+                  </div>
+                </div>
+
+                <button onClick={() => setShowModal(true)} className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 text-sm">Talk to Don</button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
