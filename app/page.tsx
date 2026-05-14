@@ -289,7 +289,7 @@ export default function MiamiApp() {
       {/* Mobile Layout */}
       <div className="flex md:hidden flex-col w-full h-full bg-white">
         {/* Full-screen map */}
-        <div className="flex-1 relative w-full overflow-hidden min-h-0">
+        <div className={`flex-1 relative w-full overflow-hidden min-h-0 transition-opacity ${isBottomSheetExpanded ? 'pointer-events-none opacity-50' : 'pointer-events-auto'}`}>
           <div ref={mapContainer} className="w-full h-full" />
           
           {/* Search Bar Overlay */}
