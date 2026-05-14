@@ -222,6 +222,9 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
 };
 
 export default function MiamiApp() {
+  const mapContainer = useRef(null);
+  const map = useRef(null);
+  const markersRef = useRef([]);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [expandedNeighborhoods, setExpandedNeighborhoods] = useState([]);
@@ -236,6 +239,39 @@ export default function MiamiApp() {
         : [...prev, neighborhood]
     );
   };
+
+  useEffect(() => {
+    if (!mapContainer.current) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js';
+    script.async = true;
+    script.onload = () => {
+      const linkEl = document.createElement('link');
+      linkEl.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
+      linkEl.rel = 'stylesheet';
+      document.head.appendChild(linkEl);
+
+      if (window.mapboxgl && mapContainer.current && !map.current) {
+        window.mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+        
+        map.current = new window.mapboxgl.Map({
+          container: mapContainer.current,
+          style: 'mapbox://styles/mapbox/light-v11',
+          center: [-80.188, 25.765],
+          zoom: 13,
+        });
+      }
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, []);
 
   const getNeighborhoodBuildings = (neighborhood) => {
     return BUILDINGS.filter(b => b.neighborhood === neighborhood);
@@ -268,7 +304,7 @@ export default function MiamiApp() {
       {/* Mobile Layout */}
       <div className="flex md:hidden flex-col w-full h-full bg-white">
         <div className={`flex-1 relative w-full overflow-hidden min-h-0 transition-opacity ${isBottomSheetExpanded ? 'pointer-events-none opacity-50' : 'pointer-events-auto'}`}>
-          <MapComponent expandedNeighborhoods={expandedNeighborhoods} selectedBuilding={selectedBuilding} onPinClick={(building) => { setSelectedBuilding(building); setIsBottomSheetExpanded(true); }} />
+          <div ref={mapContainer} className="w-full h-full" />
           <div className="absolute top-4 left-4 right-4 z-20 flex gap-3 items-center pointer-events-none">
             <input type="text" placeholder="Search buildings, price..." className="flex-1 px-4 py-3 rounded-full bg-white border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 pointer-events-auto" />
             <button className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-700 pointer-events-auto">⚙</button>
