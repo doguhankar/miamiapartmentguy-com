@@ -264,6 +264,7 @@ export default function MiamiApp() {
         });
 
         map.current.on('load', () => {
+          console.log("[v0] Map load event fired");
           addPins();
         });
       }
@@ -298,7 +299,11 @@ export default function MiamiApp() {
   };
 
   const addPins = () => {
-    if (!map.current || !window.mapboxgl) return;
+    console.log("[v0] addPins called, map:", !!map.current, "mapboxgl:", !!window.mapboxgl, "BUILDINGS:", BUILDINGS.length);
+    if (!map.current || !window.mapboxgl) {
+      console.log("[v0] Early return - map not ready");
+      return;
+    }
 
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
@@ -324,6 +329,7 @@ export default function MiamiApp() {
       
       markersRef.current.push(marker);
     });
+    console.log("[v0] Pins rendered:", markersRef.current.length);
   };
 
   useEffect(() => {
