@@ -264,10 +264,14 @@ export default function MiamiApp() {
         });
 
         map.current.on('load', () => {
+          console.log("[v0] Map load event fired");
+          console.log("[v0] Calling addPins from load event");
           addPins();
         });
 
         map.current.on('style.load', () => {
+          console.log("[v0] Map style.load event fired");
+          console.log("[v0] Calling addPins from style.load event");
           addPins();
         });
       }
@@ -302,12 +306,24 @@ export default function MiamiApp() {
   };
 
   const addPins = () => {
-    if (!map.current || !window.mapboxgl) return;
+    console.log("[v0] addPins called");
+    console.log("[v0] BUILDINGS array:", BUILDINGS);
+    console.log("[v0] BUILDINGS length:", BUILDINGS.length);
+    console.log("[v0] map.current:", !!map.current);
+    console.log("[v0] window.mapboxgl:", !!window.mapboxgl);
+    
+    if (!map.current || !window.mapboxgl) {
+      console.log("[v0] Early return - map or mapboxgl not ready");
+      return;
+    }
 
+    console.log("[v0] Clearing existing markers, count:", markersRef.current.length);
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
     BUILDINGS.forEach((building) => {
+      console.log("[v0] Creating marker for:", building.name, "at lat:", building.lat, "lng:", building.lng);
+      
       const el = document.createElement('div');
       el.style.width = '32px';
       el.style.height = '32px';
@@ -322,12 +338,19 @@ export default function MiamiApp() {
         setIsBottomSheetExpanded(true);
       };
 
-      const marker = new window.mapboxgl.Marker(el)
-        .setLngLat([building.lng, building.lat])
-        .addTo(map.current);
-      
-      markersRef.current.push(marker);
+      try {
+        const marker = new window.mapboxgl.Marker(el)
+          .setLngLat([building.lng, building.lat])
+          .addTo(map.current);
+        
+        console.log("[v0] Marker added successfully for:", building.name);
+        markersRef.current.push(marker);
+      } catch (error) {
+        console.error("[v0] Error adding marker for", building.name, ":", error.message);
+      }
     });
+    
+    console.log("[v0] Total markers added:", markersRef.current.length);
   };
 
   useEffect(() => {
