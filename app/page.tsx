@@ -156,10 +156,13 @@ export default function MiamiApp() {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
+  const bottomSheetRef = useRef(null);
+  const touchStartY = useRef(0);
 
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell']);
+  const [expandedNeighborhoods, setExpandedNeighborhoods] = useState([]);
+  const [isBottomSheetExpanded, setIsBottomSheetExpanded] = useState(false);
 
   // Initialize map and load Mapbox
   useEffect(() => {
@@ -224,7 +227,10 @@ export default function MiamiApp() {
       el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
       el.style.transition = 'all 0.2s';
 
-      el.onclick = () => setSelectedBuilding(building);
+      el.onclick = () => {
+        setSelectedBuilding(building);
+        setIsBottomSheetExpanded(true);
+      };
 
       const marker = new window.mapboxgl.Marker(el)
         .setLngLat([building.lng, building.lat])
@@ -253,6 +259,22 @@ export default function MiamiApp() {
     return BUILDINGS.filter(b => b.neighborhood === neighborhood);
   };
 
+  const handleBottomSheetDrag = (e) => {
+    if (e.type === 'touchstart') {
+      touchStartY.current = e.touches[0].clientY;
+    } else if (e.type === 'touchend' && touchStartY.current) {
+      const touchEndY = e.changedTouches[0].clientY;
+      const diff = touchEndY - touchStartY.current;
+      
+      if (diff > 30 && isBottomSheetExpanded) {
+        setIsBottomSheetExpanded(false);
+      } else if (diff < -30 && !isBottomSheetExpanded) {
+        setIsBottomSheetExpanded(true);
+      }
+      touchStartY.current = 0;
+    }
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center px-6 z-40 shadow-sm">
@@ -262,7 +284,79 @@ export default function MiamiApp() {
         </div>
       </div>
 
-      <div className="flex flex-1 mt-16">
+      {/* Mobile Layout */}
+      <div className="flex md:hidden flex-col w-full h-full relative bg-white">
+        <div className={`flex-1 relative w-full overflow-hidden min-h-0 transition-opacity ${isBottomSheetExpanded ? 'pointer-events-none opacity-50' : 'pointer-events-auto'}`}>
+          <div ref={mapContainer} className="w-full h-full" />
+          <div className="absolute top-4 left-4 right-4 z-20 flex gap-3 items-center pointer-events-none">
+            <input type="text" placeholder="Search buildings, price..." className="flex-1 px-4 py-3 rounded-full bg-white border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 pointer-events-auto" />
+            <button className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-700 pointer-events-auto">⚙</button>
+          </div>
+        </div>
+
+        <div ref={bottomSheetRef} onTouchStart={handleBottomSheetDrag} onTouchEnd={handleBottomSheetDrag} className={`fixed left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-40 transition-all duration-300 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing ${isBottomSheetExpanded ? 'bottom-0 h-[65vh]' : 'bottom-0 h-20'}`}>
+          <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 flex-shrink-0"></div>
+          
+          {!isBottomSheetExpanded && !selectedBuilding && <div className="px-4 pt-2 pb-4"><h2 className="text-sm font-semibold text-gray-900">Swipe up to browse neighborhoods</h2></div>}
+          {!isBottomSheetExpanded && selectedBuilding && <div className="px-4 pt-2 pb-4"><h2 className="text-sm font-semibold text-gray-900 truncate">{selectedBuilding.name}</h2><p className="text-xs text-gray-600">${selectedBuilding.priceMin}+/mo</p></div>}
+
+          {isBottomSheetExpanded && (
+            <div className="overflow-y-auto flex-1 px-4 pb-4">
+              {!selectedBuilding ? (
+                <div className="pt-2">
+                  <h2 className="text-lg font-semibold mb-4">Neighborhoods</h2>
+                  <div className="space-y-3">
+                    {NEIGHBORHOODS.map((neighborhood) => {
+                      const buildings = getNeighborhoodBuildings(neighborhood);
+                      const isExpanded = expandedNeighborhoods.includes(neighborhood);
+                      return (
+                        <div key={neighborhood}>
+                          <button onClick={() => toggleNeighborhood(neighborhood)} className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
+                            <span className="font-semibold text-gray-900 text-sm">{neighborhood} ({buildings.length})</span>
+                            <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
+                          </button>
+                          {isExpanded && (
+                            <div className="mt-2 space-y-2 mb-3">
+                              {buildings.map((building) => (
+                                <div key={building.id} onClick={() => { setSelectedBuilding(building); setIsBottomSheetExpanded(true); }} className="p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition bg-white">
+                                  <div className="flex justify-between items-start mb-1">
+                                    <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
+                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
+                                  </div>
+                                  <p className="text-sm font-bold text-gray-900">${building.priceMin}+/mo</p>
+                                  <p className="text-xs text-gray-600 mt-1">{building.concession}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="pt-2">
+                  <button onClick={() => setSelectedBuilding(null)} className="text-blue-600 hover:text-blue-700 text-sm mb-3 font-semibold">← Back</button>
+                  <ImageCarousel images={selectedBuilding.images} />
+                  <h1 className="text-2xl font-bold mt-4 mb-2">{selectedBuilding.name}</h1>
+                  <div className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs font-medium mb-4">{selectedBuilding.neighborhood}</div>
+                  <p className="text-gray-600 text-sm mb-6">📍 {selectedBuilding.address}</p>
+                  <div className="mb-4 p-4 bg-gray-50 rounded-lg"><p className="text-2xl font-bold text-gray-900">${selectedBuilding.priceMin}+/mo</p></div>
+                  <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-500 rounded-lg"><p className="text-sm font-semibold text-blue-900">Current Offer</p><p className="text-lg font-bold text-blue-600">{selectedBuilding.concession}</p></div>
+                  <div className="mb-4 p-4 bg-gray-50 rounded-lg"><p className="text-sm text-gray-600 mb-1">Income Requirement</p><p className="font-semibold text-gray-900">{selectedBuilding.incomeReq}</p></div>
+                  <div className="mb-4 p-4 bg-gray-50 rounded-lg"><p className="text-sm text-gray-600 mb-1">Credit Requirement</p><p className="font-semibold text-gray-900">{selectedBuilding.creditReq}</p></div>
+                  <div className="mb-4"><p className="text-sm font-semibold text-gray-900 mb-2">Bedrooms</p><div className="flex gap-2 flex-wrap">{selectedBuilding.units.map((unit) => (<span key={unit} className="text-xs bg-gray-100 px-3 py-1 rounded">{unit}</span>))}</div></div>
+                  <div className="mb-4"><p className="text-sm font-semibold text-gray-900 mb-2">Amenities</p><div className="flex flex-wrap gap-2">{selectedBuilding.amenities.map((a) => (<span key={a} className="text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded">{a}</span>))}</div></div>
+                  <button onClick={() => setShowModal(true)} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 mb-4">Talk to Don</button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden md:flex flex-1 mt-16">
         <div className="flex-1" ref={mapContainer} style={{ minHeight: 0 }} />
 
         <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
