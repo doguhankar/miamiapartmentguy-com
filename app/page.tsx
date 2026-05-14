@@ -182,17 +182,25 @@ export default function MiamiApp() {
         if (window.mapboxgl && mapContainer.current) {
           window.mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
           
-          map.current = new window.mapboxgl.Map({
-            container: mapContainer.current,
-            style: 'mapbox://styles/mapbox/light-v11',
-            center: [-80.188, 25.765],
-            zoom: 13,
-          });
+          try {
+            map.current = new window.mapboxgl.Map({
+              container: mapContainer.current,
+              style: 'mapbox://styles/mapbox/light-v11',
+              center: [-80.188, 25.765],
+              zoom: 13,
+            });
 
-          // Add pins after map is ready
-          map.current.on('load', () => {
-            addPins();
-          });
+            // Add pins after map is ready
+            map.current.on('load', () => {
+              addPins();
+            });
+            
+            map.current.on('error', (e) => {
+              console.error("[v0] Map error:", e.error?.message);
+            });
+          } catch (err) {
+            console.error("[v0] Map creation error:", err.message);
+          }
         }
       }, 100);
     };
@@ -452,7 +460,7 @@ export default function MiamiApp() {
       <div className="hidden md:flex flex-1 mt-16">
         <div className="flex-1" ref={mapContainer} style={{ minHeight: 0 }} />
 
-        <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto flex-col">
+        <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto flex flex-col">
           {!selectedBuilding ? (
             <div className="p-6">
               <h2 className="text-lg font-semibold mb-6">Neighborhoods</h2>
