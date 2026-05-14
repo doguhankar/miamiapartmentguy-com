@@ -259,23 +259,11 @@ export default function MiamiApp() {
         map.current = new window.mapboxgl.Map({
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/light-v11',
-          center: [-80.189, 25.761],
-          zoom: 14.5,
+          center: [-80.188, 25.76],
+          zoom: 14,
         });
 
         map.current.on('load', () => {
-          try {
-            const bounds = BUILDINGS.reduce((acc, building) => {
-              return acc.extend([building.lng, building.lat]);
-            }, new window.mapboxgl.LngLatBounds([BUILDINGS[0].lng, BUILDINGS[0].lat], [BUILDINGS[0].lng, BUILDINGS[0].lat]));
-            
-            setTimeout(() => {
-              map.current.fitBounds(bounds, { padding: 80 });
-            }, 100);
-          } catch (error) {
-            console.error("[v0] Error in fitBounds:", error.message);
-          }
-          
           addPins();
         });
 
