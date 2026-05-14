@@ -259,8 +259,8 @@ export default function MiamiApp() {
         map.current = new window.mapboxgl.Map({
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/light-v11',
-          center: [-80.188, 25.765],
-          zoom: 13,
+          center: [-80.189, 25.761],
+          zoom: 14.5,
         });
 
         map.current.on('load', () => {
