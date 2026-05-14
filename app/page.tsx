@@ -309,7 +309,7 @@ export default function MiamiApp() {
           onTouchEnd={handleBottomSheetDrag}
           className={`fixed left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-40 transition-all duration-300 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing ${
             isBottomSheetExpanded 
-              ? 'bottom-0 h-[75vh]' 
+              ? 'bottom-0 h-[50vh]' 
               : 'bottom-0 h-20'
           }`}
         >
