@@ -262,6 +262,10 @@ export default function MiamiApp() {
           center: [-80.188, 25.765],
           zoom: 13,
         });
+
+        map.current.on('load', () => {
+          addPins();
+        });
       }
     };
     document.body.appendChild(script);
