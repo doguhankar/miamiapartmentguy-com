@@ -335,7 +335,7 @@ export default function MiamiApp() {
 
           {/* Expanded State - Full content */}
           {isBottomSheetExpanded && (
-            <div className="overflow-hidden flex-1 px-4 pb-4">
+            <div className="overflow-y-auto flex-1 px-4 pb-4">
               {!selectedBuilding ? (
                 <div className="pt-2">
                   <h2 className="text-lg font-semibold mb-4">Neighborhoods</h2>
