@@ -264,6 +264,11 @@ export default function MiamiApp() {
         });
 
         map.current.on('load', () => {
+          const bounds = BUILDINGS.reduce((acc, building) => {
+            return acc.extend([building.lng, building.lat]);
+          }, new window.mapboxgl.LngLatBounds([BUILDINGS[0].lng, BUILDINGS[0].lat], [BUILDINGS[0].lng, BUILDINGS[0].lat]));
+          
+          map.current.fitBounds(bounds, { padding: 80 });
           addPins();
         });
 
