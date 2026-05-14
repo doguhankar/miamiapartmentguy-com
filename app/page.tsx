@@ -263,10 +263,10 @@ export default function MiamiApp() {
       const touchEndY = e.changedTouches[0].clientY;
       const diff = touchEndY - touchStartY.current;
       
-      // Dragged down more than 50px = collapse, up = expand
-      if (diff > 50 && isBottomSheetExpanded) {
+      // Dragged down more than 30px = collapse, up more than 30px = expand
+      if (diff > 30 && isBottomSheetExpanded) {
         setIsBottomSheetExpanded(false);
-      } else if (diff < -50 && !isBottomSheetExpanded) {
+      } else if (diff < -30 && !isBottomSheetExpanded) {
         setIsBottomSheetExpanded(true);
       }
       touchStartY.current = 0;
@@ -309,7 +309,7 @@ export default function MiamiApp() {
           onTouchEnd={handleBottomSheetDrag}
           className={`fixed left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-40 transition-all duration-300 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing ${
             isBottomSheetExpanded 
-              ? 'bottom-0 h-[85vh]' 
+              ? 'bottom-0 h-[75vh]' 
               : 'bottom-0 h-20'
           }`}
         >
