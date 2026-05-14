@@ -255,17 +255,110 @@ export default function MiamiApp() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center px-4 md:px-6 z-40 shadow-sm">
+      {/* Desktop Header */}
+      <div className="hidden md:flex fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 items-center px-6 z-40 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"><span className="text-white font-bold text-sm md:text-base">M</span></div>
-          <h1 className="text-base md:text-xl font-semibold truncate">Miami Apartment Guy</h1>
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"><span className="text-white font-bold">M</span></div>
+          <h1 className="text-xl font-semibold">Miami Apartment Guy</h1>
         </div>
       </div>
 
-      <div className="flex flex-1 mt-16">
+      {/* Mobile Layout */}
+      <div className="flex md:hidden flex-col w-full h-full">
+        {/* Map takes full screen on mobile */}
+        <div className="flex-1 relative">
+          <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
+          
+          {/* Mobile Search Bar Overlay */}
+          <div className="absolute top-4 left-4 right-4 z-30 flex gap-3 items-center">
+            <input 
+              type="text" 
+              placeholder="Search buildings, price..." 
+              className="flex-1 px-4 py-3 rounded-full bg-white border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-700">
+              ⚙
+            </button>
+          </div>
+        </div>
+
+        {/* Bottom Sheet with Building Cards */}
+        <div className="absolute bottom-0 left-0 right-0 max-h-[60vh] bg-white rounded-t-3xl shadow-2xl overflow-y-auto z-20">
+          <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 mb-4"></div>
+          
+          {!selectedBuilding ? (
+            <div className="p-4">
+              <h2 className="text-lg font-semibold mb-4">Neighborhoods</h2>
+              <div className="space-y-3">
+                {NEIGHBORHOODS.map((neighborhood) => {
+                  const buildings = getNeighborhoodBuildings(neighborhood);
+                  const isExpanded = expandedNeighborhoods.includes(neighborhood);
+                  return (
+                    <div key={neighborhood}>
+                      <button
+                        onClick={() => toggleNeighborhood(neighborhood)}
+                        className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
+                      >
+                        <span className="font-semibold text-gray-900 text-sm">{neighborhood} ({buildings.length})</span>
+                        <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
+                      </button>
+                      {isExpanded && (
+                        <div className="mt-2 space-y-2 mb-3">
+                          {buildings.map((building) => (
+                            <div
+                              key={building.id}
+                              onClick={() => setSelectedBuilding(building)}
+                              className="p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition bg-white"
+                            >
+                              <div className="flex justify-between items-start mb-1">
+                                <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
+                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
+                              </div>
+                              <p className="text-sm font-bold text-gray-900">${building.priceMin}+/mo</p>
+                              <p className="text-xs text-gray-600 mt-1">{building.concession}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 pb-6">
+              <button onClick={() => setSelectedBuilding(null)} className="text-blue-600 hover:text-blue-700 text-sm mb-3 font-semibold">← Back</button>
+              <ImageCarousel images={selectedBuilding.images} />
+              <h1 className="text-xl font-bold mt-3 mb-1">{selectedBuilding.name}</h1>
+              <p className="text-xs text-gray-600 mb-3">{selectedBuilding.address}</p>
+              
+              <div className="mb-3 p-3 bg-blue-50 border-2 border-blue-500 rounded-lg">
+                <p className="text-xs text-blue-900 font-semibold">Current Offer</p>
+                <p className="text-sm font-bold text-blue-600">{selectedBuilding.concession}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="p-2 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-600">Price</p>
+                  <p className="font-bold text-gray-900 text-sm">${selectedBuilding.priceMin}+</p>
+                </div>
+                <div className="p-2 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-600">Income</p>
+                  <p className="font-bold text-gray-900 text-sm">{selectedBuilding.incomeReq}</p>
+                </div>
+              </div>
+
+              <button onClick={() => setShowModal(true)} className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 text-sm">Talk to Don</button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden md:flex flex-1 mt-16">
         <div className="flex-1" ref={mapContainer} style={{ minHeight: 0 }} />
 
-        <div className="hidden md:flex md:w-96 bg-white border-l border-gray-200 overflow-y-auto flex-col">
+        <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto flex-col">
           {!selectedBuilding ? (
             <div className="p-6">
               <h2 className="text-lg font-semibold mb-6">Neighborhoods</h2>
