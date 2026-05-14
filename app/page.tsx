@@ -165,6 +165,7 @@ export default function MiamiApp() {
 
   // Initialize map and load Mapbox
   useEffect(() => {
+    console.log("[v0] Map init - mapContainer:", mapContainer.current, "map.current:", map.current);
     if (!mapContainer.current || map.current) return;
 
     const script = document.createElement('script');
@@ -172,12 +173,14 @@ export default function MiamiApp() {
     script.async = true;
 
     script.onload = () => {
+      console.log("[v0] Mapbox script loaded");
       const linkEl = document.createElement('link');
       linkEl.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
       linkEl.rel = 'stylesheet';
       document.head.appendChild(linkEl);
 
       setTimeout(() => {
+        console.log("[v0] Creating map instance", window.mapboxgl, mapContainer.current);
         if (window.mapboxgl && mapContainer.current) {
           window.mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
           
@@ -190,6 +193,7 @@ export default function MiamiApp() {
 
           // Add pins after map is ready
           map.current.on('load', () => {
+            console.log("[v0] Map loaded, adding pins");
             addPins();
           });
         }
