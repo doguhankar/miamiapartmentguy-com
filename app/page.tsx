@@ -332,6 +332,12 @@ export default function MiamiApp() {
     }
   }, [selectedBuilding]);
 
+  useEffect(() => {
+    if (map.current && map.current.isStyleLoaded()) {
+      addPins();
+    }
+  }, []);
+
   return (
     <div className="flex h-screen bg-gray-50">
       <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center px-6 z-40 shadow-sm">
