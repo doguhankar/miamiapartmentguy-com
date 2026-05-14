@@ -389,9 +389,35 @@ const BuildingDetails = ({ building, onClose, onTalkToDon }) => {
     </>
   );
 };
-      }, 100);
-    };
 
+const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) => {
+  const mapContainer = useRef(null);
+  const map = useRef(null);
+  const markersRef = useRef([]);
+
+  useEffect(() => {
+    if (!mapContainer.current) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js';
+    script.async = true;
+    script.onload = () => {
+      const linkEl = document.createElement('link');
+      linkEl.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
+      linkEl.rel = 'stylesheet';
+      document.head.appendChild(linkEl);
+
+      if (window.mapboxgl && mapContainer.current && !map.current) {
+        window.mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+        
+        map.current = new window.mapboxgl.Map({
+          container: mapContainer.current,
+          style: 'mapbox://styles/mapbox/light-v11',
+          center: [-80.188, 25.761],
+          zoom: 12.5,
+        });
+      }
+    };
     document.body.appendChild(script);
 
     return () => {
@@ -402,10 +428,10 @@ const BuildingDetails = ({ building, onClose, onTalkToDon }) => {
     };
   }, []);
 
-  const addPins = () => {
+  // Update pins when neighborhoods or selected building changes
+  useEffect(() => {
     if (!map.current || !window.mapboxgl) return;
 
-    // Clear existing markers
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
@@ -421,153 +447,15 @@ const BuildingDetails = ({ building, onClose, onTalkToDon }) => {
       el.style.border = '3px solid white';
       el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
       el.style.transition = 'all 0.2s';
-
-      el.onclick = () => setSelectedBuilding(building);
+      el.onclick = () => onPinClick(building);
 
       const marker = new window.mapboxgl.Marker(el)
         .setLngLat([building.lng, building.lat])
         .addTo(map.current);
-
+      
       markersRef.current.push(marker);
     });
-  };
+  }, [expandedNeighborhoods, selectedBuilding, onPinClick]);
 
-  // Update pins when neighborhoods or selected building changes
-  useEffect(() => {
-    if (map.current && window.mapboxgl) {
-      addPins();
-    }
-  }, [expandedNeighborhoods, selectedBuilding]);
-
-  const toggleNeighborhood = (neighborhood) => {
-    setExpandedNeighborhoods(prev =>
-      prev.includes(neighborhood)
-        ? prev.filter(n => n !== neighborhood)
-        : [...prev, neighborhood]
-    );
-  };
-
-  const getNeighborhoodBuildings = (neighborhood) => {
-    return BUILDINGS.filter(b => b.neighborhood === neighborhood);
-  };
-
-  return (
-    <div className="flex h-screen bg-gray-50">
-      <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center px-6 z-40 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"><span className="text-white font-bold">M</span></div>
-          <h1 className="text-xl font-semibold">Miami Apartment Guy</h1>
-        </div>
-      </div>
-
-      <div className="flex flex-1 mt-16">
-        <div className="flex-1" ref={mapContainer} style={{ minHeight: 0 }} />
-
-        <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
-          {!selectedBuilding ? (
-            <div className="p-6">
-              <h2 className="text-lg font-semibold mb-6">Neighborhoods</h2>
-              <div className="space-y-2">
-                {NEIGHBORHOODS.map((neighborhood) => {
-                  const buildings = getNeighborhoodBuildings(neighborhood);
-                  const isExpanded = expandedNeighborhoods.includes(neighborhood);
-                  return (
-                    <div key={neighborhood}>
-                      <button
-                        onClick={() => toggleNeighborhood(neighborhood)}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
-                      >
-                        <span className="font-semibold text-gray-900">{neighborhood} ({buildings.length})</span>
-                        <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
-                      </button>
-                      {isExpanded && (
-                        <div className="ml-4 mt-2 space-y-2 mb-4">
-                          {buildings.map((building) => (
-                            <div
-                              key={building.id}
-                              onClick={() => setSelectedBuilding(building)}
-                              className="p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition"
-                            >
-                              <h3 className="font-semibold text-gray-900">{building.name}</h3>
-                              <p className="text-sm font-semibold text-gray-900">${building.priceMin}+</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <div className="p-6">
-              <button onClick={() => setSelectedBuilding(null)} className="text-blue-600 hover:text-blue-700 text-sm mb-4">← Back</button>
-              <ImageCarousel images={selectedBuilding.images} />
-              <h1 className="text-2xl font-bold mt-4 mb-2">{selectedBuilding.name}</h1>
-              <div className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs font-medium mb-4">{selectedBuilding.neighborhood}</div>
-              <p className="text-gray-600 text-sm mb-6">📍 {selectedBuilding.address}</p>
-              
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <p className="text-xl font-bold text-gray-900">${selectedBuilding.priceMin}+/mo</p>
-              </div>
-              
-              <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-500 rounded-lg">
-                <p className="text-sm font-semibold text-blue-900">Current Offer</p>
-                <p className="text-lg font-bold text-blue-600">{selectedBuilding.concession}</p>
-              </div>
-
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Income Requirement</p>
-                <p className="font-semibold text-gray-900">{selectedBuilding.incomeReq}</p>
-              </div>
-
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Credit Requirement</p>
-                <p className="font-semibold text-gray-900">{selectedBuilding.creditReq}</p>
-              </div>
-
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-sm text-gray-600">Works w/ Guarantors</p>
-                  <Tooltip />
-                </div>
-                <p className="font-semibold text-gray-900">{selectedBuilding.guarantor ? 'Yes' : 'No'}</p>
-              </div>
-
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Hold Days</p>
-                <p className="font-semibold text-gray-900">{selectedBuilding.holdDays.join(', ')} days</p>
-              </div>
-
-              <div className="mb-6">
-                <p className="text-sm font-semibold text-gray-900 mb-2">Bedrooms</p>
-                <div className="flex gap-2 flex-wrap">
-                  {selectedBuilding.units.map((unit) => (
-                    <span key={unit} className="text-xs bg-gray-100 px-3 py-1 rounded">{unit}</span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <p className="text-sm font-semibold text-gray-900 mb-2">Amenities</p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedBuilding.amenities.map((a) => (
-                    <span key={a} className="text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded">{a}</span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <FeesDropdown fees={selectedBuilding.fees} />
-              </div>
-
-              <button onClick={() => setShowModal(true)} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Talk to Don</button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {showModal && <TalkTodonModal building={selectedBuilding} onClose={() => setShowModal(false)} />}
-    </div>
-  );
+  return <div ref={mapContainer} className="w-full h-full" />;
 }
