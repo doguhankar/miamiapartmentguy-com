@@ -196,9 +196,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
-    const buildingsToShow = BUILDINGS.filter(b => expandedNeighborhoods.includes(b.neighborhood));
-
-    buildingsToShow.forEach((building) => {
+    BUILDINGS.forEach((building) => {
       const el = document.createElement('div');
       el.style.width = '32px';
       el.style.height = '32px';
@@ -208,7 +206,10 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
       el.style.border = '3px solid white';
       el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
       el.style.transition = 'all 0.2s';
-      el.onclick = () => onPinClick(building);
+      el.onclick = () => {
+        setSelectedBuilding(building);
+        setIsBottomSheetExpanded(true);
+      };
 
       const marker = new window.mapboxgl.Marker(el)
         .setLngLat([building.lng, building.lat])
@@ -216,7 +217,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
       
       markersRef.current.push(marker);
     });
-  }, [expandedNeighborhoods, selectedBuilding, onPinClick]);
+  }, [selectedBuilding]);
 
   return <div ref={mapContainer} className="w-full h-full" />;
 };
@@ -420,7 +421,7 @@ export default function MiamiApp() {
               <ImageCarousel images={selectedBuilding.images} />
               <h1 className="text-2xl font-bold mt-4 mb-2">{selectedBuilding.name}</h1>
               <div className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs font-medium mb-4">{selectedBuilding.neighborhood}</div>
-              <p className="text-gray-600 text-sm mb-6">📍 {selectedBuilding.address}</p>
+              <p className="text-gray-600 text-sm mb-6">�� {selectedBuilding.address}</p>
               
               <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                 <p className="text-xl font-bold text-gray-900">${selectedBuilding.priceMin}+/mo</p>
