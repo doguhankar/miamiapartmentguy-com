@@ -227,7 +227,10 @@ export default function MiamiApp() {
       el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
       el.style.transition = 'all 0.2s';
 
-      el.onclick = () => setSelectedBuilding(building);
+      el.onclick = () => {
+        setSelectedBuilding(building);
+        setIsBottomSheetExpanded(true);
+      };
 
       const marker = new window.mapboxgl.Marker(el)
         .setLngLat([building.lng, building.lat])
@@ -354,7 +357,10 @@ export default function MiamiApp() {
                               {buildings.map((building) => (
                                 <div
                                   key={building.id}
-                                  onClick={() => setSelectedBuilding(building)}
+                                  onClick={() => {
+                                    setSelectedBuilding(building);
+                                    setIsBottomSheetExpanded(true);
+                                  }}
                                   className="p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition bg-white"
                                 >
                                   <div className="flex justify-between items-start mb-1">
