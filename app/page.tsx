@@ -296,18 +296,18 @@ export default function MiamiApp() {
 
       {/* Mobile Layout */}
       <div className="flex md:hidden flex-col w-full h-full relative bg-white">
-        {/* Map takes full screen on mobile */}
-        <div className="absolute inset-0 w-full" style={{ height: 'calc(100vh - 55vh)' }}>
-          <div ref={mapContainer} className="w-full h-full" />
+        {/* Map Container */}
+        <div className="flex-1 relative w-full overflow-hidden">
+          <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
           
           {/* Mobile Search Bar Overlay */}
-          <div className="absolute top-4 left-4 right-4 z-30 flex gap-3 items-center">
+          <div className="absolute top-4 left-4 right-4 z-30 flex gap-3 items-center pointer-events-none">
             <input 
               type="text" 
               placeholder="Search buildings, price..." 
-              className="flex-1 px-4 py-3 rounded-full bg-white border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-4 py-3 rounded-full bg-white border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 pointer-events-auto"
             />
-            <button className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-700">
+            <button className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-700 pointer-events-auto">
               ⚙
             </button>
           </div>
@@ -318,8 +318,8 @@ export default function MiamiApp() {
           ref={bottomSheetRef}
           onTouchStart={handleBottomSheetDrag}
           onMouseDown={handleBottomSheetDrag}
-          style={{ transform: `translateY(${dragOffset}px)`, transition: dragOffset === 0 ? 'transform 0.3s ease-out' : 'none' }}
-          className="fixed bottom-0 left-0 right-0 h-[55vh] bg-white rounded-t-3xl shadow-2xl z-40 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing"
+          style={{ transform: `translateY(${dragOffset}px)`, transition: dragOffset === 0 ? 'transform 0.3s ease-out' : 'none', height: '55vh' }}
+          className="bg-white rounded-t-3xl shadow-2xl z-40 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing"
         >
           {/* Drag Handle */}
           <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 mb-2 flex-shrink-0"></div>
