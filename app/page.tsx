@@ -228,7 +228,7 @@ export default function MiamiApp() {
   const markersRef = useRef([]);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [expandedNeighborhoods, setExpandedNeighborhoods] = useState([]);
+  const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell', 'Downtown']);
   const [isBottomSheetExpanded, setIsBottomSheetExpanded] = useState(false);
   const bottomSheetRef = useRef(null);
   const touchStartY = useRef(0);
