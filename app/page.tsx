@@ -358,7 +358,7 @@ export default function MiamiApp() {
         <div ref={bottomSheetRef} onTouchStart={handleBottomSheetDrag} onTouchEnd={handleBottomSheetDrag} className={`fixed left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-40 transition-all duration-300 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing ${isBottomSheetExpanded ? 'bottom-0 h-[65vh]' : 'bottom-0 h-20'}`}>
           <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 flex-shrink-0"></div>
           
-          {!isBottomSheetExpanded && !selectedBuilding && <div className="px-4 pt-2"><h2 className="text-sm font-semibold text-gray-900">Swipe up to browse neighborhoods</h2></div>}
+          {!isBottomSheetExpanded && !selectedBuilding && <div className="flex-1 flex items-center justify-center"><h2 className="text-lg font-semibold text-gray-900">Browse Neighborhoods</h2></div>}
           {!isBottomSheetExpanded && selectedBuilding && <div className="px-4 pt-2"><h2 className="text-sm font-semibold text-gray-900 truncate">{selectedBuilding.name}</h2><p className="text-xs text-gray-600">${selectedBuilding.priceMin}+/mo</p></div>}
 
           {isBottomSheetExpanded && (
