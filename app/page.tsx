@@ -198,12 +198,12 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
 
     BUILDINGS.forEach((building) => {
       const el = document.createElement('div');
-      el.style.width = '32px';
-      el.style.height = '32px';
+      el.style.width = '16px';
+      el.style.height = '16px';
       el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
       el.style.borderRadius = '50%';
       el.style.cursor = 'pointer';
-      el.style.border = '3px solid white';
+      el.style.border = '2px solid white';
       el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
       el.style.transition = 'all 0.2s';
       el.onclick = () => {
@@ -309,12 +309,12 @@ export default function MiamiApp() {
 
     BUILDINGS.forEach((building) => {
       const el = document.createElement('div');
-      el.style.width = '32px';
-      el.style.height = '32px';
+      el.style.width = '16px';
+      el.style.height = '16px';
       el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
       el.style.borderRadius = '50%';
       el.style.cursor = 'pointer';
-      el.style.border = '3px solid white';
+      el.style.border = '2px solid white';
       el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
       el.style.transition = 'all 0.2s';
       el.onclick = () => {
