@@ -260,7 +260,7 @@ export default function MiamiApp() {
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/light-v11',
           center: [-80.188, 25.76],
-          zoom: 14,
+          zoom: 11,
         });
 
         map.current.on('load', () => {
