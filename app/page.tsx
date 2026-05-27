@@ -260,6 +260,11 @@ export default function MiamiApp() {
   const [isBottomSheetExpanded, setIsBottomSheetExpanded] = useState(false);
   const bottomSheetRef = useRef(null);
   const touchStartY = useRef(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [infoBuilding, setInfoBuilding] = useState(null);
+  const [isAgentMode, setIsAgentMode] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinInput, setPinInput] = useState('');
 
   const toggleNeighborhood = (neighborhood) => {
     setExpandedNeighborhoods(prev =>
@@ -267,6 +272,31 @@ export default function MiamiApp() {
         ? prev.filter(n => n !== neighborhood)
         : [...prev, neighborhood]
     );
+  };
+
+  const filteredBuildings = BUILDINGS.filter(b => 
+    b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    b.neighborhood.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const getFilteredNeighborhoodBuildings = (neighborhood) => {
+    return filteredBuildings.filter(b => b.neighborhood === neighborhood);
+  };
+
+  const openWhatsApp = (building) => {
+    const message = encodeURIComponent(`Hi! I'm interested in ${building.name} at ${building.address}. Can you tell me more?`);
+    window.open(`https://wa.me/1234567890?text=${message}`, '_blank');
+  };
+
+  const handlePinSubmit = () => {
+    if (pinInput === '1234') {
+      setIsAgentMode(true);
+      setShowPinModal(false);
+      setPinInput('');
+    } else {
+      alert('Incorrect PIN');
+      setPinInput('');
+    }
   };
 
   useEffect(() => {
@@ -309,10 +339,6 @@ export default function MiamiApp() {
       }
     };
   }, []);
-
-  const getNeighborhoodBuildings = (neighborhood) => {
-    return BUILDINGS.filter(b => b.neighborhood === neighborhood);
-  };
 
   const handleBottomSheetDrag = (e) => {
     if (e.type === 'touchstart') {
@@ -378,8 +404,8 @@ export default function MiamiApp() {
         <div className={`flex-1 relative w-full h-full overflow-hidden transition-opacity ${isBottomSheetExpanded ? 'pointer-events-none opacity-50' : 'pointer-events-auto'}`}>
           <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
           <div className="absolute top-4 left-4 right-4 z-20 flex gap-3 items-center pointer-events-none">
-            <input type="text" placeholder="Search buildings, price..." className="flex-1 px-4 py-3 rounded-full bg-white border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 pointer-events-auto" />
-            <button className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-700 pointer-events-auto">⚙</button>
+            <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="flex-1 px-4 py-3 rounded-full bg-white border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 pointer-events-auto" />
+            <button onClick={() => isAgentMode ? setIsAgentMode(false) : setShowPinModal(true)} className={`w-12 h-12 ${isAgentMode ? 'bg-green-600' : 'bg-gray-600'} text-white rounded-full flex items-center justify-center shadow-md hover:opacity-80 pointer-events-auto text-lg`}>{isAgentMode ? '$' : '?'}</button>
           </div>
         </div>
 
@@ -393,11 +419,35 @@ export default function MiamiApp() {
             <div className="overflow-y-auto flex-1 px-4 pb-4">
               {!selectedBuilding ? (
                 <div className="pt-2">
-                  <h2 className="text-lg font-semibold mb-4">Neighborhoods</h2>
+                  <h2 className="text-lg font-semibold mb-4">{searchQuery ? 'Search Results' : 'Neighborhoods'}</h2>
+                  {searchQuery ? (
+                    <div className="space-y-2">
+                      {filteredBuildings.length === 0 ? (
+                        <p className="text-gray-500 text-center py-4">No buildings found</p>
+                      ) : (
+                        filteredBuildings.map((building) => (
+                          <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white">
+                            <div className="flex justify-between items-start mb-1">
+                              <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
+                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
+                            </div>
+                            <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
+                            <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
+                            {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
+                            <div className="flex gap-2 mt-2">
+                              <button onClick={(e) => { e.stopPropagation(); openWhatsApp(building); }} className="flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text</button>
+                              <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  ) : (
                   <div className="space-y-3">
                     {NEIGHBORHOODS.map((neighborhood) => {
-                      const buildings = getNeighborhoodBuildings(neighborhood);
+                      const buildings = getFilteredNeighborhoodBuildings(neighborhood);
                       const isExpanded = expandedNeighborhoods.includes(neighborhood);
+                      if (buildings.length === 0) return null;
                       return (
                         <div key={neighborhood}>
                           <button onClick={() => toggleNeighborhood(neighborhood)} className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
@@ -407,13 +457,18 @@ export default function MiamiApp() {
                           {isExpanded && (
                             <div className="mt-2 space-y-2 mb-3">
                               {buildings.map((building) => (
-                                <div key={building.id} onClick={() => { setSelectedBuilding(building); setIsBottomSheetExpanded(true); }} className="p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition bg-white">
+                                <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white">
                                   <div className="flex justify-between items-start mb-1">
                                     <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
                                     <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
                                   </div>
-                                  <p className="text-sm font-bold text-gray-900">{building.tagline || `$${building.priceMin}+/mo`}</p>
-                                  <p className="text-xs text-gray-600 mt-1">{building.concession}</p>
+                                  <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
+                                  <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
+                                  {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
+                                  <div className="flex gap-2 mt-2">
+                                    <button onClick={(e) => { e.stopPropagation(); openWhatsApp(building); }} className="flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text</button>
+                                    <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
+                                  </div>
                                 </div>
                               ))}
                             </div>
@@ -422,6 +477,7 @@ export default function MiamiApp() {
                       );
                     })}
                   </div>
+                  )}
                 </div>
               ) : (
                 <div className="pt-2">
@@ -458,11 +514,16 @@ export default function MiamiApp() {
         <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
           {!selectedBuilding ? (
             <div className="p-6">
-              <h2 className="text-lg font-semibold mb-6">Neighborhoods</h2>
+              <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">{searchQuery ? 'Search Results' : 'Neighborhoods'}</h2>
+                <button onClick={() => isAgentMode ? setIsAgentMode(false) : setShowPinModal(true)} className={`px-3 py-1 rounded-lg text-sm font-medium ${isAgentMode ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{isAgentMode ? 'Agent Mode' : 'Agent?'}</button>
+              </div>
               <div className="space-y-2">
                 {NEIGHBORHOODS.map((neighborhood) => {
-                  const buildings = getNeighborhoodBuildings(neighborhood);
+                  const buildings = getFilteredNeighborhoodBuildings(neighborhood);
                   const isExpanded = expandedNeighborhoods.includes(neighborhood);
+                  if (buildings.length === 0) return null;
                   return (
                     <div key={neighborhood}>
                       <button
@@ -475,13 +536,15 @@ export default function MiamiApp() {
                       {isExpanded && (
                         <div className="ml-4 mt-2 space-y-2">
                           {buildings.map((building) => (
-                            <div
-                              key={building.id}
-                              onClick={() => setSelectedBuilding(building)}
-                              className="p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition"
-                            >
+                            <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white">
                               <h3 className="font-semibold text-gray-900">{building.name}</h3>
-                              <p className="text-sm font-semibold text-gray-900">{building.tagline || `$${building.priceMin}+`}</p>
+                              <p className="text-sm text-gray-700">{building.tagline || `$${building.priceMin}+`}</p>
+                              <p className="text-xs text-gray-500 mt-1">{building.units.join(' | ')}</p>
+                              {isAgentMode && <p className="text-xs text-green-600 font-semibold mt-1">Commission: 50% of 1 month</p>}
+                              <div className="flex gap-2 mt-2">
+                                <button onClick={() => openWhatsApp(building)} className="flex-1 bg-green-500 text-white py-1.5 rounded text-xs font-semibold hover:bg-green-600">Text</button>
+                                <button onClick={() => setInfoBuilding(building)} className="flex-1 bg-blue-500 text-white py-1.5 rounded text-xs font-semibold hover:bg-blue-600">Info</button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -560,6 +623,114 @@ export default function MiamiApp() {
       </div>
 
       {showModal && <TalkTodonModal building={selectedBuilding} onClose={() => setShowModal(false)} />}
+      
+      {/* Info Popup Modal */}
+      {infoBuilding && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full max-h-[85vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
+              <h2 className="text-xl font-bold">{infoBuilding.name}</h2>
+              <button onClick={() => setInfoBuilding(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600">X</button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-xs text-blue-600 font-medium">{infoBuilding.neighborhood}</p>
+                <p className="text-sm text-gray-600 mt-1">{infoBuilding.address}</p>
+              </div>
+              
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-xs text-gray-500">Starting at</p>
+                <p className="text-2xl font-bold text-gray-900">${infoBuilding.priceMin}+/mo</p>
+              </div>
+              
+              {isAgentMode && (
+                <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
+                  <p className="text-xs text-green-600 font-medium">Agent Commission</p>
+                  <p className="text-lg font-bold text-green-700">50% of 1 month rent</p>
+                </div>
+              )}
+              
+              <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg">
+                <p className="text-xs text-orange-600 font-medium">Current Offer</p>
+                <p className="text-sm font-semibold text-orange-700">{infoBuilding.concession}</p>
+              </div>
+              
+              <div>
+                <p className="text-sm font-semibold text-gray-900 mb-2">Unit Types</p>
+                <div className="flex gap-2 flex-wrap">
+                  {infoBuilding.units.map((unit) => (
+                    <span key={unit} className="text-xs bg-gray-100 px-3 py-1 rounded-full">{unit}</span>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <p className="text-sm font-semibold text-gray-900 mb-2">Amenities</p>
+                <div className="flex flex-wrap gap-2">
+                  {infoBuilding.amenities.map((a) => (
+                    <span key={a} className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">{a}</span>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500">Income Req</p>
+                  <p className="font-semibold text-gray-900">{infoBuilding.incomeReq}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500">Credit Req</p>
+                  <p className="font-semibold text-gray-900">{infoBuilding.creditReq}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500">Guarantor</p>
+                  <p className="font-semibold text-gray-900">{infoBuilding.guarantor ? 'Accepted' : 'Not Accepted'}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500">Hold Period</p>
+                  <p className="font-semibold text-gray-900">{infoBuilding.holdDays.join('/')} days</p>
+                </div>
+              </div>
+              
+              <div>
+                <p className="text-sm font-semibold text-gray-900 mb-2">Fees</p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between"><span className="text-gray-600">Deposit</span><span className="font-medium">{infoBuilding.fees.deposit}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-600">Application</span><span className="font-medium">{infoBuilding.fees.application}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-600">Admin Fee</span><span className="font-medium">{infoBuilding.fees.admin}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-600">Parking</span><span className="font-medium">{infoBuilding.fees.parking}</span></div>
+                  {infoBuilding.fees.misc !== 'None' && infoBuilding.fees.misc !== 'TBD' && (
+                    <div className="flex justify-between"><span className="text-gray-600">Other</span><span className="font-medium">{infoBuilding.fees.misc}</span></div>
+                  )}
+                </div>
+              </div>
+              
+              <button onClick={() => { openWhatsApp(infoBuilding); }} className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 mt-4">Text About This Building</button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* PIN Modal for Agent Mode */}
+      {showPinModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+            <h2 className="text-xl font-bold mb-4 text-center">Enter Agent PIN</h2>
+            <input 
+              type="password" 
+              value={pinInput} 
+              onChange={(e) => setPinInput(e.target.value)} 
+              placeholder="Enter PIN" 
+              className="w-full px-4 py-3 border rounded-lg text-center text-2xl tracking-widest mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              maxLength={4}
+            />
+            <div className="flex gap-3">
+              <button onClick={() => { setShowPinModal(false); setPinInput(''); }} className="flex-1 py-3 rounded-lg border border-gray-300 font-semibold hover:bg-gray-50">Cancel</button>
+              <button onClick={handlePinSubmit} className="flex-1 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700">Unlock</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
