@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { Menu } from 'lucide-react';
 import { ImageCarousel } from '@/components/image-carousel';
 
 const BUILDINGS = [
@@ -380,10 +381,30 @@ export default function MiamiApp() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center px-6 z-40 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"><span className="text-white font-bold">M</span></div>
-          <h1 className="text-xl font-semibold">Miami Rentals</h1>
+      {/* Mobile Header */}
+      <div className="fixed top-0 left-0 right-0 z-40 bg-white md:hidden border-b-[0.5px] border-gray-300">
+        <div className="grid grid-cols-3 items-center px-4 py-3.5">
+          {/* Logo Column - Left */}
+          <div className="flex justify-start">
+            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-medium text-sm">M</span>
+            </div>
+          </div>
+          
+          {/* Text Column - Center */}
+          <div className="flex justify-center">
+            <h1 className="text-base font-medium text-gray-900 tracking-tighter whitespace-nowrap">
+              Miami Apartment Guy
+              <sup className="text-xs font-normal align-top ml-0.5 relative" style={{top: '2px'}}>™</sup>
+            </h1>
+          </div>
+          
+          {/* Hamburger Column - Right */}
+          <div className="flex justify-end">
+            <button onClick={() => {}} className="p-0 hover:opacity-70 transition">
+              <Menu className="w-5.5 h-5.5 text-gray-900" strokeWidth={1.5} />
+            </button>
+          </div>
         </div>
       </div>
 
