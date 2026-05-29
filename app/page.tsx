@@ -637,6 +637,9 @@ export default function MiamiApp() {
               <h2 className="text-xl font-bold">{infoBuilding.name}</h2>
               <button onClick={() => setInfoBuilding(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600">X</button>
             </div>
+            <div className="p-4">
+              <ImageCarousel images={infoBuilding.images} />
+            </div>
             <div className="p-4 space-y-4">
               <div className="bg-blue-50 p-3 rounded-lg">
                 <p className="text-xs text-blue-600 font-medium">{infoBuilding.neighborhood}</p>
