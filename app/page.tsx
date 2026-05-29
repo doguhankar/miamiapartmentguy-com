@@ -62,60 +62,18 @@ const ImageCarousel = ({ images }) => {
   const next = () => setCurrent((current + 1) % images.length);
   const prev = () => setCurrent((current - 1 + images.length) % images.length);
   return (
-  <div className="relative w-full h-64 bg-gray-200 rounded-lg overflow-hidden group">
-  <img src={images[current]} alt={`Building ${current + 1}`} className="w-full h-full object-cover" />
-  {images.length > 1 && (
-  <>
-  <button onClick={prev} className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition z-10">←</button>
-  <button onClick={next} className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition z-10">→</button>
-  <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">{current + 1}/{images.length}</div>
-  </>
-  )}
-  </div>
+    <div className="relative w-full h-64 bg-gray-200 rounded-lg overflow-hidden group">
+      <img src={images[current]} alt={`Building ${current + 1}`} className="w-full h-full object-cover" />
+      {images.length > 1 && (
+        <>
+          <button onClick={prev} className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition z-10">←</button>
+          <button onClick={next} className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition z-10">→</button>
+          <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">{current + 1}/{images.length}</div>
+        </>
+      )}
+    </div>
   );
-  };
-
-  const CardCarousel = ({ images, buildingId }) => {
-  const [current, setCurrent] = useState(0);
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
-  
-  const next = (e) => { e.stopPropagation(); setCurrent((current + 1) % images.length); };
-  const prev = (e) => { e.stopPropagation(); setCurrent((current - 1 + images.length) % images.length); };
-  
-  const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
-  const handleTouchMove = (e) => { touchEndX.current = e.touches[0].clientX; };
-  const handleTouchEnd = () => {
-    const diff = touchStartX.current - touchEndX.current;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) setCurrent((current + 1) % images.length);
-      else setCurrent((current - 1 + images.length) % images.length);
-    }
-  };
-  
-  return (
-  <div 
-    className="relative w-full h-40 bg-gray-200 rounded-t-lg overflow-hidden"
-    onTouchStart={handleTouchStart}
-    onTouchMove={handleTouchMove}
-    onTouchEnd={handleTouchEnd}
-  >
-    <img src={images[current]} alt={`Building ${current + 1}`} className="w-full h-full object-cover" />
-    {images.length > 1 && (
-    <>
-      <button onClick={prev} className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 active:bg-black/70 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm z-10">‹</button>
-      <button onClick={next} className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 active:bg-black/70 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm z-10">›</button>
-      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
-        {images.slice(0, 5).map((_, i) => (
-          <button key={i} onClick={(e) => { e.stopPropagation(); setCurrent(i); }} className={`w-2 h-2 rounded-full transition ${i === current ? 'bg-white' : 'bg-white/50'}`} />
-        ))}
-        {images.length > 5 && <span className="text-white text-xs ml-1">+{images.length - 5}</span>}
-      </div>
-    </>
-    )}
-  </div>
-  );
-  };
+};
 
 const FeesDropdown = ({ fees }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -330,6 +288,11 @@ export default function MiamiApp() {
     window.open(`https://wa.me/1234567890?text=${message}`, '_blank');
   };
 
+  const openSMS = () => {
+    const message = encodeURIComponent('Hey, this is Don\'s direct cell! You can text me about any building you\'ve been eyeing. I can help out with virtual tours, pricing, and neighborhood info.');
+    window.location.href = `sms:+14077657306?body=${message}`;
+  };
+
   const handlePinSubmit = () => {
     if (pinInput === '1234') {
       setIsAgentMode(true);
@@ -463,34 +426,22 @@ export default function MiamiApp() {
                 <div className="pt-2">
                   <h2 className="text-lg font-semibold mb-4">{searchQuery ? 'Search Results' : 'Neighborhoods'}</h2>
                   {searchQuery ? (
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                       {filteredBuildings.length === 0 ? (
                         <p className="text-gray-500 text-center py-4">No buildings found</p>
                       ) : (
                         filteredBuildings.map((building) => (
-                          <div key={building.id} className="rounded-lg border border-gray-200 bg-white overflow-hidden shadow-sm">
-                            <CardCarousel images={building.images} buildingId={building.id} />
-                            <div className="p-3">
-                              <div className="flex justify-between items-start mb-2">
-                                <h3 className="font-bold text-gray-900">{building.name}</h3>
-                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                                <span>{building.units.join(', ')}</span>
-                                <span className="text-gray-300">|</span>
-                                <span className="font-semibold text-gray-900">${building.priceMin}+</span>
-                              </div>
-                              <div className="flex flex-wrap gap-1 mb-3">
-                                {building.amenities.slice(0, 4).map((a) => (
-                                  <span key={a} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{a}</span>
-                                ))}
-                                {building.amenities.length > 4 && <span className="text-xs text-gray-400">+{building.amenities.length - 4}</span>}
-                              </div>
-                              {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                              <div className="flex gap-2">
-                                <button onClick={(e) => { e.stopPropagation(); openWhatsApp(building); }} className="flex-1 bg-green-500 text-white py-2.5 rounded-lg text-sm font-semibold active:bg-green-600">Text</button>
-                                <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2.5 rounded-lg text-sm font-semibold active:bg-blue-600">Info</button>
-                              </div>
+                          <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white">
+                            <div className="flex justify-between items-start mb-1">
+                              <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
+                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
+                            </div>
+                            <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
+                            <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
+                            {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
+                            <div className="flex gap-2 mt-2">
+                                <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
+                              <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
                             </div>
                           </div>
                         ))
@@ -509,31 +460,19 @@ export default function MiamiApp() {
                             <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
                           </button>
                           {isExpanded && (
-                            <div className="mt-3 space-y-4 mb-3">
+                            <div className="mt-2 space-y-2 mb-3">
                               {buildings.map((building) => (
-                                <div key={building.id} className="rounded-lg border border-gray-200 bg-white overflow-hidden shadow-sm">
-                                  <CardCarousel images={building.images} buildingId={building.id} />
-                                  <div className="p-3">
-                                    <div className="flex justify-between items-start mb-2">
-                                      <h3 className="font-bold text-gray-900">{building.name}</h3>
-                                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                                      <span>{building.units.join(', ')}</span>
-                                      <span className="text-gray-300">|</span>
-                                      <span className="font-semibold text-gray-900">${building.priceMin}+</span>
-                                    </div>
-                                    <div className="flex flex-wrap gap-1 mb-3">
-                                      {building.amenities.slice(0, 4).map((a) => (
-                                        <span key={a} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{a}</span>
-                                      ))}
-                                      {building.amenities.length > 4 && <span className="text-xs text-gray-400">+{building.amenities.length - 4}</span>}
-                                    </div>
-                                    {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                                    <div className="flex gap-2">
-                                      <button onClick={(e) => { e.stopPropagation(); openWhatsApp(building); }} className="flex-1 bg-green-500 text-white py-2.5 rounded-lg text-sm font-semibold active:bg-green-600">Text</button>
-                                      <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2.5 rounded-lg text-sm font-semibold active:bg-blue-600">Info</button>
-                                    </div>
+                                <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white">
+                                  <div className="flex justify-between items-start mb-1">
+                                    <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
+                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
+                                  </div>
+                                  <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
+                                  <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
+                                  {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
+                                  <div className="flex gap-2 mt-2">
+                              <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
+                                    <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
                                   </div>
                                 </div>
                               ))}
@@ -600,31 +539,16 @@ export default function MiamiApp() {
                         <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
                       </button>
                       {isExpanded && (
-                        <div className="ml-2 mt-3 space-y-4">
+                        <div className="ml-4 mt-2 space-y-2">
                           {buildings.map((building) => (
-                            <div key={building.id} className="rounded-lg border border-gray-200 bg-white overflow-hidden shadow-sm">
-                              <CardCarousel images={building.images} buildingId={building.id} />
-                              <div className="p-3">
-                                <div className="flex justify-between items-start mb-2">
-                                  <h3 className="font-bold text-gray-900">{building.name}</h3>
-                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                                  <span>{building.units.join(', ')}</span>
-                                  <span className="text-gray-300">|</span>
-                                  <span className="font-semibold text-gray-900">${building.priceMin}+</span>
-                                </div>
-                                <div className="flex flex-wrap gap-1 mb-3">
-                                  {building.amenities.slice(0, 4).map((a) => (
-                                    <span key={a} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{a}</span>
-                                  ))}
-                                  {building.amenities.length > 4 && <span className="text-xs text-gray-400">+{building.amenities.length - 4}</span>}
-                                </div>
-                                {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                                <div className="flex gap-2">
-                                  <button onClick={() => openWhatsApp(building)} className="flex-1 bg-green-500 text-white py-2 rounded text-sm font-semibold hover:bg-green-600">Text</button>
-                                  <button onClick={() => setInfoBuilding(building)} className="flex-1 bg-blue-500 text-white py-2 rounded text-sm font-semibold hover:bg-blue-600">Info</button>
-                                </div>
+                            <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white">
+                              <h3 className="font-semibold text-gray-900">{building.name}</h3>
+                              <p className="text-sm text-gray-700">{building.tagline || `$${building.priceMin}+`}</p>
+                              <p className="text-xs text-gray-500 mt-1">{building.units.join(' | ')}</p>
+                              {isAgentMode && <p className="text-xs text-green-600 font-semibold mt-1">Commission: 50% of 1 month</p>}
+                              <div className="flex gap-2 mt-2">
+                                <button onClick={() => openSMS()} className="md:hidden flex-1 bg-green-500 text-white py-1.5 rounded text-xs font-semibold hover:bg-green-600">Text Don</button>
+                                <button onClick={() => setInfoBuilding(building)} className="flex-1 bg-blue-500 text-white py-1.5 rounded text-xs font-semibold hover:bg-blue-600">Info</button>
                               </div>
                             </div>
                           ))}
