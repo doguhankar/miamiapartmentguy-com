@@ -414,7 +414,8 @@ export default function MiamiApp() {
                         <p className="text-gray-500 text-center py-4">No buildings found</p>
                       ) : (
                         filteredBuildings.map((building) => (
-                          <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white">
+                          <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
+                            <img src={building.images[0]} alt={building.name} className="w-full h-40 object-cover rounded-md mb-3" />
                             <div className="flex justify-between items-start mb-1">
                               <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
                               <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
@@ -445,7 +446,8 @@ export default function MiamiApp() {
                           {isExpanded && (
                             <div className="mt-2 space-y-2 mb-3">
                               {buildings.map((building) => (
-                                <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white">
+                                <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
+                                  <img src={building.images[0]} alt={building.name} className="w-full h-40 object-cover rounded-md mb-3" />
                                   <div className="flex justify-between items-start mb-1">
                                     <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
                                     <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
