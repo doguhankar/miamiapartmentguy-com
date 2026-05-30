@@ -394,14 +394,14 @@ export default function MiamiApp() {
         <div className="grid grid-cols-3 items-center px-4 py-3.5">
           {/* Logo Column - Left */}
           <div className="flex justify-start">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-[#185FA5] rounded-full flex items-center justify-center">
               <span className="text-white font-medium text-sm">M</span>
             </div>
           </div>
           
           {/* Text Column - Center */}
           <div className="flex justify-center">
-            <h1 className="text-base font-medium text-gray-900 tracking-tighter whitespace-nowrap">
+            <h1 className="text-base font-medium text-[#1a1a1a] tracking-tighter whitespace-nowrap">
               Miami Apartment Guy
               <sup className="text-xs font-normal align-top ml-0.5 relative" style={{top: '2px'}}>™</sup>
             </h1>
@@ -410,7 +410,7 @@ export default function MiamiApp() {
           {/* Hamburger Column - Right */}
           <div className="flex justify-end">
             <button onClick={() => {}} className="p-0 hover:opacity-70 transition">
-              <Menu className="w-5.5 h-5.5 text-gray-900" strokeWidth={1.5} />
+              <Menu className="w-5.5 h-5.5 text-[#1a1a1a]" strokeWidth={1.5} />
             </button>
           </div>
         </div>
