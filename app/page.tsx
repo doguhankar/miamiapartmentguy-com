@@ -745,6 +745,8 @@ export default function MiamiApp() {
           </div>
         </div>
       )}
+      {/* Hamburger Menu Drawer */}
+      {showHamburgerMenu && <HamburgerDrawer onClose={() => setShowHamburgerMenu(false)} />}
     </div>
   );
 }
