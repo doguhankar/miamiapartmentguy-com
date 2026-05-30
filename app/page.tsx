@@ -421,7 +421,7 @@ export default function MiamiApp() {
       </div>
 
       {/* Mobile Layout */}
-      <div className="flex md:hidden flex-col w-full h-full bg-white min-h-screen">
+      <div className="flex md:hidden flex-col w-full h-full bg-white min-h-screen pt-14">
         <div className={`flex-1 relative w-full h-full overflow-hidden transition-opacity ${isBottomSheetExpanded ? 'pointer-events-none opacity-50' : 'pointer-events-auto'}`}>
           <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
           <div className="absolute top-4 left-4 right-4 z-20 flex gap-3 items-center pointer-events-none">
