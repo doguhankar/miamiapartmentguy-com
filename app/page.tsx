@@ -443,7 +443,7 @@ export default function MiamiApp() {
           </div>
         </div>
 
-        <div ref={bottomSheetRef} onTouchStart={handleBottomSheetDrag} onTouchEnd={handleBottomSheetDrag} className={`fixed left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-40 transition-all duration-300 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing ${SNAP_POINTS[bottomSheetSnapPoint]}`}>
+        <div ref={bottomSheetRef} onTouchStart={handleBottomSheetDrag} onTouchEnd={handleBottomSheetDrag} className={`fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-40 transition-all duration-300 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing ${SNAP_POINTS[bottomSheetSnapPoint]}`}>
           <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 flex-shrink-0"></div>
           
           {bottomSheetSnapPoint === 0 && <div className="flex-1"></div>}
@@ -452,12 +452,15 @@ export default function MiamiApp() {
             <div className="px-4 pt-2 overflow-hidden">
               <h2 className="text-xs font-semibold text-gray-500 mb-1 truncate">Browse Neighborhoods</h2>
               <div className="space-y-1 overflow-hidden">
-                <div className="p-3 rounded-lg border border-gray-200 bg-white">
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="font-semibold text-gray-900 text-sm">{filteredBuildings[0].name}</h3>
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{filteredBuildings[0].neighborhood}</span>
+                <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                  <img src={filteredBuildings[0].images[0]} alt={filteredBuildings[0].name} className="w-full h-36 object-cover" />
+                  <div className="p-3">
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="font-semibold text-gray-900 text-sm">{filteredBuildings[0].name}</h3>
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{filteredBuildings[0].neighborhood}</span>
+                    </div>
+                    <p className="text-xs text-gray-600">{filteredBuildings[0].tagline || `$${filteredBuildings[0].priceMin}+/mo`}</p>
                   </div>
-                  <p className="text-xs text-gray-600">{filteredBuildings[0].tagline || `$${filteredBuildings[0].priceMin}+/mo`}</p>
                 </div>
               </div>
             </div>
@@ -466,12 +469,15 @@ export default function MiamiApp() {
           {bottomSheetSnapPoint === 1 && selectedBuilding && (
             <div className="px-4 pt-2 overflow-hidden">
               <div className="space-y-1 overflow-hidden">
-                <div className="p-3 rounded-lg border border-gray-200 bg-white">
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="font-semibold text-gray-900 text-sm">{selectedBuilding.name}</h3>
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{selectedBuilding.neighborhood}</span>
+                <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                  <img src={selectedBuilding.images[0]} alt={selectedBuilding.name} className="w-full h-36 object-cover" />
+                  <div className="p-3">
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="font-semibold text-gray-900 text-sm">{selectedBuilding.name}</h3>
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{selectedBuilding.neighborhood}</span>
+                    </div>
+                    <p className="text-xs text-gray-600">{selectedBuilding.tagline || `$${selectedBuilding.priceMin}+/mo`}</p>
                   </div>
-                  <p className="text-xs text-gray-600">{selectedBuilding.tagline || `$${selectedBuilding.priceMin}+/mo`}</p>
                 </div>
               </div>
             </div>
