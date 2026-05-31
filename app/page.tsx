@@ -232,7 +232,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
       el.style.transition = 'all 0.2s';
       el.onclick = () => {
         setSelectedBuilding(building);
-        setIsBottomSheetExpanded(true);
+        setBottomSheetSnapPoint(1);
       };
 
       const marker = new window.mapboxgl.Marker(el)
@@ -387,7 +387,7 @@ export default function MiamiApp() {
       el.style.transition = 'all 0.2s';
       el.onclick = () => {
         setSelectedBuilding(building);
-        setIsBottomSheetExpanded(true);
+        setBottomSheetSnapPoint(1);
       };
 
       const marker = new window.mapboxgl.Marker(el)
@@ -478,6 +478,7 @@ export default function MiamiApp() {
               ) : (
                 <div className="pt-2">
                   <div className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
+                    <button onClick={(e) => { e.stopPropagation(); setSelectedBuilding(null); }} className="text-sm text-blue-500 font-semibold mb-2 hover:text-blue-600">← Back</button>
                     <img src={selectedBuilding.images[0]} alt={selectedBuilding.name} className="w-full h-40 object-cover rounded-md mb-3" />
                     <div className="flex justify-between items-start mb-1">
                       <h3 className="font-semibold text-gray-900 text-sm">{selectedBuilding.name}</h3>
