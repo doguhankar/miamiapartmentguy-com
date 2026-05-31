@@ -264,7 +264,7 @@ export default function MiamiApp() {
 
   const SNAP_POINTS = {
     0: 'h-5 md:h-0',      // COLLAPSED: 20px (drag handle)
-    1: 'h-56 md:h-auto',  // DEFAULT: 220px (one building card)
+    1: 'h-[420px] md:h-auto',  // DEFAULT: 420px (full building card visible)
     2: 'h-[75vh] md:auto' // EXPANDED: 75% screen (scrollable)
   };
 
@@ -450,7 +450,6 @@ export default function MiamiApp() {
           
           {bottomSheetSnapPoint === 1 && !selectedBuilding && filteredBuildings.length > 0 && (
             <div className="px-4 pt-2 overflow-hidden">
-              <h2 className="text-xs font-semibold text-gray-500 mb-2 truncate">Browse Neighborhoods</h2>
               <div className="space-y-2 overflow-hidden">
                 <div className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
                   <img src={filteredBuildings[0].images[0]} alt={filteredBuildings[0].name} className="w-full h-40 object-cover rounded-md mb-3" />
