@@ -280,7 +280,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) =
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
-    BUILDINGS.forEach((building) => {
+    geocodedBuildings.forEach((building) => {
       const el = document.createElement('div');
       el.style.width = '16px';
       el.style.height = '16px';
@@ -310,6 +310,8 @@ export default function MiamiApp() {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
+  const geocodeCache = useRef(new Map());
+  const [geocodedBuildings, setGeocodedBuildings] = useState(BUILDINGS);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell', 'Downtown']);
@@ -336,7 +338,7 @@ export default function MiamiApp() {
     );
   };
 
-  const filteredBuildings = BUILDINGS.filter(b => 
+  const filteredBuildings = geocodedBuildings.filter(b => 
     b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.neighborhood.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -365,6 +367,56 @@ export default function MiamiApp() {
       setPinInput('');
     }
   };
+
+  // Geocoding useEffect
+  useEffect(() => {
+    const geocodeAddresses = async () => {
+      const MAPBOX_TOKEN = 'pk.eyJ1IjoiZG9ua2FyYWhhbiIsImEiOiJjbXAzamJ1eHIwMGQ2MnJvbHU1MHNwZWlzIn0.8De9qZEqvTRmh8-d-25NfQ';
+      const failedAddresses = [];
+      let successCount = 0;
+
+      const geocodePromises = BUILDINGS.map(async (building) => {
+        // Check cache first
+        if (geocodeCache.current.has(building.address)) {
+          const cached = geocodeCache.current.get(building.address);
+          successCount++;
+          return { ...building, lat: cached.lat, lng: cached.lng };
+        }
+
+        try {
+          const encodedAddress = encodeURIComponent(building.address);
+          const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${MAPBOX_TOKEN}`;
+          
+          const response = await fetch(url);
+          const data = await response.json();
+
+          if (data.features && data.features.length > 0) {
+            const [lng, lat] = data.features[0].geometry.coordinates;
+            geocodeCache.current.set(building.address, { lat, lng });
+            successCount++;
+            return { ...building, lat, lng };
+          } else {
+            failedAddresses.push(building.address);
+            return building; // Keep original coordinates
+          }
+        } catch (error) {
+          failedAddresses.push(building.address);
+          return building; // Keep original coordinates
+        }
+      });
+
+      const geocodedResults = await Promise.all(geocodePromises);
+      setGeocodedBuildings(geocodedResults);
+
+      // Log results
+      console.log(`[Geocoding] Successfully geocoded ${successCount}/${geocodedResults.length} addresses`);
+      if (failedAddresses.length > 0) {
+        console.warn(`[Geocoding] Failed to geocode ${failedAddresses.length} addresses:`, failedAddresses);
+      }
+    };
+
+    geocodeAddresses();
+  }, []);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -435,7 +487,7 @@ export default function MiamiApp() {
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
-    BUILDINGS.forEach((building) => {
+    geocodedBuildings.forEach((building) => {
       const el = document.createElement('div');
       el.style.width = '16px';
       el.style.height = '16px';
