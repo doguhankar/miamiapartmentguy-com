@@ -236,7 +236,7 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick }) => {
+const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick, geocodedBuildings }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
@@ -514,7 +514,7 @@ export default function MiamiApp() {
     if (map.current) {
       addPins();
     }
-  }, [selectedBuilding]);
+  }, [selectedBuilding, geocodedBuildings]);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -704,7 +704,7 @@ export default function MiamiApp() {
       {/* Desktop Layout */}
       <div className="hidden md:flex flex-1">
         <div className="flex-1 relative">
-          <MapComponent expandedNeighborhoods={expandedNeighborhoods} selectedBuilding={selectedBuilding} onPinClick={setSelectedBuilding} />
+          <MapComponent expandedNeighborhoods={expandedNeighborhoods} selectedBuilding={selectedBuilding} onPinClick={setSelectedBuilding} geocodedBuildings={geocodedBuildings} />
         </div>
 
         <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
