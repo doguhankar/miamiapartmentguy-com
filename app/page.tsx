@@ -264,7 +264,7 @@ export default function MiamiApp() {
 
   const SNAP_POINTS = {
     0: 'h-5 md:h-0',      // COLLAPSED: 20px (drag handle)
-    1: 'h-[420px] md:h-auto',  // DEFAULT: 420px (full building card visible)
+    1: 'h-[400px] md:h-auto',  // DEFAULT: 400px (full card + 40px peek of next)
     2: 'h-[75vh] md:auto' // EXPANDED: 75% screen (scrollable)
   };
 
@@ -448,45 +448,51 @@ export default function MiamiApp() {
           
           {bottomSheetSnapPoint === 0 && <div className="flex-1"></div>}
           
-          {bottomSheetSnapPoint === 1 && !selectedBuilding && filteredBuildings.length > 0 && (
-            <div className="px-4 pt-2 overflow-hidden">
-              <div className="space-y-2 overflow-hidden">
-                <div className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
-                  <img src={filteredBuildings[0].images[0]} alt={filteredBuildings[0].name} className="w-full h-40 object-cover rounded-md mb-3" />
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="font-bold text-gray-900">{filteredBuildings[0].name}</h3>
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full flex-shrink-0">{filteredBuildings[0].neighborhood}</span>
-                  </div>
-                  <p className="text-sm text-gray-700 mb-1">{filteredBuildings[0].tagline || `$${filteredBuildings[0].priceMin}+/mo`}</p>
-                  <p className="text-xs text-gray-500 mb-2">{filteredBuildings[0].units.join(' | ')}</p>
-                  {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                  <div className="flex gap-2 mt-3">
-                    <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
-                    <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(filteredBuildings[0]); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {bottomSheetSnapPoint === 1 && selectedBuilding && (
-            <div className="px-4 pt-2 overflow-hidden">
-              <div className="space-y-2 overflow-hidden">
-                <div className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
-                  <img src={selectedBuilding.images[0]} alt={selectedBuilding.name} className="w-full h-40 object-cover rounded-md mb-3" />
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="font-bold text-gray-900">{selectedBuilding.name}</h3>
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full flex-shrink-0">{selectedBuilding.neighborhood}</span>
-                  </div>
-                  <p className="text-sm text-gray-700 mb-1">{selectedBuilding.tagline || `$${selectedBuilding.priceMin}+/mo`}</p>
-                  <p className="text-xs text-gray-500 mb-2">{selectedBuilding.units.join(' | ')}</p>
-                  {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                  <div className="flex gap-2 mt-3">
-                    <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
-                    <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(selectedBuilding); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
+          {bottomSheetSnapPoint === 1 && (
+            <div className="overflow-y-auto flex-1 px-4 pb-4">
+              {!selectedBuilding ? (
+                <div className="pt-2">
+                  <div className="space-y-2">
+                    {filteredBuildings.length === 0 ? (
+                      <p className="text-gray-500 text-center py-4">No buildings found</p>
+                    ) : (
+                      filteredBuildings.map((building) => (
+                        <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
+                          <img src={building.images[0]} alt={building.name} className="w-full h-40 object-cover rounded-md mb-3" />
+                          <div className="flex justify-between items-start mb-1">
+                            <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
+                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
+                          </div>
+                          <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
+                          <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
+                          {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
+                          <div className="flex gap-2 mt-2">
+                            <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
+                            <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="pt-2">
+                  <div className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
+                    <img src={selectedBuilding.images[0]} alt={selectedBuilding.name} className="w-full h-40 object-cover rounded-md mb-3" />
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="font-semibold text-gray-900 text-sm">{selectedBuilding.name}</h3>
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{selectedBuilding.neighborhood}</span>
+                    </div>
+                    <p className="text-sm text-gray-700 mb-1">{selectedBuilding.tagline || `$${selectedBuilding.priceMin}+/mo`}</p>
+                    <p className="text-xs text-gray-500 mb-2">{selectedBuilding.units.join(' | ')}</p>
+                    {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
+                      <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(selectedBuilding); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
