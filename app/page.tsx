@@ -253,7 +253,7 @@ export default function MiamiApp() {
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell', 'Downtown']);
-  const [isBottomSheetExpanded, setIsBottomSheetExpanded] = useState(false);
+  const [bottomSheetSnapPoint, setBottomSheetSnapPoint] = useState(1);
   const bottomSheetRef = useRef(null);
   const touchStartY = useRef(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -261,6 +261,12 @@ export default function MiamiApp() {
   const [isAgentMode, setIsAgentMode] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
+
+  const SNAP_POINTS = {
+    0: 'h-5 md:h-0',      // COLLAPSED: 20px (drag handle)
+    1: 'h-56 md:h-auto',  // DEFAULT: 220px (one building card)
+    2: 'h-[75vh] md:auto' // EXPANDED: 75% screen (scrollable)
+  };
 
   const toggleNeighborhood = (neighborhood) => {
     setExpandedNeighborhoods(prev =>
@@ -347,10 +353,17 @@ export default function MiamiApp() {
     } else if (e.type === 'touchend' && touchStartY.current) {
       const touchEndY = e.changedTouches[0].clientY;
       const diff = touchEndY - touchStartY.current;
-      if (diff > 30 && isBottomSheetExpanded) {
-        setIsBottomSheetExpanded(false);
-      } else if (diff < -30 && !isBottomSheetExpanded) {
-        setIsBottomSheetExpanded(true);
+      
+      if (diff > 30) {
+        // Swipe down
+        if (bottomSheetSnapPoint > 0) {
+          setBottomSheetSnapPoint(bottomSheetSnapPoint - 1);
+        }
+      } else if (diff < -30) {
+        // Swipe up
+        if (bottomSheetSnapPoint < 2) {
+          setBottomSheetSnapPoint(bottomSheetSnapPoint + 1);
+        }
       }
       touchStartY.current = 0;
     }
@@ -422,7 +435,7 @@ export default function MiamiApp() {
 
       {/* Mobile Layout */}
       <div className="flex md:hidden flex-col w-full h-full bg-white min-h-screen pt-16">
-        <div className={`flex-1 relative w-full h-full overflow-hidden transition-opacity ${isBottomSheetExpanded ? 'pointer-events-none opacity-50' : 'pointer-events-auto'}`}>
+        <div className={`flex-1 relative w-full h-full overflow-hidden transition-opacity ${bottomSheetSnapPoint === 2 ? 'pointer-events-none opacity-50' : 'pointer-events-auto'}`}>
           <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
           <div className="absolute top-4 left-4 right-4 z-20 flex gap-3 items-center pointer-events-none">
             <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="flex-1 px-4 py-3 rounded-full bg-white border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 pointer-events-auto" />
@@ -430,13 +443,41 @@ export default function MiamiApp() {
           </div>
         </div>
 
-        <div ref={bottomSheetRef} onTouchStart={handleBottomSheetDrag} onTouchEnd={handleBottomSheetDrag} className={`fixed left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-40 transition-all duration-300 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing ${isBottomSheetExpanded ? 'bottom-0 h-[65vh]' : 'bottom-0 h-20'}`}>
+        <div ref={bottomSheetRef} onTouchStart={handleBottomSheetDrag} onTouchEnd={handleBottomSheetDrag} className={`fixed left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-40 transition-all duration-300 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing ${SNAP_POINTS[bottomSheetSnapPoint]}`}>
           <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 flex-shrink-0"></div>
           
-          {!isBottomSheetExpanded && !selectedBuilding && <div className="flex-1 flex items-center justify-center"><h2 className="text-lg font-semibold text-gray-900">Browse Neighborhoods</h2></div>}
-          {!isBottomSheetExpanded && selectedBuilding && <div className="px-4 pt-2"><h2 className="text-sm font-semibold text-gray-900 truncate">{selectedBuilding.name}</h2><p className="text-xs text-gray-600">{selectedBuilding.tagline || `$${selectedBuilding.priceMin}+/mo`}</p></div>}
+          {bottomSheetSnapPoint === 0 && <div className="flex-1"></div>}
+          
+          {bottomSheetSnapPoint === 1 && !selectedBuilding && filteredBuildings.length > 0 && (
+            <div className="px-4 pt-2 overflow-hidden">
+              <h2 className="text-xs font-semibold text-gray-500 mb-1 truncate">Browse Neighborhoods</h2>
+              <div className="space-y-1 overflow-hidden">
+                <div className="p-3 rounded-lg border border-gray-200 bg-white">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-semibold text-gray-900 text-sm">{filteredBuildings[0].name}</h3>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{filteredBuildings[0].neighborhood}</span>
+                  </div>
+                  <p className="text-xs text-gray-600">{filteredBuildings[0].tagline || `$${filteredBuildings[0].priceMin}+/mo`}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {bottomSheetSnapPoint === 1 && selectedBuilding && (
+            <div className="px-4 pt-2 overflow-hidden">
+              <div className="space-y-1 overflow-hidden">
+                <div className="p-3 rounded-lg border border-gray-200 bg-white">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-semibold text-gray-900 text-sm">{selectedBuilding.name}</h3>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{selectedBuilding.neighborhood}</span>
+                  </div>
+                  <p className="text-xs text-gray-600">{selectedBuilding.tagline || `$${selectedBuilding.priceMin}+/mo`}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
-          {isBottomSheetExpanded && (
+          {bottomSheetSnapPoint === 2 && (
             <div className="overflow-y-auto flex-1 px-4 pb-4">
               {!selectedBuilding ? (
                 <div className="pt-2">
