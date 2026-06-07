@@ -29,7 +29,10 @@ export async function POST(req) {
       results['flow-brickell'] = flowBrickellUnits;
 
       // Store in Supabase instead of global cache
+      console.log('[v0] Calling storePricingData with:', flowBrickellUnits.length, 'units');
       const stored = await storePricingData('flow-brickell', flowBrickellUnits);
+      console.log('[v0] storePricingData returned:', stored);
+      
       if (!stored) {
         console.warn('[v0] Failed to store data in Supabase, keeping in memory cache as fallback');
         global.unitCache = global.unitCache || {};
@@ -37,6 +40,8 @@ export async function POST(req) {
           units: flowBrickellUnits,
           updatedAt: new Date().toISOString(),
         };
+      } else {
+        console.log('[v0] Successfully stored in Supabase, NOT using in-memory cache');
       }
     })();
 
