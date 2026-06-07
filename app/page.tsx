@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Menu } from 'lucide-react';
 import { ImageCarousel } from '@/components/image-carousel';
+import { MapFilterModal, type FilterState } from '@/components/map-filter-modal';
 
 const BUILDINGS = [
   { id: 1, name: 'Flow Brickell', neighborhood: 'Brickell', address: '275 SW 6th St, Miami, FL 33130', lat: 25.7684, lng: -80.1990, priceMin: 2790, priceTier: '$$', tagline: 'Vibrant community, social hub, always buzzing', concession: '1 month free on select units', units: ['Studio', '1B', '2B', '3B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60, 90], images: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f8-PjSUbS6yTrIBusqZ0XXyuU8h1qerGT.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f7-e8tHKaMeidxoV13PJgZNveLuE6ScPy.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f1-sC9oG9eD9DGGUwRRPP93yLIPgssB8r.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f3-Bw25PrMJlv7UYJ3bt5D5fmbz94yAMb.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f4-9VsnFpU86vEqyTuNQKYutuLUnX5dEi.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f5-XWNn2OspXHwINOXtaNPYMrIUhleUvP.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f6-OjhZIKj1vv611WQHgFm26OfY157Ijw.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f2-ICadR5CSOFH7p9F3OQtpdBs2CH5RlD.webp'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,790', application: '$75', admin: '$150', parking: '$150/car', misc: 'Pet fee: $35/mo' } },
@@ -323,6 +324,9 @@ export default function MiamiApp() {
   const [isAgentMode, setIsAgentMode] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [] });
+  const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
 
   const SNAP_POINTS = {
     0: 'h-5 md:h-0',      // COLLAPSED: 20px (drag handle)
@@ -339,8 +343,9 @@ export default function MiamiApp() {
   };
 
   const filteredBuildings = geocodedBuildings.filter(b => 
-    b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    b.neighborhood.toLowerCase().includes(searchQuery.toLowerCase())
+    visibleBuildingIds.includes(b.id) &&
+    (b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    b.neighborhood.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const getFilteredNeighborhoodBuildings = (neighborhood) => {
@@ -366,6 +371,59 @@ export default function MiamiApp() {
       alert('Incorrect PIN');
       setPinInput('');
     }
+  };
+
+  const handleApplyFilters = async (filters: FilterState) => {
+    setActiveFilters(filters);
+    
+    // If no filters selected, show all buildings
+    if (filters.unitSize.length === 0 && filters.priceRange.length === 0 && filters.moveIn.length === 0) {
+      setVisibleBuildingIds(BUILDINGS.map(b => b.id));
+      return;
+    }
+
+    const matchingBuildingIds: number[] = [];
+
+    for (const building of geocodedBuildings) {
+      try {
+        // For now, use building data to match filters (when /api/prices is available, query it)
+        let hasMatchingUnits = true;
+
+        // Check unit size filter
+        if (filters.unitSize.length > 0) {
+          const hasMatchingUnit = filters.unitSize.some(size => {
+            if (size === 'Studio') return building.units.includes('Studio');
+            if (size === '1BR') return building.units.includes('1B');
+            if (size === '2BR') return building.units.includes('2B');
+            if (size === '3BR') return building.units.includes('3B');
+            return false;
+          });
+          hasMatchingUnits = hasMatchingUnits && hasMatchingUnit;
+        }
+
+        // Check price filter
+        if (filters.priceRange.length > 0 && hasMatchingUnits) {
+          const hasMatchingPrice = filters.priceRange.some(range => {
+            if (range === 'Under $2.5k') return building.priceMin < 2500;
+            if (range === '$2.5k-$4k') return building.priceMin >= 2500 && building.priceMin < 4000;
+            if (range === '$4k+') return building.priceMin >= 4000;
+            return false;
+          });
+          hasMatchingUnits = hasMatchingUnits && hasMatchingPrice;
+        }
+
+        // Move-in date check (all buildings match for now)
+        // In future, this would query real availability data
+
+        if (hasMatchingUnits) {
+          matchingBuildingIds.push(building.id);
+        }
+      } catch (err) {
+        console.error('Error filtering building', building.id, err);
+      }
+    }
+
+    setVisibleBuildingIds(matchingBuildingIds);
   };
 
   // Geocoding useEffect
@@ -551,7 +609,7 @@ export default function MiamiApp() {
           <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
           <div className="absolute top-4 left-4 right-4 z-20 flex gap-3 items-center pointer-events-none">
             <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="flex-1 px-4 py-3 rounded-full bg-white border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 pointer-events-auto" />
-            <button onClick={() => isAgentMode ? setIsAgentMode(false) : setShowPinModal(true)} className={`w-12 h-12 ${isAgentMode ? 'bg-green-600' : 'bg-gray-600'} text-white rounded-full flex items-center justify-center shadow-md hover:opacity-80 pointer-events-auto text-lg`}>{isAgentMode ? '$' : '?'}</button>
+            <button onClick={() => setShowFilterModal(true)} className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-600 pointer-events-auto text-lg font-semibold">⚙</button>
           </div>
         </div>
 
@@ -930,6 +988,13 @@ export default function MiamiApp() {
           </div>
         </div>
       )}
+
+      {/* Map Filter Modal */}
+      <MapFilterModal
+        isOpen={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        onApply={handleApplyFilters}
+      />
     </div>
   );
 }
