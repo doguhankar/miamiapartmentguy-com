@@ -1,6 +1,6 @@
 import { scrapeFlowBuilding } from '@/lib/scrapers/flow';
 
-export async function POST(req, res) {
+export async function POST(req) {
   if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }

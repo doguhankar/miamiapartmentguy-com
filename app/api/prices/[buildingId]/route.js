@@ -1,5 +1,5 @@
 export async function GET(req, { params }) {
-  const { buildingId } = params;
+  const { buildingId } = await params;
 
   const cache = global.unitCache?.[buildingId];
 
