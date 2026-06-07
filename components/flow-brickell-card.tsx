@@ -93,19 +93,39 @@ export function FlowBrickellCard({ onOpenModal }: { onOpenModal: () => void }) {
         )}
         {!loading && units.length > 0 && (
           <div className="space-y-2 max-h-96 overflow-y-auto border border-gray-200 rounded p-2 bg-white">
-            {units.map((unit, idx) => (
-              <div key={idx} className="p-2 bg-gray-50 rounded text-xs">
-                <div className="flex justify-between items-start gap-2 mb-1">
-                  <span className="font-semibold text-gray-900">{unit.floorPlanType}</span>
-                  <span className="text-blue-600 font-bold">${unit.price.toLocaleString()}</span>
+            {units.map((unit, idx) => {
+              const unitTypeLabel = unit.floorPlanType === 'Studio' 
+                ? 'Studio' 
+                : unit.beds ? `${unit.beds} Bedroom${unit.beds > 1 ? 's' : ''}` 
+                : unit.floorPlanType;
+              
+              return (
+                <div key={idx} className="p-3 bg-white border border-gray-200 rounded-lg">
+                  {/* Top Row: Price (left) and Availability (right) */}
+                  <div className="flex justify-between items-start gap-3 mb-2">
+                    <div>
+                      <p className="text-xl font-bold text-blue-600">${unit.price.toLocaleString()}</p>
+                      <p className="text-xs text-gray-500">/month</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">{unit.availableDate}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Bottom Row: Unit Type (left) and Sqft (right) */}
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{unitTypeLabel}</p>
+                    </div>
+                    <div className="text-right">
+                      {unit.sqft && (
+                        <p className="text-sm text-gray-700">{unit.sqft.toLocaleString()} sqft</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex gap-3 text-gray-600">
-                  {unit.beds !== null && <span>{unit.beds}B</span>}
-                  {unit.baths !== null && <span>{unit.baths}Ba</span>}
-                  {unit.sqft && <span>{unit.sqft} sqft</span>}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
