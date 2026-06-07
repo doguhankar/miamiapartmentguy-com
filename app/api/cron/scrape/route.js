@@ -8,19 +8,33 @@ export async function POST(req) {
   const results = {};
 
   try {
-    const flowBrickellUnits = await scrapeFlowBuilding('flow-brickell');
-    results['flow-brickell'] = flowBrickellUnits;
+    console.log('[v0] Scraping started at', new Date().toISOString());
 
-    // Store in global cache for now (swap for Supabase later)
-    global.unitCache = global.unitCache || {};
-    global.unitCache['flow-brickell'] = {
-      units: flowBrickellUnits,
-      updatedAt: new Date().toISOString(),
-    };
+    // Set 30-second timeout
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Scrape timeout: exceeded 30 seconds')), 30000)
+    );
+
+    const scrapePromise = (async () => {
+      console.log('[v0] Starting Flow Brickell scrape...');
+      const flowBrickellUnits = await scrapeFlowBuilding('flow-brickell');
+      console.log('[v0] Flow Brickell scraped successfully, units count:', flowBrickellUnits?.length || 0);
+      results['flow-brickell'] = flowBrickellUnits;
+
+      // Store in global cache for now (swap for Supabase later)
+      global.unitCache = global.unitCache || {};
+      global.unitCache['flow-brickell'] = {
+        units: flowBrickellUnits,
+        updatedAt: new Date().toISOString(),
+      };
+    })();
+
+    await Promise.race([scrapePromise, timeoutPromise]);
+
+    console.log('[v0] Scraping completed. Final results:', JSON.stringify(results));
+    return Response.json({ success: true, results });
   } catch (err) {
-    console.error('Scrape error:', err);
+    console.error('[v0] Scrape error:', err.message, 'at', new Date().toISOString());
     return Response.json({ error: err.message }, { status: 500 });
   }
-
-  return Response.json({ success: true, results });
 }
