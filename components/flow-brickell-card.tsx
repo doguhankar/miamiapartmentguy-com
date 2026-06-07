@@ -30,7 +30,9 @@ export function FlowBrickellCard({ onOpenModal }: { onOpenModal: () => void }) {
       setError(null);
       console.log('[v0] Fetching Flow Brickell pricing from /api/prices/flow-brickell...');
       
-      const res = await fetch('/api/prices/flow-brickell');
+      // Add cache-busting timestamp to force fresh fetch
+      const timestamp = new Date().getTime();
+      const res = await fetch(`/api/prices/flow-brickell?t=${timestamp}`);
       console.log('[v0] API response status:', res.status);
       
       if (!res.ok) {
