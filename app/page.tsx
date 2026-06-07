@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Menu } from 'lucide-react';
 import { ImageCarousel } from '@/components/image-carousel';
 import { MapFilterModal, type FilterState } from '@/components/map-filter-modal';
+import { FlowBrickellCard } from '@/components/flow-brickell-card';
 
 const BUILDINGS = [
   { id: 1, name: 'Flow Brickell', neighborhood: 'Brickell', address: '275 SW 6th St, Miami, FL 33130', lat: 25.7684, lng: -80.1990, priceMin: 2790, priceTier: '$$', tagline: 'Vibrant community, social hub, always buzzing', concession: '1 month free on select units', units: ['Studio', '1B', '2B', '3B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60, 90], images: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f8-PjSUbS6yTrIBusqZ0XXyuU8h1qerGT.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f7-e8tHKaMeidxoV13PJgZNveLuE6ScPy.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f1-sC9oG9eD9DGGUwRRPP93yLIPgssB8r.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f3-Bw25PrMJlv7UYJ3bt5D5fmbz94yAMb.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f4-9VsnFpU86vEqyTuNQKYutuLUnX5dEi.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f5-XWNn2OspXHwINOXtaNPYMrIUhleUvP.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f6-OjhZIKj1vv611WQHgFm26OfY157Ijw.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f2-ICadR5CSOFH7p9F3OQtpdBs2CH5RlD.webp'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,790', application: '$75', admin: '$150', parking: '$150/car', misc: 'Pet fee: $35/mo' } },
@@ -678,7 +679,7 @@ export default function MiamiApp() {
                         <p className="text-gray-500 text-center py-4">No buildings found</p>
                       ) : (
                         filteredBuildings.map((building) => (
-                          <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
+                          <div key={building.id} onClick={() => setSelectedBuilding(building)} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
                             <img src={building.images[0]} alt={building.name} className="w-full h-40 object-cover rounded-md mb-3" />
                             <div className="flex justify-between items-start mb-1">
                               <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
@@ -733,13 +734,15 @@ export default function MiamiApp() {
                   </div>
                   )}
                 </div>
-              ) : (
-                <div className="pt-2">
-                  <button onClick={() => setSelectedBuilding(null)} className="text-blue-600 hover:text-blue-700 text-sm mb-3 font-semibold">← Back</button>
-                  <ImageCarousel images={selectedBuilding.images} />
-                  <h1 className="text-2xl font-bold mt-4 mb-2">{selectedBuilding.name}</h1>
-                  <div className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs font-medium mb-4">{selectedBuilding.neighborhood}</div>
-                  <p className="text-gray-600 text-sm mb-6">📍 {selectedBuilding.address}</p>
+          ) : selectedBuilding.name === 'Flow Brickell' ? (
+            <FlowBrickellCard onOpenModal={() => setShowModal(true)} />
+          ) : (
+            <div className="p-6">
+              <button onClick={() => setSelectedBuilding(null)} className="text-blue-600 hover:text-blue-700 text-sm mb-4">← Back</button>
+              <ImageCarousel images={selectedBuilding.images} />
+              <h1 className="text-2xl font-bold mt-4 mb-2">{selectedBuilding.name}</h1>
+              <div className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs font-medium mb-4">{selectedBuilding.neighborhood}</div>
+              <p className="text-gray-600 text-sm mb-6">📍 {selectedBuilding.address}</p>
                   <div className="mb-4 p-4 bg-gray-50 rounded-lg"><p className="text-2xl font-bold text-gray-900">{selectedBuilding.tagline || `$${selectedBuilding.priceMin}+/mo`}</p></div>
                   <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-500 rounded-lg"><p className="text-sm font-semibold text-blue-900">Current Offer</p><p className="text-lg font-bold text-blue-600">{selectedBuilding.concession}</p></div>
                   <div className="mb-4 p-4 bg-gray-50 rounded-lg"><p className="text-sm text-gray-600 mb-1">Income Requirement</p><p className="font-semibold text-gray-900">{selectedBuilding.incomeReq}</p></div>
