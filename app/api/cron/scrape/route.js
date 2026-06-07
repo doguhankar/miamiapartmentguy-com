@@ -1,4 +1,5 @@
 import { scrapeFlowBuilding } from '@/lib/scrapers/flow';
+import { storePricingData } from '@/lib/supabase/pricing';
 
 export async function POST(req) {
   // For testing: accept any Bearer token. In production, validate against CRON_SECRET
@@ -27,12 +28,16 @@ export async function POST(req) {
       console.log('[v0] Flow Brickell scraped successfully, units count:', flowBrickellUnits?.length || 0);
       results['flow-brickell'] = flowBrickellUnits;
 
-      // Store in global cache for now (swap for Supabase later)
-      global.unitCache = global.unitCache || {};
-      global.unitCache['flow-brickell'] = {
-        units: flowBrickellUnits,
-        updatedAt: new Date().toISOString(),
-      };
+      // Store in Supabase instead of global cache
+      const stored = await storePricingData('flow-brickell', flowBrickellUnits);
+      if (!stored) {
+        console.warn('[v0] Failed to store data in Supabase, keeping in memory cache as fallback');
+        global.unitCache = global.unitCache || {};
+        global.unitCache['flow-brickell'] = {
+          units: flowBrickellUnits,
+          updatedAt: new Date().toISOString(),
+        };
+      }
     })();
 
     await Promise.race([scrapePromise, timeoutPromise]);
