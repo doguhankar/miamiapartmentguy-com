@@ -28,31 +28,77 @@ export function FlowBrickellCard({ onOpenModal }: { onOpenModal: () => void }) {
     try {
       setRefreshing(true);
       setError(null);
-      console.log('[v0] Fetching Flow Brickell pricing from /api/prices/flow-brickell...');
       
       // Add cache-busting timestamp to force fresh fetch
       const timestamp = new Date().getTime();
-      const res = await fetch(`/api/prices/flow-brickell?t=${timestamp}`);
-      console.log('[v0] API response status:', res.status);
+      const url = `/api/prices/flow-brickell?t=${timestamp}`;
+      
+      console.log('[v0] === FETCH START ===');
+      console.log('[v0] Full URL:', url);
+      console.log('[v0] Timestamp:', new Date().toISOString());
+      
+      const res = await fetch(url);
+      
+      console.log('[v0] Response received');
+      console.log('[v0] Response status:', res.status);
+      console.log('[v0] Response statusText:', res.statusText);
+      console.log('[v0] Response headers:');
+      for (const [key, value] of res.headers.entries()) {
+        console.log('[v0]   ', key, ':', value);
+      }
+      console.log('[v0] Response type:', res.type);
+      console.log('[v0] Response ok:', res.ok);
+      
+      // Get response body
+      const responseText = await res.text();
+      console.log('[v0] Response body (raw text):', responseText);
+      console.log('[v0] Response body length:', responseText.length);
       
       if (!res.ok) {
-        const errorText = await res.text();
-        console.error('[v0] API error response:', errorText);
+        console.error('[v0] ERROR: API returned non-OK status');
+        console.error('[v0] Error details:', {
+          status: res.status,
+          statusText: res.statusText,
+          body: responseText,
+        });
         setError('Error loading pricing. Please try again.');
         setUnits([]);
         return;
       }
       
-      const data: PricingData = await res.json();
-      console.log('[v0] API response data:', data);
+      // Parse JSON from the body text we already read
+      let data: PricingData;
+      try {
+        data = JSON.parse(responseText);
+        console.log('[v0] JSON parsed successfully');
+      } catch (parseErr) {
+        console.error('[v0] ERROR: Failed to parse JSON');
+        console.error('[v0] Parse error:', parseErr);
+        console.error('[v0] Raw body that failed to parse:', responseText);
+        setError('Invalid response from server.');
+        setUnits([]);
+        return;
+      }
+      
+      console.log('[v0] Parsed data object:', data);
+      console.log('[v0] Data keys:', Object.keys(data));
       console.log('[v0] API buildingId:', data.buildingId);
       console.log('[v0] API updatedAt:', data.updatedAt);
+      console.log('[v0] API units:', data.units);
+      console.log('[v0] API units type:', typeof data.units);
+      console.log('[v0] API units is array?', Array.isArray(data.units));
       console.log('[v0] API units count:', data.units?.length || 0);
       
       const unitList = data.units || [];
-      console.log('[v0] Full units array:', unitList);
-      console.log('[v0] First 5 units:', unitList.slice(0, 5));
-      console.log('[v0] Last 5 units:', unitList.slice(-5));
+      console.log('[v0] Unit list after fallback:', unitList);
+      console.log('[v0] Unit list length:', unitList.length);
+      
+      if (unitList.length > 0) {
+        console.log('[v0] First unit:', unitList[0]);
+        console.log('[v0] First 3 units:', unitList.slice(0, 3));
+      } else {
+        console.log('[v0] WARNING: Unit list is empty!');
+      }
       
       setUnits(unitList);
       setError(null);
@@ -60,20 +106,27 @@ export function FlowBrickellCard({ onOpenModal }: { onOpenModal: () => void }) {
       // Find minimum price
       if (unitList.length > 0) {
         const prices = unitList.map(u => u.price);
-        console.log('[v0] All prices:', prices);
+        console.log('[v0] All prices extracted:', prices);
         const min = Math.min(...prices);
         setMinPrice(min);
-        console.log('[v0] Minimum price:', min);
-        console.log('[v0] Successfully loaded', unitList.length, 'units');
+        console.log('[v0] Minimum price calculated:', min);
+        console.log('[v0] === SUCCESS: Loaded', unitList.length, 'units ===');
       } else {
-        console.warn('[v0] No units in API response');
+        console.warn('[v0] === WARNING: No units in API response ===');
         setError('No units available');
       }
     } catch (err) {
-      console.error('[v0] Error fetching Flow Brickell pricing:', err);
+      console.error('[v0] === CRITICAL ERROR ===');
+      console.error('[v0] Error type:', err instanceof Error ? err.constructor.name : typeof err);
+      console.error('[v0] Error message:', err instanceof Error ? err.message : String(err));
+      console.error('[v0] Error details:', err);
+      if (err instanceof Error && err.stack) {
+        console.error('[v0] Stack trace:', err.stack);
+      }
       setError('Error loading pricing. Please try again.');
       setUnits([]);
     } finally {
+      console.log('[v0] === FETCH END ===');
       setLoading(false);
       setRefreshing(false);
     }
