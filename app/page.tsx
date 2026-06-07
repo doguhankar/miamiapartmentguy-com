@@ -889,88 +889,92 @@ export default function MiamiApp() {
               <h2 className="text-xl font-bold">{infoBuilding.name}</h2>
               <button onClick={() => setInfoBuilding(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600">X</button>
             </div>
-            <div className="p-4">
-              <ImageCarousel images={infoBuilding.images} />
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <p className="text-xs text-blue-600 font-medium">{infoBuilding.neighborhood}</p>
-                <p className="text-sm text-gray-600 mt-1">{infoBuilding.address}</p>
-              </div>
-              
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-xs text-gray-500">Starting at</p>
-                <p className="text-2xl font-bold text-gray-900">${infoBuilding.priceMin}+/mo</p>
-              </div>
-              
-              {isAgentMode && (
-                <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
-                  <p className="text-xs text-green-600 font-medium">Agent Commission</p>
-                  <p className="text-lg font-bold text-green-700">50% of 1 month rent</p>
+            
+            {infoBuilding.name === 'Flow Brickell' ? (
+              <FlowBrickellCard onOpenModal={() => {}} />
+            ) : (
+              <div className="p-4 space-y-4">
+                <div className="p-4">
+                  <ImageCarousel images={infoBuilding.images} />
                 </div>
-              )}
-              
-              <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg">
-                <p className="text-xs text-orange-600 font-medium">Current Offer</p>
-                <p className="text-sm font-semibold text-orange-700">{infoBuilding.concession}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm font-semibold text-gray-900 mb-2">Unit Types</p>
-                <div className="flex gap-2 flex-wrap">
-                  {infoBuilding.units.map((unit) => (
-                    <span key={unit} className="text-xs bg-gray-100 px-3 py-1 rounded-full">{unit}</span>
-                  ))}
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-xs text-blue-600 font-medium">{infoBuilding.neighborhood}</p>
+                  <p className="text-sm text-gray-600 mt-1">{infoBuilding.address}</p>
                 </div>
-              </div>
-              
-              <div>
-                <p className="text-sm font-semibold text-gray-900 mb-2">Amenities</p>
-                <div className="flex flex-wrap gap-2">
-                  {infoBuilding.amenities.map((a) => (
-                    <span key={a} className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">{a}</span>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
+                
                 <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-500">Income Req</p>
-                  <p className="font-semibold text-gray-900">{infoBuilding.incomeReq}</p>
+                  <p className="text-xs text-gray-500">Starting at</p>
+                  <p className="text-2xl font-bold text-gray-900">${infoBuilding.priceMin}+/mo</p>
                 </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-500">Credit Req</p>
-                  <p className="font-semibold text-gray-900">{infoBuilding.creditReq}</p>
+                
+                {isAgentMode && (
+                  <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
+                    <p className="text-xs text-green-600 font-medium">Agent Commission</p>
+                    <p className="text-lg font-bold text-green-700">50% of 1 month rent</p>
+                  </div>
+                )}
+                
+                <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg">
+                  <p className="text-xs text-orange-600 font-medium">Current Offer</p>
+                  <p className="text-sm font-semibold text-orange-700">{infoBuilding.concession}</p>
                 </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-500">Guarantor</p>
-                  <p className="font-semibold text-gray-900">{infoBuilding.guarantor ? 'Accepted' : 'Not Accepted'}</p>
+                
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 mb-2">Unit Types</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {infoBuilding.units.map((unit) => (
+                      <span key={unit} className="text-xs bg-gray-100 px-3 py-1 rounded-full">{unit}</span>
+                    ))}
+                  </div>
                 </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-500">Hold Period</p>
-                  <p className="font-semibold text-gray-900">{infoBuilding.holdDays.join('/')} days</p>
+                
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 mb-2">Amenities</p>
+                  <div className="flex flex-wrap gap-2">
+                    {infoBuilding.amenities.map((a) => (
+                      <span key={a} className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">{a}</span>
+                    ))}
+                  </div>
                 </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500">Income Req</p>
+                    <p className="font-semibold text-gray-900">{infoBuilding.incomeReq}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500">Credit Req</p>
+                    <p className="font-semibold text-gray-900">{infoBuilding.creditReq}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500">Guarantor</p>
+                    <p className="font-semibold text-gray-900">{infoBuilding.guarantor ? 'Accepted' : 'Not Accepted'}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500">Hold Period</p>
+                    <p className="font-semibold text-gray-900">{infoBuilding.holdDays.join('/')} days</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 mb-2">Fees</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between"><span className="text-gray-600">Deposit</span><span className="font-medium">{infoBuilding.fees.deposit}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-600">Application</span><span className="font-medium">{infoBuilding.fees.application}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-600">Admin Fee</span><span className="font-medium">{infoBuilding.fees.admin}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-600">Parking</span><span className="font-medium">{infoBuilding.fees.parking}</span></div>
+                    {infoBuilding.fees.misc !== 'None' && infoBuilding.fees.misc !== 'TBD' && (
+                      <div className="flex justify-between"><span className="text-gray-600">Other</span><span className="font-medium">{infoBuilding.fees.misc}</span></div>
+                    )}
+                  </div>
+                </div>
+                
+                <button onClick={() => { openWhatsApp(infoBuilding); }} className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 mt-4">Text About This Building</button>
               </div>
-              
-              <div>
-                <p className="text-sm font-semibold text-gray-900 mb-2">Fees</p>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-gray-600">Deposit</span><span className="font-medium">{infoBuilding.fees.deposit}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-600">Application</span><span className="font-medium">{infoBuilding.fees.application}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-600">Admin Fee</span><span className="font-medium">{infoBuilding.fees.admin}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-600">Parking</span><span className="font-medium">{infoBuilding.fees.parking}</span></div>
-                  {infoBuilding.fees.misc !== 'None' && infoBuilding.fees.misc !== 'TBD' && (
-                    <div className="flex justify-between"><span className="text-gray-600">Other</span><span className="font-medium">{infoBuilding.fees.misc}</span></div>
-                  )}
-                </div>
-              </div>
-              
-              <button onClick={() => { openWhatsApp(infoBuilding); }} className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 mt-4">Text About This Building</button>
-            </div>
+            )}
           </div>
         </div>
       )}
-      
       {/* PIN Modal for Agent Mode */}
       {showPinModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
