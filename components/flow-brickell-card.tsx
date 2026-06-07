@@ -36,11 +36,14 @@ export function FlowBrickellCard({ onOpenModal }: { onOpenModal: () => void }) {
         const data: PricingData = await res.json();
         const unitList = data.units || [];
         setUnits(unitList);
+        console.log('[v0] Flow Brickell units fetched:', unitList.length, 'units');
+        console.log('[v0] First 3 units:', unitList.slice(0, 3));
         
         // Find minimum price
         if (unitList.length > 0) {
           const min = Math.min(...unitList.map(u => u.price));
           setMinPrice(min);
+          console.log('[v0] Minimum price:', min);
         }
       } catch (err) {
         console.error('Error fetching Flow Brickell pricing:', err);
@@ -89,7 +92,7 @@ export function FlowBrickellCard({ onOpenModal }: { onOpenModal: () => void }) {
           <p className="text-xs text-gray-600">No units available yet. Check back soon.</p>
         )}
         {!loading && units.length > 0 && (
-          <div className="space-y-2 max-h-48 overflow-y-auto">
+          <div className="space-y-2 max-h-96 overflow-y-auto border border-gray-200 rounded p-2 bg-white">
             {units.map((unit, idx) => (
               <div key={idx} className="p-2 bg-gray-50 rounded text-xs">
                 <div className="flex justify-between items-start gap-2 mb-1">
@@ -97,8 +100,9 @@ export function FlowBrickellCard({ onOpenModal }: { onOpenModal: () => void }) {
                   <span className="text-blue-600 font-bold">${unit.price.toLocaleString()}</span>
                 </div>
                 <div className="flex gap-3 text-gray-600">
+                  {unit.beds !== null && <span>{unit.beds}B</span>}
+                  {unit.baths !== null && <span>{unit.baths}Ba</span>}
                   {unit.sqft && <span>{unit.sqft} sqft</span>}
-                  <span>{unit.availableDate}</span>
                 </div>
               </div>
             ))}
