@@ -582,15 +582,8 @@ export default function MiamiApp() {
       {/* Mobile Header */}
       <div className="fixed top-0 left-0 right-0 z-40 bg-white md:hidden border-b-[0.5px] border-gray-300">
         <div className="grid grid-cols-3 items-center px-4 py-3.5">
-          {/* Logo Column - Left */}
+          {/* Text Column - Left */}
           <div className="flex justify-start">
-            <div className="w-8 h-8 bg-[#185FA5] rounded-full flex items-center justify-center">
-              <span className="text-white font-medium text-sm">M</span>
-            </div>
-          </div>
-          
-          {/* Text Column - Center */}
-          <div className="flex justify-center">
             <h1 className="text-base font-medium text-[#1a1a1a] tracking-tighter whitespace-nowrap">
               Miami Apartment Guy
               <sup className="text-xs font-normal align-top ml-0.5 relative" style={{top: '2px'}}>™</sup>
