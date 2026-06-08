@@ -69,8 +69,26 @@ export function MoveWithDon({ isOpen, onClose }: MoveWithDonProps) {
   }
 
   const handleTextChange = (value: string) => {
-    const fields = ['moveDate', 'budget', 'name', 'phone'] as const
-    setFormData((prev) => ({ ...prev, [fields[currentStep]]: value }))
+    // Map step to field: steps 0, 2, 5, 6 are text inputs
+    let fieldName: keyof FormData
+    switch (currentStep) {
+      case 0:
+        fieldName = 'moveDate'
+        break
+      case 2:
+        fieldName = 'budget'
+        break
+      case 5:
+        fieldName = 'name'
+        break
+      case 6:
+        fieldName = 'phone'
+        break
+      default:
+        return
+    }
+    
+    setFormData((prev) => ({ ...prev, [fieldName]: value }))
   }
 
   const handleRadioChange = (value: string) => {
