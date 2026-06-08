@@ -11,6 +11,12 @@ interface LeadData {
 }
 
 export async function POST(request: NextRequest) {
+  const results = {
+    success: true,
+    slack: { sent: false, error: null as string | null },
+    notion: { sent: false, error: null as string | null, errorDetails: null as any },
+  }
+
   try {
     const body: LeadData = await request.json()
 
@@ -39,12 +45,15 @@ export async function POST(request: NextRequest) {
 
     if (!SLACK_WEBHOOK_URL) {
       console.warn('[v0] ⚠️  SLACK_WEBHOOK_URL not set in environment')
+      results.slack.error = 'SLACK_WEBHOOK_URL not configured'
     }
     if (!NOTION_TOKEN) {
       console.warn('[v0] ⚠️  NOTION_TOKEN not set in environment')
+      results.notion.error = 'NOTION_TOKEN not configured'
     }
     if (!NOTION_DATABASE_ID) {
       console.warn('[v0] ⚠️  NOTION_DATABASE_ID not set in environment')
+      results.notion.error = 'NOTION_DATABASE_ID not configured'
     }
 
     // Send to Slack
@@ -113,11 +122,15 @@ export async function POST(request: NextRequest) {
 
         if (!slackResponse.ok) {
           console.error('[v0] ❌ Slack API error:', slackText)
+          results.slack.error = slackText
         } else {
           console.log('[v0] ✅ Slack notification sent successfully')
+          results.slack.sent = true
         }
       } catch (slackError) {
-        console.error('[v0] ❌ Slack error:', slackError instanceof Error ? slackError.message : String(slackError))
+        const errorMsg = slackError instanceof Error ? slackError.message : String(slackError)
+        console.error('[v0] ❌ Slack error:', errorMsg)
+        results.slack.error = errorMsg
       }
     }
 
@@ -125,56 +138,135 @@ export async function POST(request: NextRequest) {
     if (NOTION_TOKEN && NOTION_DATABASE_ID) {
       try {
         console.log('[v0] Sending to Notion...')
-        const notionPayload = {
-          parent: { database_id: NOTION_DATABASE_ID },
-          properties: {
-            Name: { title: [{ text: { content: body.name } }] },
-            'Phone': { rich_text: [{ text: { content: body.phone } }] },
-            'Move Date': { rich_text: [{ text: { content: body.moveDate } }] },
-            'Budget': { rich_text: [{ text: { content: body.budget } }] },
-            'Apartment Size': { rich_text: [{ text: { content: body.apartmentSize } }] },
-            'Credit Score': { rich_text: [{ text: { content: body.creditScore } }] },
-            'Neighborhoods': { rich_text: [{ text: { content: body.neighborhoods.join(', ') } }] },
-            'Submitted At': { rich_text: [{ text: { content: new Date().toISOString() } }] },
-          },
-        }
-
-        const notionResponse = await fetch('https://api.notion.com/v1/pages', {
-          method: 'POST',
+        console.log('[v0] Notion Database ID:', NOTION_DATABASE_ID)
+        
+        // First, fetch the database schema to see what properties exist
+        console.log('[v0] Fetching Notion database schema...')
+        const schemaResponse = await fetch(`https://api.notion.com/v1/databases/${NOTION_DATABASE_ID}`, {
+          method: 'GET',
           headers: {
             Authorization: `Bearer ${NOTION_TOKEN}`,
-            'Content-Type': 'application/json',
             'Notion-Version': '2022-06-28',
           },
-          body: JSON.stringify(notionPayload),
         })
-
-        console.log('[v0] Notion response status:', notionResponse.status)
-        const notionData = await notionResponse.json()
-        console.log('[v0] Notion response body:', JSON.stringify(notionData, null, 2))
-
-        if (!notionResponse.ok) {
-          console.error('[v0] ❌ Notion API error:', notionData)
+        
+        const schemaData = await schemaResponse.json()
+        
+        if (!schemaResponse.ok) {
+          console.error('[v0] ❌ Failed to fetch Notion database schema:', schemaData)
+          results.notion.error = `Failed to fetch database schema: ${schemaData.message || 'Unknown error'}`
+          results.notion.errorDetails = schemaData
+          results.success = false
         } else {
-          console.log('[v0] ✅ Notion page created successfully:', notionData.id)
+          // Extract property names and types from schema
+          const properties = schemaData.properties || {}
+          const propertyNames = Object.keys(properties)
+          console.log('[v0] Available properties in Notion database:', JSON.stringify(Object.entries(properties).map(([name, prop]: any) => ({ name, type: prop.type })), null, 2))
+          
+          // Find the title property or use the first one
+          let titleProp = propertyNames.find(name => properties[name as keyof typeof properties].type === 'title')
+          if (!titleProp && propertyNames.length > 0) {
+            titleProp = propertyNames[0]
+          }
+          
+          console.log('[v0] Using title property:', titleProp)
+          
+          // Build payload with only properties that exist in the database
+          const notionPayload: any = {
+            parent: { database_id: NOTION_DATABASE_ID },
+            properties: {},
+          }
+          
+          // Map our lead data to available properties
+          if (titleProp) {
+            const titlePropObj = properties[titleProp as keyof typeof properties] as any
+            if (titlePropObj.type === 'title') {
+              notionPayload.properties[titleProp] = { title: [{ text: { content: body.name } }] }
+            } else {
+              notionPayload.properties[titleProp] = { rich_text: [{ text: { content: body.name } }] }
+            }
+          }
+          
+          // Add other properties if they exist
+          for (const propName of propertyNames) {
+            const propObj = properties[propName as keyof typeof properties] as any
+            if (propObj.type === 'relation') {
+              // Skip relation properties
+              continue
+            } else if (propObj.type === 'multi_select') {
+              // For multi_select, create appropriate selection
+              if (propName.toLowerCase().includes('apartment') || propName.toLowerCase().includes('size')) {
+                notionPayload.properties[propName] = { multi_select: [{ name: body.apartmentSize }] }
+              } else if (propName.toLowerCase().includes('credit')) {
+                notionPayload.properties[propName] = { multi_select: [{ name: body.creditScore }] }
+              } else if (propName.toLowerCase().includes('neighborhood')) {
+                notionPayload.properties[propName] = { multi_select: body.neighborhoods.map(n => ({ name: n })) }
+              }
+            } else if (propObj.type === 'rich_text' || propObj.type === 'text') {
+              // Add as rich_text if empty and matches our data
+              if (propName.toLowerCase().includes('phone')) {
+                notionPayload.properties[propName] = { rich_text: [{ text: { content: body.phone } }] }
+              } else if (propName.toLowerCase().includes('date') || propName.toLowerCase().includes('move')) {
+                notionPayload.properties[propName] = { rich_text: [{ text: { content: body.moveDate } }] }
+              } else if (propName.toLowerCase().includes('budget')) {
+                notionPayload.properties[propName] = { rich_text: [{ text: { content: body.budget } }] }
+              }
+            }
+          }
+          
+          console.log('[v0] Notion payload being sent:', JSON.stringify(notionPayload, null, 2))
+
+          const notionResponse = await fetch('https://api.notion.com/v1/pages', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${NOTION_TOKEN}`,
+              'Content-Type': 'application/json',
+              'Notion-Version': '2022-06-28',
+            },
+            body: JSON.stringify(notionPayload),
+          })
+
+          console.log('[v0] Notion response status:', notionResponse.status)
+          const notionData = await notionResponse.json()
+          console.log('[v0] Notion response body:', JSON.stringify(notionData, null, 2))
+
+          if (!notionResponse.ok) {
+            console.error('[v0] ❌ Notion API error (status', notionResponse.status + '):', JSON.stringify(notionData, null, 2))
+            results.notion.error = notionData.message || 'Unknown Notion API error'
+            results.notion.errorDetails = {
+              status: notionResponse.status,
+              message: notionData.message,
+              availableProperties: Object.entries(properties).map(([name, prop]: any) => ({ name, type: prop.type })),
+            }
+            results.success = false
+          } else {
+            console.log('[v0] ✅ Notion page created successfully:', notionData.id)
+            results.notion.sent = true
+          }
         }
       } catch (notionError) {
-        console.error('[v0] ❌ Notion error:', notionError instanceof Error ? notionError.message : String(notionError))
+        const errorMsg = notionError instanceof Error ? notionError.message : String(notionError)
+        console.error('[v0] ❌ Notion error:', errorMsg)
+        console.error('[v0] Full Notion error:', notionError)
+        results.notion.error = errorMsg
+        results.success = false
       }
     }
 
     console.log('[v0] ===== LEAD SUBMISSION END =====')
+    console.log('[v0] Submission results:', JSON.stringify(results, null, 2))
 
-    return NextResponse.json(
-      { success: true, message: 'Lead submitted successfully' },
-      { status: 200 }
-    )
+    return NextResponse.json(results, { status: results.success ? 200 : 207 })
   } catch (error) {
     console.error('[v0] ===== ERROR PROCESSING LEAD =====')
     console.error('[v0] Error:', error instanceof Error ? error.message : String(error))
     console.error('[v0] Full error:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to submit lead' },
+      { 
+        success: false, 
+        error: 'Failed to submit lead',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     )
   }
