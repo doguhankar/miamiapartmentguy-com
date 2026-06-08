@@ -5,6 +5,7 @@ import { ImageCarousel } from '@/components/image-carousel';
 import { MapFilterModal, type FilterState } from '@/components/map-filter-modal';
 import { FlowBrickellCard } from '@/components/flow-brickell-card';
 import { MoveWithDon } from '@/components/move-with-don';
+import { DesktopBuildingCard } from '@/components/desktop-building-card';
 
 const BUILDINGS = [
   { id: 1, name: 'Flow Brickell', neighborhood: 'Brickell', address: '275 SW 6th St, Miami, FL 33130', lat: 25.7684, lng: -80.1990, priceMin: 2790, priceTier: '$$', tagline: 'Vibrant community, social hub, always buzzing', concession: '1 month free on select units', units: ['Studio', '1B', '2B', '3B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60, 90], images: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f8-PjSUbS6yTrIBusqZ0XXyuU8h1qerGT.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f7-e8tHKaMeidxoV13PJgZNveLuE6ScPy.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f1-sC9oG9eD9DGGUwRRPP93yLIPgssB8r.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f3-Bw25PrMJlv7UYJ3bt5D5fmbz94yAMb.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f4-9VsnFpU86vEqyTuNQKYutuLUnX5dEi.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f5-XWNn2OspXHwINOXtaNPYMrIUhleUvP.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f6-OjhZIKj1vv611WQHgFm26OfY157Ijw.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f2-ICadR5CSOFH7p9F3OQtpdBs2CH5RlD.webp'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,790', application: '$75', admin: '$150', parking: '$150/car', misc: 'Pet fee: $35/mo' } },
@@ -238,7 +239,7 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, onPinClick, geocodedBuildings }) => {
+const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
@@ -315,6 +316,7 @@ export default function MiamiApp() {
   const geocodeCache = useRef(new Map());
   const [geocodedBuildings, setGeocodedBuildings] = useState(BUILDINGS);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
+  const [highlightedBuilding, setHighlightedBuilding] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell', 'Downtown']);
   const [bottomSheetSnapPoint, setBottomSheetSnapPoint] = useState(1);
@@ -746,120 +748,62 @@ export default function MiamiApp() {
         </div>
       </div>
 
-      {/* Desktop Layout */}
-      <div className="hidden md:flex flex-1">
-        <div className="flex-1 relative">
-          <MapComponent expandedNeighborhoods={expandedNeighborhoods} selectedBuilding={selectedBuilding} onPinClick={setSelectedBuilding} geocodedBuildings={geocodedBuildings} />
+      {/* Desktop Layout - Zillow Style */}
+      <div className="hidden md:flex flex-1 gap-0">
+        {/* Map - 55% of width */}
+        <div className="flex-1 basis-[55%] relative">
+          <MapComponent 
+            expandedNeighborhoods={expandedNeighborhoods} 
+            selectedBuilding={selectedBuilding} 
+            highlightedBuilding={highlightedBuilding}
+            onPinClick={setSelectedBuilding} 
+            geocodedBuildings={geocodedBuildings} 
+          />
         </div>
 
-        <div className="w-96 lg:w-[28rem] xl:w-[32rem] 2xl:w-[36rem] bg-white border-l border-gray-200 overflow-y-auto">
-          {!selectedBuilding ? (
-            <div className="p-6">
-              <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">{searchQuery ? 'Search Results' : 'Neighborhoods'}</h2>
-                <button onClick={() => isAgentMode ? setIsAgentMode(false) : setShowPinModal(true)} className={`px-3 py-1 rounded-lg text-sm font-medium ${isAgentMode ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{isAgentMode ? 'Agent Mode' : 'Agent?'}</button>
-              </div>
-              <div className="space-y-2">
-                {NEIGHBORHOODS.map((neighborhood) => {
-                  const buildings = getFilteredNeighborhoodBuildings(neighborhood);
-                  const isExpanded = expandedNeighborhoods.includes(neighborhood);
-                  if (buildings.length === 0) return null;
-                  return (
-                    <div key={neighborhood}>
-                      <button
-                        onClick={() => toggleNeighborhood(neighborhood)}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
-                      >
-                        <span className="font-semibold text-gray-900">{neighborhood} ({buildings.length})</span>
-                        <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
-                      </button>
-                      {isExpanded && (
-                        <div className="ml-4 mt-2 space-y-2 lg:ml-0 lg:mt-3 lg:grid lg:grid-cols-2 lg:gap-3">
-                          {buildings.map((building) => (
-                            <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white">
-                              <h3 className="font-semibold text-gray-900 text-sm lg:text-base">{building.name}</h3>
-                              <p className="text-sm text-gray-700">{building.tagline || `$${building.priceMin}+`}</p>
-                              <p className="text-xs text-gray-500 mt-1">{building.units.join(' | ')}</p>
-                              {isAgentMode && <p className="text-xs text-green-600 font-semibold mt-1">Commission: 50% of 1 month</p>}
-                              <div className="flex gap-2 mt-2">
-                                <button onClick={() => openSMS()} className="md:hidden flex-1 bg-green-500 text-white py-1.5 rounded text-xs font-semibold hover:bg-green-600">Text Don</button>
-                                <button onClick={() => setInfoBuilding(building)} className="flex-1 bg-blue-500 text-white py-1.5 rounded text-xs font-semibold hover:bg-blue-600">Info</button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+        {/* Cards Panel - 45% of width */}
+        <div className="basis-[45%] bg-white border-l border-gray-200 overflow-hidden flex flex-col">
+          {/* Search & Header */}
+          <div className="p-5 border-b border-gray-100 bg-white">
+            <input 
+              type="text" 
+              placeholder="Search buildings..." 
+              value={searchQuery} 
+              onChange={(e) => setSearchQuery(e.target.value)} 
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+            />
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-700">
+                {filteredBuildings.length} Available
+              </h3>
+              <button 
+                onClick={() => isAgentMode ? setIsAgentMode(false) : setShowPinModal(true)} 
+                className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
+                  isAgentMode 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {isAgentMode ? '✓ Agent Mode' : 'Agent?'}
+              </button>
             </div>
-          ) : (
-            <div className="p-4 sm:p-6 lg:p-8">
-              <button onClick={() => setSelectedBuilding(null)} className="text-blue-600 hover:text-blue-700 text-sm mb-4">← Back</button>
-              <ImageCarousel images={selectedBuilding.images} />
-              <h1 className="text-2xl font-bold mt-4 mb-2">{selectedBuilding.name}</h1>
-              <div className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs font-medium mb-4">{selectedBuilding.neighborhood}</div>
-              <p className="text-gray-600 text-sm mb-6">📍 {selectedBuilding.address}</p>
-              
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <p className="text-xl font-bold text-gray-900">{selectedBuilding.tagline || `$${selectedBuilding.priceMin}+/mo`}</p>
-              </div>
-              
-              <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-500 rounded-lg">
-                <p className="text-sm font-semibold text-blue-900">Current Offer</p>
-                <p className="text-lg font-bold text-blue-600">{selectedBuilding.concession}</p>
-              </div>
+          </div>
 
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Income Requirement</p>
-                <p className="font-semibold text-gray-900">{selectedBuilding.incomeReq}</p>
-              </div>
-
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Credit Requirement</p>
-                <p className="font-semibold text-gray-900">{selectedBuilding.creditReq}</p>
-              </div>
-
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-sm text-gray-600">Works w/ Guarantors</p>
-                  <Tooltip />
-                </div>
-                <p className="font-semibold text-gray-900">{selectedBuilding.guarantor ? 'Yes' : 'No'}</p>
-              </div>
-
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Hold Days</p>
-                <p className="font-semibold text-gray-900">{selectedBuilding.holdDays.join(', ')} days</p>
-              </div>
-
-              <div className="mb-6">
-                <p className="text-sm font-semibold text-gray-900 mb-2">Bedrooms</p>
-                <div className="flex gap-2 flex-wrap">
-                  {selectedBuilding.units.map((unit) => (
-                    <span key={unit} className="text-xs bg-gray-100 px-3 py-1 rounded">{unit}</span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <p className="text-sm font-semibold text-gray-900 mb-2">Amenities</p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedBuilding.amenities.map((a) => (
-                    <span key={a} className="text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded">{a}</span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <FeesDropdown fees={selectedBuilding.fees} />
-              </div>
-
-              <button onClick={() => setShowModal(true)} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Talk to Don</button>
+          {/* Scrollable Cards Grid */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {filteredBuildings.map((building) => (
+                <DesktopBuildingCard
+                  key={building.id}
+                  building={building}
+                  isHighlighted={selectedBuilding?.id === building.id}
+                  isAgentMode={isAgentMode}
+                  onHover={setHighlightedBuilding}
+                  onClick={setSelectedBuilding}
+                />
+              ))}
             </div>
-          )}
+          </div>
         </div>
       </div>
 
