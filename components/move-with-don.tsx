@@ -33,8 +33,12 @@ const QUESTIONS = [
   { id: 6, label: 'Best cell to reach you?', type: 'text', placeholder: 'Your phone number' },
 ]
 
-export function MoveWithDon() {
-  const [isOpen, setIsOpen] = useState(false)
+interface MoveWithDonProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export function MoveWithDon({ isOpen, onClose }: MoveWithDonProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState<FormData>({
     moveDate: '',
@@ -47,6 +51,22 @@ export function MoveWithDon() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  
+  // Reset form when modal closes
+  const handleClose = () => {
+    setCurrentStep(0)
+    setFormData({
+      moveDate: '',
+      apartmentSize: '',
+      budget: '',
+      neighborhoods: [],
+      creditScore: '',
+      name: '',
+      phone: '',
+    })
+    setShowSuccess(false)
+    onClose()
+  }
 
   const handleTextChange = (value: string) => {
     const fields = ['moveDate', 'budget', 'name', 'phone'] as const
@@ -117,18 +137,7 @@ export function MoveWithDon() {
       if (response.ok) {
         setShowSuccess(true)
         setTimeout(() => {
-          setIsOpen(false)
-          setShowSuccess(false)
-          setCurrentStep(0)
-          setFormData({
-            moveDate: '',
-            apartmentSize: '',
-            budget: '',
-            neighborhoods: [],
-            creditScore: '',
-            name: '',
-            phone: '',
-          })
+          handleClose()
         }, 1500)
       }
     } catch (error) {
@@ -143,17 +152,12 @@ export function MoveWithDon() {
 
   return (
     <>
-      {/* Button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed top-4 left-4 z-40 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg"
-      >
-        Move with Don
-      </button>
-
       {/* Modal Overlay */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div 
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={(e) => e.target === e.currentTarget && handleClose()}
+        >
           {/* Modal Container */}
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             {showSuccess ? (
@@ -179,7 +183,12 @@ export function MoveWithDon() {
                   <span className="text-sm text-gray-500 font-medium">
                     {currentStep + 1} of {QUESTIONS.length}
                   </span>
-                  <div className="w-5" />
+                  <button
+                    onClick={handleClose}
+                    className="p-1 hover:bg-gray-100 rounded-lg transition"
+                  >
+                    <span className="text-gray-400 text-lg">×</span>
+                  </button>
                 </div>
 
                 {/* Question */}

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu } from 'lucide-react';
 import { ImageCarousel } from '@/components/image-carousel';
 import { MapFilterModal, type FilterState } from '@/components/map-filter-modal';
 import { FlowBrickellCard } from '@/components/flow-brickell-card';
@@ -327,6 +326,7 @@ export default function MiamiApp() {
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [showMoveWithDonModal, setShowMoveWithDonModal] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [] });
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
 
@@ -578,7 +578,7 @@ export default function MiamiApp() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <MoveWithDon />
+      <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
       {/* Mobile Header */}
       <div className="fixed top-0 left-0 right-0 z-40 bg-white md:hidden border-b-[0.5px] border-gray-300">
         <div className="grid grid-cols-3 items-center px-4 py-3.5">
@@ -599,8 +599,11 @@ export default function MiamiApp() {
           
           {/* Hamburger Column - Right */}
           <div className="flex justify-end">
-            <button onClick={() => {}} className="p-0 hover:opacity-70 transition">
-              <Menu className="w-5.5 h-5.5 text-[#1a1a1a]" strokeWidth={1.5} />
+            <button 
+              onClick={() => setShowMoveWithDonModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg text-sm whitespace-nowrap"
+            >
+              Move with Don
             </button>
           </div>
         </div>
