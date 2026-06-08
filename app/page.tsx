@@ -5,6 +5,7 @@ import { Menu } from 'lucide-react';
 import { ImageCarousel } from '@/components/image-carousel';
 import { MapFilterModal, type FilterState } from '@/components/map-filter-modal';
 import { FlowBrickellCard } from '@/components/flow-brickell-card';
+import { MoveWithDon } from '@/components/move-with-don';
 
 const BUILDINGS = [
   { id: 1, name: 'Flow Brickell', neighborhood: 'Brickell', address: '275 SW 6th St, Miami, FL 33130', lat: 25.7684, lng: -80.1990, priceMin: 2790, priceTier: '$$', tagline: 'Vibrant community, social hub, always buzzing', concession: '1 month free on select units', units: ['Studio', '1B', '2B', '3B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60, 90], images: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f8-PjSUbS6yTrIBusqZ0XXyuU8h1qerGT.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f7-e8tHKaMeidxoV13PJgZNveLuE6ScPy.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f1-sC9oG9eD9DGGUwRRPP93yLIPgssB8r.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f3-Bw25PrMJlv7UYJ3bt5D5fmbz94yAMb.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f4-9VsnFpU86vEqyTuNQKYutuLUnX5dEi.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f5-XWNn2OspXHwINOXtaNPYMrIUhleUvP.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f6-OjhZIKj1vv611WQHgFm26OfY157Ijw.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f2-ICadR5CSOFH7p9F3OQtpdBs2CH5RlD.webp'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,790', application: '$75', admin: '$150', parking: '$150/car', misc: 'Pet fee: $35/mo' } },
@@ -577,6 +578,7 @@ export default function MiamiApp() {
 
   return (
     <div className="flex h-screen bg-gray-50">
+      <MoveWithDon />
       {/* Mobile Header */}
       <div className="fixed top-0 left-0 right-0 z-40 bg-white md:hidden border-b-[0.5px] border-gray-300">
         <div className="grid grid-cols-3 items-center px-4 py-3.5">
