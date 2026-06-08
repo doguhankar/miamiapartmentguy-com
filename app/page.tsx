@@ -581,24 +581,20 @@ export default function MiamiApp() {
       <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
       {/* Mobile Header */}
       <div className="fixed top-0 left-0 right-0 z-40 bg-white md:hidden border-b-[0.5px] border-gray-300">
-        <div className="grid grid-cols-3 items-center px-4 py-3.5">
+        <div className="flex items-center justify-between px-4 py-3.5">
           {/* Text Column - Left */}
-          <div className="flex justify-start">
-            <h1 className="text-base font-medium text-[#1a1a1a] tracking-tighter whitespace-nowrap">
-              Miami Apartment Guy
-              <sup className="text-xs font-normal align-top ml-0.5 relative" style={{top: '2px'}}>™</sup>
-            </h1>
-          </div>
+          <h1 className="text-base font-medium text-[#1a1a1a] tracking-tighter whitespace-nowrap">
+            Miami Apartment Guy
+            <sup className="text-xs font-normal align-top ml-0.5 relative" style={{top: '2px'}}>™</sup>
+          </h1>
           
-          {/* Hamburger Column - Right */}
-          <div className="flex justify-end">
-            <button 
-              onClick={() => setShowMoveWithDonModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg text-sm whitespace-nowrap"
-            >
-              Move with Don
-            </button>
-          </div>
+          {/* Button Column - Right */}
+          <button 
+            onClick={() => setShowMoveWithDonModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg text-sm whitespace-nowrap flex-shrink-0"
+          >
+            Move with Don
+          </button>
         </div>
       </div>
 
