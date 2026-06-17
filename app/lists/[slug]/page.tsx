@@ -61,14 +61,21 @@ export default function ListPage() {
   // Track card positions for fixed overlay star buttons
   useEffect(() => {
     const updateCardPositions = () => {
-      if (!cardsContainerRef.current) return;
+      if (!cardsContainerRef.current) {
+        console.log("[v0-debug] cards container ref is null");
+        return;
+      }
       
       const container = cardsContainerRef.current;
       const containerRect = container.getBoundingClientRect();
       const positions: Record<string, { top: number; left: number; width: number; height: number }> = {};
       
+      console.log("[v0-debug] Container rect:", containerRect);
+      console.log("[v0-debug] Container scrollTop:", container.scrollTop);
+      
       if (savedList) {
         const currentDisplayedBuildings = comparisonMode ? buildingsList : buildingsList.filter((b) => savedList.buildingIds.includes(String(buildingsData.indexOf(b) + 1)));
+        console.log("[v0-debug] Current displayed buildings count:", currentDisplayedBuildings.length);
         
         currentDisplayedBuildings.forEach((building) => {
           const card = container.querySelector(`[data-card-id="${building.id}"]`);
@@ -80,16 +87,25 @@ export default function ListPage() {
               width: rect.width,
               height: rect.height,
             };
+            console.log(`[v0-debug] Building ${building.id} card position:`, positions[building.id]);
+          } else {
+            console.log(`[v0-debug] Card not found for building ${building.id}`);
           }
         });
       }
       
+      console.log("[v0-debug] Updated card positions:", positions);
       setCardPositions(positions);
     };
 
     const container = cardsContainerRef.current;
-    if (!container) return;
+    if (!container) {
+      console.log("[v0-debug] Container not found on effect mount");
+      return;
+    }
 
+    console.log("[v0-debug] Setting up scroll and resize listeners");
+    
     // Update on scroll and window resize
     container.addEventListener('scroll', updateCardPositions);
     window.addEventListener('resize', updateCardPositions);
@@ -301,16 +317,23 @@ export default function ListPage() {
         </div>
 
         {/* Fixed Star Button Overlay - Always above the bottom sheet */}
-        <div className="absolute inset-0 pointer-events-none md:hidden">
+        <div className="absolute inset-0 pointer-events-none md:hidden" style={{ zIndex: 50 }}>
           {displayedBuildings.map((building) => {
             const isStarred = starredBuildings.has(String(building.id));
             const pos = cardPositions[building.id];
-            if (!pos) return null;
+            
+            if (!pos) {
+              console.log(`[v0-debug] No position for building ${building.id}`);
+              return null;
+            }
+            
+            console.log(`[v0-debug] Rendering star for building ${building.id} at position:`, pos);
 
             return (
               <button
                 key={`star-${building.id}`}
                 onClick={(e) => {
+                  console.log(`[v0-debug] Star clicked for building ${building.id}`);
                   e.preventDefault();
                   e.stopPropagation();
                   const newStarred = new Set(starredBuildings);
@@ -325,8 +348,9 @@ export default function ListPage() {
                   position: 'absolute',
                   top: `${pos.top + 12}px`,
                   left: `${pos.left + pos.width - 40}px`,
+                  zIndex: 50,
                 }}
-                className="pointer-events-auto p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md hover:shadow-lg z-50"
+                className="pointer-events-auto p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md hover:shadow-lg"
                 aria-label={isStarred ? "Remove from list" : "Add to list"}
               >
                 <Star
