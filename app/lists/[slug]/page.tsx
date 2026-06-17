@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { buildings as buildingsData } from '@/lib/buildings';
 import { DesktopBuildingCard } from '@/components/desktop-building-card';
 import { MapView } from '@/components/map-view';
-import { Share2, ChevronLeft, Copy, Check } from 'lucide-react';
+import { Share2, ChevronLeft, Copy, Check, Star } from 'lucide-react';
 import { copyToClipboard, showToast } from '@/lib/toast-utils';
 
 // Map string IDs to building data for matching with saved numeric IDs
@@ -33,6 +33,7 @@ export default function ListPage() {
   const [selectedBuilding, setSelectedBuilding] = useState<typeof buildingsList[0] | null>(null);
   const [highlightedBuilding, setHighlightedBuilding] = useState<typeof buildingsList[0] | null>(null);
   const [copied, setCopied] = useState(false);
+  const [starredBuildings, setStarredBuildings] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchList = async () => {
@@ -214,20 +215,44 @@ export default function ListPage() {
           <div className="p-3 space-y-3">
             {displayedBuildings.map((building) => {
               const isSaved = savedBuildingIds.has(String(buildingsData.indexOf(building) + 1));
+              const isStarred = starredBuildings.has(String(building.id));
               return (
                 <div
                   key={building.id}
                   onClick={() => setSelectedBuilding(building)}
-                  className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                  className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden cursor-pointer hover:shadow-md transition-shadow relative"
                 >
-                  <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-hidden">
+                  <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-visible">
                     <img
                       src={building.images[0]}
                       alt={building.name}
                       className="w-full h-full object-cover"
                     />
+                    {/* Star Icon Button - with high z-index to stay above everything */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const newStarred = new Set(starredBuildings);
+                        if (newStarred.has(String(building.id))) {
+                          newStarred.delete(String(building.id));
+                        } else {
+                          newStarred.add(String(building.id));
+                        }
+                        setStarredBuildings(newStarred);
+                      }}
+                      className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md z-50"
+                      aria-label={isStarred ? "Remove from list" : "Add to list"}
+                    >
+                      <Star
+                        className={`h-4 w-4 transition-colors ${
+                          isStarred
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-400 hover:text-yellow-400"
+                        }`}
+                      />
+                    </button>
                     {isSaved && comparisonMode && (
-                      <div className="absolute top-2 left-2 px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded">
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded z-40">
                         Saved
                       </div>
                     )}
@@ -252,7 +277,7 @@ export default function ListPage() {
 
         {/* Mobile Comparison Toggle */}
         {buildingsList.length > savedBuildings.length && (
-          <div className="px-3 py-3 border-t border-gray-200 bg-gray-50">
+          <div className="px-3 py-3 border-t border-gray-200 bg-gray-50 relative z-30">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
