@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { buildings as buildingsData } from '@/lib/buildings';
@@ -34,8 +34,6 @@ export default function ListPage() {
   const [highlightedBuilding, setHighlightedBuilding] = useState<typeof buildingsList[0] | null>(null);
   const [copied, setCopied] = useState(false);
   const [starredBuildings, setStarredBuildings] = useState<Set<string>>(new Set());
-  const [cardPositions, setCardPositions] = useState<Record<string, { top: number; left: number; width: number; height: number }>>({});
-  const cardsContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchList = async () => {
@@ -57,51 +55,6 @@ export default function ListPage() {
       fetchList();
     }
   }, [slug]);
-
-  // Track card positions for fixed overlay star buttons
-  useEffect(() => {
-    const updateCardPositions = () => {
-      if (!cardsContainerRef.current) return;
-      
-      const container = cardsContainerRef.current;
-      const containerRect = container.getBoundingClientRect();
-      const positions: Record<string, { top: number; left: number; width: number; height: number }> = {};
-      
-      if (savedList) {
-        const currentDisplayedBuildings = comparisonMode ? buildingsList : buildingsList.filter((b) => savedList.buildingIds.includes(String(buildingsData.indexOf(b) + 1)));
-        
-        currentDisplayedBuildings.forEach((building) => {
-          const card = container.querySelector(`[data-card-id="${building.id}"]`);
-          if (card) {
-            const rect = card.getBoundingClientRect();
-            positions[building.id] = {
-              top: rect.top - containerRect.top + container.scrollTop,
-              left: rect.left - containerRect.left,
-              width: rect.width,
-              height: rect.height,
-            };
-          }
-        });
-      }
-      
-      setCardPositions(positions);
-    };
-
-    const container = cardsContainerRef.current;
-    if (!container) return;
-
-    // Update on scroll and window resize
-    container.addEventListener('scroll', updateCardPositions);
-    window.addEventListener('resize', updateCardPositions);
-    
-    // Initial update
-    setTimeout(updateCardPositions, 100);
-
-    return () => {
-      container.removeEventListener('scroll', updateCardPositions);
-      window.removeEventListener('resize', updateCardPositions);
-    };
-  }, [comparisonMode, savedList]);
 
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/lists/${slug}` : '';
 
@@ -258,10 +211,11 @@ export default function ListPage() {
       {/* Mobile Bottom Sheet */}
       <div className="md:hidden flex-1 flex flex-col overflow-hidden bg-white relative">
         {/* Mobile Cards List */}
-        <div className="flex-1 overflow-y-auto" ref={cardsContainerRef}>
+        <div className="flex-1 overflow-y-auto">
           <div className="p-3 space-y-3">
             {displayedBuildings.map((building) => {
               const isSaved = savedBuildingIds.has(String(buildingsData.indexOf(building) + 1));
+              const isStarred = starredBuildings.has(String(building.id));
               return (
                 <div
                   key={building.id}
@@ -269,15 +223,39 @@ export default function ListPage() {
                   onClick={() => setSelectedBuilding(building)}
                   className="p-3 rounded-lg border border-gray-200 bg-white cursor-pointer hover:shadow-md transition-shadow"
                 >
-                  {/* Image Container */}
-                  <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3">
+                  {/* Image Container - key: overflow-visible to allow star to render outside bounds */}
+                  <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-visible">
                     <img
                       src={building.images[0]}
                       alt={building.name}
                       className="w-full h-full object-cover rounded-md"
                     />
+                    {/* Star Button - positioned absolutely to appear in top-right, outside image bounds */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const newStarred = new Set(starredBuildings);
+                        if (newStarred.has(String(building.id))) {
+                          newStarred.delete(String(building.id));
+                        } else {
+                          newStarred.add(String(building.id));
+                        }
+                        setStarredBuildings(newStarred);
+                      }}
+                      className="absolute top-1 right-1 p-1.5 rounded-full bg-white/95 hover:bg-white transition-colors shadow-md hover:shadow-lg z-50"
+                      aria-label={isStarred ? "Remove from list" : "Add to list"}
+                    >
+                      <Star
+                        className={`h-4 w-4 transition-colors ${
+                          isStarred
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-400 hover:text-yellow-400"
+                        }`}
+                      />
+                    </button>
                     {isSaved && comparisonMode && (
-                      <div className="absolute top-2 left-2 px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded z-30">
+                      <div className="absolute bottom-1 left-1 px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded z-40">
                         Saved
                       </div>
                     )}
@@ -300,48 +278,6 @@ export default function ListPage() {
           </div>
         </div>
 
-        {/* Fixed Star Button Overlay - Always above the bottom sheet */}
-        <div className="absolute inset-0 pointer-events-none md:hidden" style={{ zIndex: 50 }}>
-          {displayedBuildings.map((building) => {
-            const isStarred = starredBuildings.has(String(building.id));
-            const pos = cardPositions[building.id];
-            
-            if (!pos) return null;
-
-            return (
-              <button
-                key={`star-${building.id}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const newStarred = new Set(starredBuildings);
-                  if (newStarred.has(String(building.id))) {
-                    newStarred.delete(String(building.id));
-                  } else {
-                    newStarred.add(String(building.id));
-                  }
-                  setStarredBuildings(newStarred);
-                }}
-                style={{
-                  position: 'absolute',
-                  top: `${pos.top + 12}px`,
-                  left: `${pos.left + pos.width - 40}px`,
-                  zIndex: 50,
-                }}
-                className="pointer-events-auto p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md hover:shadow-lg"
-                aria-label={isStarred ? "Remove from list" : "Add to list"}
-              >
-                <Star
-                  className={`h-4 w-4 transition-colors ${
-                    isStarred
-                      ? "fill-yellow-400 text-yellow-400"
-                      : "text-gray-400 hover:text-yellow-400"
-                  }`}
-                />
-              </button>
-            );
-          })}
-        </div>
 
         {/* Mobile Comparison Toggle */}
         {buildingsList.length > savedBuildings.length && (
