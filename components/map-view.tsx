@@ -148,8 +148,8 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
       // Create marker element
       const markerEl = document.createElement("div")
       markerEl.style.position = "relative"
-      markerEl.style.width = isActive ? "28px" : "24px"
-      markerEl.style.height = isActive ? "28px" : "24px"
+      markerEl.style.width = isActive ? "8px" : "6px"
+      markerEl.style.height = isActive ? "8px" : "6px"
       markerEl.style.cursor = "pointer"
       markerEl.style.display = "flex"
       markerEl.style.alignItems = "center"
@@ -165,16 +165,16 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
         markerEl.innerHTML = `
           <div style="
             position: relative;
-            width: ${isActive ? "28px" : "24px"};
-            height: ${isActive ? "28px" : "24px"};
+            width: ${isActive ? "8px" : "6px"};
+            height: ${isActive ? "8px" : "6px"};
             display: flex;
             align-items: center;
             justify-content: center;
             background: ${pinColor};
             border-radius: 50%;
-            box-shadow: ${isActive ? `0 3px 10px rgba(0, 0, 0, 0.3)` : `0 1.5px 5px rgba(0, 0, 0, 0.2)`};
-            border: 1.5px solid white;
-            font-size: ${isActive ? "6px" : "5.5px"};
+            box-shadow: ${isActive ? `0 1px 3px rgba(0, 0, 0, 0.3)` : `0 0.5px 1.5px rgba(0, 0, 0, 0.2)`};
+            border: 0.5px solid white;
+            font-size: ${isActive ? "3px" : "2px"};
             font-weight: bold;
             color: white;
             transform: scale(${isActive ? 1.15 : 1});
@@ -186,7 +186,7 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
       } else {
         // Fallback to traditional pin marker
         markerEl.innerHTML = `
-          <svg width="16" height="20" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2)); transition: transform 0.2s ease;">
+          <svg width="4" height="5" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0.5px 1px rgba(0, 0, 0, 0.2)); transition: transform 0.2s ease;">
             <path d="M16 2C10.48 2 6 6.48 6 12c0 8 10 26 10 26s10-18 10-26c0-5.52-4.48-10-10-10z" fill="${pinColor}"/>
             <circle cx="16" cy="12" r="3" fill="white"/>
           </svg>
