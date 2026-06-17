@@ -7,6 +7,7 @@ import { FlowBrickellCard } from '@/components/flow-brickell-card';
 import { MoveWithDon } from '@/components/move-with-don';
 import { DesktopBuildingCard } from '@/components/desktop-building-card';
 import { copyToClipboard, showToast } from '@/lib/toast-utils';
+import { Star } from 'lucide-react';
 
 const BUILDINGS = [
   { id: 1, name: 'Flow Brickell', neighborhood: 'Brickell', address: '275 SW 6th St, Miami, FL 33130', lat: 25.7684, lng: -80.1990, priceMin: 2790, priceTier: '$$', tagline: 'Vibrant community, social hub, always buzzing', concession: '1 month free on select units', units: ['Studio', '1B', '2B', '3B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60, 90], images: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f8-PjSUbS6yTrIBusqZ0XXyuU8h1qerGT.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f7-e8tHKaMeidxoV13PJgZNveLuE6ScPy.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f1-sC9oG9eD9DGGUwRRPP93yLIPgssB8r.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f3-Bw25PrMJlv7UYJ3bt5D5fmbz94yAMb.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f4-9VsnFpU86vEqyTuNQKYutuLUnX5dEi.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f5-XWNn2OspXHwINOXtaNPYMrIUhleUvP.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f6-OjhZIKj1vv611WQHgFm26OfY157Ijw.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f2-ICadR5CSOFH7p9F3OQtpdBs2CH5RlD.webp'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,790', application: '$75', admin: '$150', parking: '$150/car', misc: 'Pet fee: $35/mo' } },
@@ -668,7 +669,31 @@ export default function MiamiApp() {
                     ) : (
                       filteredBuildings.map((building) => (
                         <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
-                          <img src={building.images[0]} alt={building.name} className="w-full h-40 object-cover rounded-md mb-3" />
+                          <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-hidden">
+                            <img src={building.images[0]} alt={building.name} className="w-full h-full object-cover" />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newStarred = new Set(starredBuildings);
+                                if (newStarred.has(String(building.id))) {
+                                  newStarred.delete(String(building.id));
+                                } else {
+                                  newStarred.add(String(building.id));
+                                }
+                                setStarredBuildings(newStarred);
+                              }}
+                              className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md"
+                              aria-label={starredBuildings.has(String(building.id)) ? "Remove from list" : "Add to list"}
+                            >
+                              <Star
+                                className={`h-4 w-4 transition-colors ${
+                                  starredBuildings.has(String(building.id))
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-gray-400 hover:text-yellow-400"
+                                }`}
+                              />
+                            </button>
+                          </div>
                           <div className="flex justify-between items-start mb-1">
                             <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
                             <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
@@ -689,7 +714,31 @@ export default function MiamiApp() {
                 <div className="pt-2">
                   <div className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
                     <button onClick={(e) => { e.stopPropagation(); setSelectedBuilding(null); }} className="text-sm text-blue-500 font-semibold mb-2 hover:text-blue-600">← Back</button>
-                    <img src={selectedBuilding.images[0]} alt={selectedBuilding.name} className="w-full h-40 object-cover rounded-md mb-3" />
+                    <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-hidden">
+                      <img src={selectedBuilding.images[0]} alt={selectedBuilding.name} className="w-full h-full object-cover" />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newStarred = new Set(starredBuildings);
+                          if (newStarred.has(String(selectedBuilding.id))) {
+                            newStarred.delete(String(selectedBuilding.id));
+                          } else {
+                            newStarred.add(String(selectedBuilding.id));
+                          }
+                          setStarredBuildings(newStarred);
+                        }}
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md"
+                        aria-label={starredBuildings.has(String(selectedBuilding.id)) ? "Remove from list" : "Add to list"}
+                      >
+                        <Star
+                          className={`h-4 w-4 transition-colors ${
+                            starredBuildings.has(String(selectedBuilding.id))
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-gray-400 hover:text-yellow-400"
+                          }`}
+                        />
+                      </button>
+                    </div>
                     <div className="flex justify-between items-start mb-1">
                       <h3 className="font-semibold text-gray-900 text-sm">{selectedBuilding.name}</h3>
                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{selectedBuilding.neighborhood}</span>
