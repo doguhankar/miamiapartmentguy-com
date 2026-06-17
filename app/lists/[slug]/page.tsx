@@ -210,6 +210,40 @@ export default function ListPage() {
 
       {/* Mobile Bottom Sheet */}
       <div className="md:hidden flex-1 flex flex-col overflow-hidden bg-white relative">
+        {/* Fixed Star Controls Header - Never scrolls, always visible */}
+        {displayedBuildings.length > 0 && (
+          <div className="flex-shrink-0 px-3 py-2 bg-white border-b border-gray-200 flex items-center gap-2 overflow-x-auto">
+            {displayedBuildings.map((building) => {
+              const isStarred = starredBuildings.has(String(building.id));
+              return (
+                <button
+                  key={`star-header-${building.id}`}
+                  onClick={() => {
+                    const newStarred = new Set(starredBuildings);
+                    if (newStarred.has(String(building.id))) {
+                      newStarred.delete(String(building.id));
+                    } else {
+                      newStarred.add(String(building.id));
+                    }
+                    setStarredBuildings(newStarred);
+                  }}
+                  className="flex-shrink-0 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-200 hover:border-gray-300"
+                  title={building.name}
+                  aria-label={`${isStarred ? 'Unstar' : 'Star'} ${building.name}`}
+                >
+                  <Star
+                    className={`h-4 w-4 transition-colors ${
+                      isStarred
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-gray-300 hover:text-yellow-400"
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Mobile Cards List */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-3 space-y-3">
@@ -223,39 +257,15 @@ export default function ListPage() {
                   onClick={() => setSelectedBuilding(building)}
                   className="p-3 rounded-lg border border-gray-200 bg-white cursor-pointer hover:shadow-md transition-shadow"
                 >
-                  {/* Image Container - key: overflow-visible to allow star to render outside bounds */}
-                  <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-visible">
+                  {/* Image Container */}
+                  <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3">
                     <img
                       src={building.images[0]}
                       alt={building.name}
                       className="w-full h-full object-cover rounded-md"
                     />
-                    {/* Star Button - positioned absolutely to appear in top-right, outside image bounds */}
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const newStarred = new Set(starredBuildings);
-                        if (newStarred.has(String(building.id))) {
-                          newStarred.delete(String(building.id));
-                        } else {
-                          newStarred.add(String(building.id));
-                        }
-                        setStarredBuildings(newStarred);
-                      }}
-                      className="absolute top-1 right-1 p-1.5 rounded-full bg-white/95 hover:bg-white transition-colors shadow-md hover:shadow-lg z-50"
-                      aria-label={isStarred ? "Remove from list" : "Add to list"}
-                    >
-                      <Star
-                        className={`h-4 w-4 transition-colors ${
-                          isStarred
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-400 hover:text-yellow-400"
-                        }`}
-                      />
-                    </button>
                     {isSaved && comparisonMode && (
-                      <div className="absolute bottom-1 left-1 px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded z-40">
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded z-30">
                         Saved
                       </div>
                     )}
