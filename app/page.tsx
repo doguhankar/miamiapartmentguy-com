@@ -6,6 +6,7 @@ import { MapFilterModal, type FilterState } from '@/components/map-filter-modal'
 import { FlowBrickellCard } from '@/components/flow-brickell-card';
 import { MoveWithDon } from '@/components/move-with-don';
 import { DesktopBuildingCard } from '@/components/desktop-building-card';
+import { copyToClipboard, showToast } from '@/lib/toast-utils';
 
 const BUILDINGS = [
   { id: 1, name: 'Flow Brickell', neighborhood: 'Brickell', address: '275 SW 6th St, Miami, FL 33130', lat: 25.7684, lng: -80.1990, priceMin: 2790, priceTier: '$$', tagline: 'Vibrant community, social hub, always buzzing', concession: '1 month free on select units', units: ['Studio', '1B', '2B', '3B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60, 90], images: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f8-PjSUbS6yTrIBusqZ0XXyuU8h1qerGT.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f7-e8tHKaMeidxoV13PJgZNveLuE6ScPy.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f1-sC9oG9eD9DGGUwRRPP93yLIPgssB8r.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f3-Bw25PrMJlv7UYJ3bt5D5fmbz94yAMb.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f4-9VsnFpU86vEqyTuNQKYutuLUnX5dEi.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f5-XWNn2OspXHwINOXtaNPYMrIUhleUvP.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f6-OjhZIKj1vv611WQHgFm26OfY157Ijw.webp', 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f2-ICadR5CSOFH7p9F3OQtpdBs2CH5RlD.webp'], amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'], fees: { deposit: '$2,790', application: '$75', admin: '$150', parking: '$150/car', misc: 'Pet fee: $35/mo' } },
@@ -324,6 +325,8 @@ export default function MiamiApp() {
   const touchStartY = useRef(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [infoBuilding, setInfoBuilding] = useState(null);
+  const [starredBuildings, setStarredBuildings] = useState<Set<string>>(new Set());
+  const [isSavingList, setIsSavingList] = useState(false);
   const [isAgentMode, setIsAgentMode] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
@@ -578,6 +581,35 @@ export default function MiamiApp() {
     }
   }, [selectedBuilding, geocodedBuildings]);
 
+  const handleSaveList = async () => {
+    if (starredBuildings.size === 0) return;
+
+    setIsSavingList(true);
+    try {
+      const buildingIds = Array.from(starredBuildings);
+      const response = await fetch('/api/lists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ buildingIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save list');
+      }
+
+      const data = await response.json();
+      const shareUrl = data.shareUrl;
+
+      // Copy to clipboard
+      await copyToClipboard(shareUrl, 'Link copied to clipboard');
+    } catch (error) {
+      console.error('[v0] Error saving list:', error);
+      showToast('Failed to save list', { type: 'error' });
+    } finally {
+      setIsSavingList(false);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
@@ -591,12 +623,23 @@ export default function MiamiApp() {
           </h1>
           
           {/* Button Column - Right */}
-          <button 
-            onClick={() => setShowMoveWithDonModal(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg text-sm whitespace-nowrap flex-shrink-0"
-          >
-            Move with Don
-          </button>
+          <div className="flex items-center gap-2">
+            {starredBuildings.size > 0 && (
+              <button 
+                onClick={() => handleSaveList()}
+                disabled={isSavingList}
+                className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-3 py-2 rounded-lg font-semibold transition-colors shadow-lg text-xs whitespace-nowrap flex-shrink-0"
+              >
+                Save ({starredBuildings.size})
+              </button>
+            )}
+            <button 
+              onClick={() => setShowMoveWithDonModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg text-sm whitespace-nowrap flex-shrink-0"
+            >
+              Move with Don
+            </button>
+          </div>
         </div>
       </div>
 
@@ -776,16 +819,27 @@ export default function MiamiApp() {
               <h3 className="text-sm font-semibold text-gray-700">
                 {filteredBuildings.length} Available
               </h3>
-              <button 
-                onClick={() => isAgentMode ? setIsAgentMode(false) : setShowPinModal(true)} 
-                className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
-                  isAgentMode 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {isAgentMode ? '✓ Agent Mode' : 'Agent?'}
-              </button>
+              <div className="flex items-center gap-2">
+                {starredBuildings.size > 0 && (
+                  <button 
+                    onClick={() => handleSaveList()}
+                    disabled={isSavingList}
+                    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors"
+                  >
+                    Save ({starredBuildings.size})
+                  </button>
+                )}
+                <button 
+                  onClick={() => isAgentMode ? setIsAgentMode(false) : setShowPinModal(true)} 
+                  className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
+                    isAgentMode 
+                      ? 'bg-green-100 text-green-700' 
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {isAgentMode ? '✓ Agent Mode' : 'Agent?'}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -798,8 +852,18 @@ export default function MiamiApp() {
                   building={building}
                   isHighlighted={selectedBuilding?.id === building.id}
                   isAgentMode={isAgentMode}
+                  isStarred={starredBuildings.has(String(building.id))}
                   onHover={setHighlightedBuilding}
                   onClick={setSelectedBuilding}
+                  onStar={(b) => {
+                    const newStarred = new Set(starredBuildings);
+                    if (newStarred.has(String(b.id))) {
+                      newStarred.delete(String(b.id));
+                    } else {
+                      newStarred.add(String(b.id));
+                    }
+                    setStarredBuildings(newStarred);
+                  }}
                 />
               ))}
             </div>

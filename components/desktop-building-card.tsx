@@ -3,13 +3,17 @@
 import { Building } from "@/data/buildings"
 import { ImageCarousel } from "./image-carousel"
 import { useState } from "react"
+import { Star } from "lucide-react"
 
 interface DesktopBuildingCardProps {
   building: Building
   isHighlighted?: boolean
   isAgentMode?: boolean
+  isStarred?: boolean
+  hasSavedBadge?: boolean
   onHover?: (building: Building | null) => void
   onClick?: (building: Building) => void
+  onStar?: (building: Building) => void
 }
 
 // Amenity color mapping for badges
@@ -45,8 +49,11 @@ export function DesktopBuildingCard({
   building,
   isHighlighted = false,
   isAgentMode = false,
+  isStarred = false,
+  hasSavedBadge = false,
   onHover,
   onClick,
+  onStar,
 }: DesktopBuildingCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const amenities = extractAmenities(building)
@@ -74,6 +81,31 @@ export function DesktopBuildingCard({
     >
       {/* Image Carousel - Full Width */}
       <div className="relative h-56 bg-gray-100 overflow-hidden">
+        {/* Star Icon */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onStar?.(building)
+          }}
+          className="absolute top-2 right-2 z-10 p-2 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md hover:shadow-lg"
+          aria-label={isStarred ? "Remove from list" : "Add to list"}
+        >
+          <Star
+            className={`h-5 w-5 transition-colors ${
+              isStarred
+                ? "fill-yellow-400 text-yellow-400"
+                : "text-gray-400 hover:text-yellow-400"
+            }`}
+          />
+        </button>
+
+        {/* Saved Badge (for comparison view) */}
+        {hasSavedBadge && (
+          <div className="absolute top-2 left-2 z-10 px-2.5 py-1 bg-green-500 text-white text-xs font-semibold rounded">
+            Saved
+          </div>
+        )}
+
         <ImageCarousel images={building.images} />
       </div>
 
