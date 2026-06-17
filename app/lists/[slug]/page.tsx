@@ -3,9 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { buildings } from '@/lib/buildings';
+import { buildings as buildingsData } from '@/lib/buildings';
 import { DesktopBuildingCard } from '@/components/desktop-building-card';
 import { ChevronLeft } from 'lucide-react';
+
+// Map string IDs to building data for matching with saved numeric IDs
+// This creates a lookup that allows saved lists to work with buildings
+const buildingsByStringId: Record<string, typeof buildingsData[0]> = {};
+buildingsData.forEach((b, index) => {
+  buildingsByStringId[String(index + 1)] = b;
+});
+
+const buildingsList = Object.values(buildingsByStringId);
 
 interface SavedList {
   slug: string;
@@ -81,8 +90,8 @@ export default function ListPage() {
 
   // Get saved buildings
   const savedBuildingIds = new Set(savedList.buildingIds.map(String));
-  const savedBuildings = buildings.filter((b) => savedBuildingIds.has(String(b.id)));
-  const displayedBuildings = comparisonMode ? buildings : savedBuildings;
+  const savedBuildings = buildingsList.filter((b) => savedBuildingIds.has(String(buildingsData.indexOf(b) + 1)));
+  const displayedBuildings = comparisonMode ? buildingsList : savedBuildings;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
@@ -125,7 +134,7 @@ export default function ListPage() {
           </div>
 
           {/* Comparison Toggle */}
-          {buildings.length > savedBuildings.length && (
+          {buildingsList.length > savedBuildings.length && (
             <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200">
               <input
                 type="checkbox"
@@ -135,7 +144,7 @@ export default function ListPage() {
                 className="rounded cursor-pointer"
               />
               <label htmlFor="comparison-toggle" className="cursor-pointer text-sm font-medium text-gray-700">
-                Show all buildings for comparison ({buildings.length} total)
+                Show all buildings for comparison ({buildingsList.length} total)
               </label>
             </div>
           )}

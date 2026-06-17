@@ -3,9 +3,11 @@ import { createClient } from '@supabase/supabase-js'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const { slug } = await params
+    
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -17,7 +19,6 @@ export async function GET(
     }
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
-    const slug = params.slug
 
     if (!slug || typeof slug !== 'string' || !/^[a-f0-9]{12}$/.test(slug)) {
       return NextResponse.json(
