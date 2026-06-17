@@ -5,10 +5,11 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { buildings as buildingsData } from '@/lib/buildings';
 import { DesktopBuildingCard } from '@/components/desktop-building-card';
-import { ChevronLeft } from 'lucide-react';
+import { MapView } from '@/components/map-view';
+import { Share2, ChevronLeft, Copy, Check } from 'lucide-react';
+import { copyToClipboard, showToast } from '@/lib/toast-utils';
 
 // Map string IDs to building data for matching with saved numeric IDs
-// This creates a lookup that allows saved lists to work with buildings
 const buildingsByStringId: Record<string, typeof buildingsData[0]> = {};
 buildingsData.forEach((b, index) => {
   buildingsByStringId[String(index + 1)] = b;
@@ -29,7 +30,9 @@ export default function ListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [comparisonMode, setComparisonMode] = useState(false);
-  const [copiedText, setCopiedText] = useState('');
+  const [selectedBuilding, setSelectedBuilding] = useState<typeof buildingsList[0] | null>(null);
+  const [highlightedBuilding, setHighlightedBuilding] = useState<typeof buildingsList[0] | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchList = async () => {
@@ -54,13 +57,24 @@ export default function ListPage() {
 
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/lists/${slug}` : '';
 
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopiedText('Copied!');
-      setTimeout(() => setCopiedText(''), 2000);
-    } catch {
-      setCopiedText('Failed to copy');
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'My Saved Apartments',
+          text: `Check out my saved apartment list in Miami`,
+          url: shareUrl,
+        });
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          showToast('Failed to share', { type: 'error' });
+        }
+      }
+    } else {
+      // Fallback: copy to clipboard
+      await copyToClipboard(shareUrl, 'Link copied to clipboard');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -92,89 +106,164 @@ export default function ListPage() {
   const savedBuildingIds = new Set(savedList.buildingIds.map(String));
   const savedBuildings = buildingsList.filter((b) => savedBuildingIds.has(String(buildingsData.indexOf(b) + 1)));
   const displayedBuildings = comparisonMode ? buildingsList : savedBuildings;
+  const mapBuildings = comparisonMode ? buildingsList : savedBuildings;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold mb-4"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Back to listings
-          </Link>
+    <div className="w-full h-screen flex flex-col md:flex-row bg-white">
+      {/* Mobile Header */}
+      <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white z-20">
+        <Link href="/" className="flex items-center gap-2 text-gray-600 hover:text-gray-800">
+          <ChevronLeft className="h-5 w-5" />
+        </Link>
+        <h1 className="text-base font-semibold text-gray-900">
+          {savedBuildings.length} saved
+        </h1>
+        <button
+          onClick={handleShare}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          aria-label="Share list"
+        >
+          <Share2 className="h-5 w-5 text-gray-700" />
+        </button>
+      </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Saved Apartment List
-          </h1>
-
-          <p className="text-gray-600 mb-4">
-            {savedBuildings.length} apartment{savedBuildings.length !== 1 ? 's' : ''} saved
-          </p>
-
-          {/* Share Section */}
-          <div className="bg-white rounded-lg p-4 border border-gray-200 mb-6">
-            <p className="text-sm text-gray-600 mb-2">Share this list:</p>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={shareUrl}
-                readOnly
-                className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono text-gray-700"
-              />
-              <button
-                onClick={copyToClipboard}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm whitespace-nowrap"
-              >
-                {copiedText || 'Copy Link'}
-              </button>
-            </div>
-          </div>
-
-          {/* Comparison Toggle */}
-          {buildingsList.length > savedBuildings.length && (
-            <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200">
-              <input
-                type="checkbox"
-                id="comparison-toggle"
-                checked={comparisonMode}
-                onChange={(e) => setComparisonMode(e.target.checked)}
-                className="rounded cursor-pointer"
-              />
-              <label htmlFor="comparison-toggle" className="cursor-pointer text-sm font-medium text-gray-700">
-                Show all buildings for comparison ({buildingsList.length} total)
-              </label>
-            </div>
+      {/* Desktop Header */}
+      <div className="hidden md:flex md:fixed md:top-0 md:right-0 md:z-20 md:p-4 md:gap-3 md:items-center">
+        <Link href="/" className="flex items-center gap-2 text-gray-600 hover:text-gray-800 px-3 py-2">
+          <ChevronLeft className="h-4 w-4" />
+          <span className="text-sm font-semibold">Back</span>
+        </Link>
+        <button
+          onClick={handleShare}
+          className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold"
+        >
+          {copied ? (
+            <>
+              <Check className="h-4 w-4" />
+              Copied!
+            </>
+          ) : (
+            <>
+              <Copy className="h-4 w-4" />
+              Copy Link
+            </>
           )}
+        </button>
+      </div>
+
+      {/* Map Container */}
+      <div className="h-64 md:h-full md:flex-1 md:relative">
+        <MapView
+          buildings={mapBuildings}
+          selectedBuilding={selectedBuilding}
+          highlightedBuilding={highlightedBuilding}
+          onSelectBuilding={setSelectedBuilding}
+        />
+      </div>
+
+      {/* Desktop Cards Panel */}
+      <div className="hidden md:flex md:flex-col md:w-[40%] md:max-w-lg md:border-l md:border-gray-200">
+        {/* Desktop Header Info */}
+        <div className="px-4 pt-14 pb-4 border-b border-gray-200">
+          <h2 className="text-lg font-bold text-gray-900 mb-1">
+            {savedBuildings.length} apartment{savedBuildings.length !== 1 ? 's' : ''}
+          </h2>
+          <p className="text-xs text-gray-500">in your saved list</p>
         </div>
 
-        {/* Buildings Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {displayedBuildings.map((building) => {
-            const isSaved = savedBuildingIds.has(String(building.id));
-            return (
-              <div key={building.id} className="relative">
-                {isSaved && comparisonMode && (
-                  <div className="absolute top-0 left-0 right-0 z-20 px-4 pt-4">
-                    <div className="inline-block px-2.5 py-1 bg-green-500 text-white text-xs font-semibold rounded">
-                      Saved
-                    </div>
-                  </div>
-                )}
+        {/* Desktop Cards Grid */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 grid gap-4">
+            {displayedBuildings.map((building) => {
+              const isSaved = savedBuildingIds.has(String(buildingsData.indexOf(building) + 1));
+              return (
                 <DesktopBuildingCard
+                  key={building.id}
                   building={building}
                   hasSavedBadge={isSaved && comparisonMode}
+                  onHover={setHighlightedBuilding}
+                  onClick={setSelectedBuilding}
                 />
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
-        {displayedBuildings.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 mb-4">No buildings to display</p>
+        {/* Desktop Comparison Toggle */}
+        {buildingsList.length > savedBuildings.length && (
+          <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={comparisonMode}
+                onChange={(e) => setComparisonMode(e.target.checked)}
+                className="w-4 h-4 rounded cursor-pointer"
+              />
+              <span className="text-xs font-medium text-gray-700">
+                Compare with all {buildingsList.length} buildings
+              </span>
+            </label>
+          </div>
+        )}
+      </div>
+
+      {/* Mobile Bottom Sheet */}
+      <div className="md:hidden flex-1 flex flex-col overflow-hidden bg-white">
+        {/* Mobile Cards List */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-3 space-y-3">
+            {displayedBuildings.map((building) => {
+              const isSaved = savedBuildingIds.has(String(buildingsData.indexOf(building) + 1));
+              return (
+                <div
+                  key={building.id}
+                  onClick={() => setSelectedBuilding(building)}
+                  className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                >
+                  <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-hidden">
+                    <img
+                      src={building.images[0]}
+                      alt={building.name}
+                      className="w-full h-full object-cover"
+                    />
+                    {isSaved && comparisonMode && (
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded">
+                        Saved
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                      {building.neighborhood}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-700 mb-1">
+                    {building.tagline || `$${building.priceMin}+/mo`}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {building.units.join(' • ')}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Mobile Comparison Toggle */}
+        {buildingsList.length > savedBuildings.length && (
+          <div className="px-3 py-3 border-t border-gray-200 bg-gray-50">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={comparisonMode}
+                onChange={(e) => setComparisonMode(e.target.checked)}
+                className="w-4 h-4 rounded cursor-pointer"
+              />
+              <span className="text-xs font-medium text-gray-700">
+                Compare with all {buildingsList.length} buildings
+              </span>
+            </label>
           </div>
         )}
       </div>
