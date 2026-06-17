@@ -220,17 +220,19 @@ export default function ListPage() {
                 <div
                   key={building.id}
                   onClick={() => setSelectedBuilding(building)}
-                  className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden cursor-pointer hover:shadow-md transition-shadow relative"
+                  className="p-3 rounded-lg border border-gray-200 bg-white cursor-pointer hover:shadow-md transition-shadow"
                 >
-                  <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-visible">
+                  {/* Image Container - allows star to overflow */}
+                  <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 -mx-3 -mt-3 mx-0 mt-0">
                     <img
                       src={building.images[0]}
                       alt={building.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover rounded-t-md"
                     />
-                    {/* Star Icon Button - with high z-index to stay above everything */}
+                    {/* Star Icon Button - positioned to overflow and never get clipped */}
                     <button
                       onClick={(e) => {
+                        e.preventDefault();
                         e.stopPropagation();
                         const newStarred = new Set(starredBuildings);
                         if (newStarred.has(String(building.id))) {
@@ -240,7 +242,7 @@ export default function ListPage() {
                         }
                         setStarredBuildings(newStarred);
                       }}
-                      className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md z-50"
+                      className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md hover:shadow-lg z-40"
                       aria-label={isStarred ? "Remove from list" : "Add to list"}
                     >
                       <Star
@@ -252,7 +254,7 @@ export default function ListPage() {
                       />
                     </button>
                     {isSaved && comparisonMode && (
-                      <div className="absolute top-2 left-2 px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded z-40">
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded z-30">
                         Saved
                       </div>
                     )}
