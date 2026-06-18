@@ -59,11 +59,24 @@ export function MapFilterCard({ filters, onFilterChange, onClearAll }: MapFilter
 
   const getSelectedLabel = (type: 'bedrooms' | 'price' | 'moveIn'): string => {
     if (type === 'bedrooms') {
-      return filters.bedrooms.length === 0 ? 'All bedrooms' : `${filters.bedrooms.length} selected`;
+      if (filters.bedrooms.length === 0) return 'Bedroom Size';
+      if (filters.bedrooms.length === 1) return filters.bedrooms[0];
+      return `${filters.bedrooms.length} selected`;
     } else if (type === 'price') {
-      return filters.price.length === 0 ? 'All prices' : `${filters.price.length} selected`;
+      if (filters.price.length === 0) return 'Price';
+      if (filters.price.length === 1) {
+        // Format price display nicely
+        const priceStr = filters.price[0];
+        if (priceStr === '$0-$2,000') return '$0 - $2,000';
+        if (priceStr === '$2,000-$4,000') return '$2,000 - $4,000';
+        if (priceStr === '$4,000+') return '$4,000+';
+        return priceStr;
+      }
+      return `${filters.price.length} selected`;
     } else {
-      return filters.moveInDate.length === 0 ? 'Any date' : `${filters.moveInDate.length} selected`;
+      if (filters.moveInDate.length === 0) return 'Move in Date';
+      if (filters.moveInDate.length === 1) return filters.moveInDate[0];
+      return `${filters.moveInDate.length} selected`;
     }
   };
 
