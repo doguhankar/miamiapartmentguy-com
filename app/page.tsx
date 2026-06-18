@@ -583,50 +583,28 @@ export default function MiamiApp() {
   }, [selectedBuilding, geocodedBuildings]);
 
   const handleSaveList = async () => {
-    console.log("[v0] handleSaveList called, starredBuildings.size:", starredBuildings.size);
-    if (starredBuildings.size === 0) {
-      console.log("[v0] No buildings starred, returning");
-      return;
-    }
+    if (starredBuildings.size === 0) return;
 
     setIsSavingList(true);
     try {
       const buildingIds = Array.from(starredBuildings);
-      console.log("[v0] Building IDs to save:", buildingIds);
-      
-      const requestBody = { buildingIds };
-      console.log("[v0] Request body:", JSON.stringify(requestBody));
-      
       const response = await fetch('/api/lists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({ buildingIds }),
       });
 
-      console.log("[v0] POST /api/lists response status:", response.status);
-      console.log("[v0] Response ok:", response.ok);
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("[v0] Response error text:", errorText);
         throw new Error('Failed to save list');
       }
 
       const data = await response.json();
-      console.log("[v0] POST /api/lists response data:", data);
-      
       const shareUrl = data.shareUrl;
-      console.log("[v0] Share URL to copy:", shareUrl);
-      console.log("[v0] Share URL type:", typeof shareUrl);
-      console.log("[v0] Share URL length:", shareUrl?.length);
 
       // Copy to clipboard
-      console.log("[v0] Attempting to copy to clipboard...");
       await copyToClipboard(shareUrl, 'Link copied to clipboard');
-      console.log("[v0] Successfully copied to clipboard");
     } catch (error) {
       console.error('[v0] Error saving list:', error);
-      console.error('[v0] Error stack:', (error as Error).stack);
       showToast('Failed to save list', { type: 'error' });
     } finally {
       setIsSavingList(false);
