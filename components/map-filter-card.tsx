@@ -171,6 +171,16 @@ export function MapFilterCard({ filters, onFilterChange, onClearAll }: MapFilter
           </div>
         )}
       </div>
+
+      {/* Clear Filters Button */}
+      {hasActiveFilters && (
+        <button
+          onClick={onClearAll}
+          className="px-3 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors shadow-sm text-sm font-medium text-gray-700"
+        >
+          Clear Filters
+        </button>
+      )}
     </div>
   );
 }
