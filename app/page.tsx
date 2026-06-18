@@ -650,6 +650,27 @@ export default function MiamiApp() {
           <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
           <div className="absolute top-4 left-4 right-4 z-20 flex gap-3 items-center pointer-events-none">
             <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="flex-1 px-4 py-3 rounded-full bg-white border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 pointer-events-auto" />
+            <button
+              onClick={() => {
+                if (selectedBuilding) {
+                  const newStarred = new Set(starredBuildings);
+                  if (newStarred.has(String(selectedBuilding.id))) {
+                    newStarred.delete(String(selectedBuilding.id));
+                  } else {
+                    newStarred.add(String(selectedBuilding.id));
+                  }
+                  setStarredBuildings(newStarred);
+                }
+              }}
+              className="w-12 h-12 bg-yellow-500 hover:bg-yellow-600 text-white rounded-full flex items-center justify-center shadow-md pointer-events-auto transition-colors"
+              aria-label={selectedBuilding && starredBuildings.has(String(selectedBuilding.id)) ? 'Unstar building' : 'Star building'}
+              title={selectedBuilding ? (starredBuildings.has(String(selectedBuilding.id)) ? 'Unstar current building' : 'Star current building') : 'Click a card to star it'}
+            >
+              <div className="flex flex-col items-center justify-center">
+                <Star className={`h-5 w-5 ${selectedBuilding && starredBuildings.has(String(selectedBuilding.id)) ? 'fill-white' : 'fill-white/50'}`} />
+                <span className="text-xs font-bold leading-none mt-0.5">{starredBuildings.size}</span>
+              </div>
+            </button>
             <button onClick={() => setShowFilterModal(true)} className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-600 pointer-events-auto text-lg font-semibold">⚙</button>
           </div>
         </div>
@@ -671,28 +692,6 @@ export default function MiamiApp() {
                         <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
                           <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-hidden">
                             <img src={building.images[0]} alt={building.name} className="w-full h-full object-cover" />
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const newStarred = new Set(starredBuildings);
-                                if (newStarred.has(String(building.id))) {
-                                  newStarred.delete(String(building.id));
-                                } else {
-                                  newStarred.add(String(building.id));
-                                }
-                                setStarredBuildings(newStarred);
-                              }}
-                              className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md"
-                              aria-label={starredBuildings.has(String(building.id)) ? "Remove from list" : "Add to list"}
-                            >
-                              <Star
-                                className={`h-4 w-4 transition-colors ${
-                                  starredBuildings.has(String(building.id))
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-gray-400 hover:text-yellow-400"
-                                }`}
-                              />
-                            </button>
                           </div>
                           <div className="flex justify-between items-start mb-1">
                             <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
