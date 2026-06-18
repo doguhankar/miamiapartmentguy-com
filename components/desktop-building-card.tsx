@@ -4,7 +4,7 @@ import { Building } from "@/data/buildings"
 import { ImageCarousel } from "./image-carousel"
 import { useState } from "react"
 import { Star } from "lucide-react"
-import { BuildingDetailModal } from "@/components/building-detail-modal"
+import { BuildingDetailView } from "@/components/building-detail-view"
 
 interface DesktopBuildingCardProps {
   building: Building
@@ -205,9 +205,9 @@ export function DesktopBuildingCard({
         </div>
       </div>
 
-      {/* Building Detail Modal */}
+      {/* Building Detail Full-Screen View */}
       {showDetailModal && (
-        <BuildingDetailModal building={building} onClose={() => setShowDetailModal(false)} />
+        <BuildingDetailView building={building} onBack={() => setShowDetailModal(false)} />
       )}
     </div>
   )
