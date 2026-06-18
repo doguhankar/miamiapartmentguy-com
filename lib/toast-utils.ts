@@ -31,13 +31,21 @@ export function showToast(message: string, options: ToastOptions = {}): void {
  * Copy text to clipboard with toast notification
  */
 export async function copyToClipboard(text: string, successMessage: string = 'Copied to clipboard'): Promise<boolean> {
+  console.log("[v0] copyToClipboard called with text:", text);
+  console.log("[v0] Text length:", text?.length);
+  
   try {
+    console.log("[v0] navigator.clipboard available:", navigator.clipboard ? 'yes' : 'no');
+    
     if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      console.log("[v0] Using modern clipboard API");
       await navigator.clipboard.writeText(text);
+      console.log("[v0] Successfully wrote to clipboard via API");
       showToast(successMessage, { type: 'success' });
       return true;
     } else {
       // Fallback for older browsers
+      console.log("[v0] Using fallback textarea method");
       const textarea = document.createElement('textarea');
       textarea.value = text;
       textarea.style.position = 'fixed';
@@ -46,15 +54,22 @@ export async function copyToClipboard(text: string, successMessage: string = 'Co
       textarea.select();
       
       const success = document.execCommand('copy');
+      console.log("[v0] execCommand('copy') result:", success);
       document.body.removeChild(textarea);
       
       if (success) {
+        console.log("[v0] Successfully wrote to clipboard via fallback");
         showToast(successMessage, { type: 'success' });
+      } else {
+        console.log("[v0] Fallback copy failed");
       }
       return success;
     }
   } catch (err) {
-    console.error('[Toast] Copy failed:', err);
+    console.error('[v0] Copy failed:', err);
+    console.error('[v0] Error type:', (err as Error).name);
+    console.error('[v0] Error message:', (err as Error).message);
+    console.error('[v0] Error stack:', (err as Error).stack);
     showToast('Failed to copy to clipboard', { type: 'error' });
     return false;
   }
