@@ -689,9 +689,37 @@ export default function MiamiApp() {
                       <p className="text-gray-500 text-center py-4">No buildings found</p>
                     ) : (
                       filteredBuildings.map((building) => (
-                        <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
+                        <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden" onClick={() => setSelectedBuilding(building)}>
                           <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-hidden">
                             <img src={building.images[0]} alt={building.name} className="w-full h-full object-cover" />
+                            {/* Star Button - Uses transform to stay visible during momentum scroll */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newStarred = new Set(starredBuildings);
+                                if (newStarred.has(String(building.id))) {
+                                  newStarred.delete(String(building.id));
+                                } else {
+                                  newStarred.add(String(building.id));
+                                }
+                                setStarredBuildings(newStarred);
+                              }}
+                              className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md z-40 will-change-transform"
+                              style={{
+                                transform: 'translate(0, 0)',
+                                backfaceVisibility: 'hidden',
+                                WebkitBackfaceVisibility: 'hidden',
+                              }}
+                              aria-label={starredBuildings.has(String(building.id)) ? "Remove from list" : "Add to list"}
+                            >
+                              <Star
+                                className={`h-4 w-4 transition-colors ${
+                                  starredBuildings.has(String(building.id))
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-gray-400 hover:text-yellow-400"
+                                }`}
+                              />
+                            </button>
                           </div>
                           <div className="flex justify-between items-start mb-1">
                             <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
@@ -715,6 +743,34 @@ export default function MiamiApp() {
                     <button onClick={(e) => { e.stopPropagation(); setSelectedBuilding(null); }} className="text-sm text-blue-500 font-semibold mb-2 hover:text-blue-600">← Back</button>
                     <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-hidden">
                       <img src={selectedBuilding.images[0]} alt={selectedBuilding.name} className="w-full h-full object-cover" />
+                      {/* Star Button - Uses transform to stay visible during momentum scroll */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newStarred = new Set(starredBuildings);
+                          if (newStarred.has(String(selectedBuilding.id))) {
+                            newStarred.delete(String(selectedBuilding.id));
+                          } else {
+                            newStarred.add(String(selectedBuilding.id));
+                          }
+                          setStarredBuildings(newStarred);
+                        }}
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md z-40 will-change-transform"
+                        style={{
+                          transform: 'translate(0, 0)',
+                          backfaceVisibility: 'hidden',
+                          WebkitBackfaceVisibility: 'hidden',
+                        }}
+                        aria-label={starredBuildings.has(String(selectedBuilding.id)) ? "Remove from list" : "Add to list"}
+                      >
+                        <Star
+                          className={`h-4 w-4 transition-colors ${
+                            starredBuildings.has(String(selectedBuilding.id))
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-gray-400 hover:text-yellow-400"
+                          }`}
+                        />
+                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

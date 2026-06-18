@@ -261,6 +261,35 @@ export default function ListPage() {
                       alt={building.name}
                       className="w-full h-full object-cover rounded-md"
                     />
+                    {/* Star Button - Uses transform to stay visible during momentum scroll */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const newStarred = new Set(starredBuildings);
+                        if (newStarred.has(String(building.id))) {
+                          newStarred.delete(String(building.id));
+                        } else {
+                          newStarred.add(String(building.id));
+                        }
+                        setStarredBuildings(newStarred);
+                      }}
+                      className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md z-40 will-change-transform"
+                      style={{
+                        transform: 'translate(0, 0)',
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                      }}
+                      aria-label={isStarred ? "Remove from list" : "Add to list"}
+                    >
+                      <Star
+                        className={`h-4 w-4 transition-colors ${
+                          isStarred
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-400 hover:text-yellow-400"
+                        }`}
+                      />
+                    </button>
                     {isSaved && comparisonMode && (
                       <div className="absolute top-2 left-2 px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded z-30">
                         Saved
