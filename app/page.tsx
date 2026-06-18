@@ -652,8 +652,23 @@ export default function MiamiApp() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-gray-50">
       <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
+      
+      {/* Desktop Header - Fixed at Top */}
+      <div className="hidden md:flex items-center justify-between px-8 h-12 bg-white border-b border-gray-300 flex-shrink-0">
+        <h1 className="text-sm font-medium text-gray-900">
+          Miami Apartment Guy
+          <sup className="text-xs font-normal align-top ml-1 relative" style={{top: '-1px'}}>™</sup>
+        </h1>
+        <button 
+          onClick={() => setShowMoveWithDonModal(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-full font-medium text-xs transition-colors"
+        >
+          Move with Don
+        </button>
+      </div>
+
       {/* Mobile Header */}
       <div className="fixed top-0 left-0 right-0 z-40 bg-white md:hidden border-b-[0.5px] border-gray-300">
         <div className="flex items-center justify-between px-4 py-3.5">
@@ -933,20 +948,6 @@ export default function MiamiApp() {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Desktop Header */}
-      <div className="hidden md:flex items-center justify-between px-8 py-3 bg-white border-b border-gray-300 w-full">
-        <h1 className="text-base font-medium text-gray-900">
-          Miami Apartment Guy
-          <sup className="text-xs font-normal align-top ml-1 relative" style={{top: '-2px'}}>™</sup>
-        </h1>
-        <button 
-          onClick={() => setShowMoveWithDonModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full font-medium text-xs transition-colors"
-        >
-          Move with Don
-        </button>
       </div>
 
       {/* Desktop Layout - Zillow Style */}
