@@ -119,13 +119,44 @@ export default function ListPage() {
         <h1 className="text-base font-semibold text-gray-900">
           {savedBuildings.length} saved
         </h1>
-        <button
-          onClick={handleShare}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          aria-label="Share list"
-        >
-          <Share2 className="h-5 w-5 text-gray-700" />
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Star Button - Toggle starred state for currently selected building, or show count */}
+          <button
+            onClick={() => {
+              if (selectedBuilding) {
+                const newStarred = new Set(starredBuildings);
+                const buildingId = String(selectedBuilding.id);
+                if (newStarred.has(buildingId)) {
+                  newStarred.delete(buildingId);
+                } else {
+                  newStarred.add(buildingId);
+                }
+                setStarredBuildings(newStarred);
+              }
+            }}
+            className="flex items-center gap-1 px-2 py-2 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label={selectedBuilding && starredBuildings.has(String(selectedBuilding.id)) ? 'Unstar building' : 'Star building'}
+            title={selectedBuilding ? (starredBuildings.has(String(selectedBuilding.id)) ? 'Unstar current building' : 'Star current building') : 'Click a card to star it'}
+          >
+            <Star
+              className={`h-5 w-5 transition-colors ${
+                selectedBuilding && starredBuildings.has(String(selectedBuilding.id))
+                  ? "fill-yellow-400 text-yellow-400"
+                  : "text-gray-400"
+              }`}
+            />
+            <span className="text-sm font-semibold text-gray-900">
+              {starredBuildings.size}
+            </span>
+          </button>
+          <button
+            onClick={handleShare}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Share list"
+          >
+            <Share2 className="h-5 w-5 text-gray-700" />
+          </button>
+        </div>
       </div>
 
       {/* Desktop Header */}
@@ -210,40 +241,6 @@ export default function ListPage() {
 
       {/* Mobile Bottom Sheet */}
       <div className="md:hidden flex-1 flex flex-col overflow-hidden bg-white relative">
-        {/* Fixed Star Controls Header - Never scrolls, always visible */}
-        {displayedBuildings.length > 0 && (
-          <div className="flex-shrink-0 px-3 py-2 bg-white border-b border-gray-200 flex items-center gap-2 overflow-x-auto">
-            {displayedBuildings.map((building) => {
-              const isStarred = starredBuildings.has(String(building.id));
-              return (
-                <button
-                  key={`star-header-${building.id}`}
-                  onClick={() => {
-                    const newStarred = new Set(starredBuildings);
-                    if (newStarred.has(String(building.id))) {
-                      newStarred.delete(String(building.id));
-                    } else {
-                      newStarred.add(String(building.id));
-                    }
-                    setStarredBuildings(newStarred);
-                  }}
-                  className="flex-shrink-0 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-200 hover:border-gray-300"
-                  title={building.name}
-                  aria-label={`${isStarred ? 'Unstar' : 'Star'} ${building.name}`}
-                >
-                  <Star
-                    className={`h-4 w-4 transition-colors ${
-                      isStarred
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "text-gray-300 hover:text-yellow-400"
-                    }`}
-                  />
-                </button>
-              );
-            })}
-          </div>
-        )}
-
         {/* Mobile Cards List */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-3 space-y-3">
