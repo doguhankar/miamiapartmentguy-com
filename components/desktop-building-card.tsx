@@ -4,6 +4,7 @@ import { Building } from "@/data/buildings"
 import { ImageCarousel } from "./image-carousel"
 import { useState } from "react"
 import { Star } from "lucide-react"
+import { BuildingDetailModal } from "@/components/building-detail-modal"
 
 interface DesktopBuildingCardProps {
   building: Building
@@ -56,6 +57,7 @@ export function DesktopBuildingCard({
   onStar,
 }: DesktopBuildingCardProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const [showDetailModal, setShowDetailModal] = useState(false)
   const amenities = extractAmenities(building)
 
   const handleMouseEnter = () => {
@@ -185,7 +187,7 @@ export function DesktopBuildingCard({
           <button
             onClick={(e) => {
               e.stopPropagation()
-              onClick?.(building)
+              setShowDetailModal(true)
             }}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors text-sm"
           >
@@ -202,6 +204,11 @@ export function DesktopBuildingCard({
           </button>
         </div>
       </div>
+
+      {/* Building Detail Modal */}
+      {showDetailModal && (
+        <BuildingDetailModal building={building} onClose={() => setShowDetailModal(false)} />
+      )}
     </div>
   )
 }

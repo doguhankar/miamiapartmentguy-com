@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ImageCarousel } from "@/components/image-carousel"
 import { QualifyModal } from "@/components/qualify-modal"
+import { BuildingDetailModal } from "@/components/building-detail-modal"
 
 interface BuildingCardProps {
   building: Building
@@ -14,6 +15,7 @@ interface BuildingCardProps {
 
 export function BuildingCard({ building }: BuildingCardProps) {
   const [showQualifyModal, setShowQualifyModal] = useState(false)
+  const [showDetailModal, setShowDetailModal] = useState(false)
 
   return (
     <>
@@ -93,17 +95,29 @@ export function BuildingCard({ building }: BuildingCardProps) {
             </div>
           </div>
 
-          <Button
-            onClick={() => setShowQualifyModal(true)}
-            className="w-full mt-4 bg-[#0066CC] text-white hover:bg-[#0055AA]"
-          >
-            See If You Qualify
-          </Button>
+          <div className="flex gap-2 mt-4">
+            <Button
+              onClick={() => setShowDetailModal(true)}
+              className="flex-1 bg-gray-600 text-white hover:bg-gray-700"
+            >
+              View Details
+            </Button>
+            <Button
+              onClick={() => setShowQualifyModal(true)}
+              className="flex-1 bg-[#0066CC] text-white hover:bg-[#0055AA]"
+            >
+              See If You Qualify
+            </Button>
+          </div>
         </div>
       </div>
 
       {showQualifyModal && (
         <QualifyModal building={building} onClose={() => setShowQualifyModal(false)} />
+      )}
+
+      {showDetailModal && (
+        <BuildingDetailModal building={building} onClose={() => setShowDetailModal(false)} />
       )}
     </>
   )
