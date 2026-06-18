@@ -935,6 +935,20 @@ export default function MiamiApp() {
         </div>
       </div>
 
+      {/* Desktop Header */}
+      <div className="hidden md:flex items-center justify-between px-8 py-4 bg-white border-b border-gray-300 w-full">
+        <h1 className="text-lg font-medium text-gray-900">
+          Miami Apartment Guy
+          <sup className="text-xs font-normal align-top ml-1 relative" style={{top: '-2px'}}>™</sup>
+        </h1>
+        <button 
+          onClick={() => setShowMoveWithDonModal(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full font-medium text-sm transition-colors"
+        >
+          Move with Don
+        </button>
+      </div>
+
       {/* Desktop Layout - Zillow Style */}
       <div className="hidden md:flex flex-1 gap-0">
         {/* Map - 55% of width */}
