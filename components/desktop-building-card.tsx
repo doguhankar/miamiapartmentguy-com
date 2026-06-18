@@ -4,7 +4,6 @@ import { Building } from "@/data/buildings"
 import { ImageCarousel } from "./image-carousel"
 import { useState } from "react"
 import { Star } from "lucide-react"
-import { BuildingDetailView } from "@/components/building-detail-view"
 
 interface DesktopBuildingCardProps {
   building: Building
@@ -15,6 +14,7 @@ interface DesktopBuildingCardProps {
   onHover?: (building: Building | null) => void
   onClick?: (building: Building) => void
   onStar?: (building: Building) => void
+  onViewDetails?: (building: Building) => void
 }
 
 // Amenity color mapping for badges
@@ -55,9 +55,9 @@ export function DesktopBuildingCard({
   onHover,
   onClick,
   onStar,
+  onViewDetails,
 }: DesktopBuildingCardProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const [showDetailModal, setShowDetailModal] = useState(false)
   const amenities = extractAmenities(building)
 
   const handleMouseEnter = () => {
@@ -187,7 +187,7 @@ export function DesktopBuildingCard({
           <button
             onClick={(e) => {
               e.stopPropagation()
-              setShowDetailModal(true)
+              onViewDetails?.(building)
             }}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors text-sm"
           >
@@ -205,10 +205,6 @@ export function DesktopBuildingCard({
         </div>
       </div>
 
-      {/* Building Detail Full-Screen View */}
-      {showDetailModal && (
-        <BuildingDetailView building={building} onBack={() => setShowDetailModal(false)} />
-      )}
     </div>
   )
 }

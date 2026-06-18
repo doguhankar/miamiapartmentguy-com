@@ -6,6 +6,7 @@ import { MapFilterModal, type FilterState } from '@/components/map-filter-modal'
 import { FlowBrickellCard } from '@/components/flow-brickell-card';
 import { MoveWithDon } from '@/components/move-with-don';
 import { DesktopBuildingCard } from '@/components/desktop-building-card';
+import { BuildingDetailView } from '@/components/building-detail-view';
 import { copyToClipboard, showToast } from '@/lib/toast-utils';
 import { Star } from 'lucide-react';
 
@@ -335,6 +336,7 @@ export default function MiamiApp() {
   const [showMoveWithDonModal, setShowMoveWithDonModal] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [] });
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
+  const [selectedBuildingForDetail, setSelectedBuildingForDetail] = useState(null);
 
   const SNAP_POINTS = {
     0: 'h-5 md:h-0',      // COLLAPSED: 20px (drag handle)
@@ -968,6 +970,7 @@ export default function MiamiApp() {
                     }
                     setStarredBuildings(newStarred);
                   }}
+                  onViewDetails={setSelectedBuildingForDetail}
                 />
               ))}
             </div>
@@ -1098,6 +1101,14 @@ export default function MiamiApp() {
         onClose={() => setShowFilterModal(false)}
         onApply={handleApplyFilters}
       />
+
+      {/* Full-Screen Building Detail View */}
+      {selectedBuildingForDetail && (
+        <BuildingDetailView 
+          building={selectedBuildingForDetail} 
+          onBack={() => setSelectedBuildingForDetail(null)} 
+        />
+      )}
     </div>
   );
 }
