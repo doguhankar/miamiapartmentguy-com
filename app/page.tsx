@@ -7,6 +7,7 @@ import { FlowBrickellCard } from '@/components/flow-brickell-card';
 import { MoveWithDon } from '@/components/move-with-don';
 import { DesktopBuildingCard } from '@/components/desktop-building-card';
 import { BuildingDetailView } from '@/components/building-detail-view';
+import { MapFilterCard, type MapFilterState } from '@/components/map-filter-card';
 import { copyToClipboard, showToast } from '@/lib/toast-utils';
 import { Star } from 'lucide-react';
 
@@ -337,6 +338,7 @@ export default function MiamiApp() {
   const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [] });
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
   const [selectedBuildingForDetail, setSelectedBuildingForDetail] = useState(null);
+  const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], price: [], moveInDate: [] });
 
   const SNAP_POINTS = {
     0: 'h-5 md:h-0',      // COLLAPSED: 20px (drag handle)
@@ -352,8 +354,44 @@ export default function MiamiApp() {
     );
   };
 
+  // Helper function to check if a building matches the map filters
+  const buildingMatchesMapFilters = (building: any): boolean => {
+    // If no filters are active, include all buildings
+    if (mapFilters.bedrooms.length === 0 && mapFilters.price.length === 0 && mapFilters.moveInDate.length === 0) {
+      return true;
+    }
+
+    // Check bedrooms filter
+    if (mapFilters.bedrooms.length > 0) {
+      const bedroomMatch = mapFilters.bedrooms.some(filter => {
+        if (filter === 'Studio') return building.units.includes('Studio');
+        if (filter === '1 Bedroom') return building.units.includes('1B');
+        if (filter === '2 Bedrooms') return building.units.includes('2B');
+        if (filter === '3+ Bedrooms') return building.units.includes('3B');
+        return false;
+      });
+      if (!bedroomMatch) return false;
+    }
+
+    // Check price filter
+    if (mapFilters.price.length > 0) {
+      const priceMatch = mapFilters.price.some(filter => {
+        if (filter === '$0-$2,000') return building.priceMin <= 2000;
+        if (filter === '$2,000-$4,000') return building.priceMin >= 2000 && building.priceMin < 4000;
+        if (filter === '$4,000+') return building.priceMin >= 4000;
+        return false;
+      });
+      if (!priceMatch) return false;
+    }
+
+    // Move-in date filter is informational only (would need booking data)
+    // For now, we'll include all buildings regardless of move-in date
+    return true;
+  };
+
   const filteredBuildings = geocodedBuildings.filter(b => 
     visibleBuildingIds.includes(b.id) &&
+    buildingMatchesMapFilters(b) &&
     (b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.neighborhood.toLowerCase().includes(searchQuery.toLowerCase()))
   );
@@ -907,6 +945,12 @@ export default function MiamiApp() {
             highlightedBuilding={highlightedBuilding}
             onPinClick={setSelectedBuilding} 
             geocodedBuildings={geocodedBuildings} 
+          />
+          {/* Floating Filter Card */}
+          <MapFilterCard 
+            filters={mapFilters}
+            onFilterChange={setMapFilters}
+            onClearAll={() => setMapFilters({ bedrooms: [], price: [], moveInDate: [] })}
           />
         </div>
 
