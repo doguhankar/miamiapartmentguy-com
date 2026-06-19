@@ -956,9 +956,9 @@ export default function MiamiApp() {
       </div>
 
       {/* Desktop Layout - Zillow Style */}
-      <div className="hidden md:flex flex-1 gap-0">
+      <div className="hidden md:flex flex-1 gap-0 h-full overflow-hidden">
         {/* Map - 55% of width */}
-        <div className="flex-1 basis-[55%] relative">
+        <div className="flex-1 basis-[55%] relative h-full w-full">
           <MapComponent 
             expandedNeighborhoods={expandedNeighborhoods} 
             selectedBuilding={selectedBuilding} 
