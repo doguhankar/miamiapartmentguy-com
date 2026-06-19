@@ -17,7 +17,7 @@ interface PricingData {
   units?: Array<{ price: number }>
 }
 
-const MIAMI_CENTER = { lat: 25.76, lng: -80.19 }
+const MIAMI_CENTER = { lat: 25.7617, lng: -80.1918 }
 
 // Neighborhood colors for map pins
 const NEIGHBORHOOD_PIN_COLORS: Record<string, string> = {
