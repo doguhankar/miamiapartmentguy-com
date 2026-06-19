@@ -105,6 +105,30 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
       })
 
       map.current.addControl(new mapboxgl.default.NavigationControl(), "bottom-right")
+
+      // When map loads, fit bounds to all buildings
+      map.current.on('load', () => {
+        if (buildings && buildings.length > 0) {
+          // Calculate bounding box from all building coordinates
+          let minLng = buildings[0].lng
+          let maxLng = buildings[0].lng
+          let minLat = buildings[0].lat
+          let maxLat = buildings[0].lat
+
+          buildings.forEach((building) => {
+            minLng = Math.min(minLng, building.lng)
+            maxLng = Math.max(maxLng, building.lng)
+            minLat = Math.min(minLat, building.lat)
+            maxLat = Math.max(maxLat, building.lat)
+          })
+
+          // Fit map to bounds with padding
+          map.current.fitBounds(
+            [[minLng, minLat], [maxLng, maxLat]],
+            { padding: 50, maxZoom: 14 }
+          )
+        }
+      })
     } catch {
       setMapError("Failed to initialize map")
     }
@@ -115,7 +139,7 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
         map.current = null
       }
     }
-  }, [mapboxgl])
+  }, [mapboxgl, buildings])
 
   // Update markers when buildings or selectedBuilding changes
   useEffect(() => {
