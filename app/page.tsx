@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { ImageCarousel } from '@/components/image-carousel';
 import { MapFilterModal, type FilterState } from '@/components/map-filter-modal';
 import { FlowBrickellCard } from '@/components/flow-brickell-card';
@@ -243,7 +245,7 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings }) => {
+const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setBottomSheetSnapPoint }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
@@ -251,64 +253,69 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    // Use Leaflet as fallback - already installed
-    if ((window as any).L && typeof (window as any).L.map === 'function') {
-      try {
-        map.current = (window as any).L.map(mapContainer.current).setView([25.7907, -80.1870], 11);
-        
-        // Add OpenStreetMap tiles
-        (window as any).L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors',
-          maxZoom: 19,
-        }).addTo(map.current);
-      } catch (e) {
-        console.error('[v0] Leaflet map error:', e);
-      }
+    // Set Mapbox token
+    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+
+    // Create map instance
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [-80.1870, 25.7907],
+        zoom: 11,
+      });
+
+      map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+    } catch (error) {
+      console.error('[v0] Map initialization error:', error);
     }
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
   }, []);
 
+  // Add markers when buildings or selection changes
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || !geocodedBuildings.length) return;
 
-    markersRef.current.forEach((m: any) => m.remove());
+    // Remove existing markers
+    markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
+    // Add new markers
     geocodedBuildings.forEach((building: any) => {
-      if ((window as any).L) {
-        const marker = (window as any).L.circleMarker([building.lat, building.lng], {
-          radius: 8,
-          fillColor: selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6',
-          color: 'white',
-          weight: 2,
-          opacity: 1,
-          fillOpacity: 0.8,
-        }).addTo(map.current);
+      // Create marker element
+      const el = document.createElement('div');
+      el.className = 'marker';
+      el.style.width = '16px';
+      el.style.height = '16px';
+      el.style.borderRadius = '50%';
+      el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
+      el.style.border = '2px solid white';
+      el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+      el.style.cursor = 'pointer';
+      el.style.transition = 'all 0.2s';
 
-        marker.on('click', () => {
-          setSelectedBuilding(building);
-          setBottomSheetSnapPoint(1);
-        });
-        
-        markersRef.current.push(marker);
-      }
+      el.onclick = (e) => {
+        e.stopPropagation();
+        setSelectedBuilding(building);
+        setBottomSheetSnapPoint(1);
+      };
+
+      // Create marker
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat([building.lng, building.lat])
+        .addTo(map.current);
+
+      markersRef.current.push(marker);
     });
-  }, [selectedBuilding, geocodedBuildings]);
+  }, [geocodedBuildings, selectedBuilding]);
 
-  return (
-    <div ref={mapContainer} className="w-full h-full bg-gradient-to-br from-blue-100 via-blue-50 to-slate-100 flex items-center justify-center relative overflow-hidden">
-      {/* Simulated map background */}
-      <div className="absolute inset-0 bg-opacity-30" style={{
-        backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(100, 200, 200, 0.1) 0%, transparent 50%)',
-      }} />
-      
-      {/* Map placeholder text */}
-      <div className="text-center z-10 pointer-events-none">
-        <div className="text-2xl font-bold text-slate-600 mb-2">Miami Downtown Map</div>
-        <div className="text-base text-slate-500 mb-4">Zoom 11 • Center: 25.7907°N, 80.1870°W</div>
-        <div className="text-sm text-slate-400">108 Apartments Visible</div>
-      </div>
-    </div>
-  );
+  return <div ref={mapContainer} className="w-full h-full" />;
 };
 
 export default function MiamiApp() {
@@ -957,7 +964,9 @@ export default function MiamiApp() {
             selectedBuilding={selectedBuilding} 
             highlightedBuilding={highlightedBuilding}
             onPinClick={setSelectedBuilding} 
-            geocodedBuildings={geocodedBuildings} 
+            geocodedBuildings={geocodedBuildings}
+            setSelectedBuilding={setSelectedBuilding}
+            setBottomSheetSnapPoint={setBottomSheetSnapPoint}
           />
           {/* Floating Filter Card */}
           <MapFilterCard 
