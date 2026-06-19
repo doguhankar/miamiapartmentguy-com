@@ -267,31 +267,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/streets-v12',
           center: [-80.1870, 25.7907],
-          zoom: 13,
-        });
-
-        // Fit map bounds to show all buildings
-        map.current.on('load', () => {
-          if (geocodedBuildings && geocodedBuildings.length > 0) {
-            let minLng = geocodedBuildings[0].lng;
-            let maxLng = geocodedBuildings[0].lng;
-            let minLat = geocodedBuildings[0].lat;
-            let maxLat = geocodedBuildings[0].lat;
-
-            geocodedBuildings.forEach((building) => {
-              minLng = Math.min(minLng, building.lng);
-              maxLng = Math.max(maxLng, building.lng);
-              minLat = Math.min(minLat, building.lat);
-              maxLat = Math.max(maxLat, building.lat);
-            });
-
-            if (map.current && minLng !== maxLng && minLat !== maxLat) {
-              map.current.fitBounds(
-                [[minLng, minLat], [maxLng, maxLat]],
-                { padding: 50, maxZoom: 14 }
-              );
-            }
-          }
+          zoom: 12,
         });
       }
     };
