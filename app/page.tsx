@@ -245,7 +245,7 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setBottomSheetSnapPoint }) => {
+const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setBottomSheetSnapPoint, setSelectedBuildingForDetail }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
@@ -371,8 +371,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       button.onmouseover = () => button.style.backgroundColor = '#2563eb';
       button.onmouseout = () => button.style.backgroundColor = '#3b82f6';
       button.onclick = () => {
-        setSelectedBuilding(building);
-        setBottomSheetSnapPoint(1);
+        setSelectedBuildingForDetail(building);
         popup.remove();
       };
       popupContent.appendChild(button);
@@ -1082,6 +1081,7 @@ export default function MiamiApp() {
             geocodedBuildings={geocodedBuildings}
             setSelectedBuilding={setSelectedBuilding}
             setBottomSheetSnapPoint={setBottomSheetSnapPoint}
+            setSelectedBuildingForDetail={setSelectedBuildingForDetail}
           />
           {/* Floating Filter Card */}
           <MapFilterCard 
