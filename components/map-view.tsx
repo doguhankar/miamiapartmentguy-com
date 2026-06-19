@@ -99,7 +99,7 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
     try {
       map.current = new mapboxgl.default.Map({
         container: mapContainer.current,
-        style: "mapbox://styles/mapbox/light-v11",
+        style: "mapbox://styles/mapbox/streets-v12",
         center: [MIAMI_CENTER.lng, MIAMI_CENTER.lat],
         zoom: 13,
       })
@@ -119,19 +119,11 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
 
   // Update markers when buildings or selectedBuilding changes
   useEffect(() => {
-    console.log('[v0] ===== MARKER RENDER START =====')
-    console.log('[v0] pricingData state:', pricingData)
-    console.log('[v0] pricingData keys:', Object.keys(pricingData))
-    console.log('[v0] buildings count:', buildings.length)
-    console.log('[v0] buildings:', buildings.map(b => ({ id: b.id, name: b.name })))
-    
     if (!map.current) {
-      console.warn('[v0] Map not initialized yet')
       return
     }
 
     // Clear existing markers
-    console.log('[v0] Clearing', markers.current.length, 'existing markers')
     markers.current.forEach((m) => m.remove())
     markers.current = []
 
