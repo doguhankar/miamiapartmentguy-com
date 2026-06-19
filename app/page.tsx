@@ -384,13 +384,40 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         closeOnClick: false,
       }).setDOMContent(popupContent);
 
-      // Add hover handlers
-      el.onmouseenter = () => {
+      // Track hide timeout to delay hiding on mouse leave
+      let hideTimeout: NodeJS.Timeout | null = null;
+
+      const showPopup = () => {
+        if (hideTimeout) clearTimeout(hideTimeout);
         popup.setLngLat([building.lng, building.lat]).addTo(map.current);
+        
+        // Add hover listeners to popup element after it's rendered
+        setTimeout(() => {
+          const popupElement = document.querySelector('.mapboxgl-popup');
+          if (popupElement) {
+            (popupElement as HTMLElement).onmouseenter = () => {
+              if (hideTimeout) clearTimeout(hideTimeout);
+            };
+            (popupElement as HTMLElement).onmouseleave = () => {
+              hidePopup();
+            };
+          }
+        }, 0);
+      };
+
+      const hidePopup = () => {
+        hideTimeout = setTimeout(() => {
+          popup.remove();
+        }, 200);
+      };
+
+      // Add hover handlers to marker
+      el.onmouseenter = () => {
+        showPopup();
       };
 
       el.onmouseleave = () => {
-        popup.remove();
+        hidePopup();
       };
 
       // Create marker
