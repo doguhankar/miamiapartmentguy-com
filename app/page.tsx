@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { MapPinTooltip } from '@/components/map-pin-tooltip';
 import { ImageCarousel } from '@/components/image-carousel';
 import { MapFilterModal, type FilterState } from '@/components/map-filter-modal';
 import { FlowBrickellCard } from '@/components/flow-brickell-card';
@@ -250,8 +249,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
-  const [hoveredBuilding, setHoveredBuilding] = useState(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const popupsRef = useRef([]);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -285,9 +283,11 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
   useEffect(() => {
     if (!map.current || !geocodedBuildings.length) return;
 
-    // Remove existing markers
+    // Remove existing markers and popups
     markersRef.current.forEach((marker) => marker.remove());
+    popupsRef.current.forEach((popup) => popup.remove());
     markersRef.current = [];
+    popupsRef.current = [];
 
     // Add new markers
     geocodedBuildings.forEach((building: any) => {
@@ -309,18 +309,88 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         setBottomSheetSnapPoint(1);
       };
 
-      // Add hover handlers for tooltip
-      el.onmouseenter = (e) => {
-        const rect = el.getBoundingClientRect();
-        setTooltipPosition({
-          top: rect.top - 150,
-          left: rect.left - 130,
-        });
-        setHoveredBuilding(building);
+      // Create popup content
+      const popupContent = document.createElement('div');
+      popupContent.className = 'popup-content';
+      popupContent.style.padding = '12px';
+      popupContent.style.borderRadius = '8px';
+      popupContent.style.backgroundColor = 'white';
+      popupContent.style.minWidth = '200px';
+      
+      // Add building image if available
+      if (building.images && building.images.length > 0) {
+        const img = document.createElement('img');
+        img.src = building.images[0];
+        img.style.width = '100%';
+        img.style.height = '100px';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '4px';
+        img.style.marginBottom = '8px';
+        popupContent.appendChild(img);
+      }
+
+      // Add building name
+      const name = document.createElement('div');
+      name.style.fontSize = '14px';
+      name.style.fontWeight = '600';
+      name.style.color = '#1f2937';
+      name.style.marginBottom = '4px';
+      name.textContent = building.name;
+      popupContent.appendChild(name);
+
+      // Add neighborhood
+      const neighborhood = document.createElement('div');
+      neighborhood.style.fontSize = '12px';
+      neighborhood.style.color = '#6b7280';
+      neighborhood.style.marginBottom = '8px';
+      neighborhood.textContent = building.neighborhood;
+      popupContent.appendChild(neighborhood);
+
+      // Add price range
+      const price = document.createElement('div');
+      price.style.fontSize = '13px';
+      price.style.fontWeight = '500';
+      price.style.color = '#3b82f6';
+      price.style.marginBottom = '12px';
+      price.textContent = `$${building.priceMin?.toLocaleString()}/mo`;
+      popupContent.appendChild(price);
+
+      // Add view details button
+      const button = document.createElement('button');
+      button.textContent = 'View Details';
+      button.style.width = '100%';
+      button.style.padding = '8px 12px';
+      button.style.backgroundColor = '#3b82f6';
+      button.style.color = 'white';
+      button.style.border = 'none';
+      button.style.borderRadius = '4px';
+      button.style.fontSize = '12px';
+      button.style.fontWeight = '500';
+      button.style.cursor = 'pointer';
+      button.style.transition = 'background-color 0.2s';
+      button.onmouseover = () => button.style.backgroundColor = '#2563eb';
+      button.onmouseout = () => button.style.backgroundColor = '#3b82f6';
+      button.onclick = () => {
+        setSelectedBuilding(building);
+        setBottomSheetSnapPoint(1);
+        popup.remove();
+      };
+      popupContent.appendChild(button);
+
+      // Create popup
+      const popup = new mapboxgl.Popup({
+        offset: [0, -15],
+        closeButton: false,
+        closeOnClick: false,
+      }).setDOMContent(popupContent);
+
+      // Add hover handlers
+      el.onmouseenter = () => {
+        popup.setLngLat([building.lng, building.lat]).addTo(map.current);
       };
 
       el.onmouseleave = () => {
-        setHoveredBuilding(null);
+        popup.remove();
       };
 
       // Create marker
@@ -329,23 +399,11 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         .addTo(map.current);
 
       markersRef.current.push(marker);
+      popupsRef.current.push(popup);
     });
   }, [geocodedBuildings, selectedBuilding]);
 
-  return (
-    <>
-      <div ref={mapContainer} className="w-full h-full" />
-      <MapPinTooltip 
-        building={hoveredBuilding}
-        onViewDetails={(building) => {
-          setSelectedBuilding(building);
-          setBottomSheetSnapPoint(1);
-          setHoveredBuilding(null);
-        }}
-        isVisible={!!hoveredBuilding}
-      />
-    </>
-  );
+  return <div ref={mapContainer} className="w-full h-full" />;
 };
 
 export default function MiamiApp() {
