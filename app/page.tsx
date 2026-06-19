@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { MapPinTooltip } from '@/components/map-pin-tooltip';
 import { ImageCarousel } from '@/components/image-carousel';
 import { MapFilterModal, type FilterState } from '@/components/map-filter-modal';
 import { FlowBrickellCard } from '@/components/flow-brickell-card';
@@ -249,6 +250,8 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
+  const [hoveredBuilding, setHoveredBuilding] = useState(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -306,6 +309,20 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         setBottomSheetSnapPoint(1);
       };
 
+      // Add hover handlers for tooltip
+      el.onmouseenter = (e) => {
+        const rect = el.getBoundingClientRect();
+        setTooltipPosition({
+          top: rect.top - 150,
+          left: rect.left - 130,
+        });
+        setHoveredBuilding(building);
+      };
+
+      el.onmouseleave = () => {
+        setHoveredBuilding(null);
+      };
+
       // Create marker
       const marker = new mapboxgl.Marker(el)
         .setLngLat([building.lng, building.lat])
@@ -315,7 +332,20 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
     });
   }, [geocodedBuildings, selectedBuilding]);
 
-  return <div ref={mapContainer} className="w-full h-full" />;
+  return (
+    <>
+      <div ref={mapContainer} className="w-full h-full" />
+      <MapPinTooltip 
+        building={hoveredBuilding}
+        onViewDetails={(building) => {
+          setSelectedBuilding(building);
+          setBottomSheetSnapPoint(1);
+          setHoveredBuilding(null);
+        }}
+        isVisible={!!hoveredBuilding}
+      />
+    </>
+  );
 };
 
 export default function MiamiApp() {
