@@ -65,17 +65,12 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
   }
 
   const handleSaveStarred = async () => {
+    console.log('[v0] BUTTON CLICKED - handleSaveStarred called with', starredUnits.size, 'starred units')
     if (starredUnits.size === 0) return
 
     try {
       const starredUnitIds = Array.from(starredUnits)
-
-      console.log('[v0] ===== SAVE STARRED UNITS =====')
-      console.log('[v0] Building ID:', building.id, 'Type:', typeof building.id)
-      console.log('[v0] Building Name:', building.name)
-      console.log('[v0] Building Data:', { name: building.name, neighborhood: building.neighborhood, priceMin: building.priceMin })
-      console.log('[v0] Starred Unit IDs:', starredUnitIds)
-      console.log('[v0] Request Body:', { buildingIds: [String(building.id)], unitIds: starredUnitIds })
+      console.log('[v0] Sending to /api/lists:', { buildingIds: [String(building.id)], unitIds: starredUnitIds })
 
       // Call API to save the list (with building ID and unit IDs)
       const response = await fetch('/api/lists', {
@@ -93,9 +88,7 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
 
       const data = await response.json()
       const shareUrl = data.shareUrl
-
-      console.log('[v0] Save Response:', data)
-      console.log('[v0] Share URL:', shareUrl)
+      console.log('[v0] Save successful! Share URL:', shareUrl)
 
       // Copy to clipboard
       await copyToClipboard(shareUrl, "Link copied to clipboard")
