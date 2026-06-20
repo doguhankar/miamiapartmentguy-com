@@ -49,6 +49,7 @@ export async function GET(
       )
     }
 
+    console.log('[v0] API Retrieved buildingIds:', data.buildings, 'Types:', data.buildings?.map(id => typeof id));
     return NextResponse.json({
       success: true,
       slug: data.slug,

@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
     const slug = generateSlug()
 
     // Save to Supabase
+    console.log('[v0] API Saving buildingIds:', body.buildingIds, 'Types:', body.buildingIds.map(id => typeof id));
     const { data, error } = await supabase
       .from('saved_lists')
       .insert({
