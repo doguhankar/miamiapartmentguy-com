@@ -105,6 +105,13 @@ export default function ListPage() {
 
   // Get saved buildings
   const savedBuildingIds = new Set(savedList.buildingIds.map(String));
+  
+  // DEBUG: Log building ID mismatch
+  console.log('[v0] SAVED LIST DEBUG:');
+  console.log('[v0] Saved building IDs from API:', Array.from(savedBuildingIds));
+  console.log('[v0] Sample available building IDs:', Object.keys(buildingsByStringId).slice(0, 5));
+  console.log('[v0] Are they matching?', Array.from(savedBuildingIds).some(id => buildingsByStringId[id]));
+  
   const savedBuildings = buildingsList.filter((b) => {
     const buildingId = String(b.id)
     return savedBuildingIds.has(buildingId)
