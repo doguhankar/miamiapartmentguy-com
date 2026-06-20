@@ -68,6 +68,14 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
     if (starredUnits.size === 0) return
 
     try {
+      // DEBUG: Inspect building object structure
+      console.log('[v0] Building object:', building)
+      console.log('[v0] Building properties:', Object.keys(building))
+      console.log('[v0] Building.id:', building.id)
+      console.log('[v0] Building.name:', building.name)
+      console.log('[v0] Building.slug:', (building as any).slug)
+      console.log('[v0] All string-type properties:', Object.entries(building).filter(([k, v]) => typeof v === 'string').map(([k]) => k))
+      
       const starredUnitIds = Array.from(starredUnits)
 
       // Call API to save the list (with building ID and unit IDs)
