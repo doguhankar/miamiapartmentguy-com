@@ -105,15 +105,6 @@ export default function ListPage() {
 
   // Get saved buildings
   const savedBuildingIds = new Set(savedList.buildingIds.map(String));
-  
-  // DEBUG: Log building ID mismatch with actual values
-  console.log('[v0] SAVED LIST DEBUG:');
-  console.log('[v0] Saved building IDs:', Array.from(savedBuildingIds));
-  console.log('[v0] Available IDs sample:', Object.keys(buildingsByStringId).slice(0, 5));
-  console.log('[v0] First saved ID:', Array.from(savedBuildingIds)[0]);
-  console.log('[v0] First available ID:', Object.keys(buildingsByStringId)[0]);
-  console.log('[v0] Are they matching?', Array.from(savedBuildingIds).some(id => buildingsByStringId[id]));
-  
   const savedBuildings = buildingsList.filter((b) => {
     const buildingId = String(b.id)
     return savedBuildingIds.has(buildingId)
@@ -220,7 +211,7 @@ export default function ListPage() {
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 grid gap-4">
             {displayedBuildings.map((building) => {
-              const isSaved = savedBuildingIds.has(String(buildingsData.indexOf(building) + 1));
+              const isSaved = savedBuildingIds.has(String(building.id));
               return (
                 <DesktopBuildingCard
                   key={building.id}
@@ -258,7 +249,7 @@ export default function ListPage() {
         <div className="flex-1 overflow-y-auto">
           <div className="p-3 space-y-3">
             {displayedBuildings.map((building) => {
-              const isSaved = savedBuildingIds.has(String(buildingsData.indexOf(building) + 1));
+              const isSaved = savedBuildingIds.has(String(building.id));
               const isStarred = starredBuildings.has(String(building.id));
               return (
                 <div
