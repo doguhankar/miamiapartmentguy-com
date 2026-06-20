@@ -105,14 +105,6 @@ export default function ListPage() {
 
   // Get saved buildings
   const savedBuildingIds = new Set(savedList.buildingIds.map(String));
-  
-  // DEBUG - Show actual values and types
-  console.log('[v0] DEBUG - savedBuildingIds contents:', Array.from(savedBuildingIds));
-  console.log('[v0] DEBUG - First saved ID value:', Array.from(savedBuildingIds)[0]);
-  console.log('[v0] DEBUG - First saved ID type:', typeof Array.from(savedBuildingIds)[0]);
-  console.log('[v0] DEBUG - building.id for first building:', buildingsData[0]?.id);
-  console.log('[v0] DEBUG - does first building match?', savedBuildingIds.has(buildingsData[0]?.id));
-  
   const savedBuildings = buildingsList.filter((b) => {
     const buildingId = String(b.id)
     return savedBuildingIds.has(buildingId)
