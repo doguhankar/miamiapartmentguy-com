@@ -46,6 +46,11 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
   const [starredUnits, setStarredUnits] = useState<Set<string>>(new Set())
   const [displayedUnits, setDisplayedUnits] = useState(7)
 
+  // DEBUG: Log the building object when component loads
+  console.log('[v0] BuildingDetailView received building:', building);
+  console.log('[v0] building.id:', building.id, 'Type:', typeof building.id);
+  console.log('[v0] All building keys:', Object.keys(building));
+
   const toggleUnitStar = (unitId: string) => {
     const newStarred = new Set(starredUnits)
     if (newStarred.has(unitId)) {
@@ -68,11 +73,9 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
     if (starredUnits.size === 0) return
 
     try {
-      // DEBUG: Check what building.id actually is
-      console.log('[v0] SAVING - building.id:', building.id, 'Type:', typeof building.id)
-      console.log('[v0] SAVING - building object:', building)
-      
       const starredUnitIds = Array.from(starredUnits)
+      console.log('[v0] SAVING - building.id:', building.id, 'Type:', typeof building.id)
+      console.log('[v0] SAVING - Sending buildingIds:', [building.id])
 
       // Call API to save the list (with building ID and unit IDs)
       const response = await fetch('/api/lists', {
