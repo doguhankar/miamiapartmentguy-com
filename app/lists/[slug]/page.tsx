@@ -38,19 +38,11 @@ export default function ListPage() {
   useEffect(() => {
     const fetchList = async () => {
       try {
-        console.log('[v0] ===== LOADING SHARED LIST =====')
-        console.log('[v0] Slug:', slug)
-        
         const response = await fetch(`/api/lists/${slug}`);
         if (!response.ok) {
           throw new Error('List not found');
         }
         const data = await response.json();
-        
-        console.log('[v0] API Response:', data)
-        console.log('[v0] Building IDs received:', data.buildingIds)
-        console.log('[v0] Building IDs type:', typeof data.buildingIds[0])
-        
         setSavedList(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load list');
@@ -113,22 +105,10 @@ export default function ListPage() {
 
   // Get saved buildings
   const savedBuildingIds = new Set(savedList.buildingIds.map(String));
-  
-  console.log('[v0] ===== BUILDING LOOKUP =====')
-  console.log('[v0] Saved Building IDs from Supabase:', Array.from(savedBuildingIds))
-  console.log('[v0] Saved Building IDs types:', Array.from(savedBuildingIds).map(id => typeof id))
-  console.log('[v0] Available buildings (buildingsList):', buildingsList.map(b => ({ name: b.name, id: b.id, idType: typeof b.id })))
-  console.log('[v0] buildingsData array IDs:', buildingsData.map((b, idx) => ({ index: idx, id: b.id, name: b.name })))
-  
   const savedBuildings = buildingsList.filter((b) => {
     const buildingId = String(b.id)
-    const matches = savedBuildingIds.has(buildingId)
-    console.log('[v0] Checking building:', { buildingId, name: b.name, isSaved: matches })
-    return matches
+    return savedBuildingIds.has(buildingId)
   });
-  
-  console.log('[v0] Saved Buildings found:', savedBuildings.length, '/', buildingsList.length)
-  console.log('[v0] Saved buildings:', savedBuildings.map(b => ({ name: b.name, id: b.id })))
   
   const displayedBuildings = comparisonMode ? buildingsList : savedBuildings;
   const mapBuildings = comparisonMode ? buildingsList : savedBuildings;
