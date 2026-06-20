@@ -115,25 +115,20 @@ export default function ListPage() {
   const savedBuildingIds = new Set(savedList.buildingIds.map(String));
   
   console.log('[v0] ===== BUILDING LOOKUP =====')
-  console.log('[v0] Saved Building IDs from list:', Array.from(savedBuildingIds))
-  console.log('[v0] Available buildings count:', buildingsList.length)
-  console.log('[v0] First 5 buildings:', buildingsList.slice(0, 5).map((b, i) => ({
-    index: i,
-    buildingIndex: buildingsData.indexOf(b) + 1,
-    name: b.name,
-    id: b.id
-  })))
+  console.log('[v0] Saved Building IDs from Supabase:', Array.from(savedBuildingIds))
+  console.log('[v0] Saved Building IDs types:', Array.from(savedBuildingIds).map(id => typeof id))
+  console.log('[v0] Available buildings (buildingsList):', buildingsList.map(b => ({ name: b.name, id: b.id, idType: typeof b.id })))
+  console.log('[v0] buildingsData array IDs:', buildingsData.map((b, idx) => ({ index: idx, id: b.id, name: b.name })))
   
   const savedBuildings = buildingsList.filter((b) => {
-    const buildingId = b.id
+    const buildingId = String(b.id)
     const matches = savedBuildingIds.has(buildingId)
-    if (matches) {
-      console.log('[v0] Match found! ID:', buildingId, 'Name:', b.name)
-    }
+    console.log('[v0] Checking building:', { buildingId, name: b.name, isSaved: matches })
     return matches
   });
   
-  console.log('[v0] Saved Buildings found:', savedBuildings.map(b => ({ name: b.name, id: buildingsData.indexOf(b) + 1 })))
+  console.log('[v0] Saved Buildings found:', savedBuildings.length, '/', buildingsList.length)
+  console.log('[v0] Saved buildings:', savedBuildings.map(b => ({ name: b.name, id: b.id })))
   
   const displayedBuildings = comparisonMode ? buildingsList : savedBuildings;
   const mapBuildings = comparisonMode ? buildingsList : savedBuildings;

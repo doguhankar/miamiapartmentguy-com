@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { ChevronLeft, ChevronRight, Star, Phone } from "lucide-react"
-import { Building } from "@/data/buildings"
+import { Building, buildings as BUILDINGS } from "@/lib/buildings"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -69,15 +69,25 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
     if (starredUnits.size === 0) return
 
     try {
+      // Log all available building IDs in BUILDINGS array
+      const availableBuildingIds = BUILDINGS.map((b: Building) => b.id)
+      console.log('[v0] ===== BUILDING ID MISMATCH DEBUG =====')
+      console.log('[v0] Current building being saved:', { id: building.id, name: building.name })
+      console.log('[v0] Building ID type:', typeof building.id)
+      console.log('[v0] All available building IDs:', availableBuildingIds)
+      console.log('[v0] Does BUILDINGS array contain this building ID?', availableBuildingIds.includes(building.id))
+      
       const starredUnitIds = Array.from(starredUnits)
-      console.log('[v0] Sending to /api/lists:', { buildingIds: [String(building.id)], unitIds: starredUnitIds })
+      const buildingIdToSave = String(building.id)
+      console.log('[v0] Building ID being saved as string:', buildingIdToSave)
+      console.log('[v0] Sending to /api/lists:', { buildingIds: [buildingIdToSave], unitIds: starredUnitIds })
 
       // Call API to save the list (with building ID and unit IDs)
       const response = await fetch('/api/lists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          buildingIds: [String(building.id)],
+          buildingIds: [buildingIdToSave],
           unitIds: starredUnitIds 
         }),
       })
