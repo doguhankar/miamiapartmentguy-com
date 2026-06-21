@@ -84,9 +84,10 @@ function categorizeFees(fees: Record<string, number | string>): Record<string, R
   })
 
   // Remove empty categories
-  return Object.fromEntries(
+  const result = Object.fromEntries(
     Object.entries(categories).filter(([_, items]) => Object.keys(items).length > 0)
   )
+  return result
 }
 
 export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps) {
