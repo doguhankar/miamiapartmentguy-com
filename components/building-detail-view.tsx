@@ -101,26 +101,26 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
   return (
     <div className="fixed inset-0 bg-white flex flex-col z-50 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
+      <div className="flex items-center justify-between px-4 lg:px-6 py-3 lg:py-4 border-b border-gray-200 bg-white">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-1 lg:gap-2 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ChevronLeft className="h-5 w-5" />
-          <span className="text-sm font-medium">Back to search</span>
+          <span className="text-xs lg:text-sm font-medium">Back</span>
         </button>
-        <h1 className="text-lg font-semibold text-gray-900">{building.name}</h1>
-        <div className="w-24" /> {/* Spacer for balance */}
+        <h1 className="text-base lg:text-lg font-semibold text-gray-900 text-center px-2">{building.name}</h1>
+        <div className="w-12 lg:w-24" /> {/* Spacer for balance */}
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Column - 45% */}
-        <div className="w-[45%] border-r border-gray-200 flex flex-col">
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+        {/* Left Column - 45% on desktop, full width on mobile */}
+        <div className="w-full lg:w-[45%] border-r-0 lg:border-r border-gray-200 flex flex-col">
           <ScrollArea className="flex-1">
             {/* Photo Carousel */}
-            <div className="px-6 py-6">
-              <div className="relative h-[300px] bg-gray-100 rounded-lg overflow-hidden group">
+            <div className="px-4 lg:px-6 py-6">
+              <div className="relative h-[200px] lg:h-[300px] bg-gray-100 rounded-lg overflow-hidden group">
                 <img
                   src={building.images[currentPhotoIndex]}
                   alt={`${building.name} - Photo ${currentPhotoIndex + 1}`}
@@ -151,7 +151,7 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
               </div>
 
               {/* Building Details */}
-              <div className="mt-6 space-y-4">
+              <div className="mt-4 lg:mt-6 px-2 lg:px-0 space-y-3 lg:space-y-4">
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">{building.name}</h2>
                   <p className="text-sm text-gray-500 mt-1">{building.address}</p>
@@ -185,8 +185,8 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
 
                 {/* Amenities Section */}
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-3">Amenities</p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-2 lg:mb-3">Amenities</p>
+                  <div className="grid grid-cols-3 lg:grid-cols-2 gap-2 lg:gap-2">
                     {building.amenities.slice(0, 4).map((amenity) => (
                       <div key={amenity} className="flex items-center gap-2 text-sm">
                         <span className="text-lg">{amenityIcons[amenity] || "•"}</span>
@@ -198,8 +198,8 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
 
                 {/* Requirements Section */}
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-3">Requirements</p>
-                  <div className="space-y-3">
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-2 lg:mb-3">Requirements</p>
+                  <div className="space-y-2 lg:space-y-3">
                     {building.requirements?.incomeMultiplier && (
                       <div>
                         <p className="text-xs text-gray-500 font-medium">Income</p>
@@ -229,8 +229,8 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
 
                 {/* Fees Section */}
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-3">Fees</p>
-                  <div className="space-y-3">
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-2 lg:mb-3">Fees</p>
+                  <div className="space-y-2 lg:space-y-3">
                     {building.fees?.securityDeposit && (
                       <div>
                         <p className="text-xs text-gray-500 font-medium">Security Deposit</p>
@@ -262,8 +262,8 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
           </ScrollArea>
         </div>
 
-        {/* Right Column - 55% */}
-        <div className="w-[55%] flex flex-col">
+        {/* Right Column - 55% on desktop, full width on mobile */}
+        <div className="w-full lg:w-[55%] flex flex-col">
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-base font-bold text-gray-900">Available units ({mockUnits.length})</h3>
@@ -271,7 +271,7 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
 
           {/* Units Grid */}
           <ScrollArea className="flex-1">
-            <div className="p-6 grid grid-cols-2 gap-4">
+            <div className="p-4 lg:p-6 grid grid-cols-2 lg:grid-cols-2 gap-3 lg:gap-4">
               {visibleUnits.map((unit) => {
                 const isStarred = starredUnits.has(unit.id)
                 return (
@@ -315,7 +315,7 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
 
             {/* Load More Button */}
             {displayedUnits < mockUnits.length && (
-              <div className="px-6 pb-6">
+              <div className="px-4 lg:px-6 pb-4 lg:pb-6">
                 <button
                   onClick={() => setDisplayedUnits(Math.min(displayedUnits + 10, mockUnits.length))}
                   className="w-full py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-200 rounded transition-colors"
@@ -327,7 +327,7 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
           </ScrollArea>
 
           {/* Action Buttons */}
-          <div className="px-6 py-4 border-t border-gray-200 bg-white flex gap-3">
+          <div className="px-4 lg:px-6 py-3 lg:py-4 border-t border-gray-200 bg-white flex gap-2 lg:gap-3">
             <button
               onClick={handleSaveStarred}
               disabled={starredUnits.size === 0}
