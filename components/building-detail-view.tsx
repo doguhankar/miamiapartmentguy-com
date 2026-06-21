@@ -41,6 +41,54 @@ const amenityIcons: Record<string, string> = {
   Coworking: "💻",
 }
 
+// Helper function to categorize fees
+function categorizeFees(fees: Record<string, number | string>): Record<string, Record<string, number | string>> {
+  const categories: Record<string, Record<string, number | string>> = {
+    Deposits: {},
+    "Applications & Admin": {},
+    Parking: {},
+    "Pet Fees": {},
+    Other: {},
+  }
+
+  const feeKeywords: Record<string, string> = {
+    deposit: "Deposits",
+    application: "Applications & Admin",
+    admin: "Applications & Admin",
+    administrative: "Applications & Admin",
+    parking: "Parking",
+    pet: "Pet Fees",
+    "pet rent": "Pet Fees",
+    amenity: "Other",
+    trash: "Other",
+    valet: "Other",
+    pest: "Other",
+    water: "Other",
+    renters: "Other",
+    insurance: "Other",
+    connection: "Other",
+  }
+
+  Object.entries(fees).forEach(([key, value]) => {
+    const keyLower = key.toLowerCase()
+    let category = "Other"
+
+    for (const [keyword, cat] of Object.entries(feeKeywords)) {
+      if (keyLower.includes(keyword)) {
+        category = cat
+        break
+      }
+    }
+
+    categories[category][key] = value
+  })
+
+  // Remove empty categories
+  return Object.fromEntries(
+    Object.entries(categories).filter(([_, items]) => Object.keys(items).length > 0)
+  )
+}
+
 export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps) {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
   const [starredUnits, setStarredUnits] = useState<Set<string>>(new Set())
@@ -216,23 +264,36 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
                 )}
 
                 {/* Fees Section */}
-                {building.fees && Object.keys(building.fees).length > 0 && (
-                  <div>
-                    <p className="text-xs font-bold text-gray-500 uppercase mb-2 lg:mb-3">Fees</p>
-                    <div className="space-y-2 lg:space-y-3">
-                      {Object.entries(building.fees).map(([key, value]) => (
-                        value && (
-                          <div key={key}>
-                            <p className="text-xs text-gray-500 font-medium">{key}</p>
-                            <p className="text-sm font-semibold text-gray-900">
-                              {typeof value === 'number' ? `$${value.toLocaleString()}` : value}
+                {building.fees && Object.keys(building.fees).length > 0 && (() => {
+                  const categorizedFees = categorizeFees(building.fees)
+                  return (
+                    <div>
+                      <p className="text-xs font-bold text-gray-500 uppercase mb-4 lg:mb-5 tracking-wider">Fees</p>
+                      <div className="space-y-5 lg:space-y-6">
+                        {Object.entries(categorizedFees).map(([category, fees]) => (
+                          <div key={category}>
+                            <p className="text-xs font-semibold text-gray-600 uppercase mb-2 lg:mb-3 tracking-wide">
+                              {category}
                             </p>
+                            <div className="space-y-2 lg:space-y-2.5">
+                              {Object.entries(fees).map(([key, value]) => (
+                                <div
+                                  key={key}
+                                  className="flex items-center justify-between border-b border-gray-100 pb-2 lg:pb-2.5"
+                                >
+                                  <p className="text-sm text-gray-600">{key}</p>
+                                  <p className="text-sm font-semibold text-gray-900 whitespace-nowrap ml-4">
+                                    {typeof value === 'number' ? `$${value.toLocaleString()}` : value}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        )
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )
+                })()}
               </div>
             </div>
           </ScrollArea>
