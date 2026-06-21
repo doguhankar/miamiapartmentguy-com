@@ -16,12 +16,10 @@ export interface Building {
   holdDays: number[]
   images: string[]
   amenities: string[]
-  fees?: {
-    securityDeposit?: number
-    applicationFee?: number
-    adminFee?: number
-    petFeeMonthly?: number
-  }
+  phone?: string
+  management?: string
+  email?: string
+  fees?: Record<string, number | string>
   requirements?: {
     incomeMultiplier?: string
     creditScore?: string
@@ -76,7 +74,7 @@ export const buildings: Building[] = [
     priceMin: 2500,
     priceMax: 15000,
     priceTier: "$$",
-    concession: "50% off first 60 days",
+    concession: "6 weeks free on all apartments",
     units: ["Studio", "1B", "2B"],
     incomeReq: "2.5x",
     creditReq: ">650",
@@ -88,12 +86,9 @@ export const buildings: Building[] = [
       "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
     ],
     amenities: ["Pool", "Gym", "Parking"],
-    fees: {
-      securityDeposit: 2500,
-      applicationFee: 60,
-      adminFee: 125,
-      petFeeMonthly: 30,
-    },
+    phone: "(645) 202-5002",
+    management: "Mill Creek Residential",
+    email: "moderariverside@millcreekplaces.com",
     requirements: {
       incomeMultiplier: "2.5x monthly rent",
       creditScore: "650+",
@@ -111,7 +106,7 @@ export const buildings: Building[] = [
     priceMin: 2235,
     priceMax: 5000,
     priceTier: "$",
-    concession: "$500 move-in credit",
+    concession: "1 month free on all apartments",
     units: ["Studio", "1B", "2B"],
     incomeReq: "2.5x",
     creditReq: ">650",
@@ -123,10 +118,21 @@ export const buildings: Building[] = [
       "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
     ],
     amenities: ["Pool", "Gym", "Lounge"],
+    phone: "(786) 544-2662",
+    management: "ZRS Management",
+    email: "MaizonBrickell@ZRSmanagement.com",
     fees: {
-      securityDeposit: 2235,
-      applicationFee: 50,
-      adminFee: 100,
+      "Pet Fee (1st pet)": 585,
+      "Pet Fee (2nd pet)": 335,
+      "Pet Fee (additional)": 25,
+      "Application Fee": 150,
+      "Administrative Fee": 350,
+      "Amenity Fee": 50,
+      "Valet Trash": 25,
+      "Parking (1st car)": 100,
+      "Parking (additional)": 175,
+      "Storage": 100,
+      "Deposit": 750,
     },
     requirements: {
       incomeMultiplier: "2.5x monthly rent",
@@ -145,7 +151,7 @@ export const buildings: Building[] = [
     priceMin: 2654,
     priceMax: 12000,
     priceTier: "$$",
-    concession: "Free first month + parking",
+    concession: "None",
     units: ["Studio", "1B", "2B", "3B"],
     incomeReq: "3x",
     creditReq: ">650",
@@ -157,11 +163,21 @@ export const buildings: Building[] = [
       "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
     ],
     amenities: ["Pool", "Gym", "Bar Lounge", "Billiards"],
+    phone: "(786) 876-9944",
+    management: "Carter-Haston",
+    email: "SolitairBrickell@carterhaston.com",
     fees: {
-      securityDeposit: 2654,
-      applicationFee: 75,
-      adminFee: 150,
-      petFeeMonthly: 40,
+      "Deposit": 1000,
+      "Pet Fee (1st)": 500,
+      "Pet Fee (2nd)": 25,
+      "Application Fee": 150,
+      "Administrative Fee": 350,
+      "Amenity Fee": 55,
+      "Valet Trash": 25,
+      "Pest Control": 4,
+      "Parking (1st)": 100,
+      "Parking (additional)": 175,
+      "Storage": 75,
     },
     requirements: {
       incomeMultiplier: "3x monthly rent",
@@ -180,7 +196,7 @@ export const buildings: Building[] = [
     priceMin: 2425,
     priceMax: 6500,
     priceTier: "$",
-    concession: "1 month free on leases 12+ months",
+    concession: "None specified",
     units: ["Studio", "1B", "2B"],
     incomeReq: "2.5x",
     creditReq: ">650",
@@ -192,15 +208,26 @@ export const buildings: Building[] = [
       "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
     ],
     amenities: ["Pool", "Gym", "Dog Wash", "Yoga Studio"],
+    phone: "(786) 386-0731",
+    management: "Harbor Group Management",
+    email: "MRO@harborgroupmanagement.com",
     fees: {
-      securityDeposit: 2425,
-      applicationFee: 60,
-      adminFee: 120,
+      "Deposit": 1000,
+      "Pet Fee": 500,
+      "Pet Rent": "40/month",
+      "Application Fee": 125,
+      "Administrative Fee": 350,
+      "Water Connection Fee": 35,
+      "Parking (1st)": 100,
+      "Parking (additional)": 150,
+      "Trash/Pest": 22,
+      "Amenity Fee": 50,
+      "Renters Insurance": 18.75,
     },
     requirements: {
       incomeMultiplier: "2.5x monthly rent",
       creditScore: "650+",
-      guarantor: "Accepted",
+      guarantor: "Accepted (max 2 pets)",
       holdDays: "14/30/60 days",
     },
   },
