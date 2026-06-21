@@ -140,9 +140,8 @@ export function DesktopBuildingCard({
         {/* Price Range - Prominent */}
         <div className="mb-3 pb-3 border-b border-gray-100">
           <p className="text-2xl font-bold text-blue-600">
-            ${building.priceMin.toLocaleString()} - ${(building.priceMin + 1500).toLocaleString()}/mo
+            From ${building.priceMin.toLocaleString()}/mo
           </p>
-          <p className="text-xs text-gray-500 mt-1">Starting price</p>
         </div>
 
         {/* Amenity Badges */}

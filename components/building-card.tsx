@@ -43,9 +43,9 @@ export function BuildingCard({ building }: BuildingCardProps) {
                 <DollarSign className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Price Range</p>
+                <p className="text-xs text-muted-foreground">Price</p>
                 <p className="font-medium text-foreground">
-                  ${building.priceMin.toLocaleString()} - ${building.priceMax.toLocaleString()}
+                  From ${building.priceMin.toLocaleString()}/mo
                 </p>
               </div>
             </div>
