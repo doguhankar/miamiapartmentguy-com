@@ -16,6 +16,18 @@ export interface Building {
   holdDays: number[]
   images: string[]
   amenities: string[]
+  fees?: {
+    securityDeposit?: number
+    applicationFee?: number
+    adminFee?: number
+    petFeeMonthly?: number
+  }
+  requirements?: {
+    incomeMultiplier?: string
+    creditScore?: string
+    guarantor?: string
+    holdDays?: string
+  }
 }
 
 export const buildings: Building[] = [
@@ -41,6 +53,18 @@ export const buildings: Building[] = [
       "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
     ],
     amenities: ["Pool", "Gym", "Concierge", "Parking", "Rooftop"],
+    fees: {
+      securityDeposit: 2790,
+      applicationFee: 75,
+      adminFee: 150,
+      petFeeMonthly: 35,
+    },
+    requirements: {
+      incomeMultiplier: "2.5x monthly rent",
+      creditScore: "650+",
+      guarantor: "Accepted",
+      holdDays: "30/60/90 days",
+    },
   },
   {
     id: "modera-riverside",
@@ -64,6 +88,18 @@ export const buildings: Building[] = [
       "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
     ],
     amenities: ["Pool", "Gym", "Parking"],
+    fees: {
+      securityDeposit: 2500,
+      applicationFee: 60,
+      adminFee: 125,
+      petFeeMonthly: 30,
+    },
+    requirements: {
+      incomeMultiplier: "2.5x monthly rent",
+      creditScore: "650+",
+      guarantor: "Accepted",
+      holdDays: "30/60 days",
+    },
   },
   {
     id: "maizon",
@@ -87,6 +123,17 @@ export const buildings: Building[] = [
       "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
     ],
     amenities: ["Pool", "Gym", "Lounge"],
+    fees: {
+      securityDeposit: 2235,
+      applicationFee: 50,
+      adminFee: 100,
+    },
+    requirements: {
+      incomeMultiplier: "2.5x monthly rent",
+      creditScore: "650+",
+      guarantor: "Accepted",
+      holdDays: "14/30/60 days",
+    },
   },
   {
     id: "solitair",
@@ -110,6 +157,18 @@ export const buildings: Building[] = [
       "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
     ],
     amenities: ["Pool", "Gym", "Bar Lounge", "Billiards"],
+    fees: {
+      securityDeposit: 2654,
+      applicationFee: 75,
+      adminFee: 150,
+      petFeeMonthly: 40,
+    },
+    requirements: {
+      incomeMultiplier: "3x monthly rent",
+      creditScore: "650+",
+      guarantor: "Not required",
+      holdDays: "30/60/90 days",
+    },
   },
   {
     id: "miro-brickell",
@@ -133,6 +192,17 @@ export const buildings: Building[] = [
       "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
     ],
     amenities: ["Pool", "Gym", "Dog Wash", "Yoga Studio"],
+    fees: {
+      securityDeposit: 2425,
+      applicationFee: 60,
+      adminFee: 120,
+    },
+    requirements: {
+      incomeMultiplier: "2.5x monthly rent",
+      creditScore: "650+",
+      guarantor: "Accepted",
+      holdDays: "14/30/60 days",
+    },
   },
   {
     id: "brickell-first",
@@ -156,6 +226,18 @@ export const buildings: Building[] = [
       "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
     ],
     amenities: ["Pool", "Spa", "Gym", "Concierge", "Valet"],
+    fees: {
+      securityDeposit: 3045,
+      applicationFee: 75,
+      adminFee: 175,
+      petFeeMonthly: 50,
+    },
+    requirements: {
+      incomeMultiplier: "3x monthly rent",
+      creditScore: "650+",
+      guarantor: "Not required",
+      holdDays: "30/60 days",
+    },
   },
   {
     id: "cmpnd",
@@ -179,6 +261,18 @@ export const buildings: Building[] = [
       "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
     ],
     amenities: ["Pool", "Gym", "Pet-Friendly", "Coworking"],
+    fees: {
+      securityDeposit: 2478,
+      applicationFee: 50,
+      adminFee: 100,
+      petFeeMonthly: 25,
+    },
+    requirements: {
+      incomeMultiplier: "2.5x monthly rent",
+      creditScore: "600+",
+      guarantor: "Accepted",
+      holdDays: "14/30/60 days",
+    },
   },
 ]
 

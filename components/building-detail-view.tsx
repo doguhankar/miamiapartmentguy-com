@@ -198,8 +198,64 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
 
                 {/* Requirements Section */}
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">Requirements</p>
-                  <p className="text-sm text-gray-700">{building.incomeReq}x income • {'>'}{building.creditReq} credit score</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-3">Requirements</p>
+                  <div className="space-y-3">
+                    {building.requirements?.incomeMultiplier && (
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Income</p>
+                        <p className="text-sm font-semibold text-gray-900">{building.requirements.incomeMultiplier}</p>
+                      </div>
+                    )}
+                    {building.requirements?.creditScore && (
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Credit Score</p>
+                        <p className="text-sm font-semibold text-gray-900">{building.requirements.creditScore}</p>
+                      </div>
+                    )}
+                    {building.requirements?.guarantor && (
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Guarantor</p>
+                        <p className="text-sm font-semibold text-gray-900">{building.requirements.guarantor}</p>
+                      </div>
+                    )}
+                    {building.requirements?.holdDays && (
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Hold Days</p>
+                        <p className="text-sm font-semibold text-gray-900">{building.requirements.holdDays}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Fees Section */}
+                <div>
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-3">Fees</p>
+                  <div className="space-y-3">
+                    {building.fees?.securityDeposit && (
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Security Deposit</p>
+                        <p className="text-sm font-semibold text-gray-900">${building.fees.securityDeposit.toLocaleString()}</p>
+                      </div>
+                    )}
+                    {building.fees?.applicationFee && (
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Application Fee</p>
+                        <p className="text-sm font-semibold text-gray-900">${building.fees.applicationFee}</p>
+                      </div>
+                    )}
+                    {building.fees?.adminFee && (
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Admin Fee</p>
+                        <p className="text-sm font-semibold text-gray-900">${building.fees.adminFee}</p>
+                      </div>
+                    )}
+                    {building.fees?.petFeeMonthly && (
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Pet Fee (Monthly)</p>
+                        <p className="text-sm font-semibold text-gray-900">${building.fees.petFeeMonthly}/mo</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
