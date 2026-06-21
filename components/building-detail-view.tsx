@@ -197,66 +197,42 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
                 </div>
 
                 {/* Requirements Section */}
-                <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-2 lg:mb-3">Requirements</p>
-                  <div className="space-y-2 lg:space-y-3">
-                    {building.requirements?.incomeMultiplier && (
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Income</p>
-                        <p className="text-sm font-semibold text-gray-900">{building.requirements.incomeMultiplier}</p>
-                      </div>
-                    )}
-                    {building.requirements?.creditScore && (
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Credit Score</p>
-                        <p className="text-sm font-semibold text-gray-900">{building.requirements.creditScore}</p>
-                      </div>
-                    )}
-                    {building.requirements?.guarantor && (
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Guarantor</p>
-                        <p className="text-sm font-semibold text-gray-900">{building.requirements.guarantor}</p>
-                      </div>
-                    )}
-                    {building.requirements?.holdDays && (
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Hold Days</p>
-                        <p className="text-sm font-semibold text-gray-900">{building.requirements.holdDays}</p>
-                      </div>
-                    )}
+                {building.requirements && Object.keys(building.requirements).length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase mb-2 lg:mb-3">Requirements</p>
+                    <div className="space-y-2 lg:space-y-3">
+                      {Object.entries(building.requirements).map(([key, value]) => (
+                        value && (
+                          <div key={key}>
+                            <p className="text-xs text-gray-500 font-medium capitalize">
+                              {key.replace(/([A-Z])/g, ' $1').trim()}
+                            </p>
+                            <p className="text-sm font-semibold text-gray-900">{value}</p>
+                          </div>
+                        )
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Fees Section */}
-                <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-2 lg:mb-3">Fees</p>
-                  <div className="space-y-2 lg:space-y-3">
-                    {building.fees?.securityDeposit && (
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Security Deposit</p>
-                        <p className="text-sm font-semibold text-gray-900">${building.fees.securityDeposit.toLocaleString()}</p>
-                      </div>
-                    )}
-                    {building.fees?.applicationFee && (
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Application Fee</p>
-                        <p className="text-sm font-semibold text-gray-900">${building.fees.applicationFee}</p>
-                      </div>
-                    )}
-                    {building.fees?.adminFee && (
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Admin Fee</p>
-                        <p className="text-sm font-semibold text-gray-900">${building.fees.adminFee}</p>
-                      </div>
-                    )}
-                    {building.fees?.petFeeMonthly && (
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">Pet Fee (Monthly)</p>
-                        <p className="text-sm font-semibold text-gray-900">${building.fees.petFeeMonthly}/mo</p>
-                      </div>
-                    )}
+                {building.fees && Object.keys(building.fees).length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase mb-2 lg:mb-3">Fees</p>
+                    <div className="space-y-2 lg:space-y-3">
+                      {Object.entries(building.fees).map(([key, value]) => (
+                        value && (
+                          <div key={key}>
+                            <p className="text-xs text-gray-500 font-medium">{key}</p>
+                            <p className="text-sm font-semibold text-gray-900">
+                              {typeof value === 'number' ? `$${value.toLocaleString()}` : value}
+                            </p>
+                          </div>
+                        )
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </ScrollArea>
