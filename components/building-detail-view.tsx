@@ -46,12 +46,6 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
   const [starredUnits, setStarredUnits] = useState<Set<string>>(new Set())
   const [displayedUnits, setDisplayedUnits] = useState(7)
 
-  // DEBUG: Log the building object to see if fees and requirements are present
-  console.log('[v0] BuildingDetailView received building:', building)
-  console.log('[v0] building.fees:', building.fees)
-  console.log('[v0] building.requirements:', building.requirements)
-  console.log('[v0] Building keys:', Object.keys(building))
-
   const toggleUnitStar = (unitId: string) => {
     const newStarred = new Set(starredUnits)
     if (newStarred.has(unitId)) {

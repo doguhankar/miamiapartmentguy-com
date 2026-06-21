@@ -1,6 +1,6 @@
 "use client"
 
-import { Building } from "@/data/buildings"
+import { Building } from "@/lib/buildings"
 import { ImageCarousel } from "./image-carousel"
 import { useState } from "react"
 import { Star } from "lucide-react"

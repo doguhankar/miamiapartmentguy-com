@@ -631,8 +631,6 @@ export default function MiamiApp() {
       });
 
       const geocodedResults = await Promise.all(geocodePromises);
-      console.log('[v0] First geocoded building:', geocodedResults[0]);
-      console.log('[v0] Does first geocoded building have fees?', geocodedResults[0]?.fees);
       setGeocodedBuildings(geocodedResults);
 
       // Log results
