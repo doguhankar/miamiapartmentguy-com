@@ -62,8 +62,7 @@ export function DesktopBuildingCard({
   const amenities = extractAmenities(building)
   
   // Fetch dynamic pricing for buildings with live data (e.g., Flow Brickell)
-  const buildingIdLower = building.id?.toString().toLowerCase() || ''
-  const { price: dynamicPrice } = useBuildingPrice(buildingIdLower, building.priceMin)
+  const { price: dynamicPrice } = useBuildingPrice(building.id, building.priceMin)
 
   const handleMouseEnter = () => {
     setIsHovered(true)
