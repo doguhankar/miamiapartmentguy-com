@@ -171,7 +171,6 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
           </div>
         </div>
       ) : (
-        /* Main Content */
         <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
         {/* Left Column - 45% on desktop, full width on mobile */}
         <div className="w-full lg:w-[45%] border-r-0 lg:border-r border-gray-200 flex flex-col">
