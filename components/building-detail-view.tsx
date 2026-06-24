@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { copyToClipboard, showToast } from "@/lib/toast-utils"
+import { FlowBrickellCard } from "./flow-brickell-card"
 
 interface BuildingDetailViewProps {
   building: Building
@@ -162,8 +163,16 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
         <div className="w-12 lg:w-24" /> {/* Spacer for balance */}
       </div>
 
-      {/* Main Content */}
-      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+      {/* Flow Brickell Special View */}
+      {building.name === 'Flow Brickell' ? (
+        <div className="flex-1 overflow-y-auto bg-white">
+          <div className="w-full max-w-md mx-auto">
+            <FlowBrickellCard onOpenModal={() => {}} />
+          </div>
+        </div>
+      ) : (
+        /* Main Content */
+        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
         {/* Left Column - 45% on desktop, full width on mobile */}
         <div className="w-full lg:w-[45%] border-r-0 lg:border-r border-gray-200 flex flex-col">
           <ScrollArea className="flex-1">
@@ -383,6 +392,7 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
           </div>
         </div>
       </div>
+      )}
     </div>
   )
 }
