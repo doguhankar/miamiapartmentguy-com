@@ -4,6 +4,7 @@ import { Building } from "@/lib/buildings"
 import { ImageCarousel } from "./image-carousel"
 import { useState } from "react"
 import { Star } from "lucide-react"
+import { useBuildingPrice } from "@/hooks/use-building-price"
 
 interface DesktopBuildingCardProps {
   building: Building
@@ -59,6 +60,10 @@ export function DesktopBuildingCard({
 }: DesktopBuildingCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const amenities = extractAmenities(building)
+  
+  // Fetch dynamic pricing for buildings with live data (e.g., Flow Brickell)
+  const buildingIdLower = building.id?.toString().toLowerCase() || ''
+  const { price: dynamicPrice } = useBuildingPrice(buildingIdLower, building.priceMin)
 
   const handleMouseEnter = () => {
     setIsHovered(true)
@@ -140,7 +145,7 @@ export function DesktopBuildingCard({
         {/* Price Range - Prominent */}
         <div className="mb-3 pb-3 border-b border-gray-100">
           <p className="text-2xl font-bold text-blue-600">
-            From ${building.priceMin.toLocaleString()}
+            From ${dynamicPrice.toLocaleString()}
           </p>
         </div>
 
