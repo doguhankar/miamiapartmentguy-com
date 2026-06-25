@@ -150,28 +150,14 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "16px" }}>
           {[
-            { 
-              label: "Income", 
-              val: building.requirements?.incomeMultiplier || building.incomeReq || "2.5×" 
-            },
-            { 
-              label: "Credit score", 
-              val: building.requirements?.creditScore || building.creditReq || "650+" 
-            },
-            { 
-              label: "Guarantor", 
-              val: building.requirements?.guarantor || (building.guarantor ? "Accepted" : "Not required"),
-              customLabel: building.requirements?.guarantor ? "Works with Guarantors Program?" : null
-            },
-            { 
-              label: "Hold days", 
-              val: building.requirements?.holdDays || (building.holdDays?.length > 0 ? `${Math.min(...building.holdDays)}-${Math.max(...building.holdDays)} days` : "30/60/90"),
-              customLabel: building.requirements?.holdDays ? "Unit Hold Period" : null
-            },
+            building.requirements?.income || { label: "Income", value: building.incomeReq || "2.5×" },
+            building.requirements?.creditScore || { label: "Credit score", value: building.creditReq || "650+" },
+            building.requirements?.guarantor || { label: "Guarantor", value: building.guarantor ? "Accepted" : "Not required" },
+            building.requirements?.holdDays || { label: "Hold days", value: building.holdDays?.length > 0 ? `${Math.min(...building.holdDays)}-${Math.max(...building.holdDays)} days` : "30/60/90" },
           ].map((r) => (
             <div key={r.label} style={{ background: "#f7f7f7", borderRadius: "8px", padding: "10px 12px" }}>
-              <div style={{ fontSize: "11px", color: "#888", marginBottom: "3px" }}>{r.customLabel || r.label}</div>
-              <div style={{ fontSize: "14px", fontWeight: 500 }}>{r.val}</div>
+              <div style={{ fontSize: "11px", color: "#888", marginBottom: "3px" }}>{r.label}</div>
+              <div style={{ fontSize: "14px", fontWeight: 500 }}>{r.value}</div>
             </div>
           ))}
         </div>
