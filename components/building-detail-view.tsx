@@ -144,6 +144,70 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
 
         <hr style={{ border: "none", borderTop: "1px solid #eee", margin: "16px 0" }} />
 
+        {/* Requirements */}
+        <p style={{ fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
+          Requirements
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "16px" }}>
+          {[
+            { label: "Income", val: building.requirements?.incomeMultiplier || building.incomeReq || "2.5×" },
+            { label: "Credit score", val: building.requirements?.creditScore || building.creditReq || "650+" },
+            { label: "Guarantor", val: building.requirements?.guarantor || (building.guarantor ? "Accepted" : "Not required") },
+            { label: "Hold days", val: building.requirements?.holdDays || (building.holdDays?.length > 0 ? `${Math.min(...building.holdDays)}-${Math.max(...building.holdDays)} days` : "30/60/90") },
+          ].map((r) => (
+            <div key={r.label} style={{ background: "#f7f7f7", borderRadius: "8px", padding: "10px 12px" }}>
+              <div style={{ fontSize: "11px", color: "#888", marginBottom: "3px" }}>{r.label}</div>
+              <div style={{ fontSize: "14px", fontWeight: 500 }}>{r.val}</div>
+            </div>
+          ))}
+        </div>
+
+        <hr style={{ border: "none", borderTop: "1px solid #eee", margin: "16px 0" }} />
+
+        {/* Move-In Fees */}
+        {(building.moveInFees || building.fees) && (
+          <>
+            <p style={{ fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
+              Move-in fees
+            </p>
+            {(building.moveInFees || building.fees) &&
+              Object.entries(building.moveInFees || building.fees || {}).map(([label, val], idx) => (
+                <div key={idx}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "8px 0", borderBottom: "1px solid #f0f0f0" }}>
+                    <span style={{ color: "#555" }}>{label}</span>
+                    <span style={{ fontWeight: 500 }}>{typeof val === "number" ? `$${val}` : val}</span>
+                  </div>
+                </div>
+              ))}
+          </>
+        )}
+
+        <hr style={{ border: "none", borderTop: "1px solid #eee", margin: "16px 0" }} />
+
+        {/* Monthly Charges */}
+        {building.monthlyCharges && (
+          <>
+            <p style={{ fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
+              Monthly charges
+            </p>
+            {Object.entries(building.monthlyCharges).map(([label, val], idx) => (
+              <div key={idx}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "8px 0", borderBottom: "1px solid #f0f0f0" }}>
+                  <span style={{ color: "#555" }}>{label}</span>
+                  <span style={{ fontWeight: 500 }}>{typeof val === "number" ? `$${val}/mo` : val}</span>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        <hr style={{ border: "none", borderTop: "1px solid #eee", margin: "16px 0" }} />
+
+        {/* Available units section with tabs */}
+        <p style={{ fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>
+          Available units
+        </p>
+
         {/* Unit tabs */}
         <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #eee", marginBottom: "16px" }}>
           {["all", "studio", "1", "2", "3"].map((tab) => {
@@ -204,61 +268,6 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
         )}
 
         <hr style={{ border: "none", borderTop: "1px solid #eee", margin: "16px 0" }} />
-
-        {/* Requirements */}
-        <p style={{ fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
-          Requirements
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "16px" }}>
-          {[
-            { label: "Income", val: building.requirements?.incomeMultiplier || building.incomeReq || "2.5×" },
-            { label: "Credit score", val: building.requirements?.creditScore || building.creditReq || "650+" },
-            { label: "Guarantor", val: building.requirements?.guarantor || (building.guarantor ? "Accepted" : "Not required") },
-            { label: "Hold days", val: building.requirements?.holdDays || (building.holdDays?.length > 0 ? `${Math.min(...building.holdDays)}-${Math.max(...building.holdDays)} days` : "30/60/90") },
-          ].map((r) => (
-            <div key={r.label} style={{ background: "#f7f7f7", borderRadius: "8px", padding: "10px 12px" }}>
-              <div style={{ fontSize: "11px", color: "#888", marginBottom: "3px" }}>{r.label}</div>
-              <div style={{ fontSize: "14px", fontWeight: 500 }}>{r.val}</div>
-            </div>
-          ))}
-        </div>
-
-        <hr style={{ border: "none", borderTop: "1px solid #eee", margin: "16px 0" }} />
-
-        {/* Move-In Fees */}
-        {(building.moveInFees || building.fees) && (
-          <>
-            <p style={{ fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
-              Move-in fees
-            </p>
-            {(building.moveInFees || building.fees) &&
-              Object.entries(building.moveInFees || building.fees || {}).map(([label, val], idx) => (
-                <div key={idx}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "8px 0", borderBottom: "1px solid #f0f0f0" }}>
-                    <span style={{ color: "#555" }}>{label}</span>
-                    <span style={{ fontWeight: 500 }}>{typeof val === "number" ? `$${val}` : val}</span>
-                  </div>
-                </div>
-              ))}
-          </>
-        )}
-
-        {/* Monthly Charges */}
-        {building.monthlyCharges && (
-          <>
-            <p style={{ fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px", marginTop: "16px" }}>
-              Monthly charges
-            </p>
-            {Object.entries(building.monthlyCharges).map(([label, val], idx) => (
-              <div key={idx}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "8px 0", borderBottom: "1px solid #f0f0f0" }}>
-                  <span style={{ color: "#555" }}>{label}</span>
-                  <span style={{ fontWeight: 500 }}>{typeof val === "number" ? `$${val}/mo` : val}</span>
-                </div>
-              </div>
-            ))}
-          </>
-        )}
 
         {/* CTA */}
         <div style={{ display: "flex", gap: "8px", marginTop: "20px", paddingBottom: "20px" }}>
