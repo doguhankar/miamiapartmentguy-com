@@ -46,9 +46,15 @@ export const buildings: Building[] = [
     guarantor: true,
     holdDays: [30, 60, 90],
     images: [
-      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
+      "/images/buildings/flow-miami-world-1.webp",
+      "/images/buildings/flow-miami-world-2.webp",
+      "/images/buildings/flow-miami-world-3.webp",
+      "/images/buildings/flow-miami-world-4.webp",
+      "/images/buildings/flow-miami-world-5.webp",
+      "/images/buildings/flow-miami-world-6.webp",
+      "/images/buildings/flow-miami-world-7.webp",
+      "/images/buildings/flow-miami-world-8.webp",
+      "/images/buildings/flow-miami-world-9.webp",
     ],
     amenities: ["Pool", "Gym", "Concierge", "Parking", "Rooftop"],
     fees: {
