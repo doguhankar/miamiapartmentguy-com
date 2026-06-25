@@ -1,397 +1,299 @@
 "use client"
 
-import { useState } from "react"
-import { ChevronLeft, ChevronRight, Star, Phone } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Heart, Share2, Phone } from "lucide-react"
 import { Building } from "@/lib/buildings"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { copyToClipboard, showToast } from "@/lib/toast-utils"
-import { FlowBrickellCard } from "./flow-brickell-card"
 
 interface BuildingDetailViewProps {
   building: Building
   onBack: () => void
 }
 
-// Mock unit data - in production this would come from the building data or API
-const mockUnits = [
-  { id: "1", type: "Studio", sqft: 450, floor: 5, price: 2790 },
-  { id: "2", type: "Studio", sqft: 480, floor: 12, price: 2950 },
-  { id: "3", type: "1 Bedroom", sqft: 750, floor: 8, price: 3500 },
-  { id: "4", type: "1 Bedroom", sqft: 780, floor: 15, price: 3650 },
-  { id: "5", type: "2 Bedroom", sqft: 1200, floor: 3, price: 5200 },
-  { id: "6", type: "2 Bedroom", sqft: 1250, floor: 20, price: 5400 },
-  { id: "7", type: "3 Bedroom", sqft: 1800, floor: 18, price: 8500 },
-]
-
-const amenityIcons: Record<string, string> = {
-  Pool: "🏊",
-  Gym: "💪",
-  Concierge: "🎩",
-  Parking: "🅿️",
-  Rooftop: "🏢",
-  Lounge: "🛋️",
-  "Dog Wash": "🐕",
-  "Yoga Studio": "🧘",
-  Spa: "🧖",
-  "Bar Lounge": "🍸",
-  Billiards: "🎱",
-  Valet: "🚗",
-  "Pet-Friendly": "🐾",
-  Coworking: "💻",
-}
-
-// Helper function to categorize fees
-function categorizeFees(fees: Record<string, number | string>): Record<string, Record<string, number | string>> {
-  const categories: Record<string, Record<string, number | string>> = {
-    Deposits: {},
-    "Applications & Admin": {},
-    Parking: {},
-    "Pet Fees": {},
-    Other: {},
-  }
-
-  const feeKeywords: Record<string, string> = {
-    deposit: "Deposits",
-    application: "Applications & Admin",
-    admin: "Applications & Admin",
-    administrative: "Applications & Admin",
-    parking: "Parking",
-    pet: "Pet Fees",
-    "pet rent": "Pet Fees",
-    amenity: "Other",
-    trash: "Other",
-    valet: "Other",
-    pest: "Other",
-    water: "Other",
-    renters: "Other",
-    insurance: "Other",
-    connection: "Other",
-  }
-
-  Object.entries(fees).forEach(([key, value]) => {
-    const keyLower = key.toLowerCase()
-    let category = "Other"
-
-    for (const [keyword, cat] of Object.entries(feeKeywords)) {
-      if (keyLower.includes(keyword)) {
-        category = cat
-        break
-      }
-    }
-
-    categories[category][key] = value
-  })
-
-  // Remove empty categories
-  const result = Object.fromEntries(
-    Object.entries(categories).filter(([_, items]) => Object.keys(items).length > 0)
-  )
-  return result
+interface Unit {
+  floorPlanType: string
+  beds: number | null
+  baths: number
+  sqft: number
+  price: number
+  availableDate: string
 }
 
 export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps) {
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
-  const [starredUnits, setStarredUnits] = useState<Set<string>>(new Set())
-  const [displayedUnits, setDisplayedUnits] = useState(7)
+  const [units, setUnits] = useState<Unit[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedTab, setSelectedTab] = useState("all")
+  const [isHearted, setIsHearted] = useState(false)
 
-  const toggleUnitStar = (unitId: string) => {
-    const newStarred = new Set(starredUnits)
-    if (newStarred.has(unitId)) {
-      newStarred.delete(unitId)
-    } else {
-      newStarred.add(unitId)
-    }
-    setStarredUnits(newStarred)
-  }
-
-  const nextPhoto = () => {
-    setCurrentPhotoIndex((i) => (i + 1) % building.images.length)
-  }
-
-  const prevPhoto = () => {
-    setCurrentPhotoIndex((i) => (i - 1 + building.images.length) % building.images.length)
-  }
-
-  const handleSaveStarred = async () => {
-    if (starredUnits.size === 0) return
-
-    try {
-      const starredUnitIds = Array.from(starredUnits)
-
-      // Call API to save the list (with building ID and unit IDs)
-      const response = await fetch('/api/lists', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          buildingIds: [building.id],
-          unitIds: starredUnitIds 
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to save list')
+  useEffect(() => {
+    const fetchUnits = async () => {
+      try {
+        setLoading(true)
+        const res = await fetch(`/api/prices/${building.id}?t=${Date.now()}`)
+        
+        if (res.ok) {
+          const data = await res.json()
+          setUnits(data.units || [])
+        } else {
+          setError("Unable to load unit availability")
+        }
+      } catch (err) {
+        setError("Error loading units")
+      } finally {
+        setLoading(false)
       }
-
-      const data = await response.json()
-      const shareUrl = data.shareUrl
-
-      // Copy to clipboard
-      await copyToClipboard(shareUrl, "Link copied to clipboard")
-    } catch (error) {
-      console.error("[v0] Error saving starred units:", error)
-      showToast("Failed to save starred units", { type: "error" })
     }
+
+    fetchUnits()
+  }, [building.id])
+
+  // Get minimum price from units
+  const minPrice = units.length > 0 ? Math.min(...units.map(u => u.price)) : building.priceMin
+
+  // Filter units by bed count
+  const getFilteredUnits = () => {
+    if (selectedTab === "all") return units
+    if (selectedTab === "studio") return units.filter(u => u.beds === null)
+    if (selectedTab === "1") return units.filter(u => u.beds === 1)
+    if (selectedTab === "2") return units.filter(u => u.beds === 2)
+    if (selectedTab === "3") return units.filter(u => u.beds === 3)
+    return units
   }
 
-  const visibleUnits = mockUnits.slice(0, displayedUnits)
-  const dealPercentage = building.concession.match(/(\d+)%/) ? building.concession.match(/(\d+)%/)?.[1] : "50"
+  const filteredUnits = getFilteredUnits()
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+    }).format(price)
+  }
+
+  const getUnitTypeLabel = (unit: Unit) => {
+    if (unit.beds === null) return "Studio"
+    return `${unit.beds} Bed${unit.beds > 1 ? 's' : ''}`
+  }
 
   return (
-    <div className="fixed inset-0 bg-white flex flex-col z-50 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 lg:px-6 py-3 lg:py-4 border-b border-gray-200 bg-white">
+    <div className="h-full bg-white overflow-y-auto flex flex-col">
+      {/* Header with close button */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+        <h2 className="text-xl font-bold text-gray-900">{building.name}</h2>
         <button
           onClick={onBack}
-          className="flex items-center gap-1 lg:gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          className="text-gray-500 hover:text-gray-700 text-2xl"
+          aria-label="Close"
         >
-          <ChevronLeft className="h-5 w-5" />
-          <span className="text-xs lg:text-sm font-medium">Back</span>
+          ×
         </button>
-        <h1 className="text-base lg:text-lg font-semibold text-gray-900 text-center px-2">{building.name}</h1>
-        <div className="w-12 lg:w-24" /> {/* Spacer for balance */}
       </div>
 
-      {/* Flow Brickell Special View */}
-      {building.name === 'Flow Brickell' ? (
-        <div className="flex-1 overflow-y-auto bg-white">
-          <div className="w-full max-w-md mx-auto">
-            <FlowBrickellCard onOpenModal={() => {}} />
-          </div>
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        {/* 3-Panel Photo Grid */}
+        <div className="grid grid-cols-3 gap-1 h-40">
+          {building.images.slice(0, 3).map((img, idx) => (
+            <img
+              key={idx}
+              src={img}
+              alt={`${building.name} photo ${idx + 1}`}
+              className="w-full h-full object-cover"
+            />
+          ))}
         </div>
-      ) : (
-        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
-        {/* Left Column - 45% on desktop, full width on mobile */}
-        <div className="w-full lg:w-[45%] border-r-0 lg:border-r border-gray-200 flex flex-col">
-          <ScrollArea className="flex-1">
-            {/* Photo Carousel */}
-            <div className="px-4 lg:px-6 py-6">
-              <div className="relative h-[200px] lg:h-[300px] bg-gray-100 rounded-lg overflow-hidden group">
-                <img
-                  src={building.images[currentPhotoIndex]}
-                  alt={`${building.name} - Photo ${currentPhotoIndex + 1}`}
-                  className="w-full h-full object-cover"
+
+        <div className="p-4">
+          {/* Building Info with Heart & Share Icons */}
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-gray-900">{building.name}</h1>
+              <p className="text-gray-600">{building.neighborhood}</p>
+              <p className="text-sm text-gray-500">{building.address}</p>
+            </div>
+            <div className="flex gap-2 ml-4">
+              <button
+                onClick={() => setIsHearted(!isHearted)}
+                className="p-2 hover:bg-gray-100 rounded-full transition"
+                aria-label="Save building"
+              >
+                <Heart
+                  size={24}
+                  className={isHearted ? "fill-red-500 text-red-500" : "text-gray-400"}
                 />
-
-                {/* Carousel Controls */}
-                <button
-                  onClick={prevPhoto}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
-                  aria-label="Previous photo"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-
-                <button
-                  onClick={nextPhoto}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
-                  aria-label="Next photo"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-
-                {/* View All Button */}
-                <button className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 text-white text-sm font-medium rounded hover:bg-black/70 transition-colors">
-                  VIEW ALL {building.images.length}
-                </button>
-              </div>
-
-              {/* Building Details */}
-              <div className="mt-4 lg:mt-6 px-2 lg:px-0 space-y-3 lg:space-y-4">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">{building.name}</h2>
-                  <p className="text-sm text-gray-500 mt-1">{building.address}</p>
-                </div>
-
-                {/* Deal Badges */}
-                <div className="flex gap-2">
-                  <Badge className="bg-amber-100 text-amber-900 hover:bg-amber-100">DEALS</Badge>
-                  <Badge className="bg-gray-200 text-gray-700 hover:bg-gray-200">{dealPercentage}% OFF</Badge>
-                </div>
-
-                {/* Deal Info Card */}
-                <div className="p-3 bg-gray-50 border border-gray-200 rounded">
-                  <p className="text-sm font-bold text-gray-900">{building.concession}</p>
-                  <p className="text-xs text-gray-500 mt-2">Updated now • Expires in 30 days</p>
-                </div>
-
-                {/* Phone Section */}
-                <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase">Phone</p>
-                  <a href="tel:3055550123" className="text-sm font-medium text-blue-600 hover:text-blue-700 mt-1">
-                    (305) 555-0123
-                  </a>
-                </div>
-
-                {/* Management Section */}
-                <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase">Management</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">Sterling Management</p>
-                </div>
-
-                {/* Amenities Section */}
-                <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-2 lg:mb-3">Amenities</p>
-                  <div className="grid grid-cols-3 lg:grid-cols-2 gap-2 lg:gap-2">
-                    {building.amenities.slice(0, 4).map((amenity) => (
-                      <div key={amenity} className="flex items-center gap-2 text-sm">
-                        <span className="text-lg">{amenityIcons[amenity] || "•"}</span>
-                        <span className="text-gray-700">{amenity}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Requirements Section */}
-                {building.requirements && Object.keys(building.requirements).length > 0 && (
-                  <div>
-                    <p className="text-xs font-bold text-gray-500 uppercase mb-2 lg:mb-3">Requirements</p>
-                    <div className="space-y-2 lg:space-y-3">
-                      {Object.entries(building.requirements).map(([key, value]) => (
-                        value && (
-                          <div key={key}>
-                            <p className="text-xs text-gray-500 font-medium capitalize">
-                              {key.replace(/([A-Z])/g, ' $1').trim()}
-                            </p>
-                            <p className="text-sm font-semibold text-gray-900">{value}</p>
-                          </div>
-                        )
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Fees Section */}
-                {building.fees && Object.keys(building.fees).length > 0 && (() => {
-                  const categorizedFees = categorizeFees(building.fees)
-                  return (
-                    <div>
-                      <p className="text-xs font-bold text-gray-500 uppercase mb-4 lg:mb-5 tracking-wider">Fees</p>
-                      <div className="space-y-5 lg:space-y-6">
-                        {Object.entries(categorizedFees).map(([category, fees]) => (
-                          <div key={category}>
-                            <p className="text-xs font-semibold text-gray-600 uppercase mb-2 lg:mb-3 tracking-wide">
-                              {category}
-                            </p>
-                            <div className="space-y-2 lg:space-y-2.5">
-                              {Object.entries(fees).map(([key, value]) => (
-                                <div
-                                  key={key}
-                                  className="flex items-center justify-between border-b border-gray-100 pb-2 lg:pb-2.5"
-                                >
-                                  <p className="text-sm text-gray-600">{key}</p>
-                                  <p className="text-sm font-semibold text-gray-900 whitespace-nowrap ml-4">
-                                    {typeof value === 'number' ? `$${value.toLocaleString()}` : value}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                })()}
-              </div>
+              </button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href)
+                }}
+                className="p-2 hover:bg-gray-100 rounded-full transition"
+                aria-label="Share building"
+              >
+                <Share2 size={24} className="text-gray-400" />
+              </button>
             </div>
-          </ScrollArea>
-        </div>
-
-        {/* Right Column - 55% on desktop, full width on mobile */}
-        <div className="w-full lg:w-[55%] flex flex-col">
-          {/* Header */}
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-base font-bold text-gray-900">Available units ({mockUnits.length})</h3>
           </div>
 
-          {/* Units Grid */}
-          <ScrollArea className="flex-1">
-            <div className="p-4 lg:p-6 grid grid-cols-2 lg:grid-cols-2 gap-3 lg:gap-4">
-              {visibleUnits.map((unit) => {
-                const isStarred = starredUnits.has(unit.id)
-                return (
-                  <div
-                    key={unit.id}
-                    className={`relative p-3 border rounded-lg transition-all ${
-                      isStarred
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 bg-white hover:border-gray-300"
-                    }`}
-                  >
-                    {/* Star Button */}
-                    <button
-                      onClick={() => toggleUnitStar(unit.id)}
-                      className="absolute top-3 right-3 p-1 hover:bg-gray-100 rounded transition-colors"
-                      aria-label={isStarred ? "Unstar unit" : "Star unit"}
-                    >
-                      <Star
-                        className={`h-5 w-5 ${
-                          isStarred
-                            ? "fill-blue-500 text-blue-500"
-                            : "text-gray-300 hover:text-gray-400"
-                        }`}
-                      />
-                    </button>
+          {/* Badge Row */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {building.concession && (
+              <Badge className="bg-green-100 text-green-800 border-0">
+                {building.concession}
+              </Badge>
+            )}
+            <Badge className="bg-blue-100 text-blue-800 border-0">
+              Commission available
+            </Badge>
+            {building.management && (
+              <Badge className="bg-amber-100 text-amber-800 border-0">
+                {building.management}
+              </Badge>
+            )}
+          </div>
 
-                    {/* Unit Info */}
-                    <div className="pr-8">
-                      <p className="text-sm font-bold text-gray-900">{unit.type}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {unit.sqft} sqft • Floor {unit.floor}
-                      </p>
-                      <p className={`text-sm font-bold mt-2 ${isStarred ? "text-blue-600" : "text-blue-600"}`}>
-                        ${unit.price.toLocaleString()}/mo
-                      </p>
+          {/* Starting Price & Unit Count */}
+          <div className="text-lg font-semibold text-gray-900 mb-4 pb-4 border-b border-gray-200">
+            Starting at {formatPrice(minPrice)}/mo · {units.length} units available
+          </div>
+
+          {/* Tab Filter for Units */}
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+            {["all", "studio", "1", "2", "3"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setSelectedTab(tab)}
+                className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition ${
+                  selectedTab === tab
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                {tab === "all" && "All"}
+                {tab === "studio" && "Studio"}
+                {tab === "1" && "1 bed"}
+                {tab === "2" && "2 bed"}
+                {tab === "3" && "3 bed"}
+              </button>
+            ))}
+          </div>
+
+          {/* Unit List */}
+          <div className="space-y-3 mb-6">
+            {loading ? (
+              <p className="text-gray-500">Loading units...</p>
+            ) : error ? (
+              <p className="text-red-500">{error}</p>
+            ) : filteredUnits.length === 0 ? (
+              <p className="text-gray-500">No units available in this category</p>
+            ) : (
+              filteredUnits.map((unit, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                >
+                  <div className="flex-1">
+                    <div className="font-bold text-lg text-gray-900">
+                      {formatPrice(unit.price)}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {getUnitTypeLabel(unit)} • {unit.baths} ba • {unit.sqft} sqft{" "}
+                      {unit.floorPlanType && `• Floor ${unit.floorPlanType}`}
                     </div>
                   </div>
-                )
-              })}
-            </div>
-
-            {/* Load More Button */}
-            {displayedUnits < mockUnits.length && (
-              <div className="px-4 lg:px-6 pb-4 lg:pb-6">
-                <button
-                  onClick={() => setDisplayedUnits(Math.min(displayedUnits + 10, mockUnits.length))}
-                  className="w-full py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-200 rounded transition-colors"
-                >
-                  Load {Math.min(10, mockUnits.length - displayedUnits)} more units
-                </button>
-              </div>
+                  <Badge className="bg-green-100 text-green-800 border-0 ml-2 shrink-0">
+                    Available now
+                  </Badge>
+                </div>
+              ))
             )}
-          </ScrollArea>
+          </div>
 
-          {/* Action Buttons */}
-          <div className="px-4 lg:px-6 py-3 lg:py-4 border-t border-gray-200 bg-white flex gap-2 lg:gap-3">
-            <button
-              onClick={handleSaveStarred}
-              disabled={starredUnits.size === 0}
-              className={`flex-1 py-2.5 px-4 rounded font-semibold text-white transition-colors ${
-                starredUnits.size === 0
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
+          {/* Requirements Section - 2x2 Grid */}
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-3">Requirements</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-xs font-semibold text-gray-500 uppercase">Income</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {building.requirements?.incomeMultiplier || building.incomeReq}
+                </div>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-xs font-semibold text-gray-500 uppercase">Credit Score</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {building.requirements?.creditScore || building.creditReq}
+                </div>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-xs font-semibold text-gray-500 uppercase">Guarantor</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {building.requirements?.guarantor || (building.guarantor ? "Required" : "Not required")}
+                </div>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-xs font-semibold text-gray-500 uppercase">Hold Days</div>
+                <div className="text-lg font-bold text-gray-900">
+                  {building.requirements?.holdDays ||
+                    (building.holdDays?.length > 0 ? `${Math.min(...building.holdDays)}-${Math.max(...building.holdDays)} days` : "N/A")}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Move-In Fees Section */}
+          {building.fees && Object.keys(building.fees).length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">Move-In Fees</h3>
+              <div className="space-y-2">
+                {Object.entries(building.fees).map(([key, value], idx) => (
+                  <div key={idx}>
+                    <div className="flex justify-between py-2">
+                      <span className="text-gray-700 capitalize">
+                        {key.replace(/([A-Z])/g, " $1").trim()}
+                      </span>
+                      <span className="font-semibold text-gray-900">
+                        {typeof value === "number" ? formatPrice(value) : value}
+                      </span>
+                    </div>
+                    {idx < Object.keys(building.fees).length - 1 && (
+                      <div className="border-b border-gray-100" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Dual CTA Buttons */}
+          <div className="flex gap-3 pb-6">
+            <Button
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg"
+              onClick={() => {
+                // Text action - could open SMS or modal
+                if (building.phone) {
+                  window.location.href = `sms:${building.phone}`
+                }
+              }}
             >
-              Save starred ({starredUnits.size})
-            </button>
-            <button className="flex-1 py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white rounded font-semibold transition-colors">
-              Text Don
-            </button>
+              Text about {building.name}
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 border border-gray-300 text-gray-900 font-semibold py-3 rounded-lg hover:bg-gray-50"
+              onClick={() => {
+                if (building.phone) {
+                  window.location.href = `tel:${building.phone}`
+                }
+              }}
+            >
+              <Phone size={18} className="mr-2" />
+              Call
+            </Button>
           </div>
         </div>
       </div>
-      )}
     </div>
   )
 }
