@@ -1,10 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Heart, Share2, Phone } from "lucide-react"
+import { Heart, Share2 } from "lucide-react"
 import { Building } from "@/lib/buildings"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 
 interface BuildingDetailViewProps {
   building: Building
@@ -78,220 +76,207 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
   }
 
   return (
-    <div className="h-full bg-white overflow-y-auto flex flex-col">
-      {/* Header with close button */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-        <h2 className="text-xl font-bold text-gray-900">{building.name}</h2>
-        <button
-          onClick={onBack}
-          className="text-gray-500 hover:text-gray-700 text-2xl"
-          aria-label="Close"
-        >
-          ×
-        </button>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", backgroundColor: "#fff" }}>
+      {/* Photo strip - 3-panel grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", height: "220px", gap: "2px", marginBottom: 0 }}>
+        {building.images.slice(0, 3).map((img, idx) => (
+          <div key={idx} style={{ background: "#888", position: "relative", overflow: "hidden" }}>
+            <img src={img} alt={`${building.name} ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            {idx === 2 && (
+              <span style={{ position: "absolute", bottom: "8px", right: "8px", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "6px" }}>
+                View all photos
+              </span>
+            )}
+          </div>
+        ))}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        {/* 3-Panel Photo Grid */}
-        <div className="grid grid-cols-3 gap-1 h-40">
-          {building.images.slice(0, 3).map((img, idx) => (
-            <img
-              key={idx}
-              src={img}
-              alt={`${building.name} photo ${idx + 1}`}
-              className="w-full h-full object-cover"
-            />
-          ))}
+      {/* Body */}
+      <div style={{ padding: "20px", maxWidth: "600px", margin: "0 auto", width: "100%", overflowY: "auto", flex: 1 }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: "12px", color: "#888", marginBottom: "2px" }}>{building.neighborhood}</p>
+            <h1 style={{ fontSize: "20px", fontWeight: 500, marginBottom: "2px" }}>{building.name}</h1>
+            <p style={{ fontSize: "12px", color: "#888" }}>{building.address}</p>
+          </div>
+          <div style={{ display: "flex", gap: "12px", paddingTop: "4px" }}>
+            <button
+              onClick={() => setIsHearted(!isHearted)}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}
+              aria-label="Save"
+            >
+              <Heart size={20} fill={isHearted ? "#dc2626" : "none"} stroke={isHearted ? "#dc2626" : "#999"} />
+            </button>
+            <button
+              onClick={() => navigator.clipboard.writeText(window.location.href)}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}
+              aria-label="Share"
+            >
+              <Share2 size={20} stroke="#999" />
+            </button>
+          </div>
         </div>
 
-        <div className="p-4">
-          {/* Building Info with Heart & Share Icons */}
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900">{building.name}</h1>
-              <p className="text-gray-600">{building.neighborhood}</p>
-              <p className="text-sm text-gray-500">{building.address}</p>
-            </div>
-            <div className="flex gap-2 ml-4">
-              <button
-                onClick={() => setIsHearted(!isHearted)}
-                className="p-2 hover:bg-gray-100 rounded-full transition"
-                aria-label="Save building"
-              >
-                <Heart
-                  size={24}
-                  className={isHearted ? "fill-red-500 text-red-500" : "text-gray-400"}
-                />
-              </button>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href)
-                }}
-                className="p-2 hover:bg-gray-100 rounded-full transition"
-                aria-label="Share building"
-              >
-                <Share2 size={24} className="text-gray-400" />
-              </button>
-            </div>
-          </div>
+        {/* Badges */}
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", margin: "12px 0" }}>
+          {building.concession && (
+            <span style={{ fontSize: "11px", fontWeight: 500, padding: "4px 10px", borderRadius: "6px", background: "#EAF3DE", color: "#3B6D11" }}>
+              {building.concession}
+            </span>
+          )}
+          <span style={{ fontSize: "11px", fontWeight: 500, padding: "4px 10px", borderRadius: "6px", background: "#E6F1FB", color: "#185FA5" }}>
+            100% commission
+          </span>
+          {building.management && (
+            <span style={{ fontSize: "11px", fontWeight: 500, padding: "4px 10px", borderRadius: "6px", background: "#FAEEDA", color: "#854F0B" }}>
+              {building.management}
+            </span>
+          )}
+        </div>
 
-          {/* Badge Row */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {building.concession && (
-              <Badge className="bg-green-100 text-green-800 border-0">
-                {building.concession}
-              </Badge>
-            )}
-            <Badge className="bg-blue-100 text-blue-800 border-0">
-              Commission available
-            </Badge>
-            {building.management && (
-              <Badge className="bg-amber-100 text-amber-800 border-0">
-                {building.management}
-              </Badge>
-            )}
-          </div>
+        {/* Starting price */}
+        <div style={{ display: "flex", alignItems: "baseline", gap: "6px", marginBottom: "16px" }}>
+          <span style={{ fontSize: "12px", color: "#888" }}>Starting at</span>
+          <span style={{ fontSize: "22px", fontWeight: 500, color: "#185FA5" }}>${minPrice}/mo</span>
+          <span style={{ fontSize: "12px", color: "#aaa" }}>· {units.length} units available</span>
+        </div>
 
-          {/* Starting Price & Unit Count */}
-          <div className="text-lg font-semibold text-gray-900 mb-4 pb-4 border-b border-gray-200">
-            Starting at {formatPrice(minPrice)}/mo · {units.length} units available
-          </div>
+        <hr style={{ border: "none", borderTop: "1px solid #eee", margin: "16px 0" }} />
 
-          {/* Tab Filter for Units */}
-          <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-            {["all", "studio", "1", "2", "3"].map((tab) => (
+        {/* Unit tabs */}
+        <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #eee", marginBottom: "16px" }}>
+          {["all", "studio", "1", "2", "3"].map((tab) => {
+            const labels: Record<string, string> = { all: "All", studio: "Studio", "1": "1 bed", "2": "2 bed", "3": "3 bed" }
+            return (
               <button
                 key={tab}
                 onClick={() => setSelectedTab(tab)}
-                className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition ${
-                  selectedTab === tab
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                style={{
+                  padding: "8px 14px",
+                  fontSize: "13px",
+                  border: "none",
+                  background: "none",
+                  borderBottom: selectedTab === tab ? "2px solid #000" : "2px solid transparent",
+                  fontWeight: selectedTab === tab ? 500 : 400,
+                  color: selectedTab === tab ? "#000" : "#888",
+                  cursor: "pointer",
+                }}
               >
-                {tab === "all" && "All"}
-                {tab === "studio" && "Studio"}
-                {tab === "1" && "1 bed"}
-                {tab === "2" && "2 bed"}
-                {tab === "3" && "3 bed"}
+                {labels[tab]}
               </button>
-            ))}
-          </div>
+            )
+          })}
+        </div>
 
-          {/* Unit List */}
-          <div className="space-y-3 mb-6">
-            {loading ? (
-              <p className="text-gray-500">Loading units...</p>
-            ) : error ? (
-              <p className="text-red-500">{error}</p>
-            ) : filteredUnits.length === 0 ? (
-              <p className="text-gray-500">No units available in this category</p>
-            ) : (
-              filteredUnits.map((unit, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
-                >
-                  <div className="flex-1">
-                    <div className="font-bold text-lg text-gray-900">
-                      {formatPrice(unit.price)}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {getUnitTypeLabel(unit)} • {unit.baths} ba • {unit.sqft} sqft{" "}
-                      {unit.floorPlanType && `• Floor ${unit.floorPlanType}`}
-                    </div>
-                  </div>
-                  <Badge className="bg-green-100 text-green-800 border-0 ml-2 shrink-0">
-                    Available now
-                  </Badge>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Requirements Section - 2x2 Grid */}
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-3">Requirements</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-xs font-semibold text-gray-500 uppercase">Income</div>
-                <div className="text-lg font-bold text-gray-900">
-                  {building.requirements?.incomeMultiplier || building.incomeReq}
-                </div>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-xs font-semibold text-gray-500 uppercase">Credit Score</div>
-                <div className="text-lg font-bold text-gray-900">
-                  {building.requirements?.creditScore || building.creditReq}
-                </div>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-xs font-semibold text-gray-500 uppercase">Guarantor</div>
-                <div className="text-lg font-bold text-gray-900">
-                  {building.requirements?.guarantor || (building.guarantor ? "Required" : "Not required")}
-                </div>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="text-xs font-semibold text-gray-500 uppercase">Hold Days</div>
-                <div className="text-lg font-bold text-gray-900">
-                  {building.requirements?.holdDays ||
-                    (building.holdDays?.length > 0 ? `${Math.min(...building.holdDays)}-${Math.max(...building.holdDays)} days` : "N/A")}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Move-In Fees Section */}
-          {building.fees && Object.keys(building.fees).length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-3">Move-In Fees</h3>
-              <div className="space-y-2">
-                {Object.entries(building.fees).map(([key, value], idx) => (
-                  <div key={idx}>
-                    <div className="flex justify-between py-2">
-                      <span className="text-gray-700 capitalize">
-                        {key.replace(/([A-Z])/g, " $1").trim()}
-                      </span>
-                      <span className="font-semibold text-gray-900">
-                        {typeof value === "number" ? formatPrice(value) : value}
-                      </span>
-                    </div>
-                    {idx < Object.keys(building.fees).length - 1 && (
-                      <div className="border-b border-gray-100" />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Dual CTA Buttons */}
-          <div className="flex gap-3 pb-6">
-            <Button
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg"
-              onClick={() => {
-                // Text action - could open SMS or modal
-                if (building.phone) {
-                  window.location.href = `sms:${building.phone}`
-                }
+        {/* Unit rows */}
+        {loading ? (
+          <p style={{ color: "#888", fontSize: "14px" }}>Loading units...</p>
+        ) : error ? (
+          <p style={{ color: "#dc2626", fontSize: "14px" }}>{error}</p>
+        ) : filteredUnits.length === 0 ? (
+          <p style={{ color: "#888", fontSize: "14px" }}>No units available in this category</p>
+        ) : (
+          filteredUnits.map((unit, idx) => (
+            <div
+              key={idx}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "12px 14px",
+                border: "1px solid #eee",
+                borderRadius: "8px",
+                marginBottom: "8px",
               }}
             >
-              Text about {building.name}
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 border border-gray-300 text-gray-900 font-semibold py-3 rounded-lg hover:bg-gray-50"
-              onClick={() => {
-                if (building.phone) {
-                  window.location.href = `tel:${building.phone}`
-                }
-              }}
-            >
-              <Phone size={18} className="mr-2" />
-              Call
-            </Button>
-          </div>
+              <div>
+                <div style={{ fontSize: "18px", fontWeight: 500, color: "#185FA5" }}>${unit.price}/mo</div>
+                <div style={{ fontSize: "12px", color: "#888", marginTop: "2px" }}>
+                  {getUnitTypeLabel(unit)} · {unit.baths} ba · {unit.sqft} sqft{unit.floorPlanType ? ` · Floor ${unit.floorPlanType}` : ""}
+                </div>
+              </div>
+              <span style={{ fontSize: "11px", padding: "3px 8px", borderRadius: "6px", background: "#EAF3DE", color: "#3B6D11" }}>
+                Available now
+              </span>
+            </div>
+          ))
+        )}
+
+        <hr style={{ border: "none", borderTop: "1px solid #eee", margin: "16px 0" }} />
+
+        {/* Requirements */}
+        <p style={{ fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
+          Requirements
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "16px" }}>
+          {[
+            { label: "Income", val: building.requirements?.incomeMultiplier || building.incomeReq || "2.5×" },
+            { label: "Credit score", val: building.requirements?.creditScore || building.creditReq || "650+" },
+            { label: "Guarantor", val: building.requirements?.guarantor || (building.guarantor ? "Accepted" : "Not required") },
+            { label: "Hold days", val: building.requirements?.holdDays || (building.holdDays?.length > 0 ? `${Math.min(...building.holdDays)}-${Math.max(...building.holdDays)} days` : "30/60/90") },
+          ].map((r) => (
+            <div key={r.label} style={{ background: "#f7f7f7", borderRadius: "8px", padding: "10px 12px" }}>
+              <div style={{ fontSize: "11px", color: "#888", marginBottom: "3px" }}>{r.label}</div>
+              <div style={{ fontSize: "14px", fontWeight: 500 }}>{r.val}</div>
+            </div>
+          ))}
+        </div>
+
+        <hr style={{ border: "none", borderTop: "1px solid #eee", margin: "16px 0" }} />
+
+        {/* Fees */}
+        <p style={{ fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
+          Move-in fees
+        </p>
+        {building.fees &&
+          Object.entries(building.fees).map(([label, val], idx) => (
+            <div key={idx}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "6px 0", borderBottom: "1px solid #f0f0f0" }}>
+                <span style={{ color: "#888" }}>{label}</span>
+                <span style={{ fontWeight: 500 }}>{typeof val === "number" ? `$${val}` : val}</span>
+              </div>
+            </div>
+          ))}
+
+        {/* CTA */}
+        <div style={{ display: "flex", gap: "8px", marginTop: "20px", paddingBottom: "20px" }}>
+          <button
+            onClick={() => {
+              if (building.phone) window.location.href = `sms:${building.phone}`
+            }}
+            style={{
+              flex: 1,
+              padding: "13px",
+              borderRadius: "8px",
+              background: "#185FA5",
+              color: "#fff",
+              fontSize: "14px",
+              fontWeight: 500,
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Text Don about {building.name}
+          </button>
+          <button
+            onClick={() => {
+              if (building.phone) window.location.href = `tel:${building.phone}`
+            }}
+            style={{
+              flex: 1,
+              padding: "13px",
+              borderRadius: "8px",
+              background: "#f7f7f7",
+              color: "#000",
+              fontSize: "14px",
+              fontWeight: 500,
+              border: "1px solid #eee",
+              cursor: "pointer",
+            }}
+          >
+            Call Don
+          </button>
         </div>
       </div>
     </div>
