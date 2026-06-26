@@ -282,7 +282,7 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
                 </div>
               </div>
               <span style={{ fontSize: "11px", padding: "3px 8px", borderRadius: "6px", background: "#EAF3DE", color: "#3B6D11" }}>
-                Available now
+                {unit.availableDate || "Available now"}
               </span>
             </div>
           ))
