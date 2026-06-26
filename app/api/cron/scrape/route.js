@@ -1,4 +1,5 @@
 import { scrapeFlowBuilding } from '@/lib/scrapers/flow';
+import { scrapeApartmentsBuilding } from '@/lib/scrapers/apartments';
 import { storePricingData } from '@/lib/supabase/pricing';
 
 export async function POST(req) {
@@ -42,6 +43,22 @@ export async function POST(req) {
         };
       } else {
         console.log('[v0] Successfully stored in Supabase, NOT using in-memory cache');
+      }
+
+      // Phase 1: Test Apartments.com scraper for Flow Brickell
+      console.log('[v0] Starting Apartments.com scraper for Flow Brickell...');
+      try {
+        const apartmentsUnits = await scrapeApartmentsBuilding('flow-brickell');
+        console.log('[v0] Apartments.com scraped successfully, units count:', apartmentsUnits?.length || 0);
+        results['flow-brickell-apartments'] = apartmentsUnits;
+
+        // Store Apartments.com data separately for now (Phase 1)
+        console.log('[v0] Storing Apartments.com data...');
+        const apartmentsStored = await storePricingData('flow-brickell', apartmentsUnits);
+        console.log('[v0] Apartments.com data stored:', apartmentsStored);
+      } catch (err) {
+        console.error('[v0] Apartments.com scraper error:', err.message);
+        results['flow-brickell-apartments-error'] = err.message;
       }
     })();
 
