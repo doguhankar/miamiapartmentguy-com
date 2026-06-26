@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Heart, Share2 } from "lucide-react"
+import { Heart, Share2, ArrowLeft } from "lucide-react"
 import { Building } from "@/lib/buildings"
 
 interface BuildingDetailViewProps {
@@ -78,7 +78,7 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", backgroundColor: "#fff" }}>
       {/* Photo strip - 3-panel grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", height: "220px", gap: "2px", marginBottom: 0 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", height: "220px", gap: "2px", marginBottom: 0, position: "relative" }}>
         {building.images.slice(0, 3).map((img, idx) => (
           <div key={idx} style={{ background: "#888", position: "relative", overflow: "hidden" }}>
             <img src={img} alt={`${building.name} ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -89,6 +89,27 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
             )}
           </div>
         ))}
+        {/* Back button overlay */}
+        <button
+          onClick={onBack}
+          style={{
+            position: "absolute",
+            top: "12px",
+            left: "12px",
+            background: "rgba(0,0,0,0.6)",
+            border: "none",
+            borderRadius: "6px",
+            padding: "8px 8px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10,
+          }}
+          aria-label="Go back"
+        >
+          <ArrowLeft size={20} color="#fff" />
+        </button>
       </div>
 
       {/* Body */}
