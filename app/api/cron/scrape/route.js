@@ -1,4 +1,5 @@
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 import { scrapeFlowBuilding } from '@/lib/scrapers/flow';
 import { storePricingData } from '@/lib/supabase/pricing';
 
@@ -73,11 +74,23 @@ async function scrapeApartmentsWithPuppeteer() {
   
   let browser;
   try {
-    // Launch Puppeteer with no-sandbox for Vercel environment
-    browser = await puppeteer.launch({
+    // Determine if running on Vercel (serverless) or local environment
+    const isVercel = !!process.env.VERCEL;
+    
+    console.log('[v0] Browser launch mode:', isVercel ? 'Vercel (Sparticuz)' : 'Local (standard Puppeteer)');
+
+    // Launch browser with appropriate configuration
+    const launchConfig = isVercel ? {
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+    } : {
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-    });
+    };
+
+    browser = await puppeteer.launch(launchConfig);
 
     console.log('[v0] Browser launched');
     const page = await browser.newPage();
