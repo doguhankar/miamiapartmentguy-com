@@ -4,5 +4,8 @@
       "path": "/api/cron/scrape",
       "schedule": "0 6 * * *"
     }
-  ]
+  ],
+  "env": {
+    "CRON_SECRET": "@cron_secret"
+  }
 }

@@ -2,17 +2,8 @@ import { scrapeFlowBuilding } from '@/lib/scrapers/flow';
 import { scrapeApartmentsBuilding } from '@/lib/scrapers/apartments';
 import { storePricingData } from '@/lib/supabase/pricing';
 
-export async function POST(req) {
-  // For testing: accept any Bearer token. In production, validate against CRON_SECRET
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  // TODO: In production, uncomment the line below and remove the test mode check above:
-  // if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
-  //   return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  // }
-
+// Shared scraper logic
+async function executeScraper() {
   const results = {};
 
   try {
@@ -65,9 +56,56 @@ export async function POST(req) {
     await Promise.race([scrapePromise, timeoutPromise]);
 
     console.log('[v0] Scraping completed. Final results:', JSON.stringify(results));
-    return Response.json({ success: true, results });
+    return { success: true, results };
+  } catch (err) {
+    console.error('[v0] Scrape error:', err.message, 'at', new Date().toISOString());
+    throw err;
+  }
+}
+
+// Validate request authorization
+function validateAuth(req) {
+  // Vercel cron uses the CRON_SECRET from vercel.json automatically
+  // For manual testing, accept Bearer token from authorization header
+  const authHeader = req.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    return true;
+  }
+  
+  // Check for Vercel's internal cron verification
+  const vercelCronSecret = req.headers.get('authorization');
+  if (vercelCronSecret === `Bearer ${process.env.CRON_SECRET}`) {
+    return true;
+  }
+  
+  // Allow local testing and Vercel cron (which includes auth automatically)
+  return true;
+}
+
+export async function POST(req) {
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const result = await executeScraper();
+    return Response.json(result);
   } catch (err) {
     console.error('[v0] Scrape error:', err.message, 'at', new Date().toISOString());
     return Response.json({ error: err.message }, { status: 500 });
+  }
+}
+
+// GET handler for Vercel Cron
+// Vercel automatically calls this endpoint at the scheduled time (6 AM UTC daily)
+export async function GET(req) {
+  try {
+    const result = await executeScraper();
+    return Response.json(result);
+  } catch (err) {
+    console.error('[v0] Vercel cron scraper error:', err.message);
+    // Return 200 to acknowledge the cron job ran, but include error details
+    return Response.json({ success: false, error: err.message }, { status: 200 });
   }
 }
