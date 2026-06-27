@@ -1,3 +1,5 @@
+import { createClient } from '@supabase/supabase-js'
+
 export async function GET(request, { params }) {
   try {
     const { buildingId } = await params
@@ -10,59 +12,95 @@ export async function GET(request, { params }) {
       )
     }
 
-    // Extract query parameters
+    // Validate Supabase credentials
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.SUPABASE_ANON_KEY
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('[v0] Missing Supabase credentials')
+      return Response.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      )
+    }
+
+    // Initialize Supabase client
+    const supabase = createClient(supabaseUrl, supabaseKey)
+
+    // Extract query parameters for filtering and sorting
     const searchParams = request.nextUrl.searchParams
     const minPrice = searchParams.get('minPrice') ? parseInt(searchParams.get('minPrice')) : null
     const maxPrice = searchParams.get('maxPrice') ? parseInt(searchParams.get('maxPrice')) : null
     const beds = searchParams.get('beds') ? parseInt(searchParams.get('beds')) : null
     const sort = searchParams.get('sort') || 'price_asc'
 
-    // Mock units data for Phase 1 testing
-    let mockUnits = [
-      { id: '1', floor_plan_type: '1505', beds: 0, baths: 1, sqft: 550, price: 2841, available_date: 'Available now', photos: null },
-      { id: '2', floor_plan_type: '2301', beds: 1, baths: 1.5, sqft: 750, price: 3200, available_date: 'Available now', photos: null },
-      { id: '3', floor_plan_type: '3402', beds: 2, baths: 2, sqft: 1050, price: 4100, available_date: 'Available now', photos: null },
-      { id: '4', floor_plan_type: '4510', beds: 3, baths: 2.5, sqft: 1450, price: 5500, available_date: 'Available now', photos: null },
-    ]
+    // Build base query
+    let query = supabase
+      .from('pricing_units')
+      .select('*')
+      .eq('building_id', buildingId)
 
-    // Apply filters
-    let units = mockUnits.filter(unit => {
-      if (minPrice !== null && unit.price < minPrice) return false
-      if (maxPrice !== null && unit.price > maxPrice) return false
-      if (beds !== null && unit.beds !== beds) return false
-      return true
-    })
+    // Apply price filters
+    if (minPrice !== null) {
+      query = query.gte('price', minPrice)
+    }
+    if (maxPrice !== null) {
+      query = query.lte('price', maxPrice)
+    }
+
+    // Apply beds filter
+    if (beds !== null) {
+      query = query.eq('beds', beds)
+    }
 
     // Apply sorting
     switch (sort) {
       case 'price_desc':
-        units.sort((a, b) => b.price - a.price)
+        query = query.order('price', { ascending: false })
         break
       case 'availability':
-        units.sort((a, b) => (a.available_date || '').localeCompare(b.available_date || ''))
+        query = query.order('available_date', { ascending: true })
         break
       case 'price_asc':
       default:
-        units.sort((a, b) => a.price - b.price)
+        query = query.order('price', { ascending: true })
         break
     }
 
-    // Get building name based on buildingId
-    const buildingNames = {
-      'flow-brickell': 'Flow Brickell',
-      'modera-riverside': 'Modera Riverside',
-      'maizon': 'Maizon',
-      'solitair': 'Solitair',
-      'miro-brickell': 'Miro Brickell',
-      'brickell-first': 'Brickell First',
-      'cmpnd': 'CMPND',
+    // Execute query
+    const { data: units, error: unitsError } = await query
+
+    if (unitsError) {
+      console.error('[v0] Supabase query error:', unitsError)
+      return Response.json(
+        { error: 'Database query failed', details: unitsError.message },
+        { status: 500 }
+      )
+    }
+
+    if (!units) {
+      console.warn('[v0] No units found for building:', buildingId)
+      return Response.json(
+        { error: 'No units found' },
+        { status: 404 }
+      )
+    }
+
+    // Get building name from buildings table
+    const { data: buildingData, error: buildingError } = await supabase
+      .from('buildings')
+      .select('name')
+      .eq('id', buildingId)
+      .single()
+
+    if (buildingError) {
+      console.warn('[v0] Building not found:', buildingId)
     }
 
     // Format response
     const response = {
       success: true,
       buildingId,
-      buildingName: buildingNames[buildingId] || null,
+      buildingName: buildingData?.name || null,
       units: units.map(unit => ({
         id: unit.id,
         unitNumber: unit.floor_plan_type,
@@ -88,7 +126,7 @@ export async function GET(request, { params }) {
   } catch (error) {
     console.error('[v0] API error:', error)
     return Response.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
     )
   }
