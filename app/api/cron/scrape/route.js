@@ -20,6 +20,10 @@ async function executeScraper() {
         const apartmentsUnits = await scrapeApartmentsBuilding('flow-brickell');
         if (apartmentsUnits && apartmentsUnits.length > 0) {
           console.log('[v0] Apartments.com scraper succeeded, units count:', apartmentsUnits.length);
+          console.log('[v0] Unit samples being stored:');
+          apartmentsUnits.slice(0, 3).forEach((u, i) => {
+            console.log(`[v0]   ${i + 1}. ${u.unitType} - $${u.price} - Beds: ${u.beds} - Available: ${u.availableDate}`);
+          });
           results['apartments-com'] = apartmentsUnits;
 
           // Store the data
