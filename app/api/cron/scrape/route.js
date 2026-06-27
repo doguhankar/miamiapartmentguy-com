@@ -1,85 +1,261 @@
+import puppeteer from 'puppeteer';
 import { scrapeFlowBuilding } from '@/lib/scrapers/flow';
 import { storePricingData } from '@/lib/supabase/pricing';
 
-// Railway apartments scraper endpoint with Puppeteer support
-// If this endpoint is not available, we fall back to local Flow scraper
-const RAILWAY_SCRAPER_URL = 'https://apartments-scraper-production.up.railway.app/scrape';
+const APARTMENTS_COM_URL = 'https://www.apartments.com/flow-brickell-miami-fl/x13ew7n/';
 
-// Shared scraper logic - calls Railway endpoint with Puppeteer support
+/**
+ * Parse availability date string to YYYY-MM-DD format
+ */
+function parseAvailabilityDate(dateStr) {
+  if (!dateStr) return null;
+
+  const lowerStr = dateStr.toLowerCase().trim();
+
+  if (lowerStr.includes('contact for') || lowerStr === '') {
+    return null;
+  }
+
+  if (lowerStr.includes('available now') || lowerStr.includes('immediately') || lowerStr.includes('asap')) {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  }
+
+  // Try MM/DD/YYYY format
+  let dateMatch = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (dateMatch) {
+    const [_, month, day, year] = dateMatch;
+    const monthNum = parseInt(month);
+    const dayNum = parseInt(day);
+    
+    if (monthNum >= 1 && monthNum <= 12 && dayNum >= 1 && dayNum <= 31) {
+      return `${year}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+    }
+  }
+
+  // Try MM/DD/YY format
+  dateMatch = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{2})(?!\d)/);
+  if (dateMatch) {
+    const [_, month, day, yearShort] = dateMatch;
+    const monthNum = parseInt(month);
+    const dayNum = parseInt(day);
+    const yearNum = parseInt(yearShort);
+    
+    const fullYear = yearNum < 50 ? 2000 + yearNum : 1900 + yearNum;
+    
+    if (monthNum >= 1 && monthNum <= 12 && dayNum >= 1 && dayNum <= 31) {
+      return `${fullYear}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+    }
+  }
+
+  // Try Month DD, YYYY format
+  dateMatch = dateStr.match(/(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{1,2}),?\s+(\d{4})/i);
+  if (dateMatch) {
+    const monthMap = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+    const month = monthMap[dateMatch[1].toLowerCase().slice(0, 3)];
+    const day = parseInt(dateMatch[2]);
+    const year = dateMatch[3];
+    
+    if (month && day >= 1 && day <= 31) {
+      return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+  }
+
+  console.log('[v0] Could not parse availability date:', dateStr);
+  return null;
+}
+
+/**
+ * Scrape Apartments.com using Puppeteer (bypasses anti-bot protection)
+ */
+async function scrapeApartmentsWithPuppeteer() {
+  console.log('[v0] Starting Puppeteer scraper for Apartments.com...');
+  
+  let browser;
+  try {
+    // Launch Puppeteer with no-sandbox for Vercel environment
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    });
+
+    console.log('[v0] Browser launched');
+    const page = await browser.newPage();
+
+    // Set user agent to appear as real browser
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+
+    console.log('[v0] Navigating to Apartments.com URL:', APARTMENTS_COM_URL);
+    await page.goto(APARTMENTS_COM_URL, { waitUntil: 'networkidle2', timeout: 30000 });
+
+    console.log('[v0] Page loaded, extracting units...');
+
+    // Extract units from the page
+    const units = await page.evaluate(() => {
+      const results = [];
+      const seenUnits = new Set();
+
+      // Find all unit listings
+      const unitCards = document.querySelectorAll('[data-testid="apartmentCard"], [class*="ApartmentCard"], [class*="unit-card"]');
+      
+      if (unitCards.length === 0) {
+        console.log('No unit cards found with standard selectors');
+        return results;
+      }
+
+      unitCards.forEach((card) => {
+        try {
+          const text = card.innerText || card.textContent;
+
+          // Extract price
+          const priceMatch = text.match(/\$\s*([\d,]+)/);
+          if (!priceMatch) return;
+
+          const price = parseInt(priceMatch[1].replace(/,/g, ''));
+          if (price < 500 || price > 50000) return;
+
+          // Extract bedrooms
+          const bedsMatch = text.match(/(\d+)\s*(?:bed|br|bedroom)/i);
+          const beds = bedsMatch ? parseInt(bedsMatch[1]) : null;
+
+          const isStudio = /studio/i.test(text);
+          const bedrooms = isStudio ? 0 : beds;
+
+          // Extract bathrooms
+          const bathsMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:bath|ba|bathroom)/i);
+          const baths = bathsMatch ? parseFloat(bathsMatch[1]) : null;
+
+          // Extract sqft
+          const sqftMatch = text.match(/(\d+(?:,\d+)?)\s*(?:sqft|sq\.?\s*ft|square\s*feet)/i);
+          const sqft = sqftMatch ? parseInt(sqftMatch[1].replace(/,/g, '')) : null;
+
+          // Extract availability date
+          let availabilityDate = null;
+          const availPatterns = [
+            /available\s+(?:now|immediately|asap)/i,
+            /available\s+(\d{1,2}\/\d{1,2}\/\d{2,4})/i,
+            /available\s+([a-z]+\s+\d{1,2},?\s+\d{4})/i,
+            /contact\s+for\s+availability/i,
+          ];
+
+          for (const pattern of availPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+              availabilityDate = match[1] || match[0];
+              break;
+            }
+          }
+
+          // Determine unit type
+          let unitType = 'Unknown';
+          if (isStudio) unitType = 'Studio';
+          else if (bedrooms === 1) unitType = '1B';
+          else if (bedrooms === 2) unitType = '2B';
+          else if (bedrooms === 3) unitType = '3B';
+          else if (bedrooms === 4) unitType = '4B';
+
+          const uniqueKey = `${price}-${bedrooms}-${baths}-${sqft}`;
+          if (seenUnits.has(uniqueKey)) return;
+          seenUnits.add(uniqueKey);
+
+          results.push({
+            price,
+            floorPlanType: unitType,
+            beds: bedrooms,
+            baths,
+            sqft,
+            availableDate,
+          });
+        } catch (err) {
+          console.log('Error parsing unit:', err.message);
+        }
+      });
+
+      return results;
+    });
+
+    console.log('[v0] Puppeteer extracted', units.length, 'units');
+
+    // Parse availability dates
+    const parsedUnits = units.map(unit => ({
+      ...unit,
+      availableDate: parseAvailabilityDate(unit.availableDate),
+    }));
+
+    return parsedUnits;
+  } catch (err) {
+    console.error('[v0] Puppeteer scraper error:', err.message);
+    throw err;
+  } finally {
+    if (browser) {
+      await browser.close();
+      console.log('[v0] Browser closed');
+    }
+  }
+}
+
+// Shared scraper logic - uses Puppeteer for Apartments.com, falls back to Flow
 async function executeScraper() {
   const results = {};
 
   try {
     console.log('[v0] Scraping started at', new Date().toISOString());
 
-    // Set 60-second timeout for Railway scraper call
+    // Set 120-second timeout for Puppeteer rendering
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Scrape timeout: exceeded 60 seconds')), 60000)
+      setTimeout(() => reject(new Error('Scrape timeout: exceeded 120 seconds')), 120000)
     );
 
     const scrapePromise = (async () => {
       let unitsToStore = null;
       let sourceUsed = null;
 
-      // Primary: Call Railway apartments scraper with Puppeteer (bypasses anti-bot)
-      console.log('[v0] Starting Railway Puppeteer scraper...');
+      // Primary: Puppeteer scraper for real Apartments.com dates
+      console.log('[v0] Starting Apartments.com Puppeteer scraper (PRIMARY)...');
       try {
-        const railwayResponse = await fetch(RAILWAY_SCRAPER_URL, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-          },
-        });
-
-        if (!railwayResponse.ok) {
-          throw new Error(`Railway scraper returned ${railwayResponse.status}`);
-        }
-
-        const railwayData = await railwayResponse.json();
-        console.log('[v0] Railway scraper response:', JSON.stringify(railwayData).substring(0, 200));
-
-        if (railwayData.units && Array.isArray(railwayData.units) && railwayData.units.length > 0) {
-          console.log('[v0] Railway scraper succeeded, units count:', railwayData.units.length);
-          results['railway-puppeteer'] = railwayData.units;
-          unitsToStore = railwayData.units;
-          sourceUsed = 'railway-puppeteer';
+        const apartmentsUnits = await scrapeApartmentsWithPuppeteer();
+        if (apartmentsUnits && apartmentsUnits.length > 0) {
+          console.log('[v0] Puppeteer succeeded, units count:', apartmentsUnits.length);
+          results['apartments-puppeteer'] = apartmentsUnits;
+          unitsToStore = apartmentsUnits;
+          sourceUsed = 'apartments-puppeteer';
         } else {
-          console.warn('[v0] Railway scraper returned empty or invalid data');
-          results['railway-puppeteer-error'] = 'No units returned from Railway scraper';
+          console.warn('[v0] Puppeteer returned no units');
+          results['apartments-puppeteer-error'] = 'No units returned from Puppeteer scraper';
         }
       } catch (err) {
-        console.error('[v0] Railway scraper failed:', err.message);
-        results['railway-puppeteer-error'] = err.message;
+        console.error('[v0] Puppeteer scraper failed:', err.message);
+        results['apartments-puppeteer-error'] = err.message;
       }
 
-      // Fallback: If Railway failed, try local Flow scraper
+      // Fallback: Flow scraper if Puppeteer fails
       if (!unitsToStore) {
-        console.log('[v0] Railway scraper failed, falling back to local Flow scraper...');
+        console.log('[v0] Puppeteer failed, falling back to Flow scraper...');
         try {
-          const flowBrickellUnits = await scrapeFlowBuilding('flow-brickell');
-          if (flowBrickellUnits && flowBrickellUnits.length > 0) {
-            console.log('[v0] Flow Brickell scraped successfully, units count:', flowBrickellUnits.length);
-            results['flow-brickell-fallback'] = flowBrickellUnits;
-            unitsToStore = flowBrickellUnits;
+          const flowUnits = await scrapeFlowBuilding('flow-brickell');
+          if (flowUnits && flowUnits.length > 0) {
+            console.log('[v0] Flow scraper succeeded, units count:', flowUnits.length);
+            results['flow-brickell-fallback'] = flowUnits;
+            unitsToStore = flowUnits;
             sourceUsed = 'flow-brickell-fallback';
           } else {
             throw new Error('Flow scraper returned no units');
           }
         } catch (err) {
-          console.error('[v0] Flow fallback scraper failed:', err.message);
-          results['flow-brickell-error'] = err.message;
-          throw new Error('Both Railway and Flow scrapers failed - no data available');
+          console.error('[v0] Flow scraper failed:', err.message);
+          results['flow-error'] = err.message;
+          throw new Error('Both Puppeteer and Flow scrapers failed - no data available');
         }
       }
 
-      // Store the data from Railway scraper
+      // Store the data
       if (unitsToStore) {
         console.log('[v0] Storing data from source:', sourceUsed, 'with', unitsToStore.length, 'units');
         const stored = await storePricingData('flow-brickell', unitsToStore);
         console.log('[v0] storePricingData returned:', stored);
         
         if (!stored) {
-          console.warn('[v0] Failed to store data in Supabase, keeping in memory cache as fallback');
+          console.warn('[v0] Failed to store in Supabase, using memory cache');
           global.unitCache = global.unitCache || {};
           global.unitCache['flow-brickell'] = {
             units: unitsToStore,
@@ -94,10 +270,10 @@ async function executeScraper() {
 
     await Promise.race([scrapePromise, timeoutPromise]);
 
-    console.log('[v0] Scraping completed. Final results:', JSON.stringify(results));
+    console.log('[v0] Scraping completed');
     return { success: true, results };
   } catch (err) {
-    console.error('[v0] Scrape error:', err.message, 'at', new Date().toISOString());
+    console.error('[v0] Scrape error:', err.message);
     throw err;
   }
 }
