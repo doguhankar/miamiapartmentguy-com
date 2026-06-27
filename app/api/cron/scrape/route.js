@@ -1,10 +1,7 @@
 import { scrapeApartmentsBuilding } from '@/lib/scrapers/apartments';
-import { scrapeFlowBuilding } from '@/lib/scrapers/flow';
 import { storePricingData } from '@/lib/supabase/pricing';
 
-
-
-// Shared scraper logic - uses enhanced Cheerio with retry/User-Agent, falls back to Flow
+// Shared scraper logic - Apartments.com only
 async function executeScraper() {
   const results = {};
 
@@ -17,64 +14,39 @@ async function executeScraper() {
     );
 
     const scrapePromise = (async () => {
-      let unitsToStore = null;
-      let sourceUsed = null;
-
-      // Primary: Enhanced Cheerio scraper with rotating User-Agents and retry logic
-      console.log('[v0] Starting Apartments.com scraper with anti-blocking (PRIMARY)...');
+      // Apartments.com scraper with anti-blocking headers and retry logic
+      console.log('[v0] Starting Apartments.com scraper with anti-blocking...');
       try {
         const apartmentsUnits = await scrapeApartmentsBuilding('flow-brickell');
         if (apartmentsUnits && apartmentsUnits.length > 0) {
           console.log('[v0] Apartments.com scraper succeeded, units count:', apartmentsUnits.length);
           results['apartments-com'] = apartmentsUnits;
-          unitsToStore = apartmentsUnits;
-          sourceUsed = 'apartments-com';
+
+          // Store the data
+          console.log('[v0] Storing', apartmentsUnits.length, 'units to Supabase...');
+          const stored = await storePricingData('flow-brickell', apartmentsUnits);
+          console.log('[v0] storePricingData returned:', stored);
+          
+          if (!stored) {
+            console.warn('[v0] Failed to store in Supabase, using memory cache');
+            global.unitCache = global.unitCache || {};
+            global.unitCache['flow-brickell'] = {
+              units: apartmentsUnits,
+              source: 'apartments-com',
+              updatedAt: new Date().toISOString(),
+            };
+          } else {
+            console.log('[v0] Successfully stored data in Supabase');
+          }
         } else {
           console.warn('[v0] Apartments.com returned no units');
           results['apartments-error'] = 'No units returned from Apartments.com';
+          throw new Error('Apartments.com scraper returned no units');
         }
       } catch (err) {
         console.error('[v0] Apartments.com scraper failed:', err.message);
         results['apartments-error'] = err.message;
-      }
-
-      // Fallback: Flow scraper if Apartments.com fails
-      if (!unitsToStore) {
-        console.log('[v0] Apartments.com failed, falling back to Flow website...');
-        try {
-          const flowUnits = await scrapeFlowBuilding('flow-brickell');
-          if (flowUnits && flowUnits.length > 0) {
-            console.log('[v0] Flow scraper succeeded, units count:', flowUnits.length);
-            results['flow-brickell'] = flowUnits;
-            unitsToStore = flowUnits;
-            sourceUsed = 'flow-brickell';
-          } else {
-            throw new Error('Flow scraper returned no units');
-          }
-        } catch (err) {
-          console.error('[v0] Flow scraper failed:', err.message);
-          results['flow-error'] = err.message;
-          throw new Error('Both Apartments.com and Flow scrapers failed - no data available');
-        }
-      }
-
-      // Store the data
-      if (unitsToStore) {
-        console.log('[v0] Storing data from source:', sourceUsed, 'with', unitsToStore.length, 'units');
-        const stored = await storePricingData('flow-brickell', unitsToStore);
-        console.log('[v0] storePricingData returned:', stored);
-        
-        if (!stored) {
-          console.warn('[v0] Failed to store in Supabase, using memory cache');
-          global.unitCache = global.unitCache || {};
-          global.unitCache['flow-brickell'] = {
-            units: unitsToStore,
-            source: sourceUsed,
-            updatedAt: new Date().toISOString(),
-          };
-        } else {
-          console.log('[v0] Successfully stored data from', sourceUsed, 'in Supabase');
-        }
+        throw new Error(`Apartments.com scraper failed: ${err.message}`);
       }
     })();
 
