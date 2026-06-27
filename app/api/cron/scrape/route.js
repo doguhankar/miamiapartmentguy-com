@@ -18,41 +18,63 @@ async function executeScraper() {
     );
 
     const scrapePromise = (async () => {
-      console.log('[v0] Starting Flow Brickell scrape...');
-      const flowBrickellUnits = await scrapeFlowBuilding('flow-brickell');
-      console.log('[v0] Flow Brickell scraped successfully, units count:', flowBrickellUnits?.length || 0);
-      results['flow-brickell'] = flowBrickellUnits;
+      let unitsToStore = null;
+      let sourceUsed = null;
 
-      // Store in Supabase instead of global cache
-      console.log('[v0] Calling storePricingData with:', flowBrickellUnits.length, 'units');
-      const stored = await storePricingData('flow-brickell', flowBrickellUnits);
-      console.log('[v0] storePricingData returned:', stored);
-      
-      if (!stored) {
-        console.warn('[v0] Failed to store data in Supabase, keeping in memory cache as fallback');
-        global.unitCache = global.unitCache || {};
-        global.unitCache['flow-brickell'] = {
-          units: flowBrickellUnits,
-          updatedAt: new Date().toISOString(),
-        };
-      } else {
-        console.log('[v0] Successfully stored in Supabase, NOT using in-memory cache');
-      }
-
-      // Phase 1: Test Apartments.com scraper for Flow Brickell
-      console.log('[v0] Starting Apartments.com scraper for Flow Brickell...');
+      // Primary: Try Apartments.com first (has real future dates)
+      console.log('[v0] Starting Apartments.com scraper (PRIMARY)...');
       try {
         const apartmentsUnits = await scrapeApartmentsBuilding('flow-brickell');
-        console.log('[v0] Apartments.com scraped successfully, units count:', apartmentsUnits?.length || 0);
-        results['flow-brickell-apartments'] = apartmentsUnits;
-
-        // Store Apartments.com data separately for now (Phase 1)
-        console.log('[v0] Storing Apartments.com data...');
-        const apartmentsStored = await storePricingData('flow-brickell', apartmentsUnits);
-        console.log('[v0] Apartments.com data stored:', apartmentsStored);
+        if (apartmentsUnits && apartmentsUnits.length > 0) {
+          console.log('[v0] Apartments.com scraped successfully, units count:', apartmentsUnits.length);
+          results['apartments-com'] = apartmentsUnits;
+          unitsToStore = apartmentsUnits;
+          sourceUsed = 'apartments-com';
+        } else {
+          console.warn('[v0] Apartments.com returned no units, trying Flow website...');
+        }
       } catch (err) {
-        console.error('[v0] Apartments.com scraper error:', err.message);
-        results['flow-brickell-apartments-error'] = err.message;
+        console.warn('[v0] Apartments.com scraper failed:', err.message, '- Falling back to Flow website...');
+        results['apartments-com-error'] = err.message;
+      }
+
+      // Fallback: Flow Brickell website if Apartments failed
+      if (!unitsToStore) {
+        console.log('[v0] Starting Flow Brickell scraper (FALLBACK)...');
+        try {
+          const flowBrickellUnits = await scrapeFlowBuilding('flow-brickell');
+          if (flowBrickellUnits && flowBrickellUnits.length > 0) {
+            console.log('[v0] Flow Brickell scraped successfully, units count:', flowBrickellUnits.length);
+            results['flow-brickell'] = flowBrickellUnits;
+            unitsToStore = flowBrickellUnits;
+            sourceUsed = 'flow-brickell';
+          } else {
+            throw new Error('Flow scraper returned no units');
+          }
+        } catch (err) {
+          console.error('[v0] Flow Brickell scraper failed:', err.message);
+          results['flow-brickell-error'] = err.message;
+          throw new Error('Both Apartments.com and Flow scrapers failed - no data available');
+        }
+      }
+
+      // Store the data from whichever source succeeded
+      if (unitsToStore) {
+        console.log('[v0] Storing data from source:', sourceUsed, 'with', unitsToStore.length, 'units');
+        const stored = await storePricingData('flow-brickell', unitsToStore);
+        console.log('[v0] storePricingData returned:', stored);
+        
+        if (!stored) {
+          console.warn('[v0] Failed to store data in Supabase, keeping in memory cache as fallback');
+          global.unitCache = global.unitCache || {};
+          global.unitCache['flow-brickell'] = {
+            units: unitsToStore,
+            source: sourceUsed,
+            updatedAt: new Date().toISOString(),
+          };
+        } else {
+          console.log('[v0] Successfully stored data from', sourceUsed, 'in Supabase');
+        }
       }
     })();
 
