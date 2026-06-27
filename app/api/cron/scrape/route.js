@@ -1,26 +1,26 @@
-import { scrapeApartmentsBuilding } from '@/lib/scrapers/apartments';
+import { scrapeApartmentsWithPuppeteer } from '@/lib/scrapers/puppeteer-apartments';
 import { storePricingData } from '@/lib/supabase/pricing';
 
-// Shared scraper logic - Apartments.com only
+// Shared scraper logic - Puppeteer-based Apartments.com scraper
 async function executeScraper() {
   const results = {};
 
   try {
     console.log('[v0] Scraping started at', new Date().toISOString());
 
-    // Set 60-second timeout
+    // Set 90-second timeout for Puppeteer browser rendering
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Scrape timeout: exceeded 60 seconds')), 60000)
+      setTimeout(() => reject(new Error('Scrape timeout: exceeded 90 seconds')), 90000)
     );
 
     const scrapePromise = (async () => {
-      // Apartments.com scraper with anti-blocking headers and retry logic
-      console.log('[v0] Starting Apartments.com scraper with anti-blocking...');
+      // Puppeteer scraper with headless browser to bypass anti-bot detection
+      console.log('[v0] Starting Puppeteer scraper for Apartments.com...');
       try {
-        const apartmentsUnits = await scrapeApartmentsBuilding('flow-brickell');
+        const apartmentsUnits = await scrapeApartmentsWithPuppeteer();
         if (apartmentsUnits && apartmentsUnits.length > 0) {
-          console.log('[v0] Apartments.com scraper succeeded, units count:', apartmentsUnits.length);
-          results['apartments-com'] = apartmentsUnits;
+          console.log('[v0] Puppeteer scraper succeeded, units count:', apartmentsUnits.length);
+          results['puppeteer'] = apartmentsUnits;
 
           // Store the data
           console.log('[v0] Storing', apartmentsUnits.length, 'units to Supabase...');
@@ -32,21 +32,21 @@ async function executeScraper() {
             global.unitCache = global.unitCache || {};
             global.unitCache['flow-brickell'] = {
               units: apartmentsUnits,
-              source: 'apartments-com',
+              source: 'puppeteer',
               updatedAt: new Date().toISOString(),
             };
           } else {
             console.log('[v0] Successfully stored data in Supabase');
           }
         } else {
-          console.warn('[v0] Apartments.com returned no units');
-          results['apartments-error'] = 'No units returned from Apartments.com';
-          throw new Error('Apartments.com scraper returned no units');
+          console.warn('[v0] Puppeteer scraper returned no units');
+          results['puppeteer-error'] = 'No units returned from Puppeteer scraper';
+          throw new Error('Puppeteer scraper returned no units');
         }
       } catch (err) {
-        console.error('[v0] Apartments.com scraper failed:', err.message);
-        results['apartments-error'] = err.message;
-        throw new Error(`Apartments.com scraper failed: ${err.message}`);
+        console.error('[v0] Puppeteer scraper failed:', err.message);
+        results['puppeteer-error'] = err.message;
+        throw new Error(`Puppeteer scraper failed: ${err.message}`);
       }
     })();
 
