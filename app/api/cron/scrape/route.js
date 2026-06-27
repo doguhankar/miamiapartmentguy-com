@@ -2,6 +2,9 @@ import { scrapeFlowBuilding } from '@/lib/scrapers/flow';
 import { scrapeApartmentsBuilding } from '@/lib/scrapers/apartments';
 import { storePricingData } from '@/lib/supabase/pricing';
 
+// Deployment trigger: 2026-06-27T15:30:00Z
+// Vercel will rebuild with the latest parseAvailabilityDate logic that returns real YYYY-MM-DD dates
+
 // Shared scraper logic
 async function executeScraper() {
   const results = {};
