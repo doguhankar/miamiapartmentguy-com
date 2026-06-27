@@ -1,6 +1,8 @@
+import { scrapeFlowBuilding } from '@/lib/scrapers/flow';
 import { storePricingData } from '@/lib/supabase/pricing';
 
 // Railway apartments scraper endpoint with Puppeteer support
+// If this endpoint is not available, we fall back to local Flow scraper
 const RAILWAY_SCRAPER_URL = 'https://apartments-scraper-production.up.railway.app/scrape';
 
 // Shared scraper logic - calls Railway endpoint with Puppeteer support
@@ -50,9 +52,24 @@ async function executeScraper() {
         results['railway-puppeteer-error'] = err.message;
       }
 
-      // If no data, we can't proceed (no local fallback - forcing Railway dependency)
+      // Fallback: If Railway failed, try local Flow scraper
       if (!unitsToStore) {
-        throw new Error('Railway Puppeteer scraper failed - no data available');
+        console.log('[v0] Railway scraper failed, falling back to local Flow scraper...');
+        try {
+          const flowBrickellUnits = await scrapeFlowBuilding('flow-brickell');
+          if (flowBrickellUnits && flowBrickellUnits.length > 0) {
+            console.log('[v0] Flow Brickell scraped successfully, units count:', flowBrickellUnits.length);
+            results['flow-brickell-fallback'] = flowBrickellUnits;
+            unitsToStore = flowBrickellUnits;
+            sourceUsed = 'flow-brickell-fallback';
+          } else {
+            throw new Error('Flow scraper returned no units');
+          }
+        } catch (err) {
+          console.error('[v0] Flow fallback scraper failed:', err.message);
+          results['flow-brickell-error'] = err.message;
+          throw new Error('Both Railway and Flow scrapers failed - no data available');
+        }
       }
 
       // Store the data from Railway scraper
