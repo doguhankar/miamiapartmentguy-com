@@ -75,6 +75,39 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
     return `${unit.beds} Bed${unit.beds > 1 ? 's' : ''}`
   }
 
+  const formatAvailabilityDate = (availableDate: string | null) => {
+    if (!availableDate) {
+      return "Contact for availability"
+    }
+
+    const lowerDate = availableDate.toLowerCase()
+    
+    // If it says "available now" or is today's date, show "Available Now"
+    if (lowerDate === "available now" || lowerDate === "available immediately") {
+      return "Available Now"
+    }
+
+    // Check if it's today's date
+    const today = new Date()
+    const todayStr = today.toISOString().split('T')[0]
+    if (availableDate === todayStr) {
+      return "Available Now"
+    }
+
+    // If it's a future date in YYYY-MM-DD format, format as "Available Month DD"
+    const dateRegex = /^(\d{4})-(\d{2})-(\d{2})$/
+    const match = availableDate.match(dateRegex)
+    if (match) {
+      const [_, year, month, day] = match
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+      const monthName = date.toLocaleDateString('en-US', { month: 'long' })
+      return `Available ${monthName} ${parseInt(day)}`
+    }
+
+    // Fallback: return as-is if format is unexpected
+    return availableDate
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", backgroundColor: "#fff" }}>
       {/* Photo strip - 3-panel grid */}
@@ -282,7 +315,7 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
                 </div>
               </div>
               <span style={{ fontSize: "11px", padding: "3px 8px", borderRadius: "6px", background: "#EAF3DE", color: "#3B6D11" }}>
-                {unit.availableDate || "Available now"}
+                {formatAvailabilityDate(unit.availableDate)}
               </span>
             </div>
           ))
