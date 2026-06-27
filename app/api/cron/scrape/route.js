@@ -1,64 +1,61 @@
-import { scrapeFlowBuilding } from '@/lib/scrapers/flow';
-import { scrapeApartmentsBuilding } from '@/lib/scrapers/apartments';
 import { storePricingData } from '@/lib/supabase/pricing';
 
-// Deployment trigger: 2026-06-27T15:30:00Z
-// Vercel will rebuild with the latest parseAvailabilityDate logic that returns real YYYY-MM-DD dates
+// Railway apartments scraper endpoint with Puppeteer support
+const RAILWAY_SCRAPER_URL = 'https://apartments-scraper-production.up.railway.app/scrape';
 
-// Shared scraper logic
+// Shared scraper logic - calls Railway endpoint with Puppeteer support
 async function executeScraper() {
   const results = {};
 
   try {
     console.log('[v0] Scraping started at', new Date().toISOString());
 
-    // Set 30-second timeout
+    // Set 60-second timeout for Railway scraper call
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Scrape timeout: exceeded 30 seconds')), 30000)
+      setTimeout(() => reject(new Error('Scrape timeout: exceeded 60 seconds')), 60000)
     );
 
     const scrapePromise = (async () => {
       let unitsToStore = null;
       let sourceUsed = null;
 
-      // Primary: Try Apartments.com first (has real future dates)
-      console.log('[v0] Starting Apartments.com scraper (PRIMARY)...');
+      // Primary: Call Railway apartments scraper with Puppeteer (bypasses anti-bot)
+      console.log('[v0] Starting Railway Puppeteer scraper...');
       try {
-        const apartmentsUnits = await scrapeApartmentsBuilding('flow-brickell');
-        if (apartmentsUnits && apartmentsUnits.length > 0) {
-          console.log('[v0] Apartments.com scraped successfully, units count:', apartmentsUnits.length);
-          results['apartments-com'] = apartmentsUnits;
-          unitsToStore = apartmentsUnits;
-          sourceUsed = 'apartments-com';
+        const railwayResponse = await fetch(RAILWAY_SCRAPER_URL, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
+
+        if (!railwayResponse.ok) {
+          throw new Error(`Railway scraper returned ${railwayResponse.status}`);
+        }
+
+        const railwayData = await railwayResponse.json();
+        console.log('[v0] Railway scraper response:', JSON.stringify(railwayData).substring(0, 200));
+
+        if (railwayData.units && Array.isArray(railwayData.units) && railwayData.units.length > 0) {
+          console.log('[v0] Railway scraper succeeded, units count:', railwayData.units.length);
+          results['railway-puppeteer'] = railwayData.units;
+          unitsToStore = railwayData.units;
+          sourceUsed = 'railway-puppeteer';
         } else {
-          console.warn('[v0] Apartments.com returned no units, trying Flow website...');
+          console.warn('[v0] Railway scraper returned empty or invalid data');
+          results['railway-puppeteer-error'] = 'No units returned from Railway scraper';
         }
       } catch (err) {
-        console.warn('[v0] Apartments.com scraper failed:', err.message, '- Falling back to Flow website...');
-        results['apartments-com-error'] = err.message;
+        console.error('[v0] Railway scraper failed:', err.message);
+        results['railway-puppeteer-error'] = err.message;
       }
 
-      // Fallback: Flow Brickell website if Apartments failed
+      // If no data, we can't proceed (no local fallback - forcing Railway dependency)
       if (!unitsToStore) {
-        console.log('[v0] Starting Flow Brickell scraper (FALLBACK)...');
-        try {
-          const flowBrickellUnits = await scrapeFlowBuilding('flow-brickell');
-          if (flowBrickellUnits && flowBrickellUnits.length > 0) {
-            console.log('[v0] Flow Brickell scraped successfully, units count:', flowBrickellUnits.length);
-            results['flow-brickell'] = flowBrickellUnits;
-            unitsToStore = flowBrickellUnits;
-            sourceUsed = 'flow-brickell';
-          } else {
-            throw new Error('Flow scraper returned no units');
-          }
-        } catch (err) {
-          console.error('[v0] Flow Brickell scraper failed:', err.message);
-          results['flow-brickell-error'] = err.message;
-          throw new Error('Both Apartments.com and Flow scrapers failed - no data available');
-        }
+        throw new Error('Railway Puppeteer scraper failed - no data available');
       }
 
-      // Store the data from whichever source succeeded
+      // Store the data from Railway scraper
       if (unitsToStore) {
         console.log('[v0] Storing data from source:', sourceUsed, 'with', unitsToStore.length, 'units');
         const stored = await storePricingData('flow-brickell', unitsToStore);
