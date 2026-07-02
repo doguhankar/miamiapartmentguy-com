@@ -762,7 +762,7 @@ export default function MiamiApp() {
                           }}
                         >
                           <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-hidden">
-                            <img src={building.images[0]} alt={building.name} className="w-full h-full object-cover" />
+                            <img src={building.images[0]} alt={building.name} className="w-full h-full object-cover" loading="lazy" decoding="async" width={400} height={160} />
                             {/* Star Button - Uses transform to stay visible during momentum scroll */}
                             <button
                               onClick={(e) => {

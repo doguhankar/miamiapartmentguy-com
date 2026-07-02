@@ -114,7 +114,7 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", height: "220px", gap: "2px", marginBottom: 0, position: "relative" }}>
         {building.images.slice(0, 3).map((img, idx) => (
           <div key={idx} style={{ background: "#888", position: "relative", overflow: "hidden" }}>
-            <img src={img} alt={`${building.name} ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img src={img} alt={`${building.name} ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" decoding="async" width={400} height={220} />
             {idx === 2 && (
               <span style={{ position: "absolute", bottom: "8px", right: "8px", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "6px" }}>
                 View all photos

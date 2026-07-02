@@ -23,6 +23,7 @@ export function ImageCarousel({ images }: ImageCarouselProps) {
         decoding="async"
         width={400}
         height={256}
+        sizes="(max-width: 768px) 100vw, 400px"
       />
 
       {images.length > 1 && (
