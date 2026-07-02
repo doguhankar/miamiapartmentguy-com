@@ -83,13 +83,17 @@ export function DesktopBuildingCard({
       }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onClick={() => onClick?.(building)}
+      onClick={() => {
+        onClick?.(building);
+        onViewDetails?.(building);
+      }}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           onClick?.(building);
+          onViewDetails?.(building);
         }
       }}
     >
