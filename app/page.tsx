@@ -748,7 +748,19 @@ export default function MiamiApp() {
                       <p className="text-gray-500 text-center py-4">No buildings found</p>
                     ) : (
                       filteredBuildings.map((building) => (
-                        <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden" onClick={() => setSelectedBuilding(building)}>
+                        <div 
+                          key={building.id} 
+                          className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden cursor-pointer transition-colors hover:bg-gray-50"
+                          onClick={() => setSelectedBuilding(building)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setSelectedBuilding(building);
+                            }
+                          }}
+                        >
                           <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-hidden">
                             <img src={building.images[0]} alt={building.name} className="w-full h-full object-cover" />
                             {/* Star Button - Uses transform to stay visible during momentum scroll */}
@@ -787,7 +799,7 @@ export default function MiamiApp() {
                           <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
                           <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
                           {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                          <div className="flex gap-2 mt-2">
+                          <div className="flex gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
                             <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
                             <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
                           </div>
@@ -913,7 +925,19 @@ export default function MiamiApp() {
                           {isExpanded && (
                             <div className="mt-2 space-y-2 mb-3">
                               {buildings.map((building) => (
-                                <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
+                                <div 
+                                  key={building.id} 
+                                  className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden cursor-pointer transition-colors hover:bg-gray-50"
+                                  onClick={() => setInfoBuilding(building)}
+                                  role="button"
+                                  tabIndex={0}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      e.preventDefault();
+                                      setInfoBuilding(building);
+                                    }
+                                  }}
+                                >
                                   <img src={building.images[0]} alt={building.name} className="w-full h-40 object-cover rounded-md mb-3" loading="lazy" decoding="async" width={400} height={160} />
                                   <div className="flex justify-between items-start mb-1">
                                     <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
@@ -922,7 +946,7 @@ export default function MiamiApp() {
                                   <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
                                   <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
                                   {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                                  <div className="flex gap-2 mt-2">
+                                  <div className="flex gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
                               <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
                                     <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
                                   </div>
