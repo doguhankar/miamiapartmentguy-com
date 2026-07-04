@@ -19,7 +19,18 @@ export function BuildingCard({ building }: BuildingCardProps) {
 
   return (
     <>
-      <div className="space-y-4">
+      <div 
+        className="space-y-4 cursor-pointer p-1 rounded-lg transition-colors hover:bg-gray-50"
+        onClick={() => setShowDetailModal(true)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setShowDetailModal(true);
+          }
+        }}
+      >
         <ImageCarousel images={building.images} />
 
         <div>
@@ -95,15 +106,21 @@ export function BuildingCard({ building }: BuildingCardProps) {
             </div>
           </div>
 
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-2 mt-4" onClick={(e) => e.stopPropagation()}>
             <Button
-              onClick={() => setShowDetailModal(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDetailModal(true);
+              }}
               className="flex-1 bg-gray-600 text-white hover:bg-gray-700"
             >
               View Details
             </Button>
             <Button
-              onClick={() => setShowQualifyModal(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowQualifyModal(true);
+              }}
               className="flex-1 bg-[#0066CC] text-white hover:bg-[#0055AA]"
             >
               See If You Qualify

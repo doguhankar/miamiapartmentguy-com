@@ -76,14 +76,26 @@ export function DesktopBuildingCard({
 
   return (
     <div
-      className={`rounded-xl overflow-hidden border transition-all duration-200 cursor-pointer ${
+      className={`rounded-xl overflow-hidden border transition-all duration-200 cursor-pointer group ${
         isHighlighted || isHovered
           ? "border-blue-500 shadow-lg scale-[1.02]"
           : "border-gray-200 shadow-md hover:shadow-xl"
       }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onClick={() => onClick?.(building)}
+      onClick={() => {
+        onClick?.(building);
+        onViewDetails?.(building);
+      }}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.(building);
+          onViewDetails?.(building);
+        }
+      }}
     >
       {/* Image Carousel - Full Width */}
       <div className="relative h-56 bg-gray-100 overflow-hidden">

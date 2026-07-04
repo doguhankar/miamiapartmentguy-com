@@ -75,13 +75,46 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
     return `${unit.beds} Bed${unit.beds > 1 ? 's' : ''}`
   }
 
+  const formatAvailabilityDate = (availableDate: string | null) => {
+    if (!availableDate) {
+      return "Contact for availability"
+    }
+
+    const lowerDate = availableDate.toLowerCase()
+    
+    // If it says "available now" or is today's date, show "Available Now"
+    if (lowerDate === "available now" || lowerDate === "available immediately") {
+      return "Available Now"
+    }
+
+    // Check if it's today's date
+    const today = new Date()
+    const todayStr = today.toISOString().split('T')[0]
+    if (availableDate === todayStr) {
+      return "Available Now"
+    }
+
+    // If it's a future date in YYYY-MM-DD format, format as "Available Month DD"
+    const dateRegex = /^(\d{4})-(\d{2})-(\d{2})$/
+    const match = availableDate.match(dateRegex)
+    if (match) {
+      const [_, year, month, day] = match
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+      const monthName = date.toLocaleDateString('en-US', { month: 'long' })
+      return `Available ${monthName} ${parseInt(day)}`
+    }
+
+    // Fallback: return as-is if format is unexpected
+    return availableDate
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", backgroundColor: "#fff" }}>
       {/* Photo strip - 3-panel grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", height: "220px", gap: "2px", marginBottom: 0, position: "relative" }}>
         {building.images.slice(0, 3).map((img, idx) => (
           <div key={idx} style={{ background: "#888", position: "relative", overflow: "hidden" }}>
-            <img src={img} alt={`${building.name} ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img src={img} alt={`${building.name} ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" decoding="async" width={400} height={220} />
             {idx === 2 && (
               <span style={{ position: "absolute", bottom: "8px", right: "8px", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "6px" }}>
                 View all photos
@@ -282,7 +315,7 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
                 </div>
               </div>
               <span style={{ fontSize: "11px", padding: "3px 8px", borderRadius: "6px", background: "#EAF3DE", color: "#3B6D11" }}>
-                {unit.availableDate || "Available now"}
+                {formatAvailabilityDate(unit.availableDate)}
               </span>
             </div>
           ))

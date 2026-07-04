@@ -1,14 +1,22 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Archivo, Space_Grotesk } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const archivo = Archivo({
+  subsets: ['latin'],
+  axes: ['wdth'],
+  variable: '--font-archivo',
+})
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+})
 
 export const metadata: Metadata = {
-  title: 'Miami Buildings Directory | Find Your Perfect Apartment',
-  description: 'Discover apartments in Miami. Browse Wynwood, Midtown, Brickell, Downtown, and Edgewater neighborhoods. Check your eligibility instantly.',
+  title: 'Miami Apartment Guy — Every Building. Every Deal. One Text.',
+  description: 'Free apartment locating across Greater Miami. Live pricing on 108+ buildings from Brickell to Edgewater. Text your budget, get real quotes same day.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -35,8 +43,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className="font-sans antialiased overflow-hidden">
+    <html lang="en" className={`${archivo.variable} ${spaceGrotesk.variable}`} style={{ background: '#0B1220' }}>
+      <body className="antialiased" style={{ fontFamily: 'var(--font-space-grotesk,"Space Grotesk",sans-serif)', background: '#0B1220', color: '#F6F8F9', overflowX: 'hidden' }}>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
