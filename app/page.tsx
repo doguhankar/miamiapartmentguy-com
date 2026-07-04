@@ -93,6 +93,7 @@ function Ticker() {
 
 // ─── Nav ──────────────────────────────────────────────────────────────────────
 const navLinks = [
+  ['/map',     'View map'],
   ['#how',     'How it works'],
   ['#hoods',   'Neighborhoods'],
   ['#why',     'Why MAG'],
@@ -247,7 +248,7 @@ function Hero() {
               💬 Text me your budget
             </HoverLink>
             <HoverLink
-              href="#hoods"
+              href="/map"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 24px', borderRadius: 999, fontWeight: 700, fontSize: 15, border: `1px solid ${LINE}`, color: PAPER, background: 'transparent', textDecoration: 'none', transition: 'transform .15s, border-color .15s, color .15s' }}
               hoverStyle={{ borderColor: AQUA, color: AQUA }}
             >
