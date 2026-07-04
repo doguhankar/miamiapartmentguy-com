@@ -1,1204 +1,591 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { ImageCarousel } from '@/components/image-carousel';
-import { MapFilterModal, type FilterState } from '@/components/map-filter-modal';
-import { FlowBrickellCard } from '@/components/flow-brickell-card';
-import { MoveWithDon } from '@/components/move-with-don';
-import { DesktopBuildingCard } from '@/components/desktop-building-card';
-import { BuildingDetailView } from '@/components/building-detail-view';
-import { MapFilterCard, type MapFilterState } from '@/components/map-filter-card';
-import { copyToClipboard, showToast } from '@/lib/toast-utils';
-import { Star } from 'lucide-react';
-import { buildings as BUILDINGS } from '@/lib/buildings';
-const NEIGHBORHOODS = ['Brickell', 'Downtown', 'Edgewater', 'Midtown', 'Wynwood', 'Miami Design District', 'North Miami', 'North Miami Beach', 'Aventura', 'Hollywood', 'Dania Beach', 'Allapattah', 'Little Havana', 'Doral', 'Coconut Grove', 'Las Olas'];
+import React from 'react'
 
-const Tooltip = ({ text }) => {
-  const [show, setShow] = useState(false);
+// ─── Design tokens ────────────────────────────────────────────────────────────
+const INK      = '#0B1220'
+const PANEL    = '#0F1B30'
+const PANEL2   = '#152341'
+const AQUA     = '#19C6C0'
+const FLAMINGO = '#FF4D8D'
+const SUN      = '#FFC24B'
+const LINE     = 'rgba(255,255,255,.12)'
+const PAPER    = '#F6F8F9'
+const MUTED    = '#B8C4D4'
+const DIM      = '#7E8CA0'
+
+const DISPLAY: React.CSSProperties = {
+  fontFamily: 'var(--font-archivo, "Archivo", sans-serif)',
+  fontVariationSettings: "'wdth' 120",
+  fontWeight: 900,
+  letterSpacing: '-0.01em',
+  textTransform: 'uppercase',
+}
+
+const wrap: React.CSSProperties = {
+  maxWidth: 1180,
+  margin: '0 auto',
+  padding: '0 24px',
+}
+
+const eyebrow: React.CSSProperties = {
+  fontSize: 12,
+  letterSpacing: '.22em',
+  textTransform: 'uppercase',
+  color: AQUA,
+  fontWeight: 700,
+}
+
+// ─── Hover link helper ────────────────────────────────────────────────────────
+function HoverLink({ href, style, hoverStyle, children, ...rest }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { hoverStyle?: React.CSSProperties }) {
+  const [hovered, setHovered] = React.useState(false)
   return (
-    <div className="relative inline-block">
-      <button className="w-5 h-5 rounded-full border border-gray-400 text-gray-600 text-xs flex items-center justify-center hover:border-gray-600" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>i</button>
-      {show && <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 bg-gray-900 text-white text-xs p-2 rounded shadow-lg z-50">A co-signer on your lease who guarantees payment if you can't pay rent.</div>}
-    </div>
-  );
-};
+    <a
+      href={href}
+      style={{ ...style, ...(hovered ? hoverStyle : {}) }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      {...rest}
+    >
+      {children}
+    </a>
+  )
+}
 
-const FeesDropdown = ({ fees }) => {
-  const [isOpen, setIsOpen] = useState(false);
+// ─── Ticker ───────────────────────────────────────────────────────────────────
+function Ticker() {
+  const segment = (
+    <>
+      <b style={{ color: INK, margin: '0 6px' }}>LIVE</b>
+      {' '}Flow Brickell — 1BD from $2,650 · 2 months free
+      <span style={{ margin: '0 14px' }}>✦</span>
+      <b style={{ color: INK, margin: '0 6px' }}>LIVE</b>
+      {' '}Edgewater — Studios from $2,100 · waived admin
+      <span style={{ margin: '0 14px' }}>✦</span>
+      <b style={{ color: INK, margin: '0 6px' }}>LIVE</b>
+      {' '}Wynwood — 2BD from $3,400 · 6 weeks free
+      <span style={{ margin: '0 14px' }}>✦</span>
+      <b style={{ color: INK, margin: '0 6px' }}>LIVE</b>
+      {' '}Downtown — 1BD from $2,350 · $1,000 off first month
+      <span style={{ margin: '0 32px' }} />
+    </>
+  )
   return (
-    <div className="border rounded-lg">
-      <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition font-semibold text-gray-900">
-        <span>Fees & Policies</span>
-        <span className={`transition transform ${isOpen ? 'rotate-90' : ''}`}>›</span>
-      </button>
-      {isOpen && (
-        <div className="p-4 space-y-3 border-t">
-          <div className="flex justify-between"><span className="text-gray-600">Deposit</span><span className="font-semibold">{fees.deposit}</span></div>
-          <div className="flex justify-between"><span className="text-gray-600">Application Fee</span><span className="font-semibold">{fees.application}</span></div>
-          <div className="flex justify-between"><span className="text-gray-600">Admin Fee</span><span className="font-semibold">{fees.admin}</span></div>
-          <div className="flex justify-between"><span className="text-gray-600">Parking (per car)</span><span className="font-semibold">{fees.parking}</span></div>
-          <div className="flex justify-between"><span className="text-gray-600">Misc Monthly Fees</span><span className="font-semibold">{fees.misc}</span></div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const TalkTodonModal = ({ building, onClose }) => {
-  const [step, setStep] = useState('form');
-  const [formData, setFormData] = useState({ income: '', credit: '', moveInDate: '', firstName: '', phone: '' });
-  const [result, setResult] = useState(null);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const income = parseInt(formData.income);
-    const credit = parseInt(formData.credit);
-    const incomeMultiplier = parseInt(building.incomeReq);
-    const creditReq = parseInt(building.creditReq);
-    let status = 'qualify';
-    if (income < incomeMultiplier * 1500) status = 'not-fit';
-    else if (income < incomeMultiplier * 2000) status = 'close';
-    if (credit < creditReq) status = 'not-fit';
-    setResult(status);
-    setStep('results');
-  };
-
-  const handleContactSubmit = (e) => {
-    e.preventDefault();
-    console.log('Lead:', { ...formData, building: building.name, status: result });
-    setStep('contact');
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
-        {step === 'form' && (
-          <>
-            <h2 className="text-2xl font-bold mb-6">{building.name}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Monthly Income</label>
-                <input type="number" required value={formData.income} onChange={(e) => setFormData({ ...formData, income: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., 5000" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Credit Score</label>
-                <input type="number" required value={formData.credit} onChange={(e) => setFormData({ ...formData, credit: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., 680" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Move-In Date</label>
-                <input type="date" required value={formData.moveInDate} onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-              </div>
-              <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Get My Results</button>
-            </form>
-            <button onClick={onClose} className="mt-4 w-full text-gray-600 py-2 hover:text-gray-900">Close</button>
-          </>
-        )}
-        {step === 'results' && (
-          <>
-            <div className="text-center mb-6">
-              {result === 'qualify' && <><div className="text-5xl mb-3">✓</div><h2 className="text-3xl font-bold text-green-600">You Qualify!</h2></>}
-              {result === 'close' && <><div className="text-5xl mb-3">⚠</div><h2 className="text-3xl font-bold text-yellow-600">You're Close</h2></>}
-              {result === 'not-fit' && <><div className="text-5xl mb-3">✗</div><h2 className="text-3xl font-bold text-red-600">Not a Fit</h2></>}
-            </div>
-            <button onClick={() => setStep('contact')} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 mb-3">Continue</button>
-            <button onClick={onClose} className="w-full text-gray-600 py-2 hover:text-gray-900">Back</button>
-          </>
-        )}
-        {step === 'contact' && !result && (
-          <>
-            <h2 className="text-2xl font-bold mb-2">One more thing...</h2>
-            <p className="text-gray-600 mb-6">Don will reach out directly with personalized options.</p>
-            <form onSubmit={handleContactSubmit} className="space-y-4">
-              <input type="text" required value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} className="w-full px-4 py-2 border rounded-lg" placeholder="First Name" />
-              <input type="tel" required value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-4 py-2 border rounded-lg" placeholder="Phone" />
-              <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Submit</button>
-            </form>
-          </>
-        )}
-        {step === 'contact' && result && (
-          <div className="text-center py-8">
-            <div className="text-5xl mb-3">✓</div>
-            <h3 className="text-xl font-bold mb-2">Thanks!</h3>
-            <p className="text-gray-600 mb-6">Don will reach out soon.</p>
-            <button onClick={onClose} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold">Back to Buildings</button>
-          </div>
-        )}
+    <div
+      aria-hidden="true"
+      style={{
+        background: FLAMINGO,
+        color: '#fff',
+        overflow: 'hidden',
+        whiteSpace: 'nowrap',
+        fontWeight: 700,
+        fontSize: 13,
+        letterSpacing: '.06em',
+        textTransform: 'uppercase',
+      }}
+    >
+      <div className="mag-ticker-track" style={{ padding: '9px 0' }}>
+        {segment}{segment}
       </div>
     </div>
-  );
-};
-
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setBottomSheetSnapPoint, setSelectedBuildingForDetail }) => {
-  const mapContainer = useRef(null);
-  const map = useRef(null);
-  const markersRef = useRef([]);
-  const popupsRef = useRef([]);
-
-  useEffect(() => {
-    if (!mapContainer.current || map.current) return;
-
-    // Set Mapbox token
-    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
-
-    // Create map instance
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: [-80.1870, 25.7907],
-        zoom: 11,
-      });
-
-      map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
-    } catch (error) {
-      console.error('[v0] Map initialization error:', error);
-    }
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, []);
-
-  // Add markers when buildings or selection changes
-  useEffect(() => {
-    if (!map.current || !geocodedBuildings.length) return;
-
-    // Remove existing markers and popups
-    markersRef.current.forEach((marker) => marker.remove());
-    popupsRef.current.forEach((popup) => popup.remove());
-    markersRef.current = [];
-    popupsRef.current = [];
-
-    // Add new markers
-    geocodedBuildings.forEach((building: any) => {
-      // Create marker element
-      const el = document.createElement('div');
-      el.className = 'marker';
-      el.style.width = '16px';
-      el.style.height = '16px';
-      el.style.borderRadius = '50%';
-      el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
-      el.style.border = '2px solid white';
-      el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-      el.style.cursor = 'pointer';
-      el.style.transition = 'all 0.2s';
-
-      el.onclick = (e) => {
-        e.stopPropagation();
-        setSelectedBuilding(building);
-        setBottomSheetSnapPoint(1);
-      };
-
-      // Create popup content
-      const popupContent = document.createElement('div');
-      popupContent.className = 'popup-content';
-      popupContent.style.padding = '12px';
-      popupContent.style.borderRadius = '8px';
-      popupContent.style.backgroundColor = 'white';
-      popupContent.style.minWidth = '200px';
-      
-      // Add building image if available
-      if (building.images && building.images.length > 0) {
-        const img = document.createElement('img');
-        img.src = building.images[0];
-        img.style.width = '100%';
-        img.style.height = '100px';
-        img.style.objectFit = 'cover';
-        img.style.borderRadius = '4px';
-        img.style.marginBottom = '8px';
-        popupContent.appendChild(img);
-      }
-
-      // Add building name
-      const name = document.createElement('div');
-      name.style.fontSize = '14px';
-      name.style.fontWeight = '600';
-      name.style.color = '#1f2937';
-      name.style.marginBottom = '4px';
-      name.textContent = building.name;
-      popupContent.appendChild(name);
-
-      // Add neighborhood
-      const neighborhood = document.createElement('div');
-      neighborhood.style.fontSize = '12px';
-      neighborhood.style.color = '#6b7280';
-      neighborhood.style.marginBottom = '8px';
-      neighborhood.textContent = building.neighborhood;
-      popupContent.appendChild(neighborhood);
-
-      // Add price range
-      const price = document.createElement('div');
-      price.style.fontSize = '13px';
-      price.style.fontWeight = '500';
-      price.style.color = '#3b82f6';
-      price.style.marginBottom = '12px';
-      price.textContent = `$${building.priceMin?.toLocaleString()}/mo`;
-      popupContent.appendChild(price);
-
-      // Add view details button
-      const button = document.createElement('button');
-      button.textContent = 'View Details';
-      button.style.width = '100%';
-      button.style.padding = '8px 12px';
-      button.style.backgroundColor = '#3b82f6';
-      button.style.color = 'white';
-      button.style.border = 'none';
-      button.style.borderRadius = '4px';
-      button.style.fontSize = '12px';
-      button.style.fontWeight = '500';
-      button.style.cursor = 'pointer';
-      button.style.transition = 'background-color 0.2s';
-      button.onmouseover = () => button.style.backgroundColor = '#2563eb';
-      button.onmouseout = () => button.style.backgroundColor = '#3b82f6';
-      button.onclick = () => {
-        setSelectedBuildingForDetail(building);
-        popup.remove();
-      };
-      popupContent.appendChild(button);
-
-      // Create popup
-      const popup = new mapboxgl.Popup({
-        offset: [0, -15],
-        closeButton: false,
-        closeOnClick: false,
-      }).setDOMContent(popupContent);
-
-      // Track hide timeout to delay hiding on mouse leave
-      let hideTimeout: NodeJS.Timeout | null = null;
-
-      const showPopup = () => {
-        if (hideTimeout) clearTimeout(hideTimeout);
-        popup.setLngLat([building.lng, building.lat]).addTo(map.current);
-        
-        // Add hover listeners to popup element after it's rendered
-        setTimeout(() => {
-          const popupElement = document.querySelector('.mapboxgl-popup');
-          if (popupElement) {
-            (popupElement as HTMLElement).onmouseenter = () => {
-              if (hideTimeout) clearTimeout(hideTimeout);
-            };
-            (popupElement as HTMLElement).onmouseleave = () => {
-              hidePopup();
-            };
-          }
-        }, 0);
-      };
-
-      const hidePopup = () => {
-        hideTimeout = setTimeout(() => {
-          popup.remove();
-        }, 200);
-      };
-
-      // Add hover handlers to marker
-      el.onmouseenter = () => {
-        showPopup();
-      };
-
-      el.onmouseleave = () => {
-        hidePopup();
-      };
-
-      // Create marker
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([building.lng, building.lat])
-        .addTo(map.current);
-
-      markersRef.current.push(marker);
-      popupsRef.current.push(popup);
-    });
-  }, [geocodedBuildings, selectedBuilding]);
-
-  return <div ref={mapContainer} className="w-full h-full" />;
-};
-
-export default function MiamiApp() {
-  const mapContainer = useRef(null);
-  const map = useRef(null);
-  const markersRef = useRef([]);
-  const geocodeCache = useRef(new Map());
-  const [geocodedBuildings, setGeocodedBuildings] = useState(BUILDINGS);
-  const [selectedBuilding, setSelectedBuilding] = useState(null);
-  const [highlightedBuilding, setHighlightedBuilding] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell', 'Downtown']);
-  const [bottomSheetSnapPoint, setBottomSheetSnapPoint] = useState(1);
-  const bottomSheetRef = useRef(null);
-  const touchStartY = useRef(0);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [infoBuilding, setInfoBuilding] = useState(null);
-  const [starredBuildings, setStarredBuildings] = useState<Set<string>>(new Set());
-  const [isSavingList, setIsSavingList] = useState(false);
-  const [isAgentMode, setIsAgentMode] = useState(false);
-  const [showPinModal, setShowPinModal] = useState(false);
-  const [pinInput, setPinInput] = useState('');
-  const [showFilterModal, setShowFilterModal] = useState(false);
-  const [showMoveWithDonModal, setShowMoveWithDonModal] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [] });
-  const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
-  const [selectedBuildingForDetail, setSelectedBuildingForDetail] = useState(null);
-  const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], price: [], moveInDate: [] });
-
-  const SNAP_POINTS = {
-    0: 'h-5 md:h-0',      // COLLAPSED: 20px (drag handle)
-    1: 'h-[400px] md:h-auto',  // DEFAULT: 400px (full card + 40px peek of next)
-    2: 'h-[75vh] md:auto' // EXPANDED: 75% screen (scrollable)
-  };
-
-  const toggleNeighborhood = (neighborhood) => {
-    setExpandedNeighborhoods(prev =>
-      prev.includes(neighborhood)
-        ? prev.filter(n => n !== neighborhood)
-        : [...prev, neighborhood]
-    );
-  };
-
-  // Helper function to check if a building matches the map filters
-  const buildingMatchesMapFilters = (building: any): boolean => {
-    // If no filters are active, include all buildings
-    if (mapFilters.bedrooms.length === 0 && mapFilters.price.length === 0 && mapFilters.moveInDate.length === 0) {
-      return true;
-    }
-
-    // Check bedrooms filter
-    if (mapFilters.bedrooms.length > 0) {
-      const bedroomMatch = mapFilters.bedrooms.some(filter => {
-        if (filter === 'Studio') return building.units.includes('Studio');
-        if (filter === '1 Bedroom') return building.units.includes('1B');
-        if (filter === '2 Bedrooms') return building.units.includes('2B');
-        if (filter === '3+ Bedrooms') return building.units.includes('3B');
-        return false;
-      });
-      if (!bedroomMatch) return false;
-    }
-
-    // Check price filter
-    if (mapFilters.price.length > 0) {
-      const priceMatch = mapFilters.price.some(filter => {
-        if (filter === '$0-$2,000') return building.priceMin <= 2000;
-        if (filter === '$2,000-$4,000') return building.priceMin >= 2000 && building.priceMin < 4000;
-        if (filter === '$4,000+') return building.priceMin >= 4000;
-        return false;
-      });
-      if (!priceMatch) return false;
-    }
-
-    // Move-in date filter is informational only (would need booking data)
-    // For now, we'll include all buildings regardless of move-in date
-    return true;
-  };
-
-  const filteredBuildings = geocodedBuildings.filter(b => 
-    visibleBuildingIds.includes(b.id) &&
-    buildingMatchesMapFilters(b) &&
-    (b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    b.neighborhood.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
-  const getFilteredNeighborhoodBuildings = (neighborhood) => {
-    return filteredBuildings.filter(b => b.neighborhood === neighborhood);
-  };
-
-  const openWhatsApp = (building) => {
-    const message = encodeURIComponent(`Hi! I'm interested in ${building.name} at ${building.address}. Can you tell me more?`);
-    window.open(`https://wa.me/1234567890?text=${message}`, '_blank');
-  };
-
-  const openSMS = () => {
-    const message = encodeURIComponent('Hey, this is Don\'s direct cell! You can text me about any building you\'ve been eyeing. I can help out with virtual tours, pricing, and neighborhood info.');
-    window.location.href = `sms:+14077657306?body=${message}`;
-  };
-
-  const handlePinSubmit = () => {
-    if (pinInput === '1234') {
-      setIsAgentMode(true);
-      setShowPinModal(false);
-      setPinInput('');
-    } else {
-      alert('Incorrect PIN');
-      setPinInput('');
-    }
-  };
-
-  const handleApplyFilters = async (filters: FilterState) => {
-    setActiveFilters(filters);
-    
-    // If no filters selected, show all buildings
-    if (filters.unitSize.length === 0 && filters.priceRange.length === 0 && filters.moveIn.length === 0) {
-      setVisibleBuildingIds(BUILDINGS.map(b => b.id));
-      return;
-    }
-
-    const matchingBuildingIds: number[] = [];
-
-    for (const building of geocodedBuildings) {
-      try {
-        // For now, use building data to match filters (when /api/prices is available, query it)
-        let hasMatchingUnits = true;
-
-        // Check unit size filter
-        if (filters.unitSize.length > 0) {
-          const hasMatchingUnit = filters.unitSize.some(size => {
-            if (size === 'Studio') return building.units.includes('Studio');
-            if (size === '1BR') return building.units.includes('1B');
-            if (size === '2BR') return building.units.includes('2B');
-            if (size === '3BR') return building.units.includes('3B');
-            return false;
-          });
-          hasMatchingUnits = hasMatchingUnits && hasMatchingUnit;
-        }
-
-        // Check price filter
-        if (filters.priceRange.length > 0 && hasMatchingUnits) {
-          const hasMatchingPrice = filters.priceRange.some(range => {
-            if (range === 'Under $2.5k') return building.priceMin < 2500;
-            if (range === '$2.5k-$4k') return building.priceMin >= 2500 && building.priceMin < 4000;
-            if (range === '$4k+') return building.priceMin >= 4000;
-            return false;
-          });
-          hasMatchingUnits = hasMatchingUnits && hasMatchingPrice;
-        }
-
-        // Move-in date check (all buildings match for now)
-        // In future, this would query real availability data
-
-        if (hasMatchingUnits) {
-          matchingBuildingIds.push(building.id);
-        }
-      } catch (err) {
-        console.error('Error filtering building', building.id, err);
-      }
-    }
-
-    setVisibleBuildingIds(matchingBuildingIds);
-  };
-
-  // Geocoding useEffect
-  useEffect(() => {
-    const geocodeAddresses = async () => {
-      const MAPBOX_TOKEN = 'pk.eyJ1IjoiZG9ua2FyYWhhbiIsImEiOiJjbXAzamJ1eHIwMGQ2MnJvbHU1MHNwZWlzIn0.8De9qZEqvTRmh8-d-25NfQ';
-      const failedAddresses = [];
-      let successCount = 0;
-
-      const geocodePromises = BUILDINGS.map(async (building) => {
-        // Check cache first
-        if (geocodeCache.current.has(building.address)) {
-          const cached = geocodeCache.current.get(building.address);
-          successCount++;
-          return { ...building, lat: cached.lat, lng: cached.lng };
-        }
-
-        try {
-          const encodedAddress = encodeURIComponent(building.address);
-          const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${MAPBOX_TOKEN}`;
-          
-          const response = await fetch(url);
-          const data = await response.json();
-
-          if (data.features && data.features.length > 0) {
-            const [lng, lat] = data.features[0].geometry.coordinates;
-            geocodeCache.current.set(building.address, { lat, lng });
-            successCount++;
-            return { ...building, lat, lng };
-          } else {
-            failedAddresses.push(building.address);
-            return building; // Keep original coordinates
-          }
-        } catch (error) {
-          failedAddresses.push(building.address);
-          return building; // Keep original coordinates
-        }
-      });
-
-      const geocodedResults = await Promise.all(geocodePromises);
-      setGeocodedBuildings(geocodedResults);
-
-      // Log results
-      console.log(`[Geocoding] Successfully geocoded ${successCount}/${geocodedResults.length} addresses`);
-      if (failedAddresses.length > 0) {
-        console.warn(`[Geocoding] Failed to geocode ${failedAddresses.length} addresses:`, failedAddresses);
-      }
-    };
-
-    geocodeAddresses();
-  }, []);
-
-  useEffect(() => {
-    if (!mapContainer.current) return;
-
-    const script = document.createElement('script');
-    script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js';
-    script.async = true;
-    script.onload = () => {
-      const linkEl = document.createElement('link');
-      linkEl.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
-      linkEl.rel = 'stylesheet';
-      document.head.appendChild(linkEl);
-
-      if (window.mapboxgl && mapContainer.current && !map.current) {
-        window.mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-        
-        map.current = new window.mapboxgl.Map({
-          container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/light-v11',
-          center: [-80.188, 25.76],
-          zoom: 11,
-        });
-
-        map.current.on('load', () => {
-          addPins();
-        });
-
-        map.current.on('style.load', () => {
-          addPins();
-        });
-      }
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, []);
-
-  const handleBottomSheetDrag = (e) => {
-    if (e.type === 'touchstart') {
-      touchStartY.current = e.touches[0].clientY;
-    } else if (e.type === 'touchend' && touchStartY.current) {
-      const touchEndY = e.changedTouches[0].clientY;
-      const diff = touchEndY - touchStartY.current;
-      
-      if (diff > 30) {
-        // Swipe down
-        if (bottomSheetSnapPoint > 0) {
-          setBottomSheetSnapPoint(bottomSheetSnapPoint - 1);
-        }
-      } else if (diff < -30) {
-        // Swipe up
-        if (bottomSheetSnapPoint < 2) {
-          setBottomSheetSnapPoint(bottomSheetSnapPoint + 1);
-        }
-      }
-      touchStartY.current = 0;
-    }
-  };
-
-  const addPins = () => {
-    if (!map.current || !window.mapboxgl) return;
-
-    markersRef.current.forEach(m => m.remove());
-    markersRef.current = [];
-
-    geocodedBuildings.forEach((building) => {
-      const el = document.createElement('div');
-      el.style.width = '16px';
-      el.style.height = '16px';
-      el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
-      el.style.borderRadius = '50%';
-      el.style.cursor = 'pointer';
-      el.style.border = '2px solid white';
-      el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-      el.style.transition = 'all 0.2s';
-      el.onclick = () => {
-        setSelectedBuilding(building);
-        setBottomSheetSnapPoint(1);
-      };
-
-      const marker = new (window as any).mapboxgl.Marker(el)
-        .setLngLat([building.lng, building.lat])
-        .addTo(map.current);
-      
-      markersRef.current.push(marker);
-    });
-  };
-
-  useEffect(() => {
-    if (map.current) {
-      addPins();
-    }
-  }, [selectedBuilding, geocodedBuildings]);
-
-  const handleSaveList = async () => {
-    if (starredBuildings.size === 0) return;
-
-    setIsSavingList(true);
-    try {
-      const buildingIds = Array.from(starredBuildings);
-      const response = await fetch('/api/lists', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ buildingIds }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save list');
-      }
-
-      const data = await response.json();
-      const shareUrl = data.shareUrl;
-
-      // Copy to clipboard
-      await copyToClipboard(shareUrl, 'Link copied to clipboard');
-    } catch (error) {
-      console.error('[v0] Error saving list:', error);
-      showToast('Failed to save list', { type: 'error' });
-    } finally {
-      setIsSavingList(false);
-    }
-  };
-
+  )
+}
+
+// ─── Nav ──────────────────────────────────────────────────────────────────────
+const navLinks = [
+  ['#how',     'How it works'],
+  ['#hoods',   'Neighborhoods'],
+  ['#why',     'Why MAG'],
+  ['#reviews', 'Wins'],
+] as const
+
+function Nav() {
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
-      
-      {/* Desktop Header - Fixed at Top */}
-      <div className="hidden md:flex items-center justify-between px-8 h-12 bg-white border-b border-gray-300 flex-shrink-0">
-        <h1 className="text-sm font-medium text-gray-900">
-          Miami Apartment Guy
-          <sup className="text-xs font-normal align-top ml-1 relative" style={{top: '-1px'}}>™</sup>
-        </h1>
-        <button 
-          onClick={() => setShowMoveWithDonModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-full font-medium text-xs transition-colors"
+    <nav style={{
+      position: 'sticky', top: 0, zIndex: 50,
+      background: 'rgba(11,18,32,.85)',
+      backdropFilter: 'blur(14px)',
+      WebkitBackdropFilter: 'blur(14px)',
+      borderBottom: `1px solid ${LINE}`,
+    }}>
+      <div style={{ ...wrap, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 68 }}>
+        <a href="#" style={{ ...DISPLAY, fontVariationSettings: "'wdth' 125", fontSize: 20, color: PAPER, textDecoration: 'none' }}>
+          MIAMI APARTMENT <span style={{ color: FLAMINGO }}>GUY</span>™
+        </a>
+
+        <div className="mag-nav-links" style={{ display: 'flex', gap: 28, fontSize: 14, fontWeight: 500 }}>
+          {navLinks.map(([href, label]) => (
+            <HoverLink key={href} href={href} style={{ color: PAPER, textDecoration: 'none' }} hoverStyle={{ color: AQUA }}>
+              {label}
+            </HoverLink>
+          ))}
+        </div>
+
+        <HoverLink
+          href="sms:+14077657306?body=Hi%20Don%2C%20I%27m%20looking%20for%20a%20Miami%20apartment"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '13px 24px', borderRadius: 999,
+            fontWeight: 700, fontSize: 15,
+            background: FLAMINGO, color: '#fff',
+            boxShadow: '0 6px 28px rgba(255,77,141,.4)',
+            textDecoration: 'none', transition: 'transform .15s',
+          }}
+          hoverStyle={{ transform: 'translateY(-2px)' }}
         >
-          Move with Don
-        </button>
+          💬 Text Don
+        </HoverLink>
+      </div>
+    </nav>
+  )
+}
+
+// ─── Phone mockup ─────────────────────────────────────────────────────────────
+const quoteRows: [string, string, string][] = [
+  ['Gross rent',   '$2,950/mo',  PAPER],
+  ['Concession',   '2 months free', PAPER],
+  ['Net effective','$2,458/mo',  AQUA],
+  ['Move-in costs','$1,250 total', PAPER],
+]
+
+function PhoneMock() {
+  return (
+    <div aria-label="Example text conversation with Don" style={{
+      background: PANEL, border: `1px solid ${LINE}`, borderRadius: 28,
+      padding: 22, boxShadow: '0 30px 80px rgba(0,0,0,.5)',
+      maxWidth: 380, marginLeft: 'auto',
+    }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 14, borderBottom: `1px solid ${LINE}`, marginBottom: 14 }}>
+        <div style={{
+          width: 38, height: 38, borderRadius: '50%',
+          background: `linear-gradient(135deg,${FLAMINGO},${SUN})`,
+          display: 'grid', placeItems: 'center', flexShrink: 0,
+          fontFamily: 'var(--font-archivo,"Archivo",sans-serif)', fontWeight: 900, fontSize: 13,
+        }}>MAG</div>
+        <div>
+          <strong style={{ fontSize: 14 }}>Don · Miami Apartment Guy</strong>
+          <small style={{ display: 'block', color: DIM, fontSize: 11 }}>Typically replies in minutes</small>
+        </div>
       </div>
 
-      {/* Mobile Header */}
-      <div className="fixed top-0 left-0 right-0 z-40 bg-white md:hidden border-b-[0.5px] border-gray-300">
-        <div className="flex items-center justify-between px-4 py-3.5">
-          {/* Text Column - Left */}
-          <h1 className="text-base font-medium text-[#1a1a1a] tracking-tighter whitespace-nowrap">
-            Miami Apartment Guy
-            <sup className="text-xs font-normal align-top ml-0.5 relative" style={{top: '2px'}}>™</sup>
+      {/* Outgoing */}
+      <Bubble out>Hey! Looking for a 1BD in Brickell, budget around $2,800. Moving in August 🙏</Bubble>
+
+      {/* Incoming */}
+      <Bubble>Say less. Pulling live pricing now — you&apos;re going to like what Flow is running this month 👀</Bubble>
+
+      {/* Quote card bubble */}
+      <Bubble>
+        <div style={{
+          background: `linear-gradient(160deg,${PANEL2},${PANEL})`,
+          border: `1px solid rgba(25,198,192,.4)`,
+          borderRadius: 14, padding: 14, fontSize: 13,
+        }}>
+          <div style={{ ...DISPLAY, fontVariationSettings: "'wdth' 115", fontSize: 13, color: SUN, marginBottom: 8 }}>
+            Flow Brickell · 1BD/1BA · 705 sqft
+          </div>
+          {quoteRows.map(([label, val, col]) => (
+            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: MUTED }}>
+              <span>{label}</span>
+              <b style={{ color: col }}>{val}</b>
+            </div>
+          ))}
+        </div>
+      </Bubble>
+
+      <Bubble>Touring slots open Sat 11am. Want me to lock one?</Bubble>
+    </div>
+  )
+}
+
+function Bubble({ children, out }: { children: React.ReactNode; out?: boolean }) {
+  return (
+    <div style={{
+      maxWidth: '85%', padding: '11px 14px',
+      borderRadius: 16,
+      ...(out
+        ? { borderBottomRightRadius: 4, background: AQUA, color: INK, fontWeight: 500, marginLeft: 'auto' }
+        : { borderBottomLeftRadius: 4, background: '#1B2A45' }),
+      fontSize: 14, marginBottom: 10,
+    }}>
+      {children}
+    </div>
+  )
+}
+
+// ─── Hero ─────────────────────────────────────────────────────────────────────
+function Hero() {
+  return (
+    <header style={{ position: 'relative', padding: '90px 0 70px', overflow: 'hidden' }}>
+      <div aria-hidden="true" style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: `radial-gradient(700px 420px at 85% 0%,rgba(255,77,141,.22),transparent 60%),
+                     radial-gradient(600px 400px at 0% 100%,rgba(25,198,192,.18),transparent 60%)`,
+      }} />
+      <div style={{ ...wrap, position: 'relative', display: 'grid', gridTemplateColumns: '1.15fr .85fr', gap: 56, alignItems: 'center' }} className="mag-hero-inner">
+        <div>
+          <div style={eyebrow}>Free for renters · Paid by the buildings</div>
+
+          <h1 style={{ ...DISPLAY, fontSize: 'clamp(44px,6.4vw,84px)', lineHeight: .95, margin: '18px 0 22px' }}>
+            Every building.<br />
+            Every deal.<br />
+            <span style={{ color: FLAMINGO }}>One</span>{' '}
+            <span style={{ color: AQUA }}>text.</span>
           </h1>
-          
-          {/* Button Column - Right */}
-          <div className="flex items-center gap-2">
-            {starredBuildings.size > 0 && (
-              <button 
-                onClick={() => handleSaveList()}
-                disabled={isSavingList}
-                className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-3 py-2 rounded-lg font-semibold transition-colors shadow-lg text-xs whitespace-nowrap flex-shrink-0"
-              >
-                Save ({starredBuildings.size})
-              </button>
-            )}
-            <button 
-              onClick={() => setShowMoveWithDonModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg text-sm whitespace-nowrap flex-shrink-0"
+
+          <p style={{ fontSize: 19, color: MUTED, maxWidth: '52ch', marginBottom: 32, lineHeight: 1.55 }}>
+            {"Miami's rental market moves fast and hides its best concessions. I track live pricing across 108+ buildings from Brickell to Edgewater — you tell me your budget, I send you the real numbers. Net effective rent, move-in costs, everything. Same day."}
+          </p>
+
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+            <HoverLink
+              href="sms:+14077657306?body=Hi%20Don%2C%20I%27m%20looking%20for%20a%20Miami%20apartment"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 24px', borderRadius: 999, fontWeight: 700, fontSize: 15, background: FLAMINGO, color: '#fff', boxShadow: '0 6px 28px rgba(255,77,141,.4)', textDecoration: 'none', transition: 'transform .15s' }}
+              hoverStyle={{ transform: 'translateY(-2px)' }}
             >
-              Move with Don
-            </button>
+              💬 Text me your budget
+            </HoverLink>
+            <HoverLink
+              href="#hoods"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 24px', borderRadius: 999, fontWeight: 700, fontSize: 15, border: `1px solid ${LINE}`, color: PAPER, background: 'transparent', textDecoration: 'none', transition: 'transform .15s, border-color .15s, color .15s' }}
+              hoverStyle={{ borderColor: AQUA, color: AQUA }}
+            >
+              Browse the map →
+            </HoverLink>
+          </div>
+
+          <div style={{ fontSize: 13, color: DIM, marginTop: 14 }}>
+            No fees. No spam. No &quot;create an account to see prices.&quot; Ever.
           </div>
         </div>
-      </div>
 
-      {/* Mobile Layout */}
-      <div className="flex md:hidden flex-col w-full h-full bg-white min-h-screen pt-16">
-        <div className={`flex-1 relative w-full h-full overflow-hidden transition-opacity ${bottomSheetSnapPoint === 2 ? 'pointer-events-none opacity-50' : 'pointer-events-auto'}`}>
-          <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
-          <div className="absolute top-4 left-4 right-4 z-20 flex gap-3 items-center pointer-events-none">
-            <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="flex-1 px-4 py-3 rounded-full bg-white border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 pointer-events-auto" />
-            <button
-              onClick={() => {
-                if (selectedBuilding) {
-                  const newStarred = new Set(starredBuildings);
-                  if (newStarred.has(String(selectedBuilding.id))) {
-                    newStarred.delete(String(selectedBuilding.id));
-                  } else {
-                    newStarred.add(String(selectedBuilding.id));
-                  }
-                  setStarredBuildings(newStarred);
-                }
+        <PhoneMock />
+      </div>
+    </header>
+  )
+}
+
+// ─── Proof bar ────────────────────────────────────────────────────────────────
+const proofStats: [string, string][] = [
+  ['108+', 'Buildings tracked'],
+  ['$0',   'Cost to you'],
+  ['24h',  'Budget → quotes'],
+  ['100%', 'Real net pricing'],
+]
+
+function ProofBar() {
+  return (
+    <div style={{ borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}`, padding: '28px 0' }}>
+      <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24, textAlign: 'center' }} className="mag-proof-grid">
+        {proofStats.map(([num, lbl]) => (
+          <div key={lbl}>
+            <div style={{ ...DISPLAY, fontSize: 34, color: SUN, marginBottom: 4 }}>{num}</div>
+            <div style={{ fontSize: 13, color: DIM, textTransform: 'uppercase', letterSpacing: '.12em' }}>{lbl}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── How it works ─────────────────────────────────────────────────────────────
+const steps = [
+  { tag: 'Step 1', icon: '💬', title: 'Text your budget',  body: "One message: budget, beds, neighborhoods, move date. That's the whole application." },
+  { tag: 'Step 2', icon: '📋', title: 'Get real quotes',   body: 'I send formatted quotes with gross rent, concessions, net effective rent, and total move-in cost — straight from my building contacts.' },
+  { tag: 'Step 3', icon: '🔑', title: 'Tour & sign',       body: 'I book your tours, negotiate the deal, and walk you to the lease. The building pays me. You pay nothing.' },
+]
+
+function HowItWorks() {
+  const [hovered, setHovered] = React.useState<number | null>(null)
+  return (
+    <section id="how" style={{ padding: '88px 0' }}>
+      <div style={wrap}>
+        <div style={eyebrow}>How it works</div>
+        <h2 style={{ ...DISPLAY, fontSize: 'clamp(30px,4vw,48px)', margin: '12px 0 16px' }}>Three steps. Zero portals.</h2>
+        <p style={{ color: MUTED, fontSize: 17, maxWidth: '60ch', lineHeight: 1.55 }}>
+          Other sites make you fill out a four-page form to see a price. Here&apos;s the entire process:
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24, marginTop: 48 }} className="mag-steps">
+          {steps.map((s, i) => (
+            <div
+              key={s.tag}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+              style={{
+                background: PANEL,
+                border: `1px solid ${hovered === i ? AQUA : LINE}`,
+                borderRadius: 20, padding: '32px 28px',
+                position: 'relative', transition: 'border-color .2s',
               }}
-              className="w-12 h-12 bg-yellow-500 hover:bg-yellow-600 text-white rounded-full flex items-center justify-center shadow-md pointer-events-auto transition-colors"
-              aria-label={selectedBuilding && starredBuildings.has(String(selectedBuilding.id)) ? 'Unstar building' : 'Star building'}
-              title={selectedBuilding ? (starredBuildings.has(String(selectedBuilding.id)) ? 'Unstar current building' : 'Star current building') : 'Click a card to star it'}
             >
-              <div className="flex flex-col items-center justify-center">
-                <Star className={`h-5 w-5 ${selectedBuilding && starredBuildings.has(String(selectedBuilding.id)) ? 'fill-white' : 'fill-white/50'}`} />
-                <span className="text-xs font-bold leading-none mt-0.5">{starredBuildings.size}</span>
-              </div>
-            </button>
-            <button onClick={() => setShowFilterModal(true)} className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-600 pointer-events-auto text-lg font-semibold">⚙</button>
-          </div>
-        </div>
-
-        <div ref={bottomSheetRef} onTouchStart={handleBottomSheetDrag} onTouchEnd={handleBottomSheetDrag} className={`fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-40 transition-all duration-300 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing ${SNAP_POINTS[bottomSheetSnapPoint]}`}>
-          <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 flex-shrink-0"></div>
-          
-          {bottomSheetSnapPoint === 0 && <div className="flex-1"></div>}
-          
-          {bottomSheetSnapPoint === 1 && (
-            <div className="overflow-y-auto flex-1 px-4 pb-4">
-              {!selectedBuilding ? (
-                <div className="pt-2">
-                  <div className="space-y-2">
-                    {filteredBuildings.length === 0 ? (
-                      <p className="text-gray-500 text-center py-4">No buildings found</p>
-                    ) : (
-                      filteredBuildings.map((building) => (
-                        <div 
-                          key={building.id} 
-                          className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden cursor-pointer transition-colors hover:bg-gray-50"
-                          onClick={() => setSelectedBuilding(building)}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault();
-                              setSelectedBuilding(building);
-                            }
-                          }}
-                        >
-                          <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-hidden">
-                            <img src={building.images[0]} alt={building.name} className="w-full h-full object-cover" loading="lazy" decoding="async" width={400} height={160} />
-                            {/* Star Button - Uses transform to stay visible during momentum scroll */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const newStarred = new Set(starredBuildings);
-                                if (newStarred.has(String(building.id))) {
-                                  newStarred.delete(String(building.id));
-                                } else {
-                                  newStarred.add(String(building.id));
-                                }
-                                setStarredBuildings(newStarred);
-                              }}
-                              className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md z-40 will-change-transform"
-                              style={{
-                                transform: 'translate(0, 0)',
-                                backfaceVisibility: 'hidden',
-                                WebkitBackfaceVisibility: 'hidden',
-                              }}
-                              aria-label={starredBuildings.has(String(building.id)) ? "Remove from list" : "Add to list"}
-                            >
-                              <Star
-                                className={`h-4 w-4 transition-colors ${
-                                  starredBuildings.has(String(building.id))
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-gray-400 hover:text-yellow-400"
-                                }`}
-                              />
-                            </button>
-                          </div>
-                          <div className="flex justify-between items-start mb-1">
-                            <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
-                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
-                          </div>
-                          <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
-                          <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
-                          {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                          <div className="flex gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
-                            <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
-                            <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="pt-2">
-                  <div className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
-                    <button onClick={(e) => { e.stopPropagation(); setSelectedBuilding(null); }} className="text-sm text-blue-500 font-semibold mb-2 hover:text-blue-600">← Back</button>
-                    <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-hidden">
-                      <img src={selectedBuilding.images[0]} alt={selectedBuilding.name} className="w-full h-full object-cover" />
-                      {/* Star Button - Uses transform to stay visible during momentum scroll */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const newStarred = new Set(starredBuildings);
-                          if (newStarred.has(String(selectedBuilding.id))) {
-                            newStarred.delete(String(selectedBuilding.id));
-                          } else {
-                            newStarred.add(String(selectedBuilding.id));
-                          }
-                          setStarredBuildings(newStarred);
-                        }}
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md z-40 will-change-transform"
-                        style={{
-                          transform: 'translate(0, 0)',
-                          backfaceVisibility: 'hidden',
-                          WebkitBackfaceVisibility: 'hidden',
-                        }}
-                        aria-label={starredBuildings.has(String(selectedBuilding.id)) ? "Remove from list" : "Add to list"}
-                      >
-                        <Star
-                          className={`h-4 w-4 transition-colors ${
-                            starredBuildings.has(String(selectedBuilding.id))
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "text-gray-400 hover:text-yellow-400"
-                          }`}
-                        />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const newStarred = new Set(starredBuildings);
-                          if (newStarred.has(String(selectedBuilding.id))) {
-                            newStarred.delete(String(selectedBuilding.id));
-                          } else {
-                            newStarred.add(String(selectedBuilding.id));
-                          }
-                          setStarredBuildings(newStarred);
-                        }}
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md"
-                        aria-label={starredBuildings.has(String(selectedBuilding.id)) ? "Remove from list" : "Add to list"}
-                      >
-                        <Star
-                          className={`h-4 w-4 transition-colors ${
-                            starredBuildings.has(String(selectedBuilding.id))
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "text-gray-400 hover:text-yellow-400"
-                          }`}
-                        />
-                      </button>
-                    </div>
-                    <div className="flex justify-between items-start mb-1">
-                      <h3 className="font-semibold text-gray-900 text-sm">{selectedBuilding.name}</h3>
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{selectedBuilding.neighborhood}</span>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-1">{selectedBuilding.tagline || `$${selectedBuilding.priceMin}+/mo`}</p>
-                    <p className="text-xs text-gray-500 mb-2">{selectedBuilding.units.join(' | ')}</p>
-                    {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                    <div className="flex gap-2 mt-2">
-                      <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
-                      <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(selectedBuilding); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <span style={{ position: 'absolute', top: 22, right: 22, fontSize: 11, fontWeight: 700, letterSpacing: '.14em', color: FLAMINGO, textTransform: 'uppercase' }}>{s.tag}</span>
+              <div style={{ fontSize: 30, marginBottom: 16 }}>{s.icon}</div>
+              <h3 style={{ ...DISPLAY, fontVariationSettings: "'wdth' 115", fontSize: 18, marginBottom: 10 }}>{s.title}</h3>
+              <p style={{ color: MUTED, fontSize: 15, lineHeight: 1.55 }}>{s.body}</p>
             </div>
-          )}
-
-          {bottomSheetSnapPoint === 2 && (
-            <div className="overflow-y-auto flex-1 px-4 pb-4">
-              {!selectedBuilding ? (
-                <div className="pt-2">
-                  <h2 className="text-lg font-semibold mb-4">{searchQuery ? 'Search Results' : 'Neighborhoods'}</h2>
-                  {searchQuery ? (
-                    <div className="space-y-2">
-                      {filteredBuildings.length === 0 ? (
-                        <p className="text-gray-500 text-center py-4">No buildings found</p>
-                      ) : (
-                        filteredBuildings.map((building) => (
-                          <div key={building.id} onClick={() => setSelectedBuilding(building)} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
-              <img src={building.images[0]} alt={building.name} className="w-full h-40 object-cover rounded-md mb-3" loading="lazy" decoding="async" width={400} height={160} />
-                            <div className="flex justify-between items-start mb-1">
-                              <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
-                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
-                            </div>
-                            <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
-                            <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
-                            {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                            <div className="flex gap-2 mt-2">
-                                <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
-                              <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  ) : (
-                  <div className="space-y-3">
-                    {NEIGHBORHOODS.map((neighborhood) => {
-                      const buildings = getFilteredNeighborhoodBuildings(neighborhood);
-                      const isExpanded = expandedNeighborhoods.includes(neighborhood);
-                      if (buildings.length === 0) return null;
-                      return (
-                        <div key={neighborhood}>
-                          <button onClick={() => toggleNeighborhood(neighborhood)} className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
-                            <span className="font-semibold text-gray-900 text-sm">{neighborhood} ({buildings.length})</span>
-                            <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
-                          </button>
-                          {isExpanded && (
-                            <div className="mt-2 space-y-2 mb-3">
-                              {buildings.map((building) => (
-                                <div 
-                                  key={building.id} 
-                                  className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden cursor-pointer transition-colors hover:bg-gray-50"
-                                  onClick={() => setInfoBuilding(building)}
-                                  role="button"
-                                  tabIndex={0}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                      e.preventDefault();
-                                      setInfoBuilding(building);
-                                    }
-                                  }}
-                                >
-                                  <img src={building.images[0]} alt={building.name} className="w-full h-40 object-cover rounded-md mb-3" loading="lazy" decoding="async" width={400} height={160} />
-                                  <div className="flex justify-between items-start mb-1">
-                                    <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
-                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
-                                  </div>
-                                  <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
-                                  <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
-                                  {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                                  <div className="flex gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
-                              <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
-                                    <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  )}
-                </div>
-          ) : selectedBuilding.name === 'Flow Brickell' ? (
-            <FlowBrickellCard onOpenModal={() => setShowModal(true)} />
-          ) : (
-            <div className="p-4 sm:p-6 lg:p-8">
-              <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-semibold">{searchQuery ? 'Search Results' : 'Neighborhoods'}</h2>
-                <button onClick={() => isAgentMode ? setIsAgentMode(false) : setShowPinModal(true)} className={`px-3 py-1 rounded-lg text-sm font-medium ${isAgentMode ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{isAgentMode ? 'Agent Mode' : 'Agent?'}</button>
-              </div>
-                  
-                  <button onClick={() => setShowModal(true)} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 mb-4">Talk to Don</button>
-                </div>
-              )}
-            </div>
-          )}
+          ))}
         </div>
       </div>
+    </section>
+  )
+}
 
-      {/* Desktop Layout - Zillow Style */}
-      <div className="hidden md:flex flex-1 gap-0 h-full overflow-hidden">
-        {/* Map - 55% of width */}
-        <div className="flex-1 basis-[55%] relative h-full w-full">
-          <MapComponent 
-            expandedNeighborhoods={expandedNeighborhoods} 
-            selectedBuilding={selectedBuilding} 
-            highlightedBuilding={highlightedBuilding}
-            onPinClick={setSelectedBuilding} 
-            geocodedBuildings={geocodedBuildings}
-            setSelectedBuilding={setSelectedBuilding}
-            setBottomSheetSnapPoint={setBottomSheetSnapPoint}
-            setSelectedBuildingForDetail={setSelectedBuildingForDetail}
-          />
-          {/* Floating Filter Card */}
-          <MapFilterCard 
-            filters={mapFilters}
-            onFilterChange={setMapFilters}
-            onClearAll={() => setMapFilters({ bedrooms: [], price: [], moveInDate: [] })}
-          />
+// ─── Neighborhoods ────────────────────────────────────────────────────────────
+const hoods = [
+  { name: 'Brickell',      sub: 'High-rise living · from $2,300', grad: 'linear-gradient(135deg,#1B3B6F,#19C6C0)' },
+  { name: 'Wynwood',       sub: 'Art & nightlife · from $2,200',  grad: 'linear-gradient(135deg,#FF4D8D,#FF8E53)' },
+  { name: 'Edgewater',     sub: 'Bay views · from $2,100',        grad: 'linear-gradient(135deg,#3E2F8F,#FF4D8D)' },
+  { name: 'Downtown',      sub: 'Walk everywhere · from $2,000',  grad: 'linear-gradient(135deg,#0E5E6F,#FFC24B)' },
+  { name: 'Midtown',       sub: 'Best of both · from $2,250',     grad: 'linear-gradient(135deg,#233A7D,#8E54E9)' },
+  { name: 'Coconut Grove', sub: 'Lush & quiet · from $2,400',     grad: 'linear-gradient(135deg,#FF6B6B,#FFC24B)' },
+  { name: 'Coral Gables',  sub: 'Classic Miami · from $2,300',    grad: 'linear-gradient(135deg,#11998E,#38EF7D)' },
+  { name: 'Miami Beach',   sub: 'Ocean life · from $2,200',       grad: 'linear-gradient(135deg,#FC5C7D,#6A82FB)' },
+]
+
+function Neighborhoods() {
+  const [hovered, setHovered] = React.useState<number | null>(null)
+  return (
+    <section id="hoods" style={{ paddingBottom: 88 }}>
+      <div style={wrap}>
+        <div style={eyebrow}>Neighborhoods</div>
+        <h2 style={{ ...DISPLAY, fontSize: 'clamp(30px,4vw,48px)', margin: '12px 0 44px' }}>Where do you want to wake up?</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }} className="mag-hoods">
+          {hoods.map((h, i) => (
+            <a
+              key={h.name}
+              href="#"
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+              style={{
+                position: 'relative', borderRadius: 18, overflow: 'hidden',
+                aspectRatio: '4/5', display: 'flex', alignItems: 'flex-end',
+                padding: 20, border: `1px solid ${LINE}`,
+                background: h.grad, textDecoration: 'none', color: PAPER,
+                transform: hovered === i ? 'translateY(-4px)' : 'translateY(0)',
+                transition: 'transform .2s',
+              }}
+            >
+              <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,transparent 30%,rgba(11,18,32,.92))' }} />
+              <div style={{ position: 'relative', zIndex: 2 }}>
+                <h3 style={{ ...DISPLAY, fontVariationSettings: "'wdth' 118", fontSize: 19 }}>{h.name}</h3>
+                <small style={{ color: '#D7E2EE', fontSize: 12 }}>{h.sub}</small>
+              </div>
+            </a>
+          ))}
         </div>
+      </div>
+    </section>
+  )
+}
 
-        {/* Cards Panel - 45% of width */}
-        <div className="basis-[45%] bg-white border-l border-gray-200 overflow-hidden flex flex-col">
-          {/* Search & Header */}
-          <div className="p-5 border-b border-gray-100 bg-white">
-            <input 
-              type="text" 
-              placeholder="Search buildings..." 
-              value={searchQuery} 
-              onChange={(e) => setSearchQuery(e.target.value)} 
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-            />
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-700">
-                {filteredBuildings.length} Available
-              </h3>
-              <div className="flex items-center gap-2">
-                {starredBuildings.size > 0 && (
-                  <button 
-                    onClick={() => handleSaveList()}
-                    disabled={isSavingList}
-                    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors"
-                  >
-                    Save ({starredBuildings.size})
-                  </button>
-                )}
-                <button 
-                  onClick={() => isAgentMode ? setIsAgentMode(false) : setShowPinModal(true)} 
-                  className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
-                    isAgentMode 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {isAgentMode ? '✓ Agent Mode' : 'Agent?'}
-                </button>
+// ─── Why MAG ──────────────────────────────────────────────────────────────────
+const themItems = [
+  "❌ Show 10–30% of what's actually available",
+  '❌ Stale pricing, no concessions shown',
+  '❌ Your info sold to a call-center funnel',
+  '❌ You do all the legwork yourself',
+]
+const usItems = [
+  '✅ Live pricing across 108+ buildings, updated daily',
+  '✅ Net effective rent — the real number after concessions',
+  '✅ One human. My number. Straight answers.',
+  '✅ I negotiate, book tours, and chase the paperwork',
+]
+
+function WhyMag() {
+  return (
+    <section id="why" style={{ padding: '88px 0', background: PAPER, color: INK }}>
+      <div style={wrap}>
+        <div style={{ ...eyebrow, color: '#C2185B' }}>Why MAG™</div>
+        <h2 style={{ ...DISPLAY, fontSize: 'clamp(30px,4vw,48px)', margin: '12px 0 16px', color: INK }}>
+          Listing sites show you ads.<br />I show you deals.
+        </h2>
+        <p style={{ color: '#44506A', fontSize: 17, maxWidth: '60ch', lineHeight: 1.55 }}>
+          The big rental sites list whatever buildings pay them to promote. I track the whole market and I only win when you sign somewhere you love.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 44 }} className="mag-compare">
+          {/* Them */}
+          <div style={{ background: '#E9EDF2', borderRadius: 20, padding: 34, color: '#44506A' }}>
+            <h3 style={{ ...DISPLAY, fontVariationSettings: "'wdth' 115", fontSize: 20, color: INK }}>The big listing sites</h3>
+            <ul style={{ listStyle: 'none', marginTop: 18 }}>
+              {themItems.map(item => (
+                <li key={item} style={{ padding: '10px 0', borderBottom: '1px solid rgba(0,0,0,.08)', fontSize: 15, display: 'flex', gap: 10 }}>{item}</li>
+              ))}
+            </ul>
+          </div>
+          {/* Us */}
+          <div style={{ background: INK, color: PAPER, borderRadius: 20, padding: 34, boxShadow: '0 24px 60px rgba(11,18,32,.35)' }}>
+            <h3 style={{ ...DISPLAY, fontVariationSettings: "'wdth' 115", fontSize: 20 }}>
+              Miami Apartment <span style={{ color: FLAMINGO }}>Guy™</span>
+            </h3>
+            <ul style={{ listStyle: 'none', marginTop: 18 }}>
+              {usItems.map(item => (
+                <li key={item} style={{ padding: '10px 0', borderBottom: `1px solid ${LINE}`, fontSize: 15, display: 'flex', gap: 10 }}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Reviews ──────────────────────────────────────────────────────────────────
+const reviews = [
+  { quote: '"Texted Don a budget at 9pm, had five quotes with net pricing by morning. Signed at Flow with two months free I never would have found on my own."', name: 'Jessica M.', loc: 'Brickell',  initials: 'JM', bg: AQUA,     fg: INK   },
+  { quote: '"Relocated from NYC sight unseen. Don FaceTimed me through three tours and negotiated my admin fee to zero. Didn\'t pay him a dime."',               name: 'Carlos R.', loc: 'Edgewater', initials: 'CR', bg: FLAMINGO, fg: '#fff' },
+  { quote: '"Every other \'locator\' sent me a Zillow link. Don sent me a quote sheet with move-in costs down to the dollar. Different level."',                 name: 'Aaliyah T.',loc: 'Wynwood',   initials: 'AT', bg: SUN,      fg: INK   },
+]
+
+function Reviews() {
+  return (
+    <section id="reviews" style={{ padding: '88px 0' }}>
+      <div style={wrap}>
+        <div style={eyebrow}>Recent wins</div>
+        <h2 style={{ ...DISPLAY, fontSize: 'clamp(30px,4vw,48px)', margin: '12px 0 44px' }}>Renters keep the receipts.</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20 }} className="mag-reviews">
+          {reviews.map(r => (
+            <div key={r.name} style={{ background: PANEL, border: `1px solid ${LINE}`, borderRadius: 18, padding: 26 }}>
+              <div style={{ color: SUN, letterSpacing: 2, marginBottom: 12, fontSize: 16 }}>★★★★★</div>
+              <p style={{ fontSize: 15, color: '#C9D4E2', marginBottom: 16, lineHeight: 1.55 }}>{r.quote}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 700 }}>
+                <div style={{
+                  width: 34, height: 34, borderRadius: '50%',
+                  background: r.bg, color: r.fg,
+                  display: 'grid', placeItems: 'center',
+                  fontSize: 12, fontWeight: 900, flexShrink: 0,
+                  fontFamily: 'var(--font-archivo,"Archivo",sans-serif)',
+                }}>
+                  {r.initials}
+                </div>
+                {r.name} <span style={{ color: DIM, fontWeight: 400 }}>· {r.loc}</span>
               </div>
             </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Final CTA ────────────────────────────────────────────────────────────────
+function FinalCTA() {
+  return (
+    <section style={{ padding: '88px 0', position: 'relative', textAlign: 'center', overflow: 'hidden' }}>
+      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'radial-gradient(600px 340px at 50% 100%,rgba(255,77,141,.28),transparent 65%)', pointerEvents: 'none' }} />
+      <div style={{ ...wrap, position: 'relative' }}>
+        <div style={eyebrow}>Ready when you are</div>
+        <h2 style={{ ...DISPLAY, fontSize: 'clamp(38px,5.6vw,72px)', margin: '12px 0 0' }}>
+          Your next place is<br />one text away.
+        </h2>
+
+        <div>
+          <HoverLink
+            href="sms:+14077657306?body=Hi%20Don%2C%20I%27m%20looking%20for%20a%20Miami%20apartment"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 28, padding: '16px 34px', borderRadius: 999, fontWeight: 700, fontSize: 17, background: FLAMINGO, color: '#fff', boxShadow: '0 6px 28px rgba(255,77,141,.4)', textDecoration: 'none', transition: 'transform .15s' }}
+            hoverStyle={{ transform: 'translateY(-2px)' }}
+          >
+            💬 Text Don now
+          </HoverLink>
+        </div>
+
+        <div>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 14,
+            background: PANEL, border: `1px solid ${AQUA}`,
+            borderRadius: 999, padding: '16px 28px',
+            marginTop: 30, fontSize: 17, fontWeight: 700,
+          }}>
+            📱{' '}
+            <span style={{ color: AQUA, fontFamily: 'var(--font-archivo,"Archivo",sans-serif)', fontSize: 20, letterSpacing: '.04em' }}>
+              (407) 765-7306
+            </span>
+            {' '}— budget · beds · move date
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+function Footer() {
+  const footerLinks = {
+    Neighborhoods: ['Brickell', 'Wynwood', 'Edgewater', 'Downtown', 'Midtown'],
+    Company: ['How it works', 'FAQ', 'Reviews', 'For agents'],
+  }
+  return (
+    <footer style={{ borderTop: `1px solid ${LINE}`, padding: '56px 0 32px', fontSize: 14, color: DIM }}>
+      <div style={wrap}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 40, marginBottom: 40 }} className="mag-foot-grid">
+          <div>
+            <div style={{ ...DISPLAY, fontVariationSettings: "'wdth' 125", fontSize: 20, color: PAPER, marginBottom: 14 }}>
+              MIAMI APARTMENT <span style={{ color: FLAMINGO }}>GUY</span>™
+            </div>
+            <p style={{ lineHeight: 1.55 }}>
+              Free apartment locating across Greater Miami. Paid by buildings, never by renters. Operated under 305 International Realty, 848 Brickell Ave.
+            </p>
           </div>
 
-          {/* Scrollable Cards Grid */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {filteredBuildings.map((building) => (
-                <DesktopBuildingCard
-                  key={building.id}
-                  building={building}
-                  isHighlighted={selectedBuilding?.id === building.id}
-                  isAgentMode={isAgentMode}
-                  isStarred={starredBuildings.has(String(building.id))}
-                  onHover={setHighlightedBuilding}
-                  onClick={setSelectedBuilding}
-                  onStar={(b) => {
-                    const newStarred = new Set(starredBuildings);
-                    if (newStarred.has(String(b.id))) {
-                      newStarred.delete(String(b.id));
-                    } else {
-                      newStarred.add(String(b.id));
-                    }
-                    setStarredBuildings(newStarred);
-                  }}
-                  onViewDetails={setSelectedBuildingForDetail}
-                />
+          {Object.entries(footerLinks).map(([heading, links]) => (
+            <div key={heading}>
+              <h4 style={{ color: PAPER, fontSize: 13, textTransform: 'uppercase', letterSpacing: '.14em', marginBottom: 14 }}>{heading}</h4>
+              {links.map(l => (
+                <HoverLink key={l} href="#" style={{ display: 'block', padding: '5px 0', color: DIM, textDecoration: 'none' }} hoverStyle={{ color: AQUA }}>{l}</HoverLink>
               ))}
             </div>
+          ))}
+
+          <div>
+            <h4 style={{ color: PAPER, fontSize: 13, textTransform: 'uppercase', letterSpacing: '.14em', marginBottom: 14 }}>Contact</h4>
+            <HoverLink href="sms:+14077657306" style={{ display: 'block', padding: '5px 0', color: DIM, textDecoration: 'none' }} hoverStyle={{ color: AQUA }}>Text (407) 765-7306</HoverLink>
+            <HoverLink href="#" style={{ display: 'block', padding: '5px 0', color: DIM, textDecoration: 'none' }} hoverStyle={{ color: AQUA }}>Instagram</HoverLink>
+            <HoverLink href="#" style={{ display: 'block', padding: '5px 0', color: DIM, textDecoration: 'none' }} hoverStyle={{ color: AQUA }}>TikTok</HoverLink>
           </div>
+        </div>
+
+        <div style={{ borderTop: `1px solid ${LINE}`, paddingTop: 24, fontSize: 12 }}>
+          © 2026 MAG™ · Miami Apartment Guy. Equal Housing Opportunity. Licensed under 305 International Realty.
         </div>
       </div>
+    </footer>
+  )
+}
 
-      {showModal && <TalkTodonModal building={selectedBuilding} onClose={() => setShowModal(false)} />}
-      
-      {/* Info Popup Modal */}
-      {infoBuilding && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full max-h-[85vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
-              <h2 className="text-xl font-bold">{infoBuilding.name}</h2>
-              <button onClick={() => setInfoBuilding(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600">X</button>
-            </div>
-            
-            {infoBuilding.name === 'Flow Brickell' ? (
-              <FlowBrickellCard onOpenModal={() => {}} />
-            ) : (
-              <div className="p-4 space-y-4">
-                <div className="p-4">
-                  <ImageCarousel images={infoBuilding.images} />
-                </div>
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-xs text-blue-600 font-medium">{infoBuilding.neighborhood}</p>
-                  <p className="text-sm text-gray-600 mt-1">{infoBuilding.address}</p>
-                </div>
-                
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-500">Starting at</p>
-                  <p className="text-2xl font-bold text-gray-900">${infoBuilding.priceMin}+/mo</p>
-                </div>
-                
-                {isAgentMode && (
-                  <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
-                    <p className="text-xs text-green-600 font-medium">Agent Commission</p>
-                    <p className="text-lg font-bold text-green-700">50% of 1 month rent</p>
-                  </div>
-                )}
-                
-                <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg">
-                  <p className="text-xs text-orange-600 font-medium">Current Offer</p>
-                  <p className="text-sm font-semibold text-orange-700">{infoBuilding.concession}</p>
-                </div>
-                
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 mb-2">Unit Types</p>
-                  <div className="flex gap-2 flex-wrap">
-                    {infoBuilding.units.map((unit) => (
-                      <span key={unit} className="text-xs bg-gray-100 px-3 py-1 rounded-full">{unit}</span>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 mb-2">Amenities</p>
-                  <div className="flex flex-wrap gap-2">
-                    {infoBuilding.amenities.map((a) => (
-                      <span key={a} className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">{a}</span>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-xs text-gray-500">Income Req</p>
-                    <p className="font-semibold text-gray-900">{infoBuilding.incomeReq}</p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-xs text-gray-500">Credit Req</p>
-                    <p className="font-semibold text-gray-900">{infoBuilding.creditReq}</p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-xs text-gray-500">Guarantor</p>
-                    <p className="font-semibold text-gray-900">{infoBuilding.guarantor ? 'Accepted' : 'Not Accepted'}</p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-xs text-gray-500">Hold Period</p>
-                    <p className="font-semibold text-gray-900">{infoBuilding.holdDays.join('/')} days</p>
-                  </div>
-                </div>
-                
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 mb-2">Fees</p>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-600">Deposit</span><span className="font-medium">{infoBuilding.fees.deposit}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Application</span><span className="font-medium">{infoBuilding.fees.application}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Admin Fee</span><span className="font-medium">{infoBuilding.fees.admin}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Parking</span><span className="font-medium">{infoBuilding.fees.parking}</span></div>
-                    {infoBuilding.fees.misc !== 'None' && infoBuilding.fees.misc !== 'TBD' && (
-                      <div className="flex justify-between"><span className="text-gray-600">Other</span><span className="font-medium">{infoBuilding.fees.misc}</span></div>
-                    )}
-                  </div>
-                </div>
-                
-                <button onClick={() => { openWhatsApp(infoBuilding); }} className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 mt-4">Text About This Building</button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-      {/* PIN Modal for Agent Mode */}
-      {showPinModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
-            <h2 className="text-xl font-bold mb-4 text-center">Enter Agent PIN</h2>
-            <input 
-              type="password" 
-              value={pinInput} 
-              onChange={(e) => setPinInput(e.target.value)} 
-              placeholder="Enter PIN" 
-              className="w-full px-4 py-3 border rounded-lg text-center text-2xl tracking-widest mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              maxLength={4}
-            />
-            <div className="flex gap-3">
-              <button onClick={() => { setShowPinModal(false); setPinInput(''); }} className="flex-1 py-3 rounded-lg border border-gray-300 font-semibold hover:bg-gray-50">Cancel</button>
-              <button onClick={handlePinSubmit} className="flex-1 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700">Unlock</button>
-            </div>
-          </div>
-        </div>
-      )}
+// ─── Responsive styles injection ──────────────────────────────────────────────
+function ResponsiveStyles() {
+  return (
+    <style>{`
+      @media (max-width: 920px) {
+        .mag-hero-inner  { grid-template-columns: 1fr !important; }
+        .mag-steps       { grid-template-columns: 1fr !important; }
+        .mag-reviews     { grid-template-columns: 1fr !important; }
+        .mag-hoods       { grid-template-columns: repeat(2,1fr) !important; }
+        .mag-proof-grid  { grid-template-columns: repeat(2,1fr) !important; }
+        .mag-compare     { grid-template-columns: 1fr !important; }
+        .mag-foot-grid   { grid-template-columns: 1fr 1fr !important; }
+        .mag-nav-links   { display: none !important; }
+      }
+    `}</style>
+  )
+}
 
-      {/* Map Filter Modal */}
-      <MapFilterModal
-        isOpen={showFilterModal}
-        onClose={() => setShowFilterModal(false)}
-        onApply={handleApplyFilters}
-      />
-
-      {/* Full-Screen Building Detail View */}
-      {selectedBuildingForDetail && (
-        <BuildingDetailView 
-          building={selectedBuildingForDetail} 
-          onBack={() => setSelectedBuildingForDetail(null)} 
-        />
-      )}
-    </div>
-  );
+// ─── Page ─────────────────────────────────────────────────────────────────────
+export default function HomePage() {
+  return (
+    <>
+      <ResponsiveStyles />
+      <Ticker />
+      <Nav />
+      <Hero />
+      <ProofBar />
+      <HowItWorks />
+      <Neighborhoods />
+      <WhyMag />
+      <Reviews />
+      <FinalCTA />
+      <Footer />
+    </>
+  )
 }
