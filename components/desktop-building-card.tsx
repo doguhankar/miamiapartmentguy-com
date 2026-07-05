@@ -127,7 +127,16 @@ export function DesktopBuildingCard({
           />
         </button>
 
-        <ImageCarousel images={building.images} />
+        {building.images && building.images.length > 0 ? (
+          <ImageCarousel images={building.images} />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1B2A45, #0F1B30)' }}>
+            <div className="text-center">
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>📷</div>
+              <p style={{ color: '#7E8CA0', fontSize: '12px' }}>No images available</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Card Content */}

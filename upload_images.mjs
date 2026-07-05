@@ -1,24 +1,21 @@
 import { put } from '@vercel/blob';
 import fs from 'fs';
-import path from 'path';
 
-const buildingsToUpload = [
-  'cmpnd',
-  'miami-world-tower',
-  'muze-at-met',
-  'flow-miami-world',
-  'monarc-at-met',
-  'parkline',
-  '2000-biscayne',
-  'modera-edgewater',
-  'wynwood-plaza-residences'
-];
+const token = process.env.BLOB_READ_WRITE_TOKEN;
+
+const buildingsToUpload = {
+  'cmpnd': 'CMPND',
+  'parkline': 'Parkline',
+  'wynwood-plaza-residences': 'Wynwood Plaza Residences'
+};
 
 const uploadedUrls = {};
 
-for (const building of buildingsToUpload) {
-  const files = fs.readdirSync('public/images/buildings/').filter(f => f.startsWith(building));
-  uploadedUrls[building] = [];
+for (const [buildingKey, buildingName] of Object.entries(buildingsToUpload)) {
+  const files = fs.readdirSync('public/images/buildings/').filter(f => f.startsWith(buildingKey)).slice(0, 3);
+  uploadedUrls[buildingName] = [];
+  
+  console.log(`\n[v0] Uploading ${buildingName} (${files.length} files)...`);
   
   for (const file of files) {
     const filePath = `public/images/buildings/${file}`;
@@ -27,21 +24,16 @@ for (const building of buildingsToUpload) {
     try {
       const blob = await put(file, buffer, {
         access: 'public',
-        addRandomSuffix: false
+        addRandomSuffix: false,
+        token
       });
-      uploadedUrls[building].push(blob.url);
-      console.log(`✅ Uploaded ${file} -> ${blob.url.substring(0, 60)}...`);
+      uploadedUrls[buildingName].push(blob.url);
+      console.log(`  ✓ ${file} -> ${blob.url.substring(0, 60)}...`);
     } catch (error) {
-      console.error(`❌ Failed to upload ${file}:`, error.message);
+      console.error(`  ✗ ${file}: ${error.message}`);
     }
   }
 }
 
-console.log('\n📊 UPLOAD SUMMARY:');
-Object.entries(uploadedUrls).forEach(([building, urls]) => {
-  console.log(`${building}: ${urls.length} images uploaded`);
-});
-
-// Output JSON for buildings.ts
-console.log('\n// UPDATE buildings.ts WITH THESE URLS:');
+console.log('\n' + '='.repeat(80));
 console.log(JSON.stringify(uploadedUrls, null, 2));
