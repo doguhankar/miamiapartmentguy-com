@@ -47,6 +47,14 @@ function extractAmenities(building: Building): string[] {
   return amenities
 }
 
+// Check if building has deal badges based on concession
+function getDealBadge(building: Building): string | null {
+  const concession = building.concession?.toLowerCase() || ""
+  if (concession.includes("2 months") || concession.includes("8 weeks")) return "🔥 2 months free"
+  if (concession.includes("month free") && building.name === "Maizon") return "💰 Best value"
+  return null
+}
+
 export function DesktopBuildingCard({
   building,
   isHighlighted = false,
@@ -60,6 +68,7 @@ export function DesktopBuildingCard({
 }: DesktopBuildingCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const amenities = extractAmenities(building)
+  const dealBadge = getDealBadge(building)
   
   // Fetch dynamic pricing for buildings with live data (e.g., Flow Brickell)
   const { price: dynamicPrice } = useBuildingPrice(building.id, building.priceMin)
@@ -76,97 +85,87 @@ export function DesktopBuildingCard({
 
   return (
     <div
-      className={`rounded-xl overflow-hidden border transition-all duration-200 cursor-pointer ${
+      className={`rounded-2xl overflow-hidden border transition-all duration-200 cursor-pointer ${
         isHighlighted || isHovered
-          ? "border-blue-500 shadow-lg scale-[1.02]"
-          : "border-gray-200 shadow-md hover:shadow-xl"
+          ? "border-[#19C6C0] shadow-lg scale-[1.02]"
+          : "border-[#19C6C0] shadow-md hover:shadow-xl hover:border-[#19C6C0]"
       }`}
+      style={{ background: '#0F1B30' }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={() => onClick?.(building)}
     >
       {/* Image Carousel - Full Width */}
-      <div className="relative h-56 bg-gray-100 overflow-hidden">
+      <div className="relative h-56 bg-[#1B2A45] overflow-hidden">
+        {/* Neighborhood Badge */}
+        <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-[#0F1B30]/85 backdrop-blur-sm border border-[#19C6C0] text-[#F6F8F9] text-xs font-bold rounded-full">
+          {building.neighborhood}
+        </div>
+
+        {/* Deal Badge */}
+        {dealBadge && (
+          <div className="absolute top-3 right-3 z-10 px-3 py-1.5 bg-[#FFC24B] text-[#0B1220] text-xs font-bold rounded-full">
+            {dealBadge}
+          </div>
+        )}
+
         {/* Star Icon */}
         <button
           onClick={(e) => {
             e.stopPropagation()
             onStar?.(building)
           }}
-          className="absolute top-2 right-2 z-10 p-2 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md hover:shadow-lg"
+          className="absolute bottom-3 right-3 z-10 p-2 rounded-full bg-[#0F1B30]/85 backdrop-blur-sm hover:bg-[#0F1B30] transition-colors shadow-md hover:shadow-lg border border-[#19C6C0]"
           aria-label={isStarred ? "Remove from list" : "Add to list"}
         >
           <Star
             className={`h-5 w-5 transition-colors ${
               isStarred
-                ? "fill-yellow-400 text-yellow-400"
-                : "text-gray-400 hover:text-yellow-400"
+                ? "fill-[#FFC24B] text-[#FFC24B]"
+                : "text-[#7E8CA0] hover:text-[#FFC24B]"
             }`}
           />
         </button>
-
-        {/* Saved Badge (for comparison view) */}
-        {hasSavedBadge && (
-          <div className="absolute top-2 left-2 z-10 px-2.5 py-1 bg-green-500 text-white text-xs font-semibold rounded">
-            Saved
-          </div>
-        )}
 
         <ImageCarousel images={building.images} />
       </div>
 
       {/* Card Content */}
-      <div className="p-4 bg-white">
-        {/* Neighborhood Badge */}
-        <div className="flex items-start justify-between mb-2">
-          <span className="text-xs font-semibold px-2.5 py-1 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-full">
-            {building.neighborhood}
-          </span>
-          {isAgentMode && (
-            <span className="text-xs font-bold px-2.5 py-1 bg-green-100 text-green-700 rounded-full">
-              50% Commission
-            </span>
-          )}
+      <div className="p-4" style={{ background: '#0F1B30' }}>
+        {/* Building Name and Price Row */}
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <h3 className="text-base font-bold" style={{ fontFamily: 'Archivo', color: '#F6F8F9' }}>
+            {building.name}
+          </h3>
+          <div className="text-right flex-shrink-0">
+            <p className="text-xs" style={{ color: '#7E8CA0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>From</p>
+            <p className="text-xl font-bold" style={{ color: '#19C6C0', fontFamily: 'Archivo' }}>
+              ${dynamicPrice.toLocaleString()}
+            </p>
+          </div>
         </div>
-
-        {/* Building Name */}
-        <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-2">
-          {building.name}
-        </h3>
 
         {/* Tagline/Description */}
         {building.tagline && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-1">
+          <p className="text-sm mb-3 line-clamp-1" style={{ color: '#B8C4D4' }}>
             {building.tagline}
           </p>
         )}
 
-        {/* Price Range - Prominent */}
-        <div className="mb-3 pb-3 border-b border-gray-100">
-          <p className="text-2xl font-bold text-blue-600">
-            From ${dynamicPrice.toLocaleString()}
-          </p>
-        </div>
-
         {/* Amenity Badges */}
         {amenities.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1">
-            {amenities.slice(0, 4).map((amenity) => {
-              const colors = AMENITY_COLORS[amenity.toLowerCase()] || {
-                bg: "bg-gray-100",
-                text: "text-gray-700",
-              }
-              return (
-                <span
-                  key={amenity}
-                  className={`text-xs font-medium px-2 py-1 rounded-full ${colors.bg} ${colors.text}`}
-                >
-                  {amenity.charAt(0).toUpperCase() + amenity.slice(1)}
-                </span>
-              )
-            })}
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {amenities.slice(0, 4).map((amenity) => (
+              <span
+                key={amenity}
+                className="text-xs font-medium px-2.5 py-1 rounded-full"
+                style={{ background: '#1B2A45', color: '#B8C4D4' }}
+              >
+                {amenity.charAt(0).toUpperCase() + amenity.slice(1)}
+              </span>
+            ))}
             {amenities.length > 4 && (
-              <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+              <span className="text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: '#1B2A45', color: '#B8C4D4' }}>
                 +{amenities.length - 4}
               </span>
             )}
@@ -174,11 +173,12 @@ export function DesktopBuildingCard({
         )}
 
         {/* Unit Types */}
-        <div className="mb-4 flex gap-1 flex-wrap">
+        <div className="mb-4 flex gap-1.5 flex-wrap">
           {building.units.slice(0, 3).map((unit) => (
             <span
               key={unit}
-              className="text-xs font-semibold px-2 py-1 bg-gray-50 text-gray-700 rounded border border-gray-200"
+              className="text-xs font-semibold px-2.5 py-1 rounded-full border"
+              style={{ borderColor: '#19C6C0', color: '#19C6C0', background: 'transparent' }}
             >
               {unit}
             </span>
@@ -186,25 +186,29 @@ export function DesktopBuildingCard({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 pt-3 border-t border-gray-100">
+        <div className="flex gap-2 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,.12)' }}>
           <button
             onClick={(e) => {
               e.stopPropagation()
               onViewDetails?.(building)
             }}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors text-sm"
+            className="flex-1 font-semibold py-2.5 rounded-lg transition-colors text-sm"
+            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,.12)', color: '#F6F8F9' }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#19C6C0'; e.currentTarget.style.color = '#19C6C0' }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,.12)'; e.currentTarget.style.color = '#F6F8F9' }}
           >
-            View Details
+            View details
           </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              // Text functionality
-            }}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-lg transition-colors text-sm"
+          <a
+            href={`sms:+14077657306?body=Hi%20Don%2C%20I%27m%20interested%20in%20${building.name}`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 font-semibold py-2.5 rounded-lg transition-colors text-sm text-white"
+            style={{ background: '#FF4D8D' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#E53A73' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#FF4D8D' }}
           >
-            Text Don
-          </button>
+            💬 Text Don
+          </a>
         </div>
       </div>
 

@@ -15,6 +15,23 @@ import { Star } from 'lucide-react';
 import { buildings as BUILDINGS } from '@/lib/buildings';
 const NEIGHBORHOODS = ['Brickell', 'Downtown', 'Edgewater', 'Midtown', 'Wynwood', 'Miami Design District', 'North Miami', 'North Miami Beach', 'Aventura', 'Hollywood', 'Dania Beach', 'Allapattah', 'Little Havana', 'Doral', 'Coconut Grove', 'Las Olas'];
 
+// Ticker Component
+const Ticker = () => (
+  <div style={{ background: '#FF4D8D', color: '#fff', overflow: 'hidden', whiteSpace: 'nowrap', fontWeight: 700, fontSize: '12.5px', letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0' }}>
+    <div style={{ display: 'inline-block', animation: 'scroll 32s linear infinite', paddingRight: '100px' }}>
+      <span style={{ marginRight: '20px' }}><b style={{ color: '#0B1220' }}>LIVE</b> Flow Brickell — 1BD from $2,841 · 2 months free ✦</span>
+      <span style={{ marginRight: '20px' }}><b style={{ color: '#0B1220' }}>LIVE</b> CMPND Downtown — from $1,950 · brand new ✦</span>
+      <span style={{ marginRight: '20px' }}><b style={{ color: '#0B1220' }}>LIVE</b> The Dorsey Wynwood — from $2,100 · 6 weeks free ✦</span>
+      <span style={{ marginRight: '20px' }}><b style={{ color: '#0B1220' }}>LIVE</b> Parkline — from $2,120 · waived admin ✦</span>
+      <span style={{ marginRight: '20px' }}><b style={{ color: '#0B1220' }}>LIVE</b> Flow Brickell — 1BD from $2,841 · 2 months free ✦</span>
+      <span style={{ marginRight: '20px' }}><b style={{ color: '#0B1220' }}>LIVE</b> CMPND Downtown — from $1,950 · brand new ✦</span>
+    </div>
+    <style jsx>{`
+      @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    `}</style>
+  </div>
+);
+
 const Tooltip = ({ text }) => {
   const [show, setShow] = useState(false);
   return (
@@ -657,6 +674,7 @@ export default function MiamiApp() {
 
   return (
     <div className="flex flex-col h-screen bg-[#0F1B30]">
+      <Ticker />
       <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
       
       {/* Desktop Header - Fixed at Top */}
