@@ -146,7 +146,7 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
       
       // Create marker element - simple colored circle
       const markerEl = document.createElement("div")
-      const size = isActive ? 14 : 10
+      const size = isActive ? 24 : 18
       markerEl.style.width = size + "px"
       markerEl.style.height = size + "px"
       markerEl.style.background = pinColor
@@ -165,11 +165,18 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
         markerEl.style.transform = `scale(${isActive ? 1.2 : 1})`
       })
 
-      const marker = new mapboxgl.default.Marker({ element: markerEl })
-        .setLngLat([building.lng, building.lat])
-        .addTo(map.current)
+      try {
+        const marker = new mapboxgl.default.Marker({ 
+          element: markerEl,
+          anchor: 'center' 
+        })
+          .setLngLat([building.lng, building.lat])
+          .addTo(map.current)
 
-      markers.current.push(marker)
+        markers.current.push(marker)
+      } catch (err) {
+        console.error("[v0] Failed to add marker for", building.name, err)
+      }
     })
 
     // Fly to selected building
