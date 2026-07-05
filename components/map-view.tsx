@@ -17,7 +17,7 @@ interface PricingData {
   units?: Array<{ price: number }>
 }
 
-const MIAMI_CENTER = { lat: 25.7907, lng: -80.1870 }
+const MIAMI_CENTER = { lat: 25.7617, lng: -80.1918 }
 
 // Neighborhood colors for map pins
 const NEIGHBORHOOD_PIN_COLORS: Record<string, string> = {
@@ -172,55 +172,30 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
       markerEl.style.justifyContent = "center"
       markerEl.style.transition = "all 0.2s ease"
 
-      const priceText = pricing?.minPrice 
-        ? `$${(pricing.minPrice / 1000).toFixed(1)}k`
-        : null
-      
-      if (priceText) {
-        // Create a badge-style marker with price and neighborhood color
-        markerEl.innerHTML = `
-          <div style="
-            position: relative;
-            width: ${isActive ? "8px" : "6px"};
-            height: ${isActive ? "8px" : "6px"};
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: ${pinColor};
-            border-radius: 50%;
-            box-shadow: ${isActive ? `0 1px 3px rgba(0, 0, 0, 0.3)` : `0 0.5px 1.5px rgba(0, 0, 0, 0.2)`};
-            border: 0.5px solid white;
-            font-size: ${isActive ? "3px" : "2px"};
-            font-weight: bold;
-            color: white;
-            transform: scale(${isActive ? 1.15 : 1});
-            transition: all 0.2s ease;
-          " class="price-badge">
-            ${priceText}
-          </div>
-        `
-      } else {
-        // Fallback to traditional pin marker
-        markerEl.innerHTML = `
-          <svg width="4" height="5" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0.5px 1px rgba(0, 0, 0, 0.2)); transition: transform 0.2s ease;">
-            <path d="M16 2C10.48 2 6 6.48 6 12c0 8 10 26 10 26s10-18 10-26c0-5.52-4.48-10-10-10z" fill="${pinColor}"/>
-            <circle cx="16" cy="12" r="3" fill="white"/>
-          </svg>
-        `
-      }
+      // Clean colored circle marker for each building
+      markerEl.innerHTML = `
+        <div style="
+          position: relative;
+          width: ${isActive ? "12px" : "8px"};
+          height: ${isActive ? "12px" : "8px"};
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: ${pinColor};
+          border-radius: 50%;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+          border: 2px solid white;
+          transform: scale(${isActive ? 1.2 : 1});
+          transition: all 0.2s ease;
+        "></div>
+      `
 
       markerEl.addEventListener("click", () => onSelectBuilding(building))
       markerEl.addEventListener("mouseenter", () => {
-        const badge = markerEl.querySelector(".price-badge")
-        if (badge) {
-          badge.style.transform = `scale(${isActive ? 1.25 : 1.1})`
-        }
+        markerEl.style.transform = `scale(${isActive ? 1.3 : 1.2})`
       })
       markerEl.addEventListener("mouseleave", () => {
-        const badge = markerEl.querySelector(".price-badge")
-        if (badge) {
-          badge.style.transform = `scale(${isActive ? 1.15 : 1})`
-        }
+        markerEl.style.transform = `scale(${isActive ? 1.2 : 1})`
       })
 
       const marker = new mapboxgl.default.Marker({ element: markerEl })
