@@ -1,1180 +1,271 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { ImageCarousel } from '@/components/image-carousel';
-import { MapFilterModal, type FilterState } from '@/components/map-filter-modal';
-import { FlowBrickellCard } from '@/components/flow-brickell-card';
-import { MoveWithDon } from '@/components/move-with-don';
-import { DesktopBuildingCard } from '@/components/desktop-building-card';
-import { BuildingDetailView } from '@/components/building-detail-view';
-import { MapFilterCard, type MapFilterState } from '@/components/map-filter-card';
-import { copyToClipboard, showToast } from '@/lib/toast-utils';
-import { Star } from 'lucide-react';
-import { buildings as BUILDINGS } from '@/lib/buildings';
-const NEIGHBORHOODS = ['Brickell', 'Downtown', 'Edgewater', 'Midtown', 'Wynwood', 'Miami Design District', 'North Miami', 'North Miami Beach', 'Aventura', 'Hollywood', 'Dania Beach', 'Allapattah', 'Little Havana', 'Doral', 'Coconut Grove', 'Las Olas'];
+import Link from 'next/link';
+import { ArrowRight, Check, MapPin, DollarSign, Clock, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-const Tooltip = ({ text }) => {
-  const [show, setShow] = useState(false);
-  return (
-    <div className="relative inline-block">
-      <button className="w-5 h-5 rounded-full border border-gray-400 text-gray-600 text-xs flex items-center justify-center hover:border-gray-600" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>i</button>
-      {show && <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 bg-gray-900 text-white text-xs p-2 rounded shadow-lg z-50">A co-signer on your lease who guarantees payment if you can't pay rent.</div>}
-    </div>
-  );
-};
+export default function HomePage() {
+  const neighborhoods = [
+    { name: 'Brickell', buildings: 6, avgPrice: '$2,500', image: '🏢' },
+    { name: 'Downtown', buildings: 7, avgPrice: '$2,400', image: '🏙️' },
+    { name: 'Edgewater', buildings: 7, avgPrice: '$2,800', image: '🌊' },
+    { name: 'Midtown', buildings: 6, avgPrice: '$2,700', image: '🌆' },
+    { name: 'Wynwood', buildings: 12, avgPrice: '$2,600', image: '🎨' },
+  ];
 
-const FeesDropdown = ({ fees }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  return (
-    <div className="border rounded-lg">
-      <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition font-semibold text-gray-900">
-        <span>Fees & Policies</span>
-        <span className={`transition transform ${isOpen ? 'rotate-90' : ''}`}>›</span>
-      </button>
-      {isOpen && (
-        <div className="p-4 space-y-3 border-t">
-          <div className="flex justify-between"><span className="text-gray-600">Deposit</span><span className="font-semibold">{fees.deposit}</span></div>
-          <div className="flex justify-between"><span className="text-gray-600">Application Fee</span><span className="font-semibold">{fees.application}</span></div>
-          <div className="flex justify-between"><span className="text-gray-600">Admin Fee</span><span className="font-semibold">{fees.admin}</span></div>
-          <div className="flex justify-between"><span className="text-gray-600">Parking (per car)</span><span className="font-semibold">{fees.parking}</span></div>
-          <div className="flex justify-between"><span className="text-gray-600">Misc Monthly Fees</span><span className="font-semibold">{fees.misc}</span></div>
-        </div>
-      )}
-    </div>
-  );
-};
+  const comparisons = [
+    { feature: 'Personalized Guidance', mag: true, others: false },
+    { feature: 'Direct Agent Access', mag: true, others: false },
+    { feature: 'Qualification Check', mag: true, others: false },
+    { feature: '108 Premium Buildings', mag: true, others: false },
+    { feature: 'Real-Time Availability', mag: true, others: true },
+    { feature: 'Price Comparison', mag: true, others: true },
+  ];
 
-const TalkTodonModal = ({ building, onClose }) => {
-  const [step, setStep] = useState('form');
-  const [formData, setFormData] = useState({ income: '', credit: '', moveInDate: '', firstName: '', phone: '' });
-  const [result, setResult] = useState(null);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const income = parseInt(formData.income);
-    const credit = parseInt(formData.credit);
-    const incomeMultiplier = parseInt(building.incomeReq);
-    const creditReq = parseInt(building.creditReq);
-    let status = 'qualify';
-    if (income < incomeMultiplier * 1500) status = 'not-fit';
-    else if (income < incomeMultiplier * 2000) status = 'close';
-    if (credit < creditReq) status = 'not-fit';
-    setResult(status);
-    setStep('results');
-  };
-
-  const handleContactSubmit = (e) => {
-    e.preventDefault();
-    console.log('Lead:', { ...formData, building: building.name, status: result });
-    setStep('contact');
-  };
+  const reviews = [
+    { name: 'Sarah M.', text: 'Don made the whole process so easy. Found my perfect place in Brickell!', rating: 5 },
+    { name: 'James K.', text: 'Best experience renting in Miami. Highly recommend MAG!', rating: 5 },
+    { name: 'Maria L.', text: 'The neighborhood guides are incredibly helpful. Moved here from out of state.', rating: 5 },
+  ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
-        {step === 'form' && (
-          <>
-            <h2 className="text-2xl font-bold mb-6">{building.name}</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Monthly Income</label>
-                <input type="number" required value={formData.income} onChange={(e) => setFormData({ ...formData, income: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., 5000" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Credit Score</label>
-                <input type="number" required value={formData.credit} onChange={(e) => setFormData({ ...formData, credit: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., 680" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Move-In Date</label>
-                <input type="date" required value={formData.moveInDate} onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-              </div>
-              <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Get My Results</button>
-            </form>
-            <button onClick={onClose} className="mt-4 w-full text-gray-600 py-2 hover:text-gray-900">Close</button>
-          </>
-        )}
-        {step === 'results' && (
-          <>
-            <div className="text-center mb-6">
-              {result === 'qualify' && <><div className="text-5xl mb-3">✓</div><h2 className="text-3xl font-bold text-green-600">You Qualify!</h2></>}
-              {result === 'close' && <><div className="text-5xl mb-3">⚠</div><h2 className="text-3xl font-bold text-yellow-600">You're Close</h2></>}
-              {result === 'not-fit' && <><div className="text-5xl mb-3">✗</div><h2 className="text-3xl font-bold text-red-600">Not a Fit</h2></>}
-            </div>
-            <button onClick={() => setStep('contact')} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 mb-3">Continue</button>
-            <button onClick={onClose} className="w-full text-gray-600 py-2 hover:text-gray-900">Back</button>
-          </>
-        )}
-        {step === 'contact' && !result && (
-          <>
-            <h2 className="text-2xl font-bold mb-2">One more thing...</h2>
-            <p className="text-gray-600 mb-6">Don will reach out directly with personalized options.</p>
-            <form onSubmit={handleContactSubmit} className="space-y-4">
-              <input type="text" required value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} className="w-full px-4 py-2 border rounded-lg" placeholder="First Name" />
-              <input type="tel" required value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-4 py-2 border rounded-lg" placeholder="Phone" />
-              <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Submit</button>
-            </form>
-          </>
-        )}
-        {step === 'contact' && result && (
-          <div className="text-center py-8">
-            <div className="text-5xl mb-3">✓</div>
-            <h3 className="text-xl font-bold mb-2">Thanks!</h3>
-            <p className="text-gray-600 mb-6">Don will reach out soon.</p>
-            <button onClick={onClose} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold">Back to Buildings</button>
+    <main className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav className="sticky top-0 z-40 bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="text-2xl font-bold text-gray-900">
+            Miami Apartment<span className="text-blue-600"> Guy™</span>
           </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setBottomSheetSnapPoint, setSelectedBuildingForDetail }) => {
-  const mapContainer = useRef(null);
-  const map = useRef(null);
-  const markersRef = useRef([]);
-  const popupsRef = useRef([]);
-
-  useEffect(() => {
-    if (!mapContainer.current || map.current) return;
-
-    // Set Mapbox token
-    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
-
-    // Create map instance
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: [-80.1870, 25.7907],
-        zoom: 11,
-      });
-
-      map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
-    } catch (error) {
-      console.error('[v0] Map initialization error:', error);
-    }
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, []);
-
-  // Add markers when buildings or selection changes
-  useEffect(() => {
-    if (!map.current || !geocodedBuildings.length) return;
-
-    // Remove existing markers and popups
-    markersRef.current.forEach((marker) => marker.remove());
-    popupsRef.current.forEach((popup) => popup.remove());
-    markersRef.current = [];
-    popupsRef.current = [];
-
-    // Add new markers
-    geocodedBuildings.forEach((building: any) => {
-      // Create marker element
-      const el = document.createElement('div');
-      el.className = 'marker';
-      el.style.width = '16px';
-      el.style.height = '16px';
-      el.style.borderRadius = '50%';
-      el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
-      el.style.border = '2px solid white';
-      el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-      el.style.cursor = 'pointer';
-      el.style.transition = 'all 0.2s';
-
-      el.onclick = (e) => {
-        e.stopPropagation();
-        setSelectedBuilding(building);
-        setBottomSheetSnapPoint(1);
-      };
-
-      // Create popup content
-      const popupContent = document.createElement('div');
-      popupContent.className = 'popup-content';
-      popupContent.style.padding = '12px';
-      popupContent.style.borderRadius = '8px';
-      popupContent.style.backgroundColor = 'white';
-      popupContent.style.minWidth = '200px';
-      
-      // Add building image if available
-      if (building.images && building.images.length > 0) {
-        const img = document.createElement('img');
-        img.src = building.images[0];
-        img.style.width = '100%';
-        img.style.height = '100px';
-        img.style.objectFit = 'cover';
-        img.style.borderRadius = '4px';
-        img.style.marginBottom = '8px';
-        popupContent.appendChild(img);
-      }
-
-      // Add building name
-      const name = document.createElement('div');
-      name.style.fontSize = '14px';
-      name.style.fontWeight = '600';
-      name.style.color = '#1f2937';
-      name.style.marginBottom = '4px';
-      name.textContent = building.name;
-      popupContent.appendChild(name);
-
-      // Add neighborhood
-      const neighborhood = document.createElement('div');
-      neighborhood.style.fontSize = '12px';
-      neighborhood.style.color = '#6b7280';
-      neighborhood.style.marginBottom = '8px';
-      neighborhood.textContent = building.neighborhood;
-      popupContent.appendChild(neighborhood);
-
-      // Add price range
-      const price = document.createElement('div');
-      price.style.fontSize = '13px';
-      price.style.fontWeight = '500';
-      price.style.color = '#3b82f6';
-      price.style.marginBottom = '12px';
-      price.textContent = `$${building.priceMin?.toLocaleString()}/mo`;
-      popupContent.appendChild(price);
-
-      // Add view details button
-      const button = document.createElement('button');
-      button.textContent = 'View Details';
-      button.style.width = '100%';
-      button.style.padding = '8px 12px';
-      button.style.backgroundColor = '#3b82f6';
-      button.style.color = 'white';
-      button.style.border = 'none';
-      button.style.borderRadius = '4px';
-      button.style.fontSize = '12px';
-      button.style.fontWeight = '500';
-      button.style.cursor = 'pointer';
-      button.style.transition = 'background-color 0.2s';
-      button.onmouseover = () => button.style.backgroundColor = '#2563eb';
-      button.onmouseout = () => button.style.backgroundColor = '#3b82f6';
-      button.onclick = () => {
-        setSelectedBuildingForDetail(building);
-        popup.remove();
-      };
-      popupContent.appendChild(button);
-
-      // Create popup
-      const popup = new mapboxgl.Popup({
-        offset: [0, -15],
-        closeButton: false,
-        closeOnClick: false,
-      }).setDOMContent(popupContent);
-
-      // Track hide timeout to delay hiding on mouse leave
-      let hideTimeout: NodeJS.Timeout | null = null;
-
-      const showPopup = () => {
-        if (hideTimeout) clearTimeout(hideTimeout);
-        popup.setLngLat([building.lng, building.lat]).addTo(map.current);
-        
-        // Add hover listeners to popup element after it's rendered
-        setTimeout(() => {
-          const popupElement = document.querySelector('.mapboxgl-popup');
-          if (popupElement) {
-            (popupElement as HTMLElement).onmouseenter = () => {
-              if (hideTimeout) clearTimeout(hideTimeout);
-            };
-            (popupElement as HTMLElement).onmouseleave = () => {
-              hidePopup();
-            };
-          }
-        }, 0);
-      };
-
-      const hidePopup = () => {
-        hideTimeout = setTimeout(() => {
-          popup.remove();
-        }, 200);
-      };
-
-      // Add hover handlers to marker
-      el.onmouseenter = () => {
-        showPopup();
-      };
-
-      el.onmouseleave = () => {
-        hidePopup();
-      };
-
-      // Create marker
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([building.lng, building.lat])
-        .addTo(map.current);
-
-      markersRef.current.push(marker);
-      popupsRef.current.push(popup);
-    });
-  }, [geocodedBuildings, selectedBuilding]);
-
-  return <div ref={mapContainer} className="w-full h-full" />;
-};
-
-export default function MiamiApp() {
-  const mapContainer = useRef(null);
-  const map = useRef(null);
-  const markersRef = useRef([]);
-  const geocodeCache = useRef(new Map());
-  const [geocodedBuildings, setGeocodedBuildings] = useState(BUILDINGS);
-  const [selectedBuilding, setSelectedBuilding] = useState(null);
-  const [highlightedBuilding, setHighlightedBuilding] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell', 'Downtown']);
-  const [bottomSheetSnapPoint, setBottomSheetSnapPoint] = useState(1);
-  const bottomSheetRef = useRef(null);
-  const touchStartY = useRef(0);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [infoBuilding, setInfoBuilding] = useState(null);
-  const [starredBuildings, setStarredBuildings] = useState<Set<string>>(new Set());
-  const [isSavingList, setIsSavingList] = useState(false);
-  const [isAgentMode, setIsAgentMode] = useState(false);
-  const [showPinModal, setShowPinModal] = useState(false);
-  const [pinInput, setPinInput] = useState('');
-  const [showFilterModal, setShowFilterModal] = useState(false);
-  const [showMoveWithDonModal, setShowMoveWithDonModal] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [] });
-  const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
-  const [selectedBuildingForDetail, setSelectedBuildingForDetail] = useState(null);
-  const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], price: [], moveInDate: [] });
-
-  const SNAP_POINTS = {
-    0: 'h-5 md:h-0',      // COLLAPSED: 20px (drag handle)
-    1: 'h-[400px] md:h-auto',  // DEFAULT: 400px (full card + 40px peek of next)
-    2: 'h-[75vh] md:auto' // EXPANDED: 75% screen (scrollable)
-  };
-
-  const toggleNeighborhood = (neighborhood) => {
-    setExpandedNeighborhoods(prev =>
-      prev.includes(neighborhood)
-        ? prev.filter(n => n !== neighborhood)
-        : [...prev, neighborhood]
-    );
-  };
-
-  // Helper function to check if a building matches the map filters
-  const buildingMatchesMapFilters = (building: any): boolean => {
-    // If no filters are active, include all buildings
-    if (mapFilters.bedrooms.length === 0 && mapFilters.price.length === 0 && mapFilters.moveInDate.length === 0) {
-      return true;
-    }
-
-    // Check bedrooms filter
-    if (mapFilters.bedrooms.length > 0) {
-      const bedroomMatch = mapFilters.bedrooms.some(filter => {
-        if (filter === 'Studio') return building.units.includes('Studio');
-        if (filter === '1 Bedroom') return building.units.includes('1B');
-        if (filter === '2 Bedrooms') return building.units.includes('2B');
-        if (filter === '3+ Bedrooms') return building.units.includes('3B');
-        return false;
-      });
-      if (!bedroomMatch) return false;
-    }
-
-    // Check price filter
-    if (mapFilters.price.length > 0) {
-      const priceMatch = mapFilters.price.some(filter => {
-        if (filter === '$0-$2,000') return building.priceMin <= 2000;
-        if (filter === '$2,000-$4,000') return building.priceMin >= 2000 && building.priceMin < 4000;
-        if (filter === '$4,000+') return building.priceMin >= 4000;
-        return false;
-      });
-      if (!priceMatch) return false;
-    }
-
-    // Move-in date filter is informational only (would need booking data)
-    // For now, we'll include all buildings regardless of move-in date
-    return true;
-  };
-
-  const filteredBuildings = geocodedBuildings.filter(b => 
-    visibleBuildingIds.includes(b.id) &&
-    buildingMatchesMapFilters(b) &&
-    (b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    b.neighborhood.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
-  const getFilteredNeighborhoodBuildings = (neighborhood) => {
-    return filteredBuildings.filter(b => b.neighborhood === neighborhood);
-  };
-
-  const openWhatsApp = (building) => {
-    const message = encodeURIComponent(`Hi! I'm interested in ${building.name} at ${building.address}. Can you tell me more?`);
-    window.open(`https://wa.me/1234567890?text=${message}`, '_blank');
-  };
-
-  const openSMS = () => {
-    const message = encodeURIComponent('Hey, this is Don\'s direct cell! You can text me about any building you\'ve been eyeing. I can help out with virtual tours, pricing, and neighborhood info.');
-    window.location.href = `sms:+14077657306?body=${message}`;
-  };
-
-  const handlePinSubmit = () => {
-    if (pinInput === '1234') {
-      setIsAgentMode(true);
-      setShowPinModal(false);
-      setPinInput('');
-    } else {
-      alert('Incorrect PIN');
-      setPinInput('');
-    }
-  };
-
-  const handleApplyFilters = async (filters: FilterState) => {
-    setActiveFilters(filters);
-    
-    // If no filters selected, show all buildings
-    if (filters.unitSize.length === 0 && filters.priceRange.length === 0 && filters.moveIn.length === 0) {
-      setVisibleBuildingIds(BUILDINGS.map(b => b.id));
-      return;
-    }
-
-    const matchingBuildingIds: number[] = [];
-
-    for (const building of geocodedBuildings) {
-      try {
-        // For now, use building data to match filters (when /api/prices is available, query it)
-        let hasMatchingUnits = true;
-
-        // Check unit size filter
-        if (filters.unitSize.length > 0) {
-          const hasMatchingUnit = filters.unitSize.some(size => {
-            if (size === 'Studio') return building.units.includes('Studio');
-            if (size === '1BR') return building.units.includes('1B');
-            if (size === '2BR') return building.units.includes('2B');
-            if (size === '3BR') return building.units.includes('3B');
-            return false;
-          });
-          hasMatchingUnits = hasMatchingUnits && hasMatchingUnit;
-        }
-
-        // Check price filter
-        if (filters.priceRange.length > 0 && hasMatchingUnits) {
-          const hasMatchingPrice = filters.priceRange.some(range => {
-            if (range === 'Under $2.5k') return building.priceMin < 2500;
-            if (range === '$2.5k-$4k') return building.priceMin >= 2500 && building.priceMin < 4000;
-            if (range === '$4k+') return building.priceMin >= 4000;
-            return false;
-          });
-          hasMatchingUnits = hasMatchingUnits && hasMatchingPrice;
-        }
-
-        // Move-in date check (all buildings match for now)
-        // In future, this would query real availability data
-
-        if (hasMatchingUnits) {
-          matchingBuildingIds.push(building.id);
-        }
-      } catch (err) {
-        console.error('Error filtering building', building.id, err);
-      }
-    }
-
-    setVisibleBuildingIds(matchingBuildingIds);
-  };
-
-  // Geocoding useEffect
-  useEffect(() => {
-    const geocodeAddresses = async () => {
-      const MAPBOX_TOKEN = 'pk.eyJ1IjoiZG9ua2FyYWhhbiIsImEiOiJjbXAzamJ1eHIwMGQ2MnJvbHU1MHNwZWlzIn0.8De9qZEqvTRmh8-d-25NfQ';
-      const failedAddresses = [];
-      let successCount = 0;
-
-      const geocodePromises = BUILDINGS.map(async (building) => {
-        // Check cache first
-        if (geocodeCache.current.has(building.address)) {
-          const cached = geocodeCache.current.get(building.address);
-          successCount++;
-          return { ...building, lat: cached.lat, lng: cached.lng };
-        }
-
-        try {
-          const encodedAddress = encodeURIComponent(building.address);
-          const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${MAPBOX_TOKEN}`;
-          
-          const response = await fetch(url);
-          const data = await response.json();
-
-          if (data.features && data.features.length > 0) {
-            const [lng, lat] = data.features[0].geometry.coordinates;
-            geocodeCache.current.set(building.address, { lat, lng });
-            successCount++;
-            return { ...building, lat, lng };
-          } else {
-            failedAddresses.push(building.address);
-            return building; // Keep original coordinates
-          }
-        } catch (error) {
-          failedAddresses.push(building.address);
-          return building; // Keep original coordinates
-        }
-      });
-
-      const geocodedResults = await Promise.all(geocodePromises);
-      setGeocodedBuildings(geocodedResults);
-
-      // Log results
-      console.log(`[Geocoding] Successfully geocoded ${successCount}/${geocodedResults.length} addresses`);
-      if (failedAddresses.length > 0) {
-        console.warn(`[Geocoding] Failed to geocode ${failedAddresses.length} addresses:`, failedAddresses);
-      }
-    };
-
-    geocodeAddresses();
-  }, []);
-
-  useEffect(() => {
-    if (!mapContainer.current) return;
-
-    const script = document.createElement('script');
-    script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js';
-    script.async = true;
-    script.onload = () => {
-      const linkEl = document.createElement('link');
-      linkEl.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
-      linkEl.rel = 'stylesheet';
-      document.head.appendChild(linkEl);
-
-      if (window.mapboxgl && mapContainer.current && !map.current) {
-        window.mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-        
-        map.current = new window.mapboxgl.Map({
-          container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/light-v11',
-          center: [-80.188, 25.76],
-          zoom: 11,
-        });
-
-        map.current.on('load', () => {
-          addPins();
-        });
-
-        map.current.on('style.load', () => {
-          addPins();
-        });
-      }
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, []);
-
-  const handleBottomSheetDrag = (e) => {
-    if (e.type === 'touchstart') {
-      touchStartY.current = e.touches[0].clientY;
-    } else if (e.type === 'touchend' && touchStartY.current) {
-      const touchEndY = e.changedTouches[0].clientY;
-      const diff = touchEndY - touchStartY.current;
-      
-      if (diff > 30) {
-        // Swipe down
-        if (bottomSheetSnapPoint > 0) {
-          setBottomSheetSnapPoint(bottomSheetSnapPoint - 1);
-        }
-      } else if (diff < -30) {
-        // Swipe up
-        if (bottomSheetSnapPoint < 2) {
-          setBottomSheetSnapPoint(bottomSheetSnapPoint + 1);
-        }
-      }
-      touchStartY.current = 0;
-    }
-  };
-
-  const addPins = () => {
-    if (!map.current || !window.mapboxgl) return;
-
-    markersRef.current.forEach(m => m.remove());
-    markersRef.current = [];
-
-    geocodedBuildings.forEach((building) => {
-      const el = document.createElement('div');
-      el.style.width = '16px';
-      el.style.height = '16px';
-      el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
-      el.style.borderRadius = '50%';
-      el.style.cursor = 'pointer';
-      el.style.border = '2px solid white';
-      el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-      el.style.transition = 'all 0.2s';
-      el.onclick = () => {
-        setSelectedBuilding(building);
-        setBottomSheetSnapPoint(1);
-      };
-
-      const marker = new (window as any).mapboxgl.Marker(el)
-        .setLngLat([building.lng, building.lat])
-        .addTo(map.current);
-      
-      markersRef.current.push(marker);
-    });
-  };
-
-  useEffect(() => {
-    if (map.current) {
-      addPins();
-    }
-  }, [selectedBuilding, geocodedBuildings]);
-
-  const handleSaveList = async () => {
-    if (starredBuildings.size === 0) return;
-
-    setIsSavingList(true);
-    try {
-      const buildingIds = Array.from(starredBuildings);
-      const response = await fetch('/api/lists', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ buildingIds }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save list');
-      }
-
-      const data = await response.json();
-      const shareUrl = data.shareUrl;
-
-      // Copy to clipboard
-      await copyToClipboard(shareUrl, 'Link copied to clipboard');
-    } catch (error) {
-      console.error('[v0] Error saving list:', error);
-      showToast('Failed to save list', { type: 'error' });
-    } finally {
-      setIsSavingList(false);
-    }
-  };
-
-  return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
-      
-      {/* Desktop Header - Fixed at Top */}
-      <div className="hidden md:flex items-center justify-between px-8 h-12 bg-white border-b border-gray-300 flex-shrink-0">
-        <h1 className="text-sm font-medium text-gray-900">
-          Miami Apartment Guy
-          <sup className="text-xs font-normal align-top ml-1 relative" style={{top: '-1px'}}>™</sup>
-        </h1>
-        <button 
-          onClick={() => setShowMoveWithDonModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-full font-medium text-xs transition-colors"
-        >
-          Move with Don
-        </button>
-      </div>
-
-      {/* Mobile Header */}
-      <div className="fixed top-0 left-0 right-0 z-40 bg-white md:hidden border-b-[0.5px] border-gray-300">
-        <div className="flex items-center justify-between px-4 py-3.5">
-          {/* Text Column - Left */}
-          <h1 className="text-base font-medium text-[#1a1a1a] tracking-tighter whitespace-nowrap">
-            Miami Apartment Guy
-            <sup className="text-xs font-normal align-top ml-0.5 relative" style={{top: '2px'}}>™</sup>
-          </h1>
-          
-          {/* Button Column - Right */}
-          <div className="flex items-center gap-2">
-            {starredBuildings.size > 0 && (
-              <button 
-                onClick={() => handleSaveList()}
-                disabled={isSavingList}
-                className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-3 py-2 rounded-lg font-semibold transition-colors shadow-lg text-xs whitespace-nowrap flex-shrink-0"
-              >
-                Save ({starredBuildings.size})
-              </button>
-            )}
-            <button 
-              onClick={() => setShowMoveWithDonModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg text-sm whitespace-nowrap flex-shrink-0"
-            >
-              Move with Don
-            </button>
-          </div>
+          <Link href="/map">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              Explore Buildings <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
         </div>
-      </div>
+      </nav>
 
-      {/* Mobile Layout */}
-      <div className="flex md:hidden flex-col w-full h-full bg-white min-h-screen pt-16">
-        <div className={`flex-1 relative w-full h-full overflow-hidden transition-opacity ${bottomSheetSnapPoint === 2 ? 'pointer-events-none opacity-50' : 'pointer-events-auto'}`}>
-          <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
-          <div className="absolute top-4 left-4 right-4 z-20 flex gap-3 items-center pointer-events-none">
-            <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="flex-1 px-4 py-3 rounded-full bg-white border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 pointer-events-auto" />
-            <button
-              onClick={() => {
-                if (selectedBuilding) {
-                  const newStarred = new Set(starredBuildings);
-                  if (newStarred.has(String(selectedBuilding.id))) {
-                    newStarred.delete(String(selectedBuilding.id));
-                  } else {
-                    newStarred.add(String(selectedBuilding.id));
-                  }
-                  setStarredBuildings(newStarred);
-                }
-              }}
-              className="w-12 h-12 bg-yellow-500 hover:bg-yellow-600 text-white rounded-full flex items-center justify-center shadow-md pointer-events-auto transition-colors"
-              aria-label={selectedBuilding && starredBuildings.has(String(selectedBuilding.id)) ? 'Unstar building' : 'Star building'}
-              title={selectedBuilding ? (starredBuildings.has(String(selectedBuilding.id)) ? 'Unstar current building' : 'Star current building') : 'Click a card to star it'}
-            >
-              <div className="flex flex-col items-center justify-center">
-                <Star className={`h-5 w-5 ${selectedBuilding && starredBuildings.has(String(selectedBuilding.id)) ? 'fill-white' : 'fill-white/50'}`} />
-                <span className="text-xs font-bold leading-none mt-0.5">{starredBuildings.size}</span>
-              </div>
-            </button>
-            <button onClick={() => setShowFilterModal(true)} className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-600 pointer-events-auto text-lg font-semibold">⚙</button>
-          </div>
-        </div>
-
-        <div ref={bottomSheetRef} onTouchStart={handleBottomSheetDrag} onTouchEnd={handleBottomSheetDrag} className={`fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-40 transition-all duration-300 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing ${SNAP_POINTS[bottomSheetSnapPoint]}`}>
-          <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 flex-shrink-0"></div>
-          
-          {bottomSheetSnapPoint === 0 && <div className="flex-1"></div>}
-          
-          {bottomSheetSnapPoint === 1 && (
-            <div className="overflow-y-auto flex-1 px-4 pb-4">
-              {!selectedBuilding ? (
-                <div className="pt-2">
-                  <div className="space-y-2">
-                    {filteredBuildings.length === 0 ? (
-                      <p className="text-gray-500 text-center py-4">No buildings found</p>
-                    ) : (
-                      filteredBuildings.map((building) => (
-                        <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden" onClick={() => setSelectedBuilding(building)}>
-                          <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-hidden">
-                            <img src={building.images[0]} alt={building.name} className="w-full h-full object-cover" />
-                            {/* Star Button - Uses transform to stay visible during momentum scroll */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const newStarred = new Set(starredBuildings);
-                                if (newStarred.has(String(building.id))) {
-                                  newStarred.delete(String(building.id));
-                                } else {
-                                  newStarred.add(String(building.id));
-                                }
-                                setStarredBuildings(newStarred);
-                              }}
-                              className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md z-40 will-change-transform"
-                              style={{
-                                transform: 'translate(0, 0)',
-                                backfaceVisibility: 'hidden',
-                                WebkitBackfaceVisibility: 'hidden',
-                              }}
-                              aria-label={starredBuildings.has(String(building.id)) ? "Remove from list" : "Add to list"}
-                            >
-                              <Star
-                                className={`h-4 w-4 transition-colors ${
-                                  starredBuildings.has(String(building.id))
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-gray-400 hover:text-yellow-400"
-                                }`}
-                              />
-                            </button>
-                          </div>
-                          <div className="flex justify-between items-start mb-1">
-                            <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
-                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
-                          </div>
-                          <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
-                          <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
-                          {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                          <div className="flex gap-2 mt-2">
-                            <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
-                            <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="pt-2">
-                  <div className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
-                    <button onClick={(e) => { e.stopPropagation(); setSelectedBuilding(null); }} className="text-sm text-blue-500 font-semibold mb-2 hover:text-blue-600">← Back</button>
-                    <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-hidden">
-                      <img src={selectedBuilding.images[0]} alt={selectedBuilding.name} className="w-full h-full object-cover" />
-                      {/* Star Button - Uses transform to stay visible during momentum scroll */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const newStarred = new Set(starredBuildings);
-                          if (newStarred.has(String(selectedBuilding.id))) {
-                            newStarred.delete(String(selectedBuilding.id));
-                          } else {
-                            newStarred.add(String(selectedBuilding.id));
-                          }
-                          setStarredBuildings(newStarred);
-                        }}
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md z-40 will-change-transform"
-                        style={{
-                          transform: 'translate(0, 0)',
-                          backfaceVisibility: 'hidden',
-                          WebkitBackfaceVisibility: 'hidden',
-                        }}
-                        aria-label={starredBuildings.has(String(selectedBuilding.id)) ? "Remove from list" : "Add to list"}
-                      >
-                        <Star
-                          className={`h-4 w-4 transition-colors ${
-                            starredBuildings.has(String(selectedBuilding.id))
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "text-gray-400 hover:text-yellow-400"
-                          }`}
-                        />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const newStarred = new Set(starredBuildings);
-                          if (newStarred.has(String(selectedBuilding.id))) {
-                            newStarred.delete(String(selectedBuilding.id));
-                          } else {
-                            newStarred.add(String(selectedBuilding.id));
-                          }
-                          setStarredBuildings(newStarred);
-                        }}
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md"
-                        aria-label={starredBuildings.has(String(selectedBuilding.id)) ? "Remove from list" : "Add to list"}
-                      >
-                        <Star
-                          className={`h-4 w-4 transition-colors ${
-                            starredBuildings.has(String(selectedBuilding.id))
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "text-gray-400 hover:text-yellow-400"
-                          }`}
-                        />
-                      </button>
-                    </div>
-                    <div className="flex justify-between items-start mb-1">
-                      <h3 className="font-semibold text-gray-900 text-sm">{selectedBuilding.name}</h3>
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{selectedBuilding.neighborhood}</span>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-1">{selectedBuilding.tagline || `$${selectedBuilding.priceMin}+/mo`}</p>
-                    <p className="text-xs text-gray-500 mb-2">{selectedBuilding.units.join(' | ')}</p>
-                    {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                    <div className="flex gap-2 mt-2">
-                      <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
-                      <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(selectedBuilding); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {bottomSheetSnapPoint === 2 && (
-            <div className="overflow-y-auto flex-1 px-4 pb-4">
-              {!selectedBuilding ? (
-                <div className="pt-2">
-                  <h2 className="text-lg font-semibold mb-4">{searchQuery ? 'Search Results' : 'Neighborhoods'}</h2>
-                  {searchQuery ? (
-                    <div className="space-y-2">
-                      {filteredBuildings.length === 0 ? (
-                        <p className="text-gray-500 text-center py-4">No buildings found</p>
-                      ) : (
-                        filteredBuildings.map((building) => (
-                          <div key={building.id} onClick={() => setSelectedBuilding(building)} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
-              <img src={building.images[0]} alt={building.name} className="w-full h-40 object-cover rounded-md mb-3" loading="lazy" decoding="async" width={400} height={160} />
-                            <div className="flex justify-between items-start mb-1">
-                              <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
-                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
-                            </div>
-                            <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
-                            <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
-                            {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                            <div className="flex gap-2 mt-2">
-                                <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
-                              <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  ) : (
-                  <div className="space-y-3">
-                    {NEIGHBORHOODS.map((neighborhood) => {
-                      const buildings = getFilteredNeighborhoodBuildings(neighborhood);
-                      const isExpanded = expandedNeighborhoods.includes(neighborhood);
-                      if (buildings.length === 0) return null;
-                      return (
-                        <div key={neighborhood}>
-                          <button onClick={() => toggleNeighborhood(neighborhood)} className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
-                            <span className="font-semibold text-gray-900 text-sm">{neighborhood} ({buildings.length})</span>
-                            <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
-                          </button>
-                          {isExpanded && (
-                            <div className="mt-2 space-y-2 mb-3">
-                              {buildings.map((building) => (
-                                <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
-                                  <img src={building.images[0]} alt={building.name} className="w-full h-40 object-cover rounded-md mb-3" loading="lazy" decoding="async" width={400} height={160} />
-                                  <div className="flex justify-between items-start mb-1">
-                                    <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
-                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
-                                  </div>
-                                  <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
-                                  <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
-                                  {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                                  <div className="flex gap-2 mt-2">
-                              <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
-                                    <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  )}
-                </div>
-          ) : selectedBuilding.name === 'Flow Brickell' ? (
-            <FlowBrickellCard onOpenModal={() => setShowModal(true)} />
-          ) : (
-            <div className="p-4 sm:p-6 lg:p-8">
-              <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-semibold">{searchQuery ? 'Search Results' : 'Neighborhoods'}</h2>
-                <button onClick={() => isAgentMode ? setIsAgentMode(false) : setShowPinModal(true)} className={`px-3 py-1 rounded-lg text-sm font-medium ${isAgentMode ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{isAgentMode ? 'Agent Mode' : 'Agent?'}</button>
-              </div>
-                  
-                  <button onClick={() => setShowModal(true)} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 mb-4">Talk to Don</button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Desktop Layout - Zillow Style */}
-      <div className="hidden md:flex flex-1 gap-0 h-full overflow-hidden">
-        {/* Map - 55% of width */}
-        <div className="flex-1 basis-[55%] relative h-full w-full">
-          <MapComponent 
-            expandedNeighborhoods={expandedNeighborhoods} 
-            selectedBuilding={selectedBuilding} 
-            highlightedBuilding={highlightedBuilding}
-            onPinClick={setSelectedBuilding} 
-            geocodedBuildings={geocodedBuildings}
-            setSelectedBuilding={setSelectedBuilding}
-            setBottomSheetSnapPoint={setBottomSheetSnapPoint}
-            setSelectedBuildingForDetail={setSelectedBuildingForDetail}
-          />
-          {/* Floating Filter Card */}
-          <MapFilterCard 
-            filters={mapFilters}
-            onFilterChange={setMapFilters}
-            onClearAll={() => setMapFilters({ bedrooms: [], price: [], moveInDate: [] })}
-          />
-        </div>
-
-        {/* Cards Panel - 45% of width */}
-        <div className="basis-[45%] bg-white border-l border-gray-200 overflow-hidden flex flex-col">
-          {/* Search & Header */}
-          <div className="p-5 border-b border-gray-100 bg-white">
-            <input 
-              type="text" 
-              placeholder="Search buildings..." 
-              value={searchQuery} 
-              onChange={(e) => setSearchQuery(e.target.value)} 
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-            />
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-700">
-                {filteredBuildings.length} Available
-              </h3>
-              <div className="flex items-center gap-2">
-                {starredBuildings.size > 0 && (
-                  <button 
-                    onClick={() => handleSaveList()}
-                    disabled={isSavingList}
-                    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors"
-                  >
-                    Save ({starredBuildings.size})
-                  </button>
-                )}
-                <button 
-                  onClick={() => isAgentMode ? setIsAgentMode(false) : setShowPinModal(true)} 
-                  className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
-                    isAgentMode 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {isAgentMode ? '✓ Agent Mode' : 'Agent?'}
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-white py-20 sm:py-32">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                Your Miami Apartment Journey Starts Here
+              </h1>
+              <p className="text-xl text-gray-600 mb-8">
+                Connect with Don to explore 108 handpicked apartments across Miami's best neighborhoods. Get personalized guidance, instant qualification checks, and direct access to premium properties.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link href="/map">
+                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto">
+                    Browse 108 Buildings <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+                <button className="px-8 py-3 rounded-lg border border-gray-300 text-gray-900 font-medium hover:bg-gray-50 transition w-full sm:w-auto">
+                  📱 Text Don
                 </button>
               </div>
+              <div className="mt-12 flex items-center gap-8">
+                <div>
+                  <div className="text-3xl font-bold text-gray-900">108</div>
+                  <div className="text-sm text-gray-600">Premium Buildings</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-gray-900">50K+</div>
+                  <div className="text-sm text-gray-600">Happy Renters</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-gray-900">24/7</div>
+                  <div className="text-sm text-gray-600">Direct Support</div>
+                </div>
+              </div>
+            </div>
+            <div className="relative h-96 bg-gradient-to-br from-blue-200 to-blue-100 rounded-2xl flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-6xl mb-4">🗺️</div>
+                <p className="text-gray-700 font-medium">Interactive Map of Miami</p>
+                <p className="text-sm text-gray-600 mt-2">Explore neighborhoods and buildings</p>
+              </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Scrollable Cards Grid */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {filteredBuildings.map((building) => (
-                <DesktopBuildingCard
-                  key={building.id}
-                  building={building}
-                  isHighlighted={selectedBuilding?.id === building.id}
-                  isAgentMode={isAgentMode}
-                  isStarred={starredBuildings.has(String(building.id))}
-                  onHover={setHighlightedBuilding}
-                  onClick={setSelectedBuilding}
-                  onStar={(b) => {
-                    const newStarred = new Set(starredBuildings);
-                    if (newStarred.has(String(b.id))) {
-                      newStarred.delete(String(b.id));
-                    } else {
-                      newStarred.add(String(b.id));
-                    }
-                    setStarredBuildings(newStarred);
-                  }}
-                  onViewDetails={setSelectedBuildingForDetail}
-                />
+      {/* Neighborhoods Section */}
+      <section className="py-20 sm:py-32 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 text-center">Explore Miami Neighborhoods</h2>
+          <p className="text-xl text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+            From vibrant Brickell to artistic Wynwood, find your perfect neighborhood
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            {neighborhoods.map((neighborhood) => (
+              <Link
+                key={neighborhood.name}
+                href="/map"
+                className="group p-6 rounded-xl border border-gray-200 hover:border-blue-400 hover:shadow-lg transition duration-300 cursor-pointer"
+              >
+                <div className="text-4xl mb-4">{neighborhood.image}</div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{neighborhood.name}</h3>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    {neighborhood.buildings} buildings
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    From {neighborhood.avgPrice}/mo
+                  </div>
+                </div>
+                <div className="mt-4 text-blue-600 font-medium group-hover:translate-x-1 transition">
+                  Explore →
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Why MAG Section */}
+      <section className="py-20 sm:py-32 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 text-center">Why Choose Miami Apartment Guy?</h2>
+          <p className="text-xl text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+            We go beyond listings. Get expert guidance from someone who knows Miami inside and out.
+          </p>
+          <div className="grid md:grid-cols-2 gap-16">
+            <div className="space-y-8">
+              {[
+                { icon: User, title: 'Personal Advisor', desc: 'Direct access to Don for questions, tours, and neighborhood insights' },
+                { icon: Clock, title: 'Save Time', desc: 'We filter the market and find buildings that match your needs' },
+                { icon: Check, title: 'Qualification Support', desc: 'Instant qualification checks and guidance on requirements' },
+              ].map((item, i) => (
+                <div key={i} className="flex gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <item.icon className="h-6 w-6 text-blue-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{item.title}</h3>
+                    <p className="mt-2 text-gray-600">{item.desc}</p>
+                  </div>
+                </div>
               ))}
             </div>
-          </div>
-        </div>
-      </div>
-
-      {showModal && <TalkTodonModal building={selectedBuilding} onClose={() => setShowModal(false)} />}
-      
-      {/* Info Popup Modal */}
-      {infoBuilding && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full max-h-[85vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
-              <h2 className="text-xl font-bold">{infoBuilding.name}</h2>
-              <button onClick={() => setInfoBuilding(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600">X</button>
-            </div>
-            
-            {infoBuilding.name === 'Flow Brickell' ? (
-              <FlowBrickellCard onOpenModal={() => {}} />
-            ) : (
-              <div className="p-4 space-y-4">
-                <div className="p-4">
-                  <ImageCarousel images={infoBuilding.images} />
-                </div>
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-xs text-blue-600 font-medium">{infoBuilding.neighborhood}</p>
-                  <p className="text-sm text-gray-600 mt-1">{infoBuilding.address}</p>
-                </div>
-                
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-500">Starting at</p>
-                  <p className="text-2xl font-bold text-gray-900">${infoBuilding.priceMin}+/mo</p>
-                </div>
-                
-                {isAgentMode && (
-                  <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
-                    <p className="text-xs text-green-600 font-medium">Agent Commission</p>
-                    <p className="text-lg font-bold text-green-700">50% of 1 month rent</p>
+            <div className="bg-white rounded-2xl p-8 shadow-lg">
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">MAG vs Others</h3>
+              <div className="space-y-4">
+                {comparisons.map((comp, i) => (
+                  <div key={i} className="flex items-center gap-3 py-2 border-b border-gray-200 last:border-0">
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">{comp.feature}</p>
+                    </div>
+                    <div className="w-20 text-center">
+                      {comp.mag ? (
+                        <Check className="h-5 w-5 text-green-600 mx-auto" />
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </div>
+                    <div className="w-20 text-center">
+                      {comp.others ? (
+                        <Check className="h-5 w-5 text-green-600 mx-auto" />
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </div>
                   </div>
-                )}
-                
-                <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg">
-                  <p className="text-xs text-orange-600 font-medium">Current Offer</p>
-                  <p className="text-sm font-semibold text-orange-700">{infoBuilding.concession}</p>
-                </div>
-                
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 mb-2">Unit Types</p>
-                  <div className="flex gap-2 flex-wrap">
-                    {infoBuilding.units.map((unit) => (
-                      <span key={unit} className="text-xs bg-gray-100 px-3 py-1 rounded-full">{unit}</span>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 mb-2">Amenities</p>
-                  <div className="flex flex-wrap gap-2">
-                    {infoBuilding.amenities.map((a) => (
-                      <span key={a} className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">{a}</span>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-xs text-gray-500">Income Req</p>
-                    <p className="font-semibold text-gray-900">{infoBuilding.incomeReq}</p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-xs text-gray-500">Credit Req</p>
-                    <p className="font-semibold text-gray-900">{infoBuilding.creditReq}</p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-xs text-gray-500">Guarantor</p>
-                    <p className="font-semibold text-gray-900">{infoBuilding.guarantor ? 'Accepted' : 'Not Accepted'}</p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-xs text-gray-500">Hold Period</p>
-                    <p className="font-semibold text-gray-900">{infoBuilding.holdDays.join('/')} days</p>
-                  </div>
-                </div>
-                
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 mb-2">Fees</p>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-600">Deposit</span><span className="font-medium">{infoBuilding.fees.deposit}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Application</span><span className="font-medium">{infoBuilding.fees.application}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Admin Fee</span><span className="font-medium">{infoBuilding.fees.admin}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Parking</span><span className="font-medium">{infoBuilding.fees.parking}</span></div>
-                    {infoBuilding.fees.misc !== 'None' && infoBuilding.fees.misc !== 'TBD' && (
-                      <div className="flex justify-between"><span className="text-gray-600">Other</span><span className="font-medium">{infoBuilding.fees.misc}</span></div>
-                    )}
-                  </div>
-                </div>
-                
-                <button onClick={() => { openWhatsApp(infoBuilding); }} className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 mt-4">Text About This Building</button>
+                ))}
               </div>
-            )}
-          </div>
-        </div>
-      )}
-      {/* PIN Modal for Agent Mode */}
-      {showPinModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
-            <h2 className="text-xl font-bold mb-4 text-center">Enter Agent PIN</h2>
-            <input 
-              type="password" 
-              value={pinInput} 
-              onChange={(e) => setPinInput(e.target.value)} 
-              placeholder="Enter PIN" 
-              className="w-full px-4 py-3 border rounded-lg text-center text-2xl tracking-widest mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              maxLength={4}
-            />
-            <div className="flex gap-3">
-              <button onClick={() => { setShowPinModal(false); setPinInput(''); }} className="flex-1 py-3 rounded-lg border border-gray-300 font-semibold hover:bg-gray-50">Cancel</button>
-              <button onClick={handlePinSubmit} className="flex-1 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700">Unlock</button>
             </div>
           </div>
         </div>
-      )}
+      </section>
 
-      {/* Map Filter Modal */}
-      <MapFilterModal
-        isOpen={showFilterModal}
-        onClose={() => setShowFilterModal(false)}
-        onApply={handleApplyFilters}
-      />
+      {/* Reviews Section */}
+      <section className="py-20 sm:py-32 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 text-center">What Renters Say</h2>
+          <p className="text-xl text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+            Real experiences from Miami renters who found their perfect apartments
+          </p>
+          <div className="grid md:grid-cols-3 gap-8">
+            {reviews.map((review, i) => (
+              <div key={i} className="p-8 rounded-xl border border-gray-200 hover:shadow-lg transition">
+                <div className="flex gap-1 mb-4">
+                  {[...Array(review.rating)].map((_, j) => (
+                    <span key={j} className="text-yellow-400">★</span>
+                  ))}
+                </div>
+                <p className="text-gray-700 mb-4 italic">"{review.text}"</p>
+                <p className="font-semibold text-gray-900">— {review.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-      {/* Full-Screen Building Detail View */}
-      {selectedBuildingForDetail && (
-        <BuildingDetailView 
-          building={selectedBuildingForDetail} 
-          onBack={() => setSelectedBuildingForDetail(null)} 
-        />
-      )}
-    </div>
+      {/* CTA Section */}
+      <section className="py-20 sm:py-32 bg-blue-600">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">Ready to Find Your Miami Apartment?</h2>
+          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            Explore 108 handpicked buildings or text Don directly for personalized recommendations
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/map">
+              <Button size="lg" className="bg-white hover:bg-gray-100 text-blue-600 font-semibold w-full sm:w-auto">
+                Browse Buildings <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <button className="px-8 py-3 rounded-lg bg-blue-500 hover:bg-blue-700 text-white font-medium transition w-full sm:w-auto">
+              📱 Text Don: +1 (407) 765-7306
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-gray-300 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h4 className="font-semibold text-white mb-4">Explore</h4>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="/map" className="hover:text-white">All Buildings</Link></li>
+                <li><Link href="/map" className="hover:text-white">Neighborhoods</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-white mb-4">About</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="hover:text-white">About Us</a></li>
+                <li><a href="#" className="hover:text-white">Contact</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-white mb-4">Support</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="hover:text-white">FAQ</a></li>
+                <li><a href="#" className="hover:text-white">Help</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-white mb-4">Connect</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="hover:text-white">Text Don</a></li>
+                <li><a href="#" className="hover:text-white">Instagram</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 pt-8">
+            <p className="text-center text-sm text-gray-400">
+              © 2026 Miami Apartment Guy™. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
+    </main>
   );
 }
