@@ -98,13 +98,13 @@ export function DesktopBuildingCard({
       {/* Image Carousel - Full Width */}
       <div className="relative h-56 bg-[#1B2A45] overflow-hidden">
         {/* Neighborhood Badge */}
-        <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-[#0F1B30]/85 backdrop-blur-sm border border-[#19C6C0] text-[#F6F8F9] text-xs font-bold rounded-full">
+        <div className="badge absolute top-3 left-3 z-10 px-3 py-1.5 bg-[#0F1B30]/85 backdrop-blur-sm border border-[#19C6C0] text-[#F6F8F9] text-xs rounded-full" style={{ fontFamily: 'Archivo', fontWeight: 900, textTransform: 'uppercase', fontVariationSettings: "'wdth' 118", letterSpacing: '-0.01em' }}>
           {building.neighborhood}
         </div>
 
         {/* Deal Badge */}
         {dealBadge && (
-          <div className="absolute top-3 right-3 z-10 px-3 py-1.5 bg-[#FFC24B] text-[#0B1220] text-xs font-bold rounded-full">
+          <div className="badge absolute top-3 right-3 z-10 px-3 py-1.5 bg-[#FFC24B] text-[#0B1220] text-xs rounded-full" style={{ fontFamily: 'Archivo', fontWeight: 900, textTransform: 'uppercase', fontVariationSettings: "'wdth' 118", letterSpacing: '-0.01em' }}>
             {dealBadge}
           </div>
         )}
@@ -134,7 +134,7 @@ export function DesktopBuildingCard({
       <div className="p-4" style={{ background: '#0F1B30' }}>
         {/* Building Name and Price Row */}
         <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="text-base font-bold" style={{ fontFamily: 'Archivo', color: '#F6F8F9' }}>
+          <h3 className="text-base font-black" style={{ fontFamily: 'Archivo', color: '#F6F8F9', textTransform: 'uppercase', fontVariationSettings: "'wdth' 118", letterSpacing: '-0.01em' }}>
             {building.name}
           </h3>
           <div className="text-right flex-shrink-0">
