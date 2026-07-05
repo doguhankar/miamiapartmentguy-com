@@ -101,33 +101,16 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/streets-v12",
         center: [MIAMI_CENTER.lng, MIAMI_CENTER.lat],
-        zoom: 13,
+        zoom: 13.5,
       })
 
       map.current.addControl(new mapboxgl.default.NavigationControl(), "bottom-right")
 
-      // When map loads, fit bounds to all buildings
+      // Keep map at tight zoom on downtown/Brickell, don't fitBounds to all scattered buildings
+      // Buildings spread from Brickell (25.75-25.77) to Edgewater/Wynwood (25.79-26.0)
+      // Zoom 13-14 keeps focus on core downtown/Brickell clusters, not outer neighborhoods
       map.current.on('load', () => {
-        if (buildings && buildings.length > 0) {
-          // Calculate bounding box from all building coordinates
-          let minLng = buildings[0].lng
-          let maxLng = buildings[0].lng
-          let minLat = buildings[0].lat
-          let maxLat = buildings[0].lat
-
-          buildings.forEach((building) => {
-            minLng = Math.min(minLng, building.lng)
-            maxLng = Math.max(maxLng, building.lng)
-            minLat = Math.min(minLat, building.lat)
-            maxLat = Math.max(maxLat, building.lat)
-          })
-
-          // Fit map to bounds with padding
-          map.current.fitBounds(
-            [[minLng, minLat], [maxLng, maxLat]],
-            { padding: 50, maxZoom: 14 }
-          )
-        }
+        // Map stays at zoom 13 centered on Miami, initial view tight on downtown core
       })
     } catch {
       setMapError("Failed to initialize map")
