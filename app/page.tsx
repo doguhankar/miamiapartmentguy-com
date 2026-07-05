@@ -61,7 +61,7 @@ export default function HomePage() {
               Every building.<br />Every deal.<br /><span style={{ color: '#FF4D8D' }}>One</span> <span style={{ color: '#19C6C0' }}>text.</span>
             </h1>
             <p style={{ fontSize: '19px', color: '#B8C4D4', maxWidth: '52ch', marginBottom: '32px' }}>
-              Miami's rental market moves fast and hides its best concessions. I track live pricing across 108+ buildings from Brickell to Edgewater — you tell me your budget, I send you the real numbers. Net effective rent, move-in costs, everything. Same day.
+              I track live pricing across Miami and Broward buildings. Text your budget, get real quotes same day. Net effective rent, move-in costs, everything.
             </p>
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
               <a href="sms:+14077657306?body=Hi%20Don%2C%20I%27m%20looking%20for%20a%20Miami%20apartment" className="btn btn-pink">💬 Text me your budget</a>
