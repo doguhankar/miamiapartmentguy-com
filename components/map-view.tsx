@@ -122,7 +122,7 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
         map.current = null
       }
     }
-  }, [mapboxgl, buildings])
+  }, [mapboxgl])
 
   // Update markers when buildings or selectedBuilding changes
   useEffect(() => {
@@ -133,7 +133,7 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
     // Clear existing markers
     markers.current.forEach((m) => m.remove())
     markers.current = []
-
+    
     // Add new markers
     buildings.forEach((building) => {
       const isSelected = selectedBuilding?.id === building.id
@@ -144,34 +144,18 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
       let pinColor = NEIGHBORHOOD_PIN_COLORS[building.neighborhood] || "#6B7280"
       const isActive = isSelected || isHighlighted
       
-      // Create marker element
+      // Create marker element - simple colored circle
       const markerEl = document.createElement("div")
-      markerEl.style.position = "relative"
-      markerEl.style.width = isActive ? "8px" : "6px"
-      markerEl.style.height = isActive ? "8px" : "6px"
+      const size = isActive ? 14 : 10
+      markerEl.style.width = size + "px"
+      markerEl.style.height = size + "px"
+      markerEl.style.background = pinColor
+      markerEl.style.borderRadius = "50%"
+      markerEl.style.border = "2px solid white"
+      markerEl.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.3)"
       markerEl.style.cursor = "pointer"
-      markerEl.style.display = "flex"
-      markerEl.style.alignItems = "center"
-      markerEl.style.justifyContent = "center"
       markerEl.style.transition = "all 0.2s ease"
-
-      // Clean colored circle marker for each building
-      markerEl.innerHTML = `
-        <div style="
-          position: relative;
-          width: ${isActive ? "12px" : "8px"};
-          height: ${isActive ? "12px" : "8px"};
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: ${pinColor};
-          border-radius: 50%;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-          border: 2px solid white;
-          transform: scale(${isActive ? 1.2 : 1});
-          transition: all 0.2s ease;
-        "></div>
-      `
+      markerEl.style.transform = isActive ? "scale(1.2)" : "scale(1)"
 
       markerEl.addEventListener("click", () => onSelectBuilding(building))
       markerEl.addEventListener("mouseenter", () => {
