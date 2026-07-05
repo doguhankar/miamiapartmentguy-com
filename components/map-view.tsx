@@ -17,7 +17,8 @@ interface PricingData {
   units?: Array<{ price: number }>
 }
 
-const MIAMI_CENTER = { lat: 25.7907, lng: -80.1870 }
+// Miami center to fit core buildings: Brickell Hammock (25.71) through Downtown/Edgewater/Midtown/Wynwood to Rt 195 (~25.82)
+const MIAMI_CENTER = { lat: 25.765, lng: -80.185 }
 
 // Neighborhood colors for map pins
 const NEIGHBORHOOD_PIN_COLORS: Record<string, string> = {
@@ -101,7 +102,7 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/streets-v12",
         center: [MIAMI_CENTER.lng, MIAMI_CENTER.lat],
-        zoom: 13,
+        zoom: 11, // Zoom 11 fits all core Miami neighborhoods: Brickell, Downtown, Edgewater, Midtown, Wynwood
       })
 
       map.current.addControl(new mapboxgl.default.NavigationControl(), "bottom-right")
@@ -122,10 +123,10 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
             maxLat = Math.max(maxLat, building.lat)
           })
 
-          // Fit map to bounds with padding
+          // Fit map to bounds with padding (fits all buildings while respecting zoom 11)
           map.current.fitBounds(
             [[minLng, minLat], [maxLng, maxLat]],
-            { padding: 50, maxZoom: 14 }
+            { padding: 100, maxZoom: 11 }
           )
         }
       })
