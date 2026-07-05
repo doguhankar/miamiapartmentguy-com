@@ -42,6 +42,7 @@ export default function HomePage() {
             Miami Apartment <span style={{ color: '#FF4D8D' }}>Guy</span>™
           </a>
           <div style={{ display: 'flex', gap: '28px', fontSize: '14px', fontWeight: 500 }}>
+            <a href="/map" style={{ color: 'inherit', transition: 'color 0.2s' }} onMouseEnter={(e) => (e.target.style.color = '#19C6C0')} onMouseLeave={(e) => (e.target.style.color = 'inherit')}>View Map</a>
             <a href="#hoods" style={{ color: 'inherit', transition: 'color 0.2s' }} onMouseEnter={(e) => (e.target.style.color = '#19C6C0')} onMouseLeave={(e) => (e.target.style.color = 'inherit')}>Neighborhoods</a>
           </div>
           <a href="sms:+14077657306?body=Hi%20Don%2C%20I%27m%20looking%20for%20a%20Miami%20apartment" className="btn btn-pink">💬 Text Don</a>
