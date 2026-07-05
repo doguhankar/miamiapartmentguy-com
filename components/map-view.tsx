@@ -110,7 +110,7 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
       // Buildings spread from Brickell (25.75-25.77) to Edgewater/Wynwood (25.79-26.0)
       // Zoom 13-14 keeps focus on core downtown/Brickell clusters, not outer neighborhoods
       map.current.on('load', () => {
-        // Map stays at zoom 13 centered on Miami, initial view tight on downtown core
+        // Map stays at zoom 13.5 centered on Miami, initial view tight on downtown core
       })
     } catch {
       setMapError("Failed to initialize map")
@@ -144,18 +144,20 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
       let pinColor = NEIGHBORHOOD_PIN_COLORS[building.neighborhood] || "#6B7280"
       const isActive = isSelected || isHighlighted
       
-      // Create marker element - simple colored circle
+      // Create marker element as a simple colored div circle
       const markerEl = document.createElement("div")
       const size = isActive ? 24 : 18
       markerEl.style.width = size + "px"
       markerEl.style.height = size + "px"
-      markerEl.style.background = pinColor
+      markerEl.style.backgroundColor = pinColor
       markerEl.style.borderRadius = "50%"
-      markerEl.style.border = "2px solid white"
-      markerEl.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.3)"
+      markerEl.style.border = "2px solid #ffffff"
+      markerEl.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.4)"
       markerEl.style.cursor = "pointer"
       markerEl.style.transition = "all 0.2s ease"
       markerEl.style.transform = isActive ? "scale(1.2)" : "scale(1)"
+      markerEl.style.position = "relative"
+      markerEl.style.display = "block"
 
       markerEl.addEventListener("click", () => onSelectBuilding(building))
       markerEl.addEventListener("mouseenter", () => {
@@ -175,7 +177,7 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
 
         markers.current.push(marker)
       } catch (err) {
-        console.error("[v0] Failed to add marker for", building.name, err)
+        // Silent fail - marker creation issue
       }
     })
 
