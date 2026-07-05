@@ -19,8 +19,8 @@ const Tooltip = ({ text }) => {
   const [show, setShow] = useState(false);
   return (
     <div className="relative inline-block">
-      <button className="w-5 h-5 rounded-full border border-gray-400 text-gray-600 text-xs flex items-center justify-center hover:border-gray-600" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>i</button>
-      {show && <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 bg-gray-900 text-white text-xs p-2 rounded shadow-lg z-50">A co-signer on your lease who guarantees payment if you can't pay rent.</div>}
+      <button className="w-5 h-5 rounded-full border border-[#19C6C0] text-[#B8C4D4] text-xs flex items-center justify-center hover:border-gray-600" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>i</button>
+      {show && <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 bg-[#0B1220] text-white text-xs p-2 rounded shadow-lg z-50">A co-signer on your lease who guarantees payment if you can't pay rent.</div>}
     </div>
   );
 };
@@ -29,17 +29,17 @@ const FeesDropdown = ({ fees }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="border rounded-lg">
-      <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition font-semibold text-gray-900">
+      <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-4 bg-[#0F1B30] hover:bg-[#1B2A45] transition font-semibold text-[#F6F8F9]">
         <span>Fees & Policies</span>
         <span className={`transition transform ${isOpen ? 'rotate-90' : ''}`}>›</span>
       </button>
       {isOpen && (
         <div className="p-4 space-y-3 border-t">
-          <div className="flex justify-between"><span className="text-gray-600">Deposit</span><span className="font-semibold">{fees.deposit}</span></div>
-          <div className="flex justify-between"><span className="text-gray-600">Application Fee</span><span className="font-semibold">{fees.application}</span></div>
-          <div className="flex justify-between"><span className="text-gray-600">Admin Fee</span><span className="font-semibold">{fees.admin}</span></div>
-          <div className="flex justify-between"><span className="text-gray-600">Parking (per car)</span><span className="font-semibold">{fees.parking}</span></div>
-          <div className="flex justify-between"><span className="text-gray-600">Misc Monthly Fees</span><span className="font-semibold">{fees.misc}</span></div>
+          <div className="flex justify-between"><span className="text-[#B8C4D4]">Deposit</span><span className="font-semibold">{fees.deposit}</span></div>
+          <div className="flex justify-between"><span className="text-[#B8C4D4]">Application Fee</span><span className="font-semibold">{fees.application}</span></div>
+          <div className="flex justify-between"><span className="text-[#B8C4D4]">Admin Fee</span><span className="font-semibold">{fees.admin}</span></div>
+          <div className="flex justify-between"><span className="text-[#B8C4D4]">Parking (per car)</span><span className="font-semibold">{fees.parking}</span></div>
+          <div className="flex justify-between"><span className="text-[#B8C4D4]">Misc Monthly Fees</span><span className="font-semibold">{fees.misc}</span></div>
         </div>
       )}
     </div>
@@ -73,26 +73,26 @@ const TalkTodonModal = ({ building, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-[#0F1B30] rounded-lg p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
         {step === 'form' && (
           <>
             <h2 className="text-2xl font-bold mb-6">{building.name}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Monthly Income</label>
-                <input type="number" required value={formData.income} onChange={(e) => setFormData({ ...formData, income: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., 5000" />
+                <input type="number" required value={formData.income} onChange={(e) => setFormData({ ...formData, income: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF4D8D] focus:outline-none" placeholder="e.g., 5000" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Credit Score</label>
-                <input type="number" required value={formData.credit} onChange={(e) => setFormData({ ...formData, credit: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., 680" />
+                <input type="number" required value={formData.credit} onChange={(e) => setFormData({ ...formData, credit: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF4D8D] focus:outline-none" placeholder="e.g., 680" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Move-In Date</label>
-                <input type="date" required value={formData.moveInDate} onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <input type="date" required value={formData.moveInDate} onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF4D8D] focus:outline-none" />
               </div>
-              <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Get My Results</button>
+              <button type="submit" className="w-full bg-[#FF4D8D] text-white py-3 rounded-lg font-semibold hover:bg-[#E53A73]">Get My Results</button>
             </form>
-            <button onClick={onClose} className="mt-4 w-full text-gray-600 py-2 hover:text-gray-900">Close</button>
+            <button onClick={onClose} className="mt-4 w-full text-[#B8C4D4] py-2 hover:text-[#F6F8F9]">Close</button>
           </>
         )}
         {step === 'results' && (
@@ -102,18 +102,18 @@ const TalkTodonModal = ({ building, onClose }) => {
               {result === 'close' && <><div className="text-5xl mb-3">⚠</div><h2 className="text-3xl font-bold text-yellow-600">You're Close</h2></>}
               {result === 'not-fit' && <><div className="text-5xl mb-3">✗</div><h2 className="text-3xl font-bold text-red-600">Not a Fit</h2></>}
             </div>
-            <button onClick={() => setStep('contact')} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 mb-3">Continue</button>
-            <button onClick={onClose} className="w-full text-gray-600 py-2 hover:text-gray-900">Back</button>
+            <button onClick={() => setStep('contact')} className="w-full bg-[#FF4D8D] text-white py-3 rounded-lg font-semibold hover:bg-[#E53A73] mb-3">Continue</button>
+            <button onClick={onClose} className="w-full text-[#B8C4D4] py-2 hover:text-[#F6F8F9]">Back</button>
           </>
         )}
         {step === 'contact' && !result && (
           <>
             <h2 className="text-2xl font-bold mb-2">One more thing...</h2>
-            <p className="text-gray-600 mb-6">Don will reach out directly with personalized options.</p>
+            <p className="text-[#B8C4D4] mb-6">Don will reach out directly with personalized options.</p>
             <form onSubmit={handleContactSubmit} className="space-y-4">
               <input type="text" required value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} className="w-full px-4 py-2 border rounded-lg" placeholder="First Name" />
               <input type="tel" required value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-4 py-2 border rounded-lg" placeholder="Phone" />
-              <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">Submit</button>
+              <button type="submit" className="w-full bg-[#FF4D8D] text-white py-3 rounded-lg font-semibold hover:bg-[#E53A73]">Submit</button>
             </form>
           </>
         )}
@@ -121,8 +121,8 @@ const TalkTodonModal = ({ building, onClose }) => {
           <div className="text-center py-8">
             <div className="text-5xl mb-3">✓</div>
             <h3 className="text-xl font-bold mb-2">Thanks!</h3>
-            <p className="text-gray-600 mb-6">Don will reach out soon.</p>
-            <button onClick={onClose} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold">Back to Buildings</button>
+            <p className="text-[#B8C4D4] mb-6">Don will reach out soon.</p>
+            <button onClick={onClose} className="w-full bg-[#FF4D8D] text-white py-3 rounded-lg font-semibold">Back to Buildings</button>
           </div>
         )}
       </div>
@@ -235,7 +235,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       const price = document.createElement('div');
       price.style.fontSize = '13px';
       price.style.fontWeight = '500';
-      price.style.color = '#3b82f6';
+      price.style.color = '#FF4D8D';
       price.style.marginBottom = '12px';
       price.textContent = `$${building.priceMin?.toLocaleString()}/mo`;
       popupContent.appendChild(price);
@@ -245,7 +245,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       button.textContent = 'View Details';
       button.style.width = '100%';
       button.style.padding = '8px 12px';
-      button.style.backgroundColor = '#3b82f6';
+      button.style.backgroundColor = '#FF4D8D';
       button.style.color = 'white';
       button.style.border = 'none';
       button.style.borderRadius = '4px';
@@ -253,8 +253,8 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       button.style.fontWeight = '500';
       button.style.cursor = 'pointer';
       button.style.transition = 'background-color 0.2s';
-      button.onmouseover = () => button.style.backgroundColor = '#2563eb';
-      button.onmouseout = () => button.style.backgroundColor = '#3b82f6';
+      button.onmouseover = () => button.style.backgroundColor = '#E53A73';
+      button.onmouseout = () => button.style.backgroundColor = '#FF4D8D';
       button.onclick = () => {
         setSelectedBuildingForDetail(building);
         popup.remove();
@@ -656,25 +656,25 @@ export default function MiamiApp() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-[#0F1B30]">
       <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
       
       {/* Desktop Header - Fixed at Top */}
-      <div className="hidden md:flex items-center justify-between px-8 h-12 bg-white border-b border-gray-300 flex-shrink-0">
-        <h1 className="text-sm font-medium text-gray-900">
+      <div className="hidden md:flex items-center justify-between px-8 h-12 bg-[#0F1B30] border-b border-[#19C6C0] flex-shrink-0">
+        <h1 className="text-sm font-medium text-[#F6F8F9]">
           Miami Apartment Guy
           <sup className="text-xs font-normal align-top ml-1 relative" style={{top: '-1px'}}>™</sup>
         </h1>
         <button 
           onClick={() => setShowMoveWithDonModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-full font-medium text-xs transition-colors"
+          className="bg-[#FF4D8D] hover:bg-[#E53A73] text-white px-3 py-1.5 rounded-full font-medium text-xs transition-colors"
         >
           Move with Don
         </button>
       </div>
 
       {/* Mobile Header */}
-      <div className="fixed top-0 left-0 right-0 z-40 bg-white md:hidden border-b-[0.5px] border-gray-300">
+      <div className="fixed top-0 left-0 right-0 z-40 bg-[#0F1B30] md:hidden border-b-[0.5px] border-[#19C6C0]">
         <div className="flex items-center justify-between px-4 py-3.5">
           {/* Text Column - Left */}
           <h1 className="text-base font-medium text-[#1a1a1a] tracking-tighter whitespace-nowrap">
@@ -695,7 +695,7 @@ export default function MiamiApp() {
             )}
             <button 
               onClick={() => setShowMoveWithDonModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg text-sm whitespace-nowrap flex-shrink-0"
+              className="bg-[#FF4D8D] hover:bg-[#E53A73] text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg text-sm whitespace-nowrap flex-shrink-0"
             >
               Move with Don
             </button>
@@ -704,11 +704,11 @@ export default function MiamiApp() {
       </div>
 
       {/* Mobile Layout */}
-      <div className="flex md:hidden flex-col w-full h-full bg-white min-h-screen pt-16">
+      <div className="flex md:hidden flex-col w-full h-full bg-[#0F1B30] min-h-screen pt-16">
         <div className={`flex-1 relative w-full h-full overflow-hidden transition-opacity ${bottomSheetSnapPoint === 2 ? 'pointer-events-none opacity-50' : 'pointer-events-auto'}`}>
           <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
           <div className="absolute top-4 left-4 right-4 z-20 flex gap-3 items-center pointer-events-none">
-            <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="flex-1 px-4 py-3 rounded-full bg-white border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 pointer-events-auto" />
+            <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="flex-1 px-4 py-3 rounded-full bg-[#0F1B30] border border-[#19C6C0] text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-[#FF4D8D] pointer-events-auto" />
             <button
               onClick={() => {
                 if (selectedBuilding) {
@@ -730,11 +730,11 @@ export default function MiamiApp() {
                 <span className="text-xs font-bold leading-none mt-0.5">{starredBuildings.size}</span>
               </div>
             </button>
-            <button onClick={() => setShowFilterModal(true)} className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-blue-600 pointer-events-auto text-lg font-semibold">⚙</button>
+            <button onClick={() => setShowFilterModal(true)} className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-[#FF4D8D] pointer-events-auto text-lg font-semibold">⚙</button>
           </div>
         </div>
 
-        <div ref={bottomSheetRef} onTouchStart={handleBottomSheetDrag} onTouchEnd={handleBottomSheetDrag} className={`fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-40 transition-all duration-300 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing ${SNAP_POINTS[bottomSheetSnapPoint]}`}>
+        <div ref={bottomSheetRef} onTouchStart={handleBottomSheetDrag} onTouchEnd={handleBottomSheetDrag} className={`fixed bottom-0 left-0 right-0 bg-[#0F1B30] rounded-t-3xl shadow-2xl z-40 transition-all duration-300 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing ${SNAP_POINTS[bottomSheetSnapPoint]}`}>
           <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 flex-shrink-0"></div>
           
           {bottomSheetSnapPoint === 0 && <div className="flex-1"></div>}
@@ -748,8 +748,8 @@ export default function MiamiApp() {
                       <p className="text-gray-500 text-center py-4">No buildings found</p>
                     ) : (
                       filteredBuildings.map((building) => (
-                        <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden" onClick={() => setSelectedBuilding(building)}>
-                          <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-hidden">
+                        <div key={building.id} className="p-3 rounded-lg border border-[#19C6C0] bg-[#0F1B30] overflow-hidden" onClick={() => setSelectedBuilding(building)}>
+                          <div className="relative w-full h-40 bg-[#1B2A45] rounded-md mb-3 overflow-hidden">
                             <img src={building.images[0]} alt={building.name} className="w-full h-full object-cover" />
                             {/* Star Button - Uses transform to stay visible during momentum scroll */}
                             <button
@@ -763,7 +763,7 @@ export default function MiamiApp() {
                                 }
                                 setStarredBuildings(newStarred);
                               }}
-                              className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md z-40 will-change-transform"
+                              className="absolute top-2 right-2 p-1.5 rounded-full bg-[#0F1B30]/90 hover:bg-[#0F1B30] transition-colors shadow-md z-40 will-change-transform"
                               style={{
                                 transform: 'translate(0, 0)',
                                 backfaceVisibility: 'hidden',
@@ -775,13 +775,13 @@ export default function MiamiApp() {
                                 className={`h-4 w-4 transition-colors ${
                                   starredBuildings.has(String(building.id))
                                     ? "fill-yellow-400 text-yellow-400"
-                                    : "text-gray-400 hover:text-yellow-400"
+                                    : "text-[#7E8CA0] hover:text-yellow-400"
                                 }`}
                               />
                             </button>
                           </div>
                           <div className="flex justify-between items-start mb-1">
-                            <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
+                            <h3 className="font-semibold text-[#F6F8F9] text-sm">{building.name}</h3>
                             <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
                           </div>
                           <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
@@ -789,7 +789,7 @@ export default function MiamiApp() {
                           {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
                           <div className="flex gap-2 mt-2">
                             <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
-                            <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
+                            <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-[#FF4D8D]">Info</button>
                           </div>
                         </div>
                       ))
@@ -798,9 +798,9 @@ export default function MiamiApp() {
                 </div>
               ) : (
                 <div className="pt-2">
-                  <div className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
-                    <button onClick={(e) => { e.stopPropagation(); setSelectedBuilding(null); }} className="text-sm text-blue-500 font-semibold mb-2 hover:text-blue-600">← Back</button>
-                    <div className="relative w-full h-40 bg-gray-100 rounded-md mb-3 overflow-hidden">
+                  <div className="p-3 rounded-lg border border-[#19C6C0] bg-[#0F1B30] overflow-hidden">
+                    <button onClick={(e) => { e.stopPropagation(); setSelectedBuilding(null); }} className="text-sm text-blue-500 font-semibold mb-2 hover:text-[#FF4D8D]">← Back</button>
+                    <div className="relative w-full h-40 bg-[#1B2A45] rounded-md mb-3 overflow-hidden">
                       <img src={selectedBuilding.images[0]} alt={selectedBuilding.name} className="w-full h-full object-cover" />
                       {/* Star Button - Uses transform to stay visible during momentum scroll */}
                       <button
@@ -814,7 +814,7 @@ export default function MiamiApp() {
                           }
                           setStarredBuildings(newStarred);
                         }}
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md z-40 will-change-transform"
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-[#0F1B30]/90 hover:bg-[#0F1B30] transition-colors shadow-md z-40 will-change-transform"
                         style={{
                           transform: 'translate(0, 0)',
                           backfaceVisibility: 'hidden',
@@ -826,7 +826,7 @@ export default function MiamiApp() {
                           className={`h-4 w-4 transition-colors ${
                             starredBuildings.has(String(selectedBuilding.id))
                               ? "fill-yellow-400 text-yellow-400"
-                              : "text-gray-400 hover:text-yellow-400"
+                              : "text-[#7E8CA0] hover:text-yellow-400"
                           }`}
                         />
                       </button>
@@ -841,20 +841,20 @@ export default function MiamiApp() {
                           }
                           setStarredBuildings(newStarred);
                         }}
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md"
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-[#0F1B30]/90 hover:bg-[#0F1B30] transition-colors shadow-md"
                         aria-label={starredBuildings.has(String(selectedBuilding.id)) ? "Remove from list" : "Add to list"}
                       >
                         <Star
                           className={`h-4 w-4 transition-colors ${
                             starredBuildings.has(String(selectedBuilding.id))
                               ? "fill-yellow-400 text-yellow-400"
-                              : "text-gray-400 hover:text-yellow-400"
+                              : "text-[#7E8CA0] hover:text-yellow-400"
                           }`}
                         />
                       </button>
                     </div>
                     <div className="flex justify-between items-start mb-1">
-                      <h3 className="font-semibold text-gray-900 text-sm">{selectedBuilding.name}</h3>
+                      <h3 className="font-semibold text-[#F6F8F9] text-sm">{selectedBuilding.name}</h3>
                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{selectedBuilding.neighborhood}</span>
                     </div>
                     <p className="text-sm text-gray-700 mb-1">{selectedBuilding.tagline || `$${selectedBuilding.priceMin}+/mo`}</p>
@@ -862,7 +862,7 @@ export default function MiamiApp() {
                     {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
                     <div className="flex gap-2 mt-2">
                       <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
-                      <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(selectedBuilding); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
+                      <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(selectedBuilding); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-[#FF4D8D]">Info</button>
                     </div>
                   </div>
                 </div>
@@ -881,10 +881,10 @@ export default function MiamiApp() {
                         <p className="text-gray-500 text-center py-4">No buildings found</p>
                       ) : (
                         filteredBuildings.map((building) => (
-                          <div key={building.id} onClick={() => setSelectedBuilding(building)} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
+                          <div key={building.id} onClick={() => setSelectedBuilding(building)} className="p-3 rounded-lg border border-[#19C6C0] bg-[#0F1B30] overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
               <img src={building.images[0]} alt={building.name} className="w-full h-40 object-cover rounded-md mb-3" loading="lazy" decoding="async" width={400} height={160} />
                             <div className="flex justify-between items-start mb-1">
-                              <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
+                              <h3 className="font-semibold text-[#F6F8F9] text-sm">{building.name}</h3>
                               <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
                             </div>
                             <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
@@ -892,7 +892,7 @@ export default function MiamiApp() {
                             {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
                             <div className="flex gap-2 mt-2">
                                 <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
-                              <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
+                              <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-[#FF4D8D]">Info</button>
                             </div>
                           </div>
                         ))
@@ -906,17 +906,17 @@ export default function MiamiApp() {
                       if (buildings.length === 0) return null;
                       return (
                         <div key={neighborhood}>
-                          <button onClick={() => toggleNeighborhood(neighborhood)} className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
-                            <span className="font-semibold text-gray-900 text-sm">{neighborhood} ({buildings.length})</span>
-                            <span className={`text-gray-600 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
+                          <button onClick={() => toggleNeighborhood(neighborhood)} className="w-full flex items-center justify-between p-3 bg-[#0F1B30] hover:bg-[#1B2A45] rounded-lg transition">
+                            <span className="font-semibold text-[#F6F8F9] text-sm">{neighborhood} ({buildings.length})</span>
+                            <span className={`text-[#B8C4D4] transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
                           </button>
                           {isExpanded && (
                             <div className="mt-2 space-y-2 mb-3">
                               {buildings.map((building) => (
-                                <div key={building.id} className="p-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
+                                <div key={building.id} className="p-3 rounded-lg border border-[#19C6C0] bg-[#0F1B30] overflow-hidden">
                                   <img src={building.images[0]} alt={building.name} className="w-full h-40 object-cover rounded-md mb-3" loading="lazy" decoding="async" width={400} height={160} />
                                   <div className="flex justify-between items-start mb-1">
-                                    <h3 className="font-semibold text-gray-900 text-sm">{building.name}</h3>
+                                    <h3 className="font-semibold text-[#F6F8F9] text-sm">{building.name}</h3>
                                     <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
                                   </div>
                                   <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
@@ -924,7 +924,7 @@ export default function MiamiApp() {
                                   {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
                                   <div className="flex gap-2 mt-2">
                               <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600">Text Don</button>
-                                    <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600">Info</button>
+                                    <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-[#FF4D8D]">Info</button>
                                   </div>
                                 </div>
                               ))}
@@ -940,13 +940,13 @@ export default function MiamiApp() {
             <FlowBrickellCard onOpenModal={() => setShowModal(true)} />
           ) : (
             <div className="p-4 sm:p-6 lg:p-8">
-              <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-[#19C6C0] text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-[#FF4D8D]" />
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-semibold">{searchQuery ? 'Search Results' : 'Neighborhoods'}</h2>
-                <button onClick={() => isAgentMode ? setIsAgentMode(false) : setShowPinModal(true)} className={`px-3 py-1 rounded-lg text-sm font-medium ${isAgentMode ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{isAgentMode ? 'Agent Mode' : 'Agent?'}</button>
+                <button onClick={() => isAgentMode ? setIsAgentMode(false) : setShowPinModal(true)} className={`px-3 py-1 rounded-lg text-sm font-medium ${isAgentMode ? 'bg-green-100 text-green-700' : 'bg-[#1B2A45] text-[#B8C4D4]'}`}>{isAgentMode ? 'Agent Mode' : 'Agent?'}</button>
               </div>
                   
-                  <button onClick={() => setShowModal(true)} className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 mb-4">Talk to Don</button>
+                  <button onClick={() => setShowModal(true)} className="w-full bg-[#FF4D8D] text-white py-3 rounded-lg font-semibold hover:bg-[#E53A73] mb-4">Talk to Don</button>
                 </div>
               )}
             </div>
@@ -977,15 +977,15 @@ export default function MiamiApp() {
         </div>
 
         {/* Cards Panel - 45% of width */}
-        <div className="basis-[45%] bg-white border-l border-gray-200 overflow-hidden flex flex-col">
+        <div className="basis-[45%] bg-[#0F1B30] border-l border-[#19C6C0] overflow-hidden flex flex-col">
           {/* Search & Header */}
-          <div className="p-5 border-b border-gray-100 bg-white">
+          <div className="p-5 border-b border-gray-100 bg-[#0F1B30]">
             <input 
               type="text" 
               placeholder="Search buildings..." 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+              className="w-full px-4 py-2.5 rounded-lg border border-[#19C6C0] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[#FF4D8D]" 
             />
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-gray-700">
@@ -1006,7 +1006,7 @@ export default function MiamiApp() {
                   className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
                     isAgentMode 
                       ? 'bg-green-100 text-green-700' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-[#1B2A45] text-[#B8C4D4] hover:bg-gray-200'
                   }`}
                 >
                   {isAgentMode ? '✓ Agent Mode' : 'Agent?'}
@@ -1049,10 +1049,10 @@ export default function MiamiApp() {
       {/* Info Popup Modal */}
       {infoBuilding && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full max-h-[85vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
+          <div className="bg-[#0F1B30] rounded-2xl max-w-md w-full max-h-[85vh] overflow-y-auto">
+            <div className="sticky top-0 bg-[#0F1B30] p-4 border-b flex justify-between items-center">
               <h2 className="text-xl font-bold">{infoBuilding.name}</h2>
-              <button onClick={() => setInfoBuilding(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600">X</button>
+              <button onClick={() => setInfoBuilding(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1B2A45] hover:bg-gray-200 text-[#B8C4D4]">X</button>
             </div>
             
             {infoBuilding.name === 'Flow Brickell' ? (
@@ -1063,13 +1063,13 @@ export default function MiamiApp() {
                   <ImageCarousel images={infoBuilding.images} />
                 </div>
                 <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-xs text-blue-600 font-medium">{infoBuilding.neighborhood}</p>
-                  <p className="text-sm text-gray-600 mt-1">{infoBuilding.address}</p>
+                  <p className="text-xs text-[#FF4D8D] font-medium">{infoBuilding.neighborhood}</p>
+                  <p className="text-sm text-[#B8C4D4] mt-1">{infoBuilding.address}</p>
                 </div>
                 
-                <div className="bg-gray-50 p-3 rounded-lg">
+                <div className="bg-[#0F1B30] p-3 rounded-lg">
                   <p className="text-xs text-gray-500">Starting at</p>
-                  <p className="text-2xl font-bold text-gray-900">${infoBuilding.priceMin}+/mo</p>
+                  <p className="text-2xl font-bold text-[#F6F8F9]">${infoBuilding.priceMin}+/mo</p>
                 </div>
                 
                 {isAgentMode && (
@@ -1085,16 +1085,16 @@ export default function MiamiApp() {
                 </div>
                 
                 <div>
-                  <p className="text-sm font-semibold text-gray-900 mb-2">Unit Types</p>
+                  <p className="text-sm font-semibold text-[#F6F8F9] mb-2">Unit Types</p>
                   <div className="flex gap-2 flex-wrap">
                     {infoBuilding.units.map((unit) => (
-                      <span key={unit} className="text-xs bg-gray-100 px-3 py-1 rounded-full">{unit}</span>
+                      <span key={unit} className="text-xs bg-[#1B2A45] px-3 py-1 rounded-full">{unit}</span>
                     ))}
                   </div>
                 </div>
                 
                 <div>
-                  <p className="text-sm font-semibold text-gray-900 mb-2">Amenities</p>
+                  <p className="text-sm font-semibold text-[#F6F8F9] mb-2">Amenities</p>
                   <div className="flex flex-wrap gap-2">
                     {infoBuilding.amenities.map((a) => (
                       <span key={a} className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">{a}</span>
@@ -1103,33 +1103,33 @@ export default function MiamiApp() {
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="bg-[#0F1B30] p-3 rounded-lg">
                     <p className="text-xs text-gray-500">Income Req</p>
-                    <p className="font-semibold text-gray-900">{infoBuilding.incomeReq}</p>
+                    <p className="font-semibold text-[#F6F8F9]">{infoBuilding.incomeReq}</p>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="bg-[#0F1B30] p-3 rounded-lg">
                     <p className="text-xs text-gray-500">Credit Req</p>
-                    <p className="font-semibold text-gray-900">{infoBuilding.creditReq}</p>
+                    <p className="font-semibold text-[#F6F8F9]">{infoBuilding.creditReq}</p>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="bg-[#0F1B30] p-3 rounded-lg">
                     <p className="text-xs text-gray-500">Guarantor</p>
-                    <p className="font-semibold text-gray-900">{infoBuilding.guarantor ? 'Accepted' : 'Not Accepted'}</p>
+                    <p className="font-semibold text-[#F6F8F9]">{infoBuilding.guarantor ? 'Accepted' : 'Not Accepted'}</p>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="bg-[#0F1B30] p-3 rounded-lg">
                     <p className="text-xs text-gray-500">Hold Period</p>
-                    <p className="font-semibold text-gray-900">{infoBuilding.holdDays.join('/')} days</p>
+                    <p className="font-semibold text-[#F6F8F9]">{infoBuilding.holdDays.join('/')} days</p>
                   </div>
                 </div>
                 
                 <div>
-                  <p className="text-sm font-semibold text-gray-900 mb-2">Fees</p>
+                  <p className="text-sm font-semibold text-[#F6F8F9] mb-2">Fees</p>
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-600">Deposit</span><span className="font-medium">{infoBuilding.fees.deposit}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Application</span><span className="font-medium">{infoBuilding.fees.application}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Admin Fee</span><span className="font-medium">{infoBuilding.fees.admin}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-600">Parking</span><span className="font-medium">{infoBuilding.fees.parking}</span></div>
+                    <div className="flex justify-between"><span className="text-[#B8C4D4]">Deposit</span><span className="font-medium">{infoBuilding.fees.deposit}</span></div>
+                    <div className="flex justify-between"><span className="text-[#B8C4D4]">Application</span><span className="font-medium">{infoBuilding.fees.application}</span></div>
+                    <div className="flex justify-between"><span className="text-[#B8C4D4]">Admin Fee</span><span className="font-medium">{infoBuilding.fees.admin}</span></div>
+                    <div className="flex justify-between"><span className="text-[#B8C4D4]">Parking</span><span className="font-medium">{infoBuilding.fees.parking}</span></div>
                     {infoBuilding.fees.misc !== 'None' && infoBuilding.fees.misc !== 'TBD' && (
-                      <div className="flex justify-between"><span className="text-gray-600">Other</span><span className="font-medium">{infoBuilding.fees.misc}</span></div>
+                      <div className="flex justify-between"><span className="text-[#B8C4D4]">Other</span><span className="font-medium">{infoBuilding.fees.misc}</span></div>
                     )}
                   </div>
                 </div>
@@ -1143,19 +1143,19 @@ export default function MiamiApp() {
       {/* PIN Modal for Agent Mode */}
       {showPinModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+          <div className="bg-[#0F1B30] rounded-2xl p-6 max-w-sm w-full">
             <h2 className="text-xl font-bold mb-4 text-center">Enter Agent PIN</h2>
             <input 
               type="password" 
               value={pinInput} 
               onChange={(e) => setPinInput(e.target.value)} 
               placeholder="Enter PIN" 
-              className="w-full px-4 py-3 border rounded-lg text-center text-2xl tracking-widest mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border rounded-lg text-center text-2xl tracking-widest mb-4 focus:outline-none focus:ring-2 focus:ring-[#FF4D8D]"
               maxLength={4}
             />
             <div className="flex gap-3">
-              <button onClick={() => { setShowPinModal(false); setPinInput(''); }} className="flex-1 py-3 rounded-lg border border-gray-300 font-semibold hover:bg-gray-50">Cancel</button>
-              <button onClick={handlePinSubmit} className="flex-1 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700">Unlock</button>
+              <button onClick={() => { setShowPinModal(false); setPinInput(''); }} className="flex-1 py-3 rounded-lg border border-[#19C6C0] font-semibold hover:bg-[#0F1B30]">Cancel</button>
+              <button onClick={handlePinSubmit} className="flex-1 py-3 rounded-lg bg-[#FF4D8D] text-white font-semibold hover:bg-[#E53A73]">Unlock</button>
             </div>
           </div>
         </div>
