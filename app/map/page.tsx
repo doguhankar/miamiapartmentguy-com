@@ -439,20 +439,20 @@ export default function MapPage() {
   }
 
   return (
-    <div style={{ background: INK, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ background: INK, height: "100vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
       <Ticker />
       <Nav />
 
       {/* Filter bar */}
       <div
         style={{
-          position: "sticky",
-          top: 62,
+          position: "relative",
           zIndex: 55,
           background: "rgba(11,18,32,.92)",
           backdropFilter: "blur(14px)",
           borderBottom: `1px solid ${LINE}`,
           padding: "14px 0",
+          flexShrink: 0,
         }}
       >
         <div
@@ -505,9 +505,8 @@ export default function MapPage() {
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 520px",
-          height: "calc(100vh - 104px)",
-          minHeight: 640,
           flex: 1,
+          overflow: "hidden",
         }}
         className="map-split"
       >
