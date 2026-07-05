@@ -65,7 +65,7 @@ export default function HomePage() {
             </p>
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
               <a href="sms:+14077657306?body=Hi%20Don%2C%20I%27m%20looking%20for%20a%20Miami%20apartment" className="btn btn-pink">💬 Text me your budget</a>
-              <a href="#hoods" className="btn btn-ghost">Browse the map →</a>
+              <a href="#hoods" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', fontWeight: 700, fontSize: '15px', cursor: 'pointer', border: '1px solid rgba(255,255,255,.12)', color: '#F6F8F9', background: 'transparent', transition: 'transform 0.15s, border-color 0.15s, color 0.15s' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#19C6C0'; e.currentTarget.style.color = '#19C6C0'; e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,.12)'; e.currentTarget.style.color = '#F6F8F9'; e.currentTarget.style.transform = 'none'; }}>Browse the map →</a>
             </div>
             <div style={{ fontSize: '13px', color: '#7E8CA0', marginTop: '14px' }}>No fees. No spam. No "create an account to see prices." Ever.</div>
           </div>
