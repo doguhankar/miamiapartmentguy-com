@@ -5,7 +5,7 @@ import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
-const _archivo = Archivo({ subsets: ["latin"], variable: '--font-archivo' });
+const _archivo = Archivo({ subsets: ["latin"], weight: ['900'], variable: '--font-archivo' });
 const _spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: '--font-space-grotesk' });
 
 export const metadata: Metadata = {

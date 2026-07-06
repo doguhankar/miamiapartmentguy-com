@@ -747,7 +747,7 @@ export default function MiamiApp() {
       <div className="fixed top-0 left-0 right-0 z-40 bg-[#0B1220] md:hidden border-b border-white/[0.12]">
         <div className="flex items-center justify-between px-4 py-3">
           {/* Logo - Left */}
-          <h1 className="text-sm font-bold text-white uppercase tracking-tight whitespace-nowrap" style={{ fontFamily: 'Archivo', fontVariationSettings: "'wdth' 125", letterSpacing: '0.05em' }}>
+          <h1 className="text-xs font-black text-white uppercase tracking-tight whitespace-nowrap" style={{ fontFamily: 'var(--font-archivo), Archivo, sans-serif', fontVariationSettings: "'wdth' 115", fontWeight: 900, letterSpacing: '-0.01em' }}>
             Miami Apartment <span className="text-[#FF4D8D]">Guy</span>™
           </h1>
           
