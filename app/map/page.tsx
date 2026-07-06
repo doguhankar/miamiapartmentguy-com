@@ -770,7 +770,7 @@ export default function MiamiApp() {
         <div className={`flex-1 relative w-full h-full overflow-hidden transition-opacity ${bottomSheetSnapPoint === 2 ? 'pointer-events-none opacity-50' : 'pointer-events-auto'}`}>
           <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
           <div className="absolute top-4 left-4 right-4 z-20 flex gap-3 items-center pointer-events-none">
-            <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="flex-1 px-4 py-3 rounded-full bg-[#0F1B30] border border-[#19C6C0] text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-[#FF4D8D] pointer-events-auto" />
+            <input type="text" placeholder="Search for a building" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="flex-1 px-4 py-3 rounded-full bg-[#0F1B30] border-2 border-[#FF4D8D] text-sm text-[#F6F8F9] shadow-lg shadow-[#FF4D8D]/20 focus:outline-none focus:ring-2 focus:ring-[#FF4D8D] focus:ring-offset-2 focus:ring-offset-[#0a0e1a] pointer-events-auto transition-all placeholder:text-[#7E8CA0]" />
             <button
               onClick={() => {
                 if (selectedBuilding) {
@@ -1010,7 +1010,7 @@ export default function MiamiApp() {
             <FlowBrickellCard onOpenModal={() => setShowModal(true)} />
           ) : (
             <div className="p-4 sm:p-6 lg:p-8">
-              <input type="text" placeholder="Look up a building..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-[#19C6C0] text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-[#FF4D8D]" />
+              <input type="text" placeholder="Search for a building" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full px-4 py-3 rounded-lg border-2 border-[#FF4D8D] text-sm text-[#F6F8F9] mb-4 shadow-lg shadow-[#FF4D8D]/20 focus:outline-none focus:ring-2 focus:ring-[#FF4D8D] focus:ring-offset-2 focus:ring-offset-[#0F1B30] transition-all placeholder:text-[#7E8CA0]" />
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-semibold">{searchQuery ? 'Search Results' : 'Neighborhoods'}</h2>
                 <button onClick={() => isAgentMode ? setIsAgentMode(false) : setShowPinModal(true)} className={`px-3 py-1 rounded-lg text-sm font-medium ${isAgentMode ? 'bg-green-100 text-green-700' : 'bg-[#1B2A45] text-[#B8C4D4]'}`}>{isAgentMode ? 'Agent Mode' : 'Agent?'}</button>
