@@ -924,9 +924,17 @@ export default function MiamiApp() {
                       if (buildings.length === 0) return null;
                       return (
                         <div key={neighborhood}>
-                          <button onClick={() => toggleNeighborhood(neighborhood)} className="w-full flex items-center justify-between p-3 bg-[#0F1B30] hover:bg-[#1B2A45] rounded-lg transition">
-                            <span className="font-semibold text-[#F6F8F9] text-sm">{neighborhood} ({buildings.length})</span>
-                            <span className={`text-[#B8C4D4] transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
+                          <button 
+                            onClick={() => toggleNeighborhood(neighborhood)}
+                            className="px-4 py-2 rounded-full transition-all flex items-center justify-between"
+                            style={{
+                              background: '#0F1B30',
+                              border: isExpanded ? '2px solid #19C6C0' : '1px solid rgba(255,255,255,.12)',
+                              color: isExpanded ? '#19C6C0' : '#F6F8F9'
+                            }}
+                          >
+                            <span className="font-semibold text-sm">{neighborhood} ({buildings.length})</span>
+                            <span className={`ml-2 transition transform ${isExpanded ? 'rotate-90' : ''}`}>›</span>
                           </button>
                           {isExpanded && (
                             <div className="mt-2 space-y-2 mb-3">
