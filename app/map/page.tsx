@@ -148,7 +148,7 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setBottomSheetSnapPoint, setSelectedBuildingForDetail }) => {
+const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setBottomSheetSnapPoint, setSelectedBuildingForDetail, onMapReady }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
@@ -170,6 +170,9 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       });
 
       map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+      
+      // Register map instance with parent
+      onMapReady?.(map.current);
     } catch (error) {
       console.error('[v0] Map initialization error:', error);
     }
@@ -361,17 +364,32 @@ export default function MiamiApp() {
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
   const [selectedBuildingForDetail, setSelectedBuildingForDetail] = useState(null);
   const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], price: [], moveInDate: [], neighborhood: null });
+  const [mapInstance, setMapInstance] = useState<any>(null);
+
+  // Callback to receive map instance from MapComponent
+  const handleMapReady = (mapRef: any) => {
+    setMapInstance(mapRef);
+  };
 
   // Handle neighborhood selection with Mapbox flyTo
   const handleNeighborhoodFlyTo = (neighborhood: string) => {
     const center = neighborhoodCenters[neighborhood];
-    if (map.current && center) {
-      map.current.flyTo({
-        center: [center.lng, center.lat],
-        zoom: center.zoom,
-        duration: 1500
-      });
+    
+    if (!mapInstance) {
+      console.log('[v0] mapInstance not yet initialized');
+      return;
     }
+    
+    if (!center) {
+      console.log('[v0] no center data found for neighborhood:', neighborhood);
+      return;
+    }
+    
+    mapInstance.flyTo({
+      center: [center.lng, center.lat],
+      zoom: center.zoom,
+      duration: 1500
+    });
   };
 
   const SNAP_POINTS = {
@@ -1030,6 +1048,7 @@ export default function MiamiApp() {
             setSelectedBuilding={setSelectedBuilding}
             setBottomSheetSnapPoint={setBottomSheetSnapPoint}
             setSelectedBuildingForDetail={setSelectedBuildingForDetail}
+            onMapReady={handleMapReady}
           />
         </div>
 
