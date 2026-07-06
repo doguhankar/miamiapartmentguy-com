@@ -728,10 +728,11 @@ export default function MiamiApp() {
         {/* Text Don Button */}
         <button 
           onClick={() => setShowMoveWithDonModal(true)}
-          className="flex items-center justify-center gap-2 bg-[#ec4899] hover:bg-[#db2777] text-white px-4 py-2 rounded-full font-semibold text-sm transition-colors"
+          className="flex items-center justify-center bg-[#ec4899] hover:bg-[#db2777] text-white px-4 py-2 rounded-full font-semibold text-sm transition-colors"
+          style={{ lineHeight: '1' }}
         >
-          <span>💬</span>
-          Text Don
+          <span style={{ marginRight: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>💬</span>
+          <span>Text Don</span>
         </button>
       </div>
 
