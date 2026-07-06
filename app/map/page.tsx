@@ -733,12 +733,13 @@ export default function MiamiApp() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            lineHeight: '1.2',
-            gap: '8px'
+            lineHeight: '1',
+            gap: '8px',
+            height: '36px'
           }}
         >
-          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1' }}>💬</span>
-          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1.2' }}>Text Don</span>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Text Don</span>
         </button>
       </div>
 
