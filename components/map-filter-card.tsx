@@ -14,9 +14,18 @@ interface MapFilterCardProps {
   onFilterChange: (filters: MapFilterState) => void;
   onClearAll: () => void;
   buildingCount?: number;
+  expandedNeighborhoods?: string[];
+  onNeighborhoodToggle?: (neighborhood: string) => void;
 }
 
-export function MapFilterCard({ filters, onFilterChange, onClearAll, buildingCount = 107 }: MapFilterCardProps) {
+export function MapFilterCard({ 
+  filters, 
+  onFilterChange, 
+  onClearAll, 
+  buildingCount = 107,
+  expandedNeighborhoods = [],
+  onNeighborhoodToggle 
+}: MapFilterCardProps) {
   const [openDropdown, setOpenDropdown] = useState<'bedrooms' | 'price' | 'moveIn' | null>(null);
 
   const bedroomOptions = ['All bedrooms', 'Studio', '1 Bedroom', '2 Bedrooms', '3+ Bedrooms'];
@@ -85,19 +94,39 @@ export function MapFilterCard({ filters, onFilterChange, onClearAll, buildingCou
     <div className="w-full flex items-center justify-between px-8 py-4 bg-[#0a0e1a] border-b border-[#0F1B30] gap-4">
       {/* Left side - Filter pills */}
       <div className="flex items-center gap-3">
+        {/* Neighborhood Pill - Only show when at least one is selected */}
+        {expandedNeighborhoods.length > 0 && (
+          <div className="relative">
+            <button
+              onClick={() => onNeighborhoodToggle && onNeighborhoodToggle(expandedNeighborhoods[0])}
+              className="flex items-center justify-between px-5 py-3 rounded-full transition-all"
+              style={{
+                background: 'transparent',
+                border: '2px solid #5eead4',
+                color: '#5eead4',
+                fontSize: '15px'
+              }}
+            >
+              <span className="font-medium truncate">Neighborhood: {expandedNeighborhoods[0]}</span>
+              <span className="ml-2">▾</span>
+            </button>
+          </div>
+        )}
+
         {/* Bedrooms Dropdown */}
         <div className="relative">
         <button
           onClick={() => setOpenDropdown(openDropdown === 'bedrooms' ? null : 'bedrooms')}
-          className="flex items-center justify-between px-4 py-2 rounded-full transition-all"
+          className="flex items-center justify-between px-5 py-3 rounded-full transition-all"
           style={{
             background: '#0F1B30',
             border: '1px solid rgba(255,255,255,.12)',
             color: '#F6F8F9',
+            fontSize: '15px',
             ...(openDropdown === 'bedrooms' ? { borderColor: '#19C6C0', color: '#19C6C0' } : {})
           }}
         >
-          <span className="text-sm font-medium truncate">{getSelectedLabel('bedrooms')}</span>
+          <span className="font-medium truncate">{getSelectedLabel('bedrooms')}</span>
           <ChevronDown className={`h-4 w-4 ml-2 transition-transform flex-shrink-0 ${openDropdown === 'bedrooms' ? 'rotate-180' : ''}`} />
         </button>
         {openDropdown === 'bedrooms' && (
@@ -133,15 +162,16 @@ export function MapFilterCard({ filters, onFilterChange, onClearAll, buildingCou
       <div className="relative">
         <button
           onClick={() => setOpenDropdown(openDropdown === 'price' ? null : 'price')}
-          className="flex items-center justify-between px-4 py-2 rounded-full transition-all"
+          className="flex items-center justify-between px-5 py-3 rounded-full transition-all"
           style={{
             background: '#0F1B30',
             border: '1px solid rgba(255,255,255,.12)',
             color: '#F6F8F9',
+            fontSize: '15px',
             ...(openDropdown === 'price' ? { borderColor: '#19C6C0', color: '#19C6C0' } : {})
           }}
         >
-          <span className="text-sm font-medium truncate">{getSelectedLabel('price')}</span>
+          <span className="font-medium truncate">{getSelectedLabel('price')}</span>
           <ChevronDown className={`h-4 w-4 ml-2 transition-transform flex-shrink-0 ${openDropdown === 'price' ? 'rotate-180' : ''}`} />
         </button>
         {openDropdown === 'price' && (
@@ -177,15 +207,16 @@ export function MapFilterCard({ filters, onFilterChange, onClearAll, buildingCou
       <div className="relative">
         <button
           onClick={() => setOpenDropdown(openDropdown === 'moveIn' ? null : 'moveIn')}
-          className="flex items-center justify-between px-4 py-2 rounded-full transition-all"
+          className="flex items-center justify-between px-5 py-3 rounded-full transition-all"
           style={{
             background: '#0F1B30',
             border: '1px solid rgba(255,255,255,.12)',
             color: '#F6F8F9',
+            fontSize: '15px',
             ...(openDropdown === 'moveIn' ? { borderColor: '#19C6C0', color: '#19C6C0' } : {})
           }}
         >
-          <span className="text-sm font-medium truncate">{getSelectedLabel('moveIn')}</span>
+          <span className="font-medium truncate">{getSelectedLabel('moveIn')}</span>
           <ChevronDown className={`h-4 w-4 ml-2 transition-transform flex-shrink-0 ${openDropdown === 'moveIn' ? 'rotate-180' : ''}`} />
         </button>
         {openDropdown === 'moveIn' && (
@@ -221,14 +252,15 @@ export function MapFilterCard({ filters, onFilterChange, onClearAll, buildingCou
         {hasActiveFilters && (
           <button
             onClick={onClearAll}
-            className="px-4 py-2 rounded-full transition-all text-sm font-medium flex items-center gap-2"
+            className="px-5 py-3 rounded-full transition-all font-medium flex items-center gap-2"
             style={{
-              background: '#0F1B30',
-              border: '1px solid rgba(255,255,255,.12)',
-              color: '#F6F8F9'
+              background: 'transparent',
+              border: 'none',
+              color: '#7E8CA0',
+              fontSize: '15px'
             }}
-            onMouseEnter={(e) => { e.target.style.borderColor = '#FF4D8D'; e.target.style.color = '#FF4D8D'; }}
-            onMouseLeave={(e) => { e.target.style.borderColor = 'rgba(255,255,255,.12)'; e.target.style.color = '#F6F8F9'; }}
+            onMouseEnter={(e) => { e.target.style.color = '#B8C4D4'; }}
+            onMouseLeave={(e) => { e.target.style.color = '#7E8CA0'; }}
           >
             <span>✕</span>
             Clear filters

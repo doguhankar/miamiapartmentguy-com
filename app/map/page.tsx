@@ -995,6 +995,8 @@ export default function MiamiApp() {
           onFilterChange={setMapFilters}
           onClearAll={() => setMapFilters({ bedrooms: [], price: [], moveInDate: [] })}
           buildingCount={BUILDINGS.length}
+          expandedNeighborhoods={expandedNeighborhoods}
+          onNeighborhoodToggle={toggleNeighborhood}
         />
       </div>
 
