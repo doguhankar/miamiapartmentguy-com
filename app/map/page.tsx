@@ -744,32 +744,29 @@ export default function MiamiApp() {
       </div>
 
       {/* Mobile Header */}
-      <div className="fixed top-0 left-0 right-0 z-40 bg-[#0F1B30] md:hidden border-b-[0.5px] border-[#19C6C0]">
-        <div className="flex items-center justify-between px-4 py-3.5">
-          {/* Text Column - Left */}
-          <h1 className="text-base font-medium text-[#1a1a1a] tracking-tighter whitespace-nowrap">
-            Miami Apartment Guy
-            <sup className="text-xs font-normal align-top ml-0.5 relative" style={{top: '2px'}}>™</sup>
+      <div className="fixed top-0 left-0 right-0 z-40 bg-[#0B1220] md:hidden border-b border-white/[0.12]">
+        <div className="flex items-center justify-between px-4 py-3">
+          {/* Logo - Left */}
+          <h1 className="text-sm font-bold text-white uppercase tracking-tight whitespace-nowrap" style={{ fontFamily: 'Archivo', fontVariationSettings: "'wdth' 125", letterSpacing: '0.05em' }}>
+            Miami Apartment <span className="text-[#FF4D8D]">Guy</span>™
           </h1>
           
-          {/* Button Column - Right */}
-          <div className="flex items-center gap-2">
-            {starredBuildings.size > 0 && (
-              <button 
-                onClick={() => handleSaveList()}
-                disabled={isSavingList}
-                className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-3 py-2 rounded-lg font-semibold transition-colors shadow-lg text-xs whitespace-nowrap flex-shrink-0"
-              >
-                Save ({starredBuildings.size})
-              </button>
-            )}
-            <button 
-              onClick={() => setShowMoveWithDonModal(true)}
-              className="bg-[#FF4D8D] hover:bg-[#E53A73] text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-lg text-sm whitespace-nowrap flex-shrink-0"
-            >
-              Move with Don
-            </button>
-          </div>
+          {/* Button - Right */}
+          <button 
+            onClick={() => setShowMoveWithDonModal(true)}
+            className="bg-[#FF4D8D] hover:bg-[#E53A73] text-white px-5 py-2 rounded-full font-bold text-sm transition-colors shadow-lg flex-shrink-0"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '7px',
+              lineHeight: '1',
+              height: '40px'
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span>
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Move with Don</span>
+          </button>
         </div>
       </div>
 
@@ -777,8 +774,10 @@ export default function MiamiApp() {
       <div className="flex md:hidden flex-col w-full h-full bg-[#0F1B30] min-h-screen pt-16">
         <div className={`flex-1 relative w-full h-full overflow-hidden transition-opacity ${bottomSheetSnapPoint === 2 ? 'pointer-events-none opacity-50' : 'pointer-events-auto'}`}>
           <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
-          <div className="absolute top-4 left-4 right-4 z-20 flex gap-3 items-center pointer-events-none">
-            <input type="text" placeholder="Search for a building" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="flex-1 px-4 py-3 rounded-full bg-[#0F1B30] border-2 border-[#FF4D8D] text-sm text-[#F6F8F9] shadow-lg shadow-[#FF4D8D]/20 focus:outline-none focus:ring-2 focus:ring-[#FF4D8D] focus:ring-offset-2 focus:ring-offset-[#0a0e1a] pointer-events-auto transition-all placeholder:text-[#7E8CA0]" />
+          <div className="absolute top-3 left-3 right-3 z-20 flex gap-2 items-center pointer-events-none">
+            <div className="flex-1 flex items-center bg-black/[0.92] backdrop-blur-sm border-2 border-[#FF4D8D] rounded-full px-4 py-3 shadow-lg shadow-[#FF4D8D]/25">
+              <input type="text" placeholder="Search for a building" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="flex-1 bg-transparent border-none outline-none text-sm text-white placeholder:text-[#7E8CA0] pointer-events-auto" />
+            </div>
             <button
               onClick={() => {
                 if (selectedBuilding) {
@@ -791,21 +790,16 @@ export default function MiamiApp() {
                   setStarredBuildings(newStarred);
                 }
               }}
-              className="w-12 h-12 bg-yellow-500 hover:bg-yellow-600 text-white rounded-full flex items-center justify-center shadow-md pointer-events-auto transition-colors"
+              className="w-11 h-11 bg-[#FFC24B] hover:bg-[#FFB829] text-[#0B1220] rounded-full flex items-center justify-center shadow-lg pointer-events-auto transition-colors font-bold text-lg flex-shrink-0"
               aria-label={selectedBuilding && starredBuildings.has(String(selectedBuilding.id)) ? 'Unstar building' : 'Star building'}
               title={selectedBuilding ? (starredBuildings.has(String(selectedBuilding.id)) ? 'Unstar current building' : 'Star current building') : 'Click a card to star it'}
-            >
-              <div className="flex flex-col items-center justify-center">
-                <Star className={`h-5 w-5 ${selectedBuilding && starredBuildings.has(String(selectedBuilding.id)) ? 'fill-white' : 'fill-white/50'}`} />
-                <span className="text-xs font-bold leading-none mt-0.5">{starredBuildings.size}</span>
-              </div>
-            </button>
-            <button onClick={() => setShowFilterModal(true)} className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-[#FF4D8D] pointer-events-auto text-lg font-semibold">⚙</button>
+            >★</button>
+            <button onClick={() => setShowFilterModal(true)} className="w-11 h-11 bg-[#152341] text-[#19C6C0] rounded-full flex items-center justify-center shadow-lg border border-white/[0.12] pointer-events-auto text-lg font-semibold hover:bg-[#1a3344] transition-colors flex-shrink-0">⚙</button>
           </div>
         </div>
 
-        <div ref={bottomSheetRef} onTouchStart={handleBottomSheetDrag} onTouchEnd={handleBottomSheetDrag} className={`fixed bottom-0 left-0 right-0 bg-[#0F1B30] rounded-t-3xl shadow-2xl z-40 transition-all duration-300 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing ${SNAP_POINTS[bottomSheetSnapPoint]}`}>
-          <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-3 flex-shrink-0"></div>
+        <div ref={bottomSheetRef} onTouchStart={handleBottomSheetDrag} onTouchEnd={handleBottomSheetDrag} className={`fixed bottom-0 left-0 right-0 bg-[#0B1220] rounded-t-[22px] shadow-2xl z-40 transition-all duration-300 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing border-t border-white/[0.12] ${SNAP_POINTS[bottomSheetSnapPoint]}`}>
+          <div className="w-11 h-1 bg-white/[0.12] rounded-full mx-auto mt-2.5 flex-shrink-0"></div>
           
           {bottomSheetSnapPoint === 0 && <div className="flex-1"></div>}
           
@@ -818,10 +812,11 @@ export default function MiamiApp() {
                       <p className="text-gray-500 text-center py-4">No buildings found</p>
                     ) : (
                       filteredBuildings.map((building) => (
-                        <div key={building.id} className="p-3 rounded-lg border border-[#19C6C0] bg-[#0F1B30] overflow-hidden" onClick={() => setSelectedBuilding(building)}>
-                          <div className="relative w-full h-40 bg-[#1B2A45] rounded-md mb-3 overflow-hidden">
+                        <div key={building.id} className="bg-[#0F1B30] border border-white/[0.12] rounded-[18px] overflow-hidden mb-3" onClick={() => setSelectedBuilding(building)}>
+                          <div className="relative w-full aspect-video bg-gray-800 overflow-hidden">
                             <img src={building.images[0]} alt={building.name} className="w-full h-full object-cover" />
-                            {/* Star Button - Uses transform to stay visible during momentum scroll */}
+                            <span className="absolute top-2.5 left-2.5 bg-black/[0.85] backdrop-blur-sm border border-white/[0.12] rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest text-white">{building.neighborhood}</span>
+                            {building.concession && <span className="absolute top-2.5 right-2.5 bg-[#FFC24B] text-[#0B1220] rounded-full px-3 py-1 text-xs font-bold">🔥 {building.concession}</span>}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -833,33 +828,29 @@ export default function MiamiApp() {
                                 }
                                 setStarredBuildings(newStarred);
                               }}
-                              className="absolute top-2 right-2 p-1.5 rounded-full bg-[#0F1B30]/90 hover:bg-[#0F1B30] transition-colors shadow-md z-40 will-change-transform"
-                              style={{
-                                transform: 'translate(0, 0)',
-                                backfaceVisibility: 'hidden',
-                                WebkitBackfaceVisibility: 'hidden',
-                              }}
+                              className="absolute bottom-2.5 right-2.5 w-8 h-8 rounded-full bg-black/[0.7] backdrop-blur-sm border border-white/[0.12] flex items-center justify-center text-sm hover:bg-black/[0.85] transition-colors z-10"
                               aria-label={starredBuildings.has(String(building.id)) ? "Remove from list" : "Add to list"}
                             >
-                              <Star
-                                className={`h-4 w-4 transition-colors ${
-                                  starredBuildings.has(String(building.id))
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-[#7E8CA0] hover:text-yellow-400"
-                                }`}
-                              />
+                              {starredBuildings.has(String(building.id)) ? '★' : '☆'}
                             </button>
                           </div>
-                          <div className="flex justify-between items-start mb-1">
-                            <h3 className="font-semibold text-[#F6F8F9] text-sm">{building.name}</h3>
-                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{building.neighborhood}</span>
-                          </div>
-                          <p className="text-sm text-gray-700 mb-1">{building.tagline || `$${building.priceMin}+/mo`}</p>
-                          <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
-                          {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                          <div className="flex gap-2 mt-2">
-                                <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', lineHeight: '1', height: '36px' }}><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Move with Don</span></button>
-                            <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 flex items-center justify-center bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-[#FF4D8D]">Info</button>
+                          <div className="px-4 py-3">
+                            <div className="flex justify-between items-start gap-2 mb-1">
+                              <h3 className="text-base font-black uppercase flex-1" style={{ fontFamily: 'Archivo', fontVariationSettings: "'wdth' 115", color: '#F6F8F9' }}>{building.name}</h3>
+                              <div className="text-right whitespace-nowrap">
+                                <span className="text-xs text-[#7E8CA0] uppercase tracking-widest block">From</span>
+                                <span className="text-lg font-black text-[#19C6C0]">${building.priceMin.toLocaleString()}</span>
+                              </div>
+                            </div>
+                            <p className="text-xs text-[#B8C4D4] mb-2.5 line-clamp-2">{building.tagline}</p>
+                            <div className="flex flex-wrap gap-1.5 mb-3">
+                              <span className="text-xs bg-[#152341] text-[#B8C4D4] rounded-full px-2.5 py-1">{building.units.map(u => u.split(' ')[0]).join(' · ')}</span>
+                              {building.amenities?.slice(0, 3).map(a => <span key={a} className="text-xs bg-[#152341] text-[#B8C4D4] rounded-full px-2.5 py-1">{a}</span>)}
+                            </div>
+                            <div className="flex gap-2">
+                              <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="flex-1 bg-[#FF4D8D] text-white py-2.5 rounded-lg text-sm font-bold hover:bg-[#E53A73] transition-colors" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', lineHeight: '1' }}><span>💬</span><span>Move with Don</span></button>
+                              <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 bg-transparent text-white border border-white/[0.12] py-2.5 rounded-lg text-sm font-bold hover:bg-white/[0.05] transition-colors">Info</button>
+                            </div>
                           </div>
                         </div>
                       ))
@@ -868,11 +859,12 @@ export default function MiamiApp() {
                 </div>
               ) : (
                 <div className="pt-2">
-                  <div className="p-3 rounded-lg border border-[#19C6C0] bg-[#0F1B30] overflow-hidden">
-                    <button onClick={(e) => { e.stopPropagation(); setSelectedBuilding(null); }} className="text-sm text-blue-500 font-semibold mb-2 hover:text-[#FF4D8D]">← Back</button>
-                    <div className="relative w-full h-40 bg-[#1B2A45] rounded-md mb-3 overflow-hidden">
+                  <div className="bg-[#0F1B30] border border-white/[0.12] rounded-[18px] overflow-hidden">
+                    <button onClick={(e) => { e.stopPropagation(); setSelectedBuilding(null); }} className="w-full text-left text-sm text-[#19C6C0] font-bold mb-0 pb-3 px-4 pt-3 hover:text-white transition-colors">← Back</button>
+                    <div className="relative w-full aspect-video bg-gray-800 overflow-hidden">
                       <img src={selectedBuilding.images[0]} alt={selectedBuilding.name} className="w-full h-full object-cover" />
-                      {/* Star Button - Uses transform to stay visible during momentum scroll */}
+                      <span className="absolute top-2.5 left-2.5 bg-black/[0.85] backdrop-blur-sm border border-white/[0.12] rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest text-white">{selectedBuilding.neighborhood}</span>
+                      {selectedBuilding.concession && <span className="absolute top-2.5 right-2.5 bg-[#FFC24B] text-[#0B1220] rounded-full px-3 py-1 text-xs font-bold">🔥 {selectedBuilding.concession}</span>}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -884,55 +876,30 @@ export default function MiamiApp() {
                           }
                           setStarredBuildings(newStarred);
                         }}
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-[#0F1B30]/90 hover:bg-[#0F1B30] transition-colors shadow-md z-40 will-change-transform"
-                        style={{
-                          transform: 'translate(0, 0)',
-                          backfaceVisibility: 'hidden',
-                          WebkitBackfaceVisibility: 'hidden',
-                        }}
+                        className="absolute bottom-2.5 right-2.5 w-8 h-8 rounded-full bg-black/[0.7] backdrop-blur-sm border border-white/[0.12] flex items-center justify-center text-sm hover:bg-black/[0.85] transition-colors z-10"
                         aria-label={starredBuildings.has(String(selectedBuilding.id)) ? "Remove from list" : "Add to list"}
                       >
-                        <Star
-                          className={`h-4 w-4 transition-colors ${
-                            starredBuildings.has(String(selectedBuilding.id))
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "text-[#7E8CA0] hover:text-yellow-400"
-                          }`}
-                        />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const newStarred = new Set(starredBuildings);
-                          if (newStarred.has(String(selectedBuilding.id))) {
-                            newStarred.delete(String(selectedBuilding.id));
-                          } else {
-                            newStarred.add(String(selectedBuilding.id));
-                          }
-                          setStarredBuildings(newStarred);
-                        }}
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-[#0F1B30]/90 hover:bg-[#0F1B30] transition-colors shadow-md"
-                        aria-label={starredBuildings.has(String(selectedBuilding.id)) ? "Remove from list" : "Add to list"}
-                      >
-                        <Star
-                          className={`h-4 w-4 transition-colors ${
-                            starredBuildings.has(String(selectedBuilding.id))
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "text-[#7E8CA0] hover:text-yellow-400"
-                          }`}
-                        />
+                        {starredBuildings.has(String(selectedBuilding.id)) ? '★' : '☆'}
                       </button>
                     </div>
-                    <div className="flex justify-between items-start mb-1">
-                      <h3 className="font-semibold text-[#F6F8F9] text-sm">{selectedBuilding.name}</h3>
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">{selectedBuilding.neighborhood}</span>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-1">{selectedBuilding.tagline || `$${selectedBuilding.priceMin}+/mo`}</p>
-                    <p className="text-xs text-gray-500 mb-2">{selectedBuilding.units.join(' | ')}</p>
-                    {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
-                    <div className="flex gap-2 mt-2">
-                              <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', lineHeight: '1', height: '36px' }}><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Move with Don</span></button>
-                      <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(selectedBuilding); }} className="flex-1 flex items-center justify-center bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-[#FF4D8D]">Info</button>
+                    <div className="px-4 py-3">
+                      <div className="flex justify-between items-start gap-2 mb-1">
+                        <h3 className="text-base font-black uppercase flex-1" style={{ fontFamily: 'Archivo', fontVariationSettings: "'wdth' 115", color: '#F6F8F9' }}>{selectedBuilding.name}</h3>
+                        <div className="text-right whitespace-nowrap">
+                          <span className="text-xs text-[#7E8CA0] uppercase tracking-widest block">From</span>
+                          <span className="text-lg font-black text-[#19C6C0]">${selectedBuilding.priceMin.toLocaleString()}</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-[#B8C4D4] mb-2.5 line-clamp-2">{selectedBuilding.tagline}</p>
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        <span className="text-xs bg-[#152341] text-[#B8C4D4] rounded-full px-2.5 py-1">{selectedBuilding.units.map(u => u.split(' ')[0]).join(' · ')}</span>
+                        {selectedBuilding.amenities?.slice(0, 3).map(a => <span key={a} className="text-xs bg-[#152341] text-[#B8C4D4] rounded-full px-2.5 py-1">{a}</span>)}
+                      </div>
+                      {isAgentMode && <p className="text-xs text-[#FFC24B] font-semibold mb-2">Commission: 50% of 1 month</p>}
+                      <div className="flex gap-2">
+                        <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="flex-1 bg-[#FF4D8D] text-white py-2.5 rounded-lg text-sm font-bold hover:bg-[#E53A73] transition-colors" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', lineHeight: '1' }}><span>💬</span><span>Move with Don</span></button>
+                        <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(selectedBuilding); }} className="flex-1 bg-transparent text-white border border-white/[0.12] py-2.5 rounded-lg text-sm font-bold hover:bg-white/[0.05] transition-colors">Info</button>
+                      </div>
                     </div>
                   </div>
                 </div>
