@@ -739,7 +739,7 @@ export default function MiamiApp() {
           }}
         >
           <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span>
-          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Text Don</span>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Move with Don</span>
         </button>
       </div>
 
@@ -858,7 +858,7 @@ export default function MiamiApp() {
                           <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
                           {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
                           <div className="flex gap-2 mt-2">
-                                <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', lineHeight: '1', height: '36px' }}><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Text Don</span></button>
+                                <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', lineHeight: '1', height: '36px' }}><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Move with Don</span></button>
                             <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 flex items-center justify-center bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-[#FF4D8D]">Info</button>
                           </div>
                         </div>
@@ -931,7 +931,7 @@ export default function MiamiApp() {
                     <p className="text-xs text-gray-500 mb-2">{selectedBuilding.units.join(' | ')}</p>
                     {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
                     <div className="flex gap-2 mt-2">
-                              <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', lineHeight: '1', height: '36px' }}><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Text Don</span></button>
+                              <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', lineHeight: '1', height: '36px' }}><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Move with Don</span></button>
                       <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(selectedBuilding); }} className="flex-1 flex items-center justify-center bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-[#FF4D8D]">Info</button>
                     </div>
                   </div>
@@ -961,7 +961,7 @@ export default function MiamiApp() {
                             <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
                             {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
                             <div className="flex gap-2 mt-2">
-                            <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', lineHeight: '1', height: '36px' }}><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Text Don</span></button>
+                            <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', lineHeight: '1', height: '36px' }}><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Move with Don</span></button>
                               <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 flex items-center justify-center bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-[#FF4D8D]">Info</button>
                             </div>
                           </div>
@@ -1001,7 +1001,7 @@ export default function MiamiApp() {
                                   <p className="text-xs text-gray-500 mb-2">{building.units.join(' | ')}</p>
                                   {isAgentMode && <p className="text-xs text-green-600 font-semibold mb-2">Commission: 50% of 1 month</p>}
                                   <div className="flex gap-2 mt-2">
-                      <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', lineHeight: '1', height: '36px' }}><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Text Don</span></button>
+                      <button onClick={(e) => { e.stopPropagation(); openSMS(); }} className="md:hidden flex-1 bg-green-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-600" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', lineHeight: '1', height: '36px' }}><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span><span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Move with Don</span></button>
                                     <button onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }} className="flex-1 flex items-center justify-center bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-[#FF4D8D]">Info</button>
                                   </div>
                                 </div>
