@@ -678,14 +678,14 @@ export default function MiamiApp() {
       <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
       
       {/* Desktop Header - Fixed at Top */}
-      <div className="hidden md:flex items-center justify-between px-8 py-5 bg-[#0a0e1a] flex-shrink-0">
+      <div className="hidden md:flex items-center justify-between px-8 py-7 bg-[#0a0e1a] flex-shrink-0">
         {/* Wordmark */}
-        <div className="flex items-baseline gap-1">
-          <h1 className="font-black text-sm tracking-tighter uppercase text-white" style={{ fontFamily: 'Archivo', letterSpacing: '-0.02em' }}>
+        <div className="flex items-center gap-1">
+          <h1 className="font-black tracking-tighter uppercase text-white" style={{ fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '30px', lineHeight: '1' }}>
             Miami Apartment
           </h1>
-          <span className="font-black text-sm uppercase" style={{ color: '#ec4899', fontFamily: 'Archivo', letterSpacing: '-0.02em' }}>
-            Guy<sup className="text-xs align-top relative" style={{ top: '-3px', marginLeft: '2px' }}>™</sup>
+          <span className="font-black uppercase" style={{ color: '#ec4899', fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '30px', lineHeight: '1' }}>
+            Guy<sup className="align-top relative" style={{ fontSize: '14px', top: '-4px', marginLeft: '2px' }}>™</sup>
           </span>
         </div>
         
