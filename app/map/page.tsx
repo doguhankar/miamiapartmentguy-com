@@ -13,6 +13,7 @@ import { MapFilterCard, type MapFilterState } from '@/components/map-filter-card
 import { copyToClipboard, showToast } from '@/lib/toast-utils';
 import { Star } from 'lucide-react';
 import { buildings as BUILDINGS } from '@/lib/buildings';
+import { neighborhoodCenters } from '@/lib/neighborhood-centers';
 const NEIGHBORHOODS = ['Brickell', 'Downtown', 'Edgewater', 'Midtown', 'Wynwood', 'Miami Design District', 'North Miami', 'North Miami Beach', 'Aventura', 'Hollywood', 'Dania Beach', 'Allapattah', 'Little Havana', 'Doral', 'Coconut Grove', 'Las Olas'];
 
 // Ticker Component
@@ -359,7 +360,19 @@ export default function MiamiApp() {
   const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [] });
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
   const [selectedBuildingForDetail, setSelectedBuildingForDetail] = useState(null);
-  const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], price: [], moveInDate: [] });
+  const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], price: [], moveInDate: [], neighborhood: null });
+
+  // Handle neighborhood selection with Mapbox flyTo
+  const handleNeighborhoodFlyTo = (neighborhood: string) => {
+    const center = neighborhoodCenters[neighborhood];
+    if (map.current && center) {
+      map.current.flyTo({
+        center: [center.lng, center.lat],
+        zoom: center.zoom,
+        duration: 1500
+      });
+    }
+  };
 
   const SNAP_POINTS = {
     0: 'h-5 md:h-0',      // COLLAPSED: 20px (drag handle)
@@ -377,6 +390,11 @@ export default function MiamiApp() {
 
   // Helper function to check if a building matches the map filters
   const buildingMatchesMapFilters = (building: any): boolean => {
+    // Check neighborhood filter first
+    if (mapFilters.neighborhood !== null && building.neighborhood !== mapFilters.neighborhood) {
+      return false;
+    }
+
     // If no filters are active, include all buildings
     if (mapFilters.bedrooms.length === 0 && mapFilters.price.length === 0 && mapFilters.moveInDate.length === 0) {
       return true;
@@ -993,10 +1011,9 @@ export default function MiamiApp() {
         <MapFilterCard 
           filters={mapFilters}
           onFilterChange={setMapFilters}
-          onClearAll={() => setMapFilters({ bedrooms: [], price: [], moveInDate: [] })}
+          onClearAll={() => setMapFilters({ bedrooms: [], price: [], moveInDate: [], neighborhood: null })}
           buildingCount={BUILDINGS.length}
-          expandedNeighborhoods={expandedNeighborhoods}
-          onNeighborhoodToggle={toggleNeighborhood}
+          onNeighborhoodFlyTo={handleNeighborhoodFlyTo}
         />
       </div>
 

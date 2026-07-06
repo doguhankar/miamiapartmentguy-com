@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { neighborhoodCenters } from '@/lib/neighborhood-centers';
 
 export interface MapFilterState {
   bedrooms: string[];
   price: string[];
   moveInDate: string[];
+  neighborhood: string | null;
 }
 
 interface MapFilterCardProps {
@@ -14,8 +16,7 @@ interface MapFilterCardProps {
   onFilterChange: (filters: MapFilterState) => void;
   onClearAll: () => void;
   buildingCount?: number;
-  expandedNeighborhoods?: string[];
-  onNeighborhoodToggle?: (neighborhood: string) => void;
+  onNeighborhoodFlyTo?: (neighborhood: string) => void;
 }
 
 export function MapFilterCard({ 
@@ -23,10 +24,23 @@ export function MapFilterCard({
   onFilterChange, 
   onClearAll, 
   buildingCount = 107,
-  expandedNeighborhoods = [],
-  onNeighborhoodToggle 
+  onNeighborhoodFlyTo
 }: MapFilterCardProps) {
-  const [openDropdown, setOpenDropdown] = useState<'bedrooms' | 'price' | 'moveIn' | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<'neighborhood' | 'bedrooms' | 'price' | 'moveIn' | null>(null);
+  
+  const neighborhoodOptions = Object.keys(neighborhoodCenters).sort();
+  
+  const handleNeighborhoodSelect = (neighborhood: string) => {
+    if (filters.neighborhood === neighborhood) {
+      // Deselect if clicking the same neighborhood
+      onFilterChange({ ...filters, neighborhood: null });
+      setOpenDropdown(null);
+    } else {
+      onFilterChange({ ...filters, neighborhood });
+      onNeighborhoodFlyTo?.(neighborhood);
+      setOpenDropdown(null);
+    }
+  };
 
   const bedroomOptions = ['All bedrooms', 'Studio', '1 Bedroom', '2 Bedrooms', '3+ Bedrooms'];
   const priceOptions = ['All prices', '$0-$2,000', '$2,000-$4,000', '$4,000+'];
@@ -65,7 +79,7 @@ export function MapFilterCard({
     }
   };
 
-  const hasActiveFilters = filters.bedrooms.length > 0 || filters.price.length > 0 || filters.moveInDate.length > 0;
+  const hasActiveFilters = filters.neighborhood !== null || filters.bedrooms.length > 0 || filters.price.length > 0 || filters.moveInDate.length > 0;
 
   const getSelectedLabel = (type: 'bedrooms' | 'price' | 'moveIn'): string => {
     if (type === 'bedrooms') {
@@ -94,24 +108,51 @@ export function MapFilterCard({
     <div className="w-full flex items-center justify-between px-8 py-4 bg-[#0a0e1a] border-b border-[#0F1B30] gap-4">
       {/* Left side - Filter pills */}
       <div className="flex items-center gap-3">
-        {/* Neighborhood Pill - Only show when at least one is selected */}
-        {expandedNeighborhoods.length > 0 && (
-          <div className="relative">
-            <button
-              onClick={() => onNeighborhoodToggle && onNeighborhoodToggle(expandedNeighborhoods[0])}
-              className="flex items-center justify-between px-5 py-3 rounded-full transition-all"
-              style={{
-                background: 'transparent',
-                border: '2px solid #5eead4',
-                color: '#5eead4',
-                fontSize: '15px'
-              }}
-            >
-              <span className="font-medium truncate">Neighborhood: {expandedNeighborhoods[0]}</span>
-              <span className="ml-2">▾</span>
-            </button>
-          </div>
-        )}
+        {/* Neighborhood Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setOpenDropdown(openDropdown === 'neighborhood' ? null : 'neighborhood')}
+            className="flex items-center justify-between px-5 py-3 rounded-full transition-all"
+            style={{
+              background: filters.neighborhood ? 'transparent' : '#0F1B30',
+              border: filters.neighborhood ? '2px solid #5eead4' : '1px solid rgba(255,255,255,.12)',
+              color: filters.neighborhood ? '#5eead4' : '#F6F8F9',
+              fontSize: '15px'
+            }}
+          >
+            <span className="font-medium truncate">
+              {filters.neighborhood ? `Neighborhood: ${filters.neighborhood}` : 'Neighborhood'}
+            </span>
+            <ChevronDown className={`h-4 w-4 ml-2 transition-transform flex-shrink-0 ${openDropdown === 'neighborhood' ? 'rotate-180' : ''}`} />
+          </button>
+          {openDropdown === 'neighborhood' && (
+            <div className="absolute top-full left-0 mt-2 w-56 rounded-lg shadow-lg z-20" style={{ background: '#0F1B30', border: '1px solid #19C6C0' }}>
+              {neighborhoodOptions.map(option => (
+                <button
+                  key={option}
+                  onClick={() => handleNeighborhoodSelect(option)}
+                  className="w-full text-left px-4 py-2 flex items-center gap-2 text-sm transition-colors"
+                  style={{
+                    color: filters.neighborhood === option ? '#5eead4' : '#B8C4D4',
+                    background: filters.neighborhood === option ? 'rgba(94, 234, 212, 0.1)' : 'transparent',
+                    borderBottom: option !== neighborhoodOptions[neighborhoodOptions.length - 1] ? '1px solid rgba(255,255,255,.05)' : 'none'
+                  }}
+                  onMouseEnter={(e) => { if (filters.neighborhood !== option) e.target.style.background = 'rgba(255,255,255,.05)'; }}
+                  onMouseLeave={(e) => { if (filters.neighborhood !== option) e.target.style.background = 'transparent'; }}
+                >
+                  <input
+                    type="radio"
+                    checked={filters.neighborhood === option}
+                    readOnly
+                    className="rounded-full"
+                    style={{ accentColor: '#5eead4' }}
+                  />
+                  {option}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Bedrooms Dropdown */}
         <div className="relative">
