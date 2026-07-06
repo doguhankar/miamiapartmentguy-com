@@ -13,9 +13,10 @@ interface MapFilterCardProps {
   filters: MapFilterState;
   onFilterChange: (filters: MapFilterState) => void;
   onClearAll: () => void;
+  buildingCount?: number;
 }
 
-export function MapFilterCard({ filters, onFilterChange, onClearAll }: MapFilterCardProps) {
+export function MapFilterCard({ filters, onFilterChange, onClearAll, buildingCount = 107 }: MapFilterCardProps) {
   const [openDropdown, setOpenDropdown] = useState<'bedrooms' | 'price' | 'moveIn' | null>(null);
 
   const bedroomOptions = ['All bedrooms', 'Studio', '1 Bedroom', '2 Bedrooms', '3+ Bedrooms'];
@@ -81,9 +82,11 @@ export function MapFilterCard({ filters, onFilterChange, onClearAll }: MapFilter
   };
 
   return (
-    <div className="absolute top-6 left-6 z-10 flex gap-3 items-center flex-wrap">
-      {/* Bedrooms Dropdown */}
-      <div className="relative">
+    <div className="w-full flex items-center justify-between px-8 py-4 bg-[#0a0e1a] border-b border-[#0F1B30] gap-4">
+      {/* Left side - Filter pills */}
+      <div className="flex items-center gap-3">
+        {/* Bedrooms Dropdown */}
+        <div className="relative">
         <button
           onClick={() => setOpenDropdown(openDropdown === 'bedrooms' ? null : 'bedrooms')}
           className="flex items-center justify-between px-4 py-2 rounded-full transition-all"
@@ -214,22 +217,30 @@ export function MapFilterCard({ filters, onFilterChange, onClearAll }: MapFilter
         )}
       </div>
 
-      {/* Clear Filters Button */}
-      {hasActiveFilters && (
-        <button
-          onClick={onClearAll}
-          className="px-4 py-2 rounded-full transition-all text-sm font-medium"
-          style={{
-            background: '#0F1B30',
-            border: '1px solid rgba(255,255,255,.12)',
-            color: '#F6F8F9'
-          }}
-          onMouseEnter={(e) => { e.target.style.borderColor = '#FF4D8D'; e.target.style.color = '#FF4D8D'; }}
-          onMouseLeave={(e) => { e.target.style.borderColor = 'rgba(255,255,255,.12)'; e.target.style.color = '#F6F8F9'; }}
-        >
-          Clear
-        </button>
-      )}
+        {/* Clear Filters Button */}
+        {hasActiveFilters && (
+          <button
+            onClick={onClearAll}
+            className="px-4 py-2 rounded-full transition-all text-sm font-medium flex items-center gap-2"
+            style={{
+              background: '#0F1B30',
+              border: '1px solid rgba(255,255,255,.12)',
+              color: '#F6F8F9'
+            }}
+            onMouseEnter={(e) => { e.target.style.borderColor = '#FF4D8D'; e.target.style.color = '#FF4D8D'; }}
+            onMouseLeave={(e) => { e.target.style.borderColor = 'rgba(255,255,255,.12)'; e.target.style.color = '#F6F8F9'; }}
+          >
+            <span>✕</span>
+            Clear filters
+          </button>
+        )}
+      </div>
+
+      {/* Right side - Building count */}
+      <div className="flex items-center gap-2 ml-auto">
+        <span className="text-lg font-black" style={{ color: '#ec4899' }}>{buildingCount}</span>
+        <span className="text-sm" style={{ color: '#7E8CA0' }}>buildings live</span>
+      </div>
     </div>
   );
 }

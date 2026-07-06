@@ -678,16 +678,24 @@ export default function MiamiApp() {
       <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
       
       {/* Desktop Header - Fixed at Top */}
-      <div className="hidden md:flex items-center justify-between px-8 h-12 bg-[#0F1B30] border-b border-[#19C6C0] flex-shrink-0">
-        <h1 className="text-sm font-medium text-[#F6F8F9]">
-          Miami Apartment Guy
-          <sup className="text-xs font-normal align-top ml-1 relative" style={{top: '-1px'}}>™</sup>
-        </h1>
+      <div className="hidden md:flex items-center justify-between px-8 py-5 bg-[#0a0e1a] flex-shrink-0">
+        {/* Wordmark */}
+        <div className="flex items-baseline gap-1">
+          <h1 className="font-black text-sm tracking-tighter uppercase text-white" style={{ fontFamily: 'Archivo', letterSpacing: '-0.02em' }}>
+            Miami Apartment
+          </h1>
+          <span className="font-black text-sm uppercase" style={{ color: '#ec4899', fontFamily: 'Archivo', letterSpacing: '-0.02em' }}>
+            Guy<sup className="text-xs align-top relative" style={{ top: '-3px', marginLeft: '2px' }}>™</sup>
+          </span>
+        </div>
+        
+        {/* Text Don Button */}
         <button 
           onClick={() => setShowMoveWithDonModal(true)}
-          className="bg-[#FF4D8D] hover:bg-[#E53A73] text-white px-3 py-1.5 rounded-full font-medium text-xs transition-colors"
+          className="flex items-center gap-2 bg-[#ec4899] hover:bg-[#db2777] text-white px-4 py-2 rounded-full font-semibold text-sm transition-colors"
         >
-          Move with Don
+          <span>💬</span>
+          Text Don
         </button>
       </div>
 
@@ -980,6 +988,16 @@ export default function MiamiApp() {
         </div>
       </div>
 
+      {/* Filter Bar - Full Width */}
+      <div className="hidden md:block w-full bg-[#0a0e1a] border-b border-[#0F1B30]">
+        <MapFilterCard 
+          filters={mapFilters}
+          onFilterChange={setMapFilters}
+          onClearAll={() => setMapFilters({ bedrooms: [], price: [], moveInDate: [] })}
+          buildingCount={BUILDINGS.length}
+        />
+      </div>
+
       {/* Desktop Layout - Zillow Style */}
       <div className="hidden md:flex flex-1 gap-0 h-full overflow-hidden">
         {/* Map - 55% of width */}
@@ -993,12 +1011,6 @@ export default function MiamiApp() {
             setSelectedBuilding={setSelectedBuilding}
             setBottomSheetSnapPoint={setBottomSheetSnapPoint}
             setSelectedBuildingForDetail={setSelectedBuildingForDetail}
-          />
-          {/* Floating Filter Card */}
-          <MapFilterCard 
-            filters={mapFilters}
-            onFilterChange={setMapFilters}
-            onClearAll={() => setMapFilters({ bedrooms: [], price: [], moveInDate: [] })}
           />
         </div>
 
