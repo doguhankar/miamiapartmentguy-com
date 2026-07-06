@@ -306,6 +306,9 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
               fontWeight: 500,
               border: "none",
               cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             Text Don about {building.name}
@@ -324,6 +327,9 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
               fontWeight: 500,
               border: "1px solid #eee",
               cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             Call Don
