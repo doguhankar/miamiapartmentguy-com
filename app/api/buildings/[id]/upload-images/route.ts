@@ -2,20 +2,21 @@ import { put } from '@vercel/blob';
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
-
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: buildingId } = await params;
+    
+    // Initialize Supabase inside handler to ensure env vars are available
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
-    const buildingId = params.id;
 
     if (!files || files.length === 0) {
       return NextResponse.json(

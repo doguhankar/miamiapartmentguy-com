@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Heart, Share2, ArrowLeft } from "lucide-react"
 import { Building } from "@/lib/buildings"
+import { ImageCarouselSupabase } from "@/components/image-carousel-supabase"
 
 interface BuildingDetailViewProps {
   building: Building
@@ -77,18 +78,12 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", backgroundColor: "#fff" }}>
-      {/* Photo strip - 3-panel grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", height: "220px", gap: "2px", marginBottom: 0, position: "relative" }}>
-        {building.images.slice(0, 3).map((img, idx) => (
-          <div key={idx} style={{ background: "#888", position: "relative", overflow: "hidden" }}>
-            <img src={img} alt={`${building.name} ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            {idx === 2 && (
-              <span style={{ position: "absolute", bottom: "8px", right: "8px", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "6px" }}>
-                View all photos
-              </span>
-            )}
-          </div>
-        ))}
+      {/* Photo carousel with Supabase integration */}
+      <div style={{ position: "relative", height: "220px" }}>
+        <ImageCarouselSupabase 
+          buildingId={building.id}
+          fallbackImages={building.images}
+        />
         {/* Back button overlay */}
         <button
           onClick={onBack}

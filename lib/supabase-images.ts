@@ -1,9 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const getSupabase = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!url || !key) {
+    console.warn('[v0] Supabase credentials not configured');
+    return null;
+  }
+  
+  return createClient(url, key);
+};
 
 interface BuildingImages {
   buildingId: string;
@@ -19,6 +26,9 @@ export async function getBuildingImages(
   fallbackImages?: string[]
 ): Promise<string[]> {
   try {
+    const supabase = getSupabase();
+    if (!supabase) return fallbackImages || [];
+
     const { data, error } = await supabase
       .from('buildings')
       .select('image_urls')
@@ -44,6 +54,9 @@ export async function getBuildingImages(
  */
 export async function getAllBuildingImages(): Promise<Map<string, string[]>> {
   try {
+    const supabase = getSupabase();
+    if (!supabase) return new Map();
+
     const { data, error } = await supabase
       .from('buildings')
       .select('id, image_urls')
