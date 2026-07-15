@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import Link from 'next/link'
 import { buildings } from '@/lib/buildings'
 
 interface UploadResult {
@@ -176,9 +177,18 @@ export default function AdminUploadPage() {
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#FF4D8D' }}>
-            Admin
-          </p>
+          <div className="flex items-center gap-4 mb-1">
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#FF4D8D' }}>Admin</p>
+            <Link
+              href="/admin/bulk-upload"
+              className="text-xs uppercase tracking-wider transition-colors"
+              style={{ color: '#7E8CA0' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#F6F8F9')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#7E8CA0')}
+            >
+              Bulk ZIP Upload
+            </Link>
+          </div>
           <h1
             className="text-3xl font-black uppercase"
             style={{ fontFamily: 'Archivo, sans-serif', letterSpacing: '-0.02em' }}
