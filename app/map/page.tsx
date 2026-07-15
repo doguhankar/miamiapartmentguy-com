@@ -710,12 +710,12 @@ export default function MiamiApp() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#0F1B30]">
+    <div className="flex flex-col h-screen bg-[#0B1220]">
       <Ticker />
       <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
       
       {/* Desktop Header - Fixed at Top */}
-      <div className="hidden md:flex items-center justify-between px-8 py-7 bg-[#0a0e1a] flex-shrink-0" style={{ height: '74px' }}>
+      <div className="hidden md:flex items-center justify-between px-8 py-7 bg-[#0B1220] flex-shrink-0" style={{ height: '74px' }}>
         {/* Wordmark */}
         <div className="flex items-center gap-1">
           <h1 className="font-black tracking-tighter uppercase text-white" style={{ fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '30px', lineHeight: '1' }}>
@@ -745,7 +745,7 @@ export default function MiamiApp() {
       </div>
 
       {/* Filter Bar - Full Width */}
-      <div className="hidden md:block w-full bg-[#0a0e1a] border-b border-[#0F1B30] sticky z-50" style={{ top: '74px' }}>
+      <div className="hidden md:block w-full bg-[#0B1220] border-b border-[#0B1220] sticky z-50" style={{ top: '74px' }}>
         <MapFilterCard 
           filters={mapFilters}
           onFilterChange={setMapFilters}
@@ -773,9 +773,9 @@ export default function MiamiApp() {
         </div>
 
         {/* Cards Panel - 45% of width */}
-        <div className="basis-[45%] bg-[#0F1B30] border-l border-[#19C6C0] overflow-hidden flex flex-col">
+        <div className="basis-[45%] bg-[#0B1220] border-l border-[#19C6C0] overflow-hidden flex flex-col">
           {/* Search & Header */}
-          <div className="p-5 border-b border-gray-100 bg-[#0F1B30]">
+          <div className="p-5 border-b border-[#1B2A45] bg-[#0B1220]">
             <input 
               type="text" 
               placeholder="Search buildings..." 
@@ -784,7 +784,7 @@ export default function MiamiApp() {
               className="w-full px-4 py-2.5 rounded-lg border border-[#19C6C0] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[#FF4D8D]" 
             />
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-700">
+              <h3 className="text-sm font-semibold text-[#B8C4D4]">
                 {filteredBuildings.length} Available
               </h3>
               <div className="flex items-center gap-2">

@@ -84,7 +84,7 @@ export function DesktopBuildingCard({
           ? "border-[#FF4D8D] shadow-lg"
           : "border-[rgba(255,255,255,.12)] hover:border-[#FF4D8D]"
       }`}
-      style={{ background: '#0F1B30' }}
+      style={{ background: '#162032' }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={() => onClick?.(building)}
