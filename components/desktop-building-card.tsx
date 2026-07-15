@@ -1,9 +1,7 @@
 "use client"
 
 import { Building } from "@/lib/buildings"
-import { ImageCarousel } from "./image-carousel"
 import { useState } from "react"
-import { Star } from "lucide-react"
 
 interface DesktopBuildingCardProps {
   building: Building
@@ -81,125 +79,76 @@ export function DesktopBuildingCard({
 
   return (
     <div
-      className={`rounded-2xl overflow-hidden border transition-all duration-200 cursor-pointer ${
+      className={`flex gap-3 rounded-lg overflow-hidden border transition-all duration-200 cursor-pointer p-3 ${
         isHighlighted || isHovered
-          ? "border-[#19C6C0] shadow-lg scale-[1.02]"
-          : "border-[#19C6C0] shadow-md hover:shadow-xl hover:border-[#19C6C0]"
+          ? "border-[#FF4D8D] shadow-lg"
+          : "border-[rgba(255,255,255,.12)] hover:border-[#FF4D8D]"
       }`}
       style={{ background: '#0F1B30' }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={() => onClick?.(building)}
     >
-      {/* Image Carousel - Full Width */}
-      <div className="relative h-56 bg-[#1B2A45] overflow-hidden">
-        {/* Neighborhood Badge */}
-        <div className="badge absolute top-3 left-3 z-10 px-3 py-1.5 bg-[#0F1B30]/85 backdrop-blur-sm border border-[#19C6C0] text-[#F6F8F9] text-xs rounded-full" style={{ fontFamily: 'Archivo', fontWeight: 900, textTransform: 'uppercase', fontVariationSettings: "'wdth' 118", letterSpacing: '-0.01em' }}>
-          {building.neighborhood}
-        </div>
-
-        {/* Deal Badge */}
-        {dealBadge && (
-          <div className="badge absolute top-3 right-3 z-10 px-3 py-1.5 bg-[#FFC24B] text-[#0B1220] text-xs rounded-full" style={{ fontFamily: 'Archivo', fontWeight: 900, textTransform: 'uppercase', fontVariationSettings: "'wdth' 118", letterSpacing: '-0.01em' }}>
-            {dealBadge}
-          </div>
-        )}
-
-        {/* Star Icon */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onStar?.(building)
-          }}
-          className="absolute bottom-3 right-3 z-10 p-2 rounded-full bg-[#0F1B30]/85 backdrop-blur-sm hover:bg-[#0F1B30] transition-colors shadow-md hover:shadow-lg border border-[#19C6C0]"
-          aria-label={isStarred ? "Remove from list" : "Add to list"}
-        >
-          <Star
-            className={`h-5 w-5 transition-colors ${
-              isStarred
-                ? "fill-[#FFC24B] text-[#FFC24B]"
-                : "text-[#7E8CA0] hover:text-[#FFC24B]"
-            }`}
-          />
-        </button>
-
-        {building.images && building.images.length > 0 ? (
-          <ImageCarousel images={building.images} />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1B2A45, #0F1B30)' }}>
-            <div className="text-center">
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>📷</div>
-              <p style={{ color: '#7E8CA0', fontSize: '12px' }}>No images available</p>
+      {/* Image - Left (96px square) */}
+      <div className="relative flex-shrink-0" style={{ width: '96px', height: '96px' }}>
+        <div className="relative w-full h-full bg-[#1B2A45] rounded-lg overflow-hidden">
+          {building.images && building.images.length > 0 ? (
+            <>
+              <img
+                src={building.images[0]}
+                alt={building.name}
+                className="w-full h-full object-cover"
+              />
+              {/* Neighborhood Badge - Top Left */}
+              <div className="absolute top-1 left-1 z-10 px-2 py-0.5 bg-[#0B1220]/90 text-[#F6F8F9] text-xs rounded" style={{ fontFamily: 'Archivo', fontWeight: 900, textTransform: 'uppercase', fontVariationSettings: "'wdth' 118", letterSpacing: '-0.01em' }}>
+                {building.neighborhood}
+              </div>
+            </>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1B2A45, #0F1B30)' }}>
+              <div style={{ fontSize: '24px' }}>📷</div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Card Content */}
-      <div className="p-4" style={{ background: '#0F1B30' }}>
-        {/* Building Name */}
-        <h3 className="text-base font-black mb-2" style={{ fontFamily: 'Archivo', color: '#F6F8F9', textTransform: 'uppercase', fontVariationSettings: "'wdth' 118", letterSpacing: '-0.01em' }}>
-          {building.name}
-        </h3>
-
-        {/* Tagline/Description */}
-        {building.tagline && (
-          <p className="text-sm mb-3 line-clamp-1" style={{ color: '#B8C4D4' }}>
-            {building.tagline}
-          </p>
-        )}
-
-        {/* Amenity Badges */}
-        {amenities.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1.5">
-            {amenities.slice(0, 4).map((amenity) => (
-              <span
-                key={amenity}
-                className="text-xs font-medium px-2.5 py-1 rounded-full"
-                style={{ background: '#1B2A45', color: '#B8C4D4' }}
-              >
-                {amenity.charAt(0).toUpperCase() + amenity.slice(1)}
-              </span>
-            ))}
-            {amenities.length > 4 && (
-              <span className="text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: '#1B2A45', color: '#B8C4D4' }}>
-                +{amenities.length - 4}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Unit Types */}
-        <div className="mb-4 flex gap-1.5 flex-wrap">
-          {building.units.slice(0, 3).map((unit) => (
-            <span
-              key={unit}
-              className="text-xs font-semibold px-2.5 py-1 rounded-full border"
-              style={{ borderColor: '#19C6C0', color: '#19C6C0', background: 'transparent' }}
-            >
-              {unit}
-            </span>
-          ))}
+      {/* Content - Right */}
+      <div className="flex-1 flex flex-col justify-between min-w-0">
+        {/* Top: Building Name + Description */}
+        <div className="min-w-0">
+          <h3 className="text-sm font-black truncate" style={{ fontFamily: 'Archivo', color: '#F6F8F9', textTransform: 'uppercase', fontVariationSettings: "'wdth' 118", letterSpacing: '-0.01em' }}>
+            {building.name}
+          </h3>
+          {building.tagline && (
+            <p className="text-xs line-clamp-1" style={{ color: '#B8C4D4' }}>
+              {building.tagline}
+            </p>
+          )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-2 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,.12)' }}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onViewDetails?.(building)
-            }}
-            className="flex-1 font-semibold py-2.5 rounded-lg transition-colors text-sm"
-            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,.12)', color: '#F6F8F9' }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#19C6C0'; e.currentTarget.style.color = '#19C6C0' }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,.12)'; e.currentTarget.style.color = '#F6F8F9' }}
-          >
-            View details
-          </button>
+        {/* Bottom: Bedroom Chips + Text Don Button (ONE ROW) */}
+        <div className="flex items-center gap-2 pt-2">
+          {/* Bedroom Chips - Left Aligned */}
+          <div className="flex gap-1 flex-wrap">
+            {building.units.slice(0, 2).map((unit) => (
+              <span
+                key={unit}
+                className="text-xs font-semibold px-2 py-0.5 rounded border flex-shrink-0"
+                style={{ borderColor: '#19C6C0', color: '#19C6C0', background: 'transparent' }}
+              >
+                {unit}
+              </span>
+            ))}
+          </div>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Text Don Button - Right Aligned */}
           <a
             href={`sms:+14077657306?body=Hi%20Don%2C%20I%27m%20interested%20in%20${building.name}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 font-semibold py-2.5 rounded-lg transition-colors text-sm text-white"
+            className="flex-shrink-0 font-semibold py-1.5 px-2.5 rounded text-xs text-white transition-colors whitespace-nowrap"
             style={{ background: '#FF4D8D' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = '#E53A73' }}
             onMouseLeave={(e) => { e.currentTarget.style.background = '#FF4D8D' }}
