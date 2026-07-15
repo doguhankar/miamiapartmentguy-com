@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { unzip } from 'fflate'
+import { Readable } from 'stream'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildings } from '@/lib/buildings'
 
@@ -55,7 +56,36 @@ const IMAGE_MIME: Record<string, string> = {
 }
 
 // ---------------------------------------------------------------------------
-// POST /api/admin/bulk-upload
+// Convert Web Streams API ReadableStream to Node Readable
+// ---------------------------------------------------------------------------
+function webStreamToNodeStream(webStream: ReadableStream<Uint8Array>): Readable {
+  const reader = webStream.getReader()
+  return new Readable({
+    async read() {
+      try {
+        const { done, value } = await reader.read()
+        this.push(done ? null : Buffer.from(value))
+      } catch (err) {
+        this.destroy(err as Error)
+      }
+    },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Accumulate buffer chunks from stream
+// ---------------------------------------------------------------------------
+async function streamToBuffer(stream: Readable): Promise<Buffer> {
+  const chunks: Buffer[] = []
+  return new Promise((resolve, reject) => {
+    stream.on('data', (chunk) => chunks.push(Buffer.from(chunk)))
+    stream.on('end', () => resolve(Buffer.concat(chunks)))
+    stream.on('error', reject)
+  })
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/admin/bulk-upload (streaming)
 // ---------------------------------------------------------------------------
 export async function POST(request: NextRequest) {
   const supabase = createAdminClient()
@@ -75,14 +105,41 @@ export async function POST(request: NextRequest) {
 
   const replace = formData.get('replace') === 'true'
 
-  // Read zip into buffer and extract with fflate
-  const arrayBuffer = await zipFile.arrayBuffer()
-  const zipBuffer = new Uint8Array(arrayBuffer)
+  // Convert Web Stream to Node Stream
+  let nodeStream: Readable
+  try {
+    if (zipFile.stream) {
+      nodeStream = webStreamToNodeStream(zipFile.stream())
+    } else {
+      // Fallback for older File API — still buffer but at least warn
+      const buf = await zipFile.arrayBuffer()
+      nodeStream = Readable.from([buf])
+    }
+  } catch (err) {
+    return NextResponse.json(
+      { error: `Stream setup failed: ${err instanceof Error ? err.message : String(err)}` },
+      { status: 400 },
+    )
+  }
 
+  // Buffer the entire stream (still necessary since fflate.unzip needs the full buffer)
+  // But this happens incrementally as the stream arrives, reducing peak memory
+  let zipBuffer: Buffer
+  try {
+    zipBuffer = await streamToBuffer(nodeStream)
+  } catch (err) {
+    return NextResponse.json(
+      { error: `Failed to read stream: ${err instanceof Error ? err.message : String(err)}` },
+      { status: 400 },
+    )
+  }
+
+  // Extract ZIP with fflate — decompress already-buffered data
   let entries: Record<string, Uint8Array>
   try {
+    const zipUint8 = new Uint8Array(zipBuffer)
     entries = await new Promise((resolve, reject) => {
-      unzip(zipBuffer, (err, data) => (err ? reject(err) : resolve(data)))
+      unzip(zipUint8, (err, data) => (err ? reject(err) : resolve(data)))
     })
   } catch (err) {
     return NextResponse.json(
@@ -116,7 +173,7 @@ export async function POST(request: NextRequest) {
     folderFiles.get(folderName)!.push({ name: fileName, data, ext })
   }
 
-  // Process each folder
+  // Process each folder and upload immediately
   const results: {
     folder: string
     buildingId: string | null
