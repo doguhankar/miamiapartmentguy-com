@@ -810,9 +810,9 @@ export default function MiamiApp() {
             </div>
           </div>
 
-          {/* Scrollable Cards Grid */}
+          {/* Scrollable Cards - Vertical Stack */}
           <div className="flex-1 overflow-y-auto">
-            <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="p-4 flex flex-col gap-3">
               {filteredBuildings.map((building) => (
                 <DesktopBuildingCard
                   key={building.id}
