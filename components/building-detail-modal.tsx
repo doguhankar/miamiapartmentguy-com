@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { X, ChevronLeft, ChevronRight } from "lucide-react"
 import { Building } from "@/lib/buildings"
+import { useSupabaseImages } from "@/hooks/use-supabase-images"
 
 interface BuildingDetailModalProps {
   building: Building
@@ -11,13 +12,17 @@ interface BuildingDetailModalProps {
 
 export function BuildingDetailModal({ building, onClose }: BuildingDetailModalProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const { images: supabaseImages } = useSupabaseImages(building.id)
+
+  // Prefer Supabase images; fall back to hardcoded array
+  const images = supabaseImages.length > 0 ? supabaseImages : (building.images ?? [])
 
   const nextImage = () => {
-    setCurrentImageIndex((i) => (i + 1) % (building.images?.length || 1))
+    setCurrentImageIndex((i) => (i + 1) % (images.length || 1))
   }
 
   const prevImage = () => {
-    setCurrentImageIndex((i) => (i - 1 + (building.images?.length || 1)) % (building.images?.length || 1))
+    setCurrentImageIndex((i) => (i - 1 + (images.length || 1)) % (images.length || 1))
   }
 
   // Mock stats - in production these would come from the building data or API
@@ -59,10 +64,10 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
               background: "linear-gradient(135deg, #1B2A45, #0F1B30)"
             }}
           >
-            {building.images && building.images.length > 0 ? (
+            {images.length > 0 ? (
               <>
                 <img
-                  src={building.images[currentImageIndex]}
+                  src={images[currentImageIndex]}
                   alt={`${building.name} ${currentImageIndex + 1}`}
                   className="w-full h-full object-cover"
                 />

@@ -2,13 +2,21 @@
 
 import { useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useSupabaseImages } from "@/hooks/use-supabase-images"
 
 interface ImageCarouselProps {
   images: string[]
+  /** When provided, images are fetched from Supabase building_images table.
+   *  Falls back to the `images` prop if no DB rows exist yet. */
+  buildingId?: string
 }
 
-export function ImageCarousel({ images }: ImageCarouselProps) {
+export function ImageCarousel({ images: fallbackImages, buildingId }: ImageCarouselProps) {
   const [current, setCurrent] = useState(0)
+  const { images: supabaseImages } = useSupabaseImages(buildingId)
+
+  // Prefer Supabase images; fall back to hardcoded prop
+  const images = supabaseImages.length > 0 ? supabaseImages : fallbackImages
 
   const next = () => setCurrent((current + 1) % images.length)
   const prev = () => setCurrent((current - 1 + images.length) % images.length)

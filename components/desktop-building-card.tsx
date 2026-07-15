@@ -2,6 +2,7 @@
 
 import { Building } from "@/lib/buildings"
 import { useState } from "react"
+import { useSupabaseImages } from "@/hooks/use-supabase-images"
 
 interface DesktopBuildingCardProps {
   building: Building
@@ -66,6 +67,8 @@ export function DesktopBuildingCard({
   const [isHovered, setIsHovered] = useState(false)
   const amenities = extractAmenities(building)
   const dealBadge = getDealBadge(building)
+  const { images: supabaseImages } = useSupabaseImages(building.id)
+  const thumbnailSrc = supabaseImages[0] ?? building.images?.[0]
 
   const handleMouseEnter = () => {
     setIsHovered(true)
@@ -92,10 +95,10 @@ export function DesktopBuildingCard({
       {/* Image - Left (96px square) */}
       <div className="relative flex-shrink-0" style={{ width: '96px', height: '96px' }}>
         <div className="relative w-full h-full bg-[#1B2A45] rounded-lg overflow-hidden">
-          {building.images && building.images.length > 0 ? (
+          {thumbnailSrc ? (
             <>
               <img
-                src={building.images[0]}
+                src={thumbnailSrc}
                 alt={building.name}
                 className="w-full h-full object-cover"
               />
