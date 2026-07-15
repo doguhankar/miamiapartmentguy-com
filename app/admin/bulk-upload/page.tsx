@@ -114,7 +114,7 @@ export default function BulkUploadPage() {
             Bulk ZIP Upload
           </h1>
           <p className="mt-1 text-sm" style={{ color: '#7E8CA0' }}>
-            Zip your building folders, drop the ZIP here — all images upload automatically.
+            Zip your building folders, drop the ZIP here — all images upload automatically. For large uploads, split into batches of 10–15 buildings each.
           </p>
         </div>
 
@@ -132,6 +132,25 @@ export default function BulkUploadPage() {
           </ol>
           <p className="mt-3 text-xs" style={{ color: '#7E8CA0' }}>
             Folder names are matched automatically — partial matches and alternate capitalisation work fine. Unmatched folders are listed after upload.
+          </p>
+        </div>
+
+        {/* Batching guidance */}
+        <div
+          className="rounded-xl p-4 mb-8 text-sm"
+          style={{ background: 'rgba(255,77,141,0.05)', border: '1px solid rgba(255,77,141,0.2)' }}
+        >
+          <p className="font-semibold mb-2" style={{ color: '#FF4D8D' }}>For large uploads (50+ buildings)</p>
+          <p style={{ color: '#B8C4D4' }} className="mb-2">
+            To keep uploads fast and reliable, split your ZIP into smaller batches:
+          </p>
+          <ul className="space-y-1 list-disc list-inside" style={{ color: '#B8C4D4' }}>
+            <li>Create separate ZIPs with 10–15 buildings each (e.g. <span style={{ color: '#F6F8F9' }}>buildings-1-15.zip</span>, <span style={{ color: '#F6F8F9' }}>buildings-16-30.zip</span>)</li>
+            <li>Upload each batch separately — the page supports multiple uploads</li>
+            <li>Each batch uploads in parallel, so 50 buildings = 4 batches in ~4 minutes total</li>
+          </ul>
+          <p className="mt-2 text-xs" style={{ color: '#7E8CA0' }}>
+            This avoids timeouts and keeps memory usage low. You can upload batches back-to-back.
           </p>
         </div>
 
@@ -185,7 +204,7 @@ export default function BulkUploadPage() {
                 Drop your ZIP file here or click to browse
               </p>
               <p className="text-xs" style={{ color: '#7E8CA0' }}>
-                One ZIP containing all building folders
+                ZIP with building folders • Upload multiple batches one after another
               </p>
             </>
           )}
