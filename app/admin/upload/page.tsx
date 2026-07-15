@@ -48,9 +48,24 @@ export default function AdminUploadPage() {
   }, [buildingId])
 
   const addFiles = useCallback((incoming: FileList | File[]) => {
-    const valid = Array.from(incoming).filter((f) =>
+    const maxSizeBytes = 10 * 1024 * 1024 // 10 MB
+    const filesArray = Array.from(incoming)
+    const oversized = filesArray.filter((f) => f.size > maxSizeBytes)
+    
+    if (oversized.length > 0) {
+      setError(`${oversized.length} file(s) exceed 10 MB limit: ${oversized.map((f) => f.name).join(', ')}`)
+      return
+    }
+
+    const valid = filesArray.filter((f) =>
       /\.(jpe?g|png|webp|gif)$/i.test(f.name),
     )
+    
+    if (valid.length < filesArray.length) {
+      setError(`${filesArray.length - valid.length} file(s) are not supported image types`)
+      return
+    }
+
     setFiles((prev) => {
       const names = new Set(prev.map((f) => f.name))
       return [...prev, ...valid.filter((f) => !names.has(f.name))]
@@ -76,11 +91,13 @@ export default function AdminUploadPage() {
     setResponse(null)
     setError(null)
 
-    // Upload in batches of 5 to show progress
-    const batchSize = 5
+    // Upload in batches of 3 to avoid timeouts on large files
+    const batchSize = 3
     const allResults: UploadResult[] = []
     let uploaded = 0
     let failed = 0
+    let batchRetries = 0
+    const maxRetries = 2
 
     for (let i = 0; i < files.length; i += batchSize) {
       const batch = files.slice(i, i + batchSize)
@@ -90,17 +107,38 @@ export default function AdminUploadPage() {
       form.append('replace', (replace && i === 0).toString())
       batch.forEach((f) => form.append('images', f))
 
-      try {
-        const res = await fetch('/api/admin/upload-images', {
-          method: 'POST',
-          body: form,
-        })
-        const data: UploadResponse = await res.json()
-        allResults.push(...data.results)
-        uploaded += data.uploaded
-        failed += data.failed
-      } catch (err) {
-        setError('Network error during upload')
+      let lastError: string | null = null
+      let success = false
+
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          const res = await fetch('/api/admin/upload-images', {
+            method: 'POST',
+            body: form,
+          })
+
+          if (!res.ok) {
+            const errorText = await res.text()
+            throw new Error(`HTTP ${res.status}: ${errorText}`)
+          }
+
+          const data: UploadResponse = await res.json()
+          allResults.push(...data.results)
+          uploaded += data.uploaded
+          failed += data.failed
+          success = true
+          break
+        } catch (err) {
+          lastError = err instanceof Error ? err.message : 'Unknown error'
+          if (attempt < maxRetries) {
+            // Wait with exponential backoff: 1s, 2s
+            await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
+          }
+        }
+      }
+
+      if (!success) {
+        setError(`Upload failed after ${maxRetries + 1} attempts: ${lastError}`)
         setUploading(false)
         return
       }
