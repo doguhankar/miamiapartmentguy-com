@@ -30,21 +30,25 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 z-50 flex items-end"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.65)" }}
       onClick={onClose}
     >
       <div
-        className="w-full bg-[#0B1220] rounded-t-3xl overflow-hidden"
+        className="relative w-full rounded-2xl overflow-hidden overflow-y-auto"
+        style={{ maxWidth: "480px", maxHeight: "90vh", background: "#0B1220" }}
         onClick={(e) => e.stopPropagation()}
-        style={{ maxHeight: "90vh" }}
       >
-        <div className="flex flex-col max-w-full">
+        <div className="flex flex-col">
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-50 p-2 hover:bg-[#1B2A45] rounded-lg transition-colors"
+            className="absolute top-3 right-3 z-50 p-1.5 rounded-lg transition-colors"
+            style={{ background: "rgba(0,0,0,0.5)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.75)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.5)")}
           >
-            <X className="h-5 w-5" style={{ color: "#F6F8F9" }} />
+            <X className="h-4 w-4" style={{ color: "#F6F8F9" }} />
           </button>
 
           {/* Image Carousel */}
@@ -224,7 +228,7 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
               onMouseEnter={(e) => e.currentTarget.style.background = "#E53A73"}
               onMouseLeave={(e) => e.currentTarget.style.background = "#FF4D8D"}
             >
-              💬 Text Don about this building
+              Text Don about this building
             </a>
           </div>
         </div>
