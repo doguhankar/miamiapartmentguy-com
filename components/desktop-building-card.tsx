@@ -4,7 +4,6 @@ import { Building } from "@/lib/buildings"
 import { ImageCarousel } from "./image-carousel"
 import { useState } from "react"
 import { Star } from "lucide-react"
-import { useBuildingPrice } from "@/hooks/use-building-price"
 
 interface DesktopBuildingCardProps {
   building: Building
@@ -69,9 +68,6 @@ export function DesktopBuildingCard({
   const [isHovered, setIsHovered] = useState(false)
   const amenities = extractAmenities(building)
   const dealBadge = getDealBadge(building)
-  
-  // Fetch dynamic pricing for buildings with live data (e.g., Flow Brickell)
-  const { price: dynamicPrice } = useBuildingPrice(building.id, building.priceMin)
 
   const handleMouseEnter = () => {
     setIsHovered(true)
@@ -141,18 +137,10 @@ export function DesktopBuildingCard({
 
       {/* Card Content */}
       <div className="p-4" style={{ background: '#0F1B30' }}>
-        {/* Building Name and Price Row */}
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="text-base font-black" style={{ fontFamily: 'Archivo', color: '#F6F8F9', textTransform: 'uppercase', fontVariationSettings: "'wdth' 118", letterSpacing: '-0.01em' }}>
-            {building.name}
-          </h3>
-          <div className="text-right flex-shrink-0">
-            <p className="text-xs" style={{ color: '#7E8CA0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>From</p>
-            <p className="text-xl font-bold" style={{ color: '#19C6C0', fontFamily: 'Archivo' }}>
-              ${dynamicPrice.toLocaleString()}
-            </p>
-          </div>
-        </div>
+        {/* Building Name */}
+        <h3 className="text-base font-black mb-2" style={{ fontFamily: 'Archivo', color: '#F6F8F9', textTransform: 'uppercase', fontVariationSettings: "'wdth' 118", letterSpacing: '-0.01em' }}>
+          {building.name}
+        </h3>
 
         {/* Tagline/Description */}
         {building.tagline && (

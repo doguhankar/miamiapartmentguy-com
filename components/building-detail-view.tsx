@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Heart, Share2, ArrowLeft } from "lucide-react"
 import { Building } from "@/lib/buildings"
-import { ImageCarouselSupabase } from "@/components/image-carousel-supabase"
+import { ImageCarousel } from "@/components/image-carousel"
 
 interface BuildingDetailViewProps {
   building: Building
@@ -78,12 +78,9 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", backgroundColor: "#fff" }}>
-      {/* Photo carousel with Supabase integration */}
+      {/* Photo carousel */}
       <div style={{ position: "relative", height: "220px" }}>
-        <ImageCarouselSupabase 
-          buildingId={building.id}
-          fallbackImages={building.images}
-        />
+        <ImageCarousel images={building.images} />
         {/* Back button overlay */}
         <button
           onClick={onBack}
