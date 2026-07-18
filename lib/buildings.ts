@@ -103,7 +103,7 @@ export const buildings: Building[] = [
     units: ['1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [30, 60],
     images: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b1-O2FpSvYfF1LHICzaZvBrxtxAVbC0KC.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b2-Sm2CtHzLgcPrW6MLXcv1fLHW6XmFVy.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b3-FS8ZnMT2YPNi5qZSOx7QHMmLHMtS14.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b4-7wDXGyndKR7qe0aqfh75kJ95l3oyW5.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b5-sQnJdKQA02URpuWgrGmGoqVwHJ7Z1A.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b6-bi6UZdvOoBebqO5jvsLT1iD8BTFsGE.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b7-ZIUarO5HNZYHISSVJoiPFa1476TW8h.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b8-teMZtibo9B29cVGnS1G3p2pcxs8IFj.webp'],
     amenities: ['Pool', 'Spa', 'Gym', 'Concierge', 'Valet'],
-    moveInFees: [{ type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }],
+    moveInFees: [{ type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }, { type: 'Deposit', amount: 99 }],
     monthlyCharges: [{ type: 'Pet Fee 1st', amount: 500 }, { type: 'Pet Fee 2nd+', amount: 250 }, { type: 'Pet Rent', amount: 30 }, { type: 'Parking 1st', amount: 130 }],
   },
 
@@ -239,7 +239,7 @@ export const buildings: Building[] = [
     monthlyCharges: [],
   },
 
-  // ── MIDTOWN ───────────────────────────────────────────────────────────────
+  // ── MIDTOWN ───────────────��───────────────────────────────────────────────
   {
     id: "18", name: 'AMLI Midtown 29', neighborhood: 'Midtown',
     address: '180 NE 29th St, Miami, FL 33137', lat: 25.7940, lng: -80.1910,
