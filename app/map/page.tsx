@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { ImageCarousel } from '@/components/image-carousel';
@@ -366,6 +367,70 @@ export default function MiamiApp() {
   const [selectedBuildingForDetail, setSelectedBuildingForDetail] = useState(null);
   const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], price: [], moveInDate: [], neighborhood: null });
   const [mapInstance, setMapInstance] = useState<any>(null);
+  
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Load filters from URL params on mount
+  useEffect(() => {
+    const neighborhood = searchParams.get('neighborhood');
+    const bedsParam = searchParams.get('beds');
+    const priceMinParam = searchParams.get('priceMin');
+    const priceMaxParam = searchParams.get('priceMax');
+    const moveInDateParam = searchParams.get('moveInDate');
+
+    const newFilters: MapFilterState = { bedrooms: [], price: [], moveInDate: [], neighborhood: null };
+
+    if (neighborhood) {
+      newFilters.neighborhood = neighborhood.charAt(0).toUpperCase() + neighborhood.slice(1).replace(/-/g, ' ');
+    }
+    if (bedsParam) {
+      newFilters.bedrooms = [parseInt(bedsParam)];
+    }
+    if (priceMinParam && priceMaxParam) {
+      newFilters.price = [{ min: parseInt(priceMinParam), max: parseInt(priceMaxParam) }];
+    }
+    if (moveInDateParam) {
+      newFilters.moveInDate = [moveInDateParam];
+    }
+
+    if (Object.values(newFilters).some(v => v !== null && (Array.isArray(v) ? v.length > 0 : false))) {
+      setMapFilters(newFilters);
+    }
+  }, [searchParams]);
+
+  // Update URL when filters change
+  const updateUrlWithFilters = (newFilters: MapFilterState) => {
+    const params = new URLSearchParams();
+    
+    if (newFilters.neighborhood) {
+      params.set('neighborhood', newFilters.neighborhood.toLowerCase().replace(/ /g, '-'));
+    }
+    if (newFilters.bedrooms && newFilters.bedrooms.length > 0) {
+      params.set('beds', newFilters.bedrooms[0].toString());
+    }
+    if (newFilters.price && newFilters.price.length > 0) {
+      params.set('priceMin', newFilters.price[0].min.toString());
+      params.set('priceMax', newFilters.price[0].max.toString());
+    }
+    if (newFilters.moveInDate && newFilters.moveInDate.length > 0) {
+      params.set('moveInDate', newFilters.moveInDate[0]);
+    }
+    
+    const newUrl = `/map${params.toString() ? '?' + params.toString() : ''}`;
+    router.push(newUrl);
+  };
+
+  // Wrapper for filter changes that also updates URL
+  const handleFilterChange = (newFilters: MapFilterState) => {
+    setMapFilters(newFilters);
+    updateUrlWithFilters(newFilters);
+  };
+
+  const handleClearAllFilters = () => {
+    setMapFilters({ bedrooms: [], price: [], moveInDate: [], neighborhood: null });
+    router.push('/map');
+  };
 
   // Callback to receive map instance from MapComponent
   const handleMapReady = (mapRef: any) => {
@@ -748,8 +813,8 @@ export default function MiamiApp() {
       <div className="hidden md:block w-full bg-[#0B1220] border-b border-[#0B1220] sticky z-50" style={{ top: '74px' }}>
         <MapFilterCard 
           filters={mapFilters}
-          onFilterChange={setMapFilters}
-          onClearAll={() => setMapFilters({ bedrooms: [], price: [], moveInDate: [], neighborhood: null })}
+          onFilterChange={handleFilterChange}
+          onClearAll={handleClearAllFilters}
           buildingCount={BUILDINGS.length}
           onNeighborhoodFlyTo={handleNeighborhoodFlyTo}
         />

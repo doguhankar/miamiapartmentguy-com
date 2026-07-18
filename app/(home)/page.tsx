@@ -148,16 +148,16 @@ export default function HomePage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
             {[
-              { g: 'linear-gradient(135deg, #1B3B6F, #19C6C0)', name: 'Brickell', desc: 'High-rise living · from $2,300' },
-              { g: 'linear-gradient(135deg, #FF4D8D, #FF8E53)', name: 'Wynwood', desc: 'Art & nightlife · from $2,200' },
-              { g: 'linear-gradient(135deg, #3E2F8F, #FF4D8D)', name: 'Edgewater', desc: 'Bay views · from $2,100' },
-              { g: 'linear-gradient(135deg, #0E5E6F, #FFC24B)', name: 'Downtown', desc: 'Walk everywhere · from $2,000' },
-              { g: 'linear-gradient(135deg, #233A7D, #8E54E9)', name: 'Midtown', desc: 'Best of both · from $2,250' },
-              { g: 'linear-gradient(135deg, #FF6B6B, #FFC24B)', name: 'Coconut Grove', desc: 'Lush & quiet · from $2,400' },
-              { g: 'linear-gradient(135deg, #11998E, #38EF7D)', name: 'Coral Gables', desc: 'Classic Miami · from $2,300' },
-              { g: 'linear-gradient(135deg, #FC5C7D, #6A82FB)', name: 'Miami Beach', desc: 'Ocean life · from $2,200' }
+              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.27.49%E2%80%AFPM.png-quNNm2yJanE4YvhAq5LXnzZU6Bc1M0.jpeg)', name: 'Brickell', desc: 'High-rise living · from $2,300', link: '/map?neighborhood=brickell' },
+              { g: 'linear-gradient(135deg, #FF4D8D, #FF8E53)', name: 'Wynwood', desc: 'Art & nightlife · from $2,200', link: '/map?neighborhood=wynwood' },
+              { g: 'linear-gradient(135deg, #3E2F8F, #FF4D8D)', name: 'Edgewater', desc: 'Bay views · from $2,100', link: '/map?neighborhood=edgewater' },
+              { g: 'linear-gradient(135deg, #0E5E6F, #FFC24B)', name: 'Downtown', desc: 'Walk everywhere · from $2,000', link: '/map?neighborhood=downtown' },
+              { g: 'linear-gradient(135deg, #233A7D, #8E54E9)', name: 'Midtown', desc: 'Best of both · from $2,250', link: '/map?neighborhood=midtown' },
+              { g: 'linear-gradient(135deg, #FF6B6B, #FFC24B)', name: 'Coconut Grove', desc: 'Lush & quiet · from $2,400', link: '/map?neighborhood=coconut-grove' },
+              { g: 'linear-gradient(135deg, #11998E, #38EF7D)', name: 'Coral Gables', desc: 'Classic Miami · from $2,300', link: '/map?neighborhood=coral-gables' },
+              { g: 'linear-gradient(135deg, #FC5C7D, #6A82FB)', name: 'Miami Beach', desc: 'Ocean life · from $2,200', link: '/map?neighborhood=miami-beach' }
             ].map((hood, i) => (
-              <a key={i} href="#" style={{ position: 'relative', borderRadius: '18px', overflow: 'hidden', aspectRatio: '4/5', display: 'flex', alignItems: 'flex-end', padding: '20px', border: '1px solid rgba(255,255,255,.12)', transition: 'transform 0.2s', background: hood.g, cursor: 'pointer' }} onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-4px)')} onMouseLeave={(e) => (e.currentTarget.style.transform = 'none')}>
+              <a key={i} href={hood.link} style={{ position: 'relative', borderRadius: '18px', overflow: 'hidden', aspectRatio: '4/5', display: 'flex', alignItems: 'flex-end', padding: '20px', border: '1px solid rgba(255,255,255,.12)', transition: 'transform 0.2s', backgroundImage: hood.bg || hood.g, backgroundSize: 'cover', backgroundPosition: 'center', cursor: 'pointer' }} onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-4px)')} onMouseLeave={(e) => (e.currentTarget.style.transform = 'none')}>
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 30%, rgba(11,18,32,.92))', pointerEvents: 'none' }} />
                 <h3 className="display" style={{ fontFamily: 'Archivo', fontVariationSettings: "'wdth' 118", textTransform: 'uppercase', fontSize: '19px', position: 'relative', zIndex: 2 }}>{hood.name}</h3>
                 <small style={{ position: 'relative', zIndex: 2, color: '#D7E2EE', fontSize: '12px' }}>{hood.desc}</small>
