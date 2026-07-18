@@ -81,6 +81,10 @@ export default function HomePage() {
           }
           .hood h3 { font-size: 15px !important; }
           .hood small { font-size: 10px !important; }
+          
+          /* Mobile copy toggles */
+          .desktop-copy { display: none !important; }
+          .mobile-copy { display: inline !important; }
         }
       `}</style>
 
@@ -120,8 +124,11 @@ export default function HomePage() {
             <h1 style={{ fontFamily: 'Archivo', fontVariationSettings: "'wdth' 120", fontSize: 'clamp(44px, 6.4vw, 84px)', lineHeight: 0.95, margin: '18px 0 22px', fontWeight: 900 }}>
               Every building.<br />Every deal.<br /><span style={{ color: '#FF4D8D' }}>One</span> <span style={{ color: '#19C6C0' }}>text.</span>
             </h1>
-            <p style={{ fontSize: '19px', color: '#B8C4D4', maxWidth: '52ch', marginBottom: '32px' }}>
+            <p className="desktop-copy" style={{ fontSize: '19px', color: '#B8C4D4', maxWidth: '52ch', marginBottom: '32px' }}>
               I track live pricing across Miami and Broward buildings. Text your budget, get real quotes same day. Net effective rent, move-in costs, everything.
+            </p>
+            <p className="mobile-copy" style={{ display: 'none', fontSize: '18px', color: '#B8C4D4', marginBottom: '32px' }}>
+              Text your budget. Get real quotes same day.
             </p>
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
               <a href="sms:+14077657306?body=Hi%20Don%2C%20I%27m%20looking%20for%20a%20Miami%20apartment" className="btn btn-pink">💬 Text me your budget</a>
@@ -186,15 +193,16 @@ export default function HomePage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginTop: '48px' }}>
             {[
-              { tag: 'Step 1', icon: '💬', title: 'Text your budget', desc: 'One message: budget, beds, neighborhoods, move date. That\'s the whole application.' },
-              { tag: 'Step 2', icon: '📋', title: 'Get real quotes', desc: 'I send formatted quotes with gross rent, concessions, net effective rent, and total move-in cost — straight from my building contacts.' },
-              { tag: 'Step 3', icon: '🔑', title: 'Tour & sign', desc: 'I book your tours, negotiate the deal, and walk you to the lease. The building pays me. You pay nothing.' }
+              { tag: 'Step 1', icon: '💬', title: 'Text your budget', descLong: 'One message: budget, beds, neighborhoods, move date. That\'s the whole application.', descShort: 'Send budget, beds, and move date.' },
+              { tag: 'Step 2', icon: '📋', title: 'Get real quotes', descLong: 'I send formatted quotes with gross rent, concessions, net effective rent, and total move-in cost — straight from my building contacts.', descShort: 'Receive live pricing in minutes.' },
+              { tag: 'Step 3', icon: '🔑', title: 'Tour & sign', descLong: 'I book your tours, negotiate the deal, and walk you to the lease. The building pays me. You pay nothing.', descShort: 'Book tours and close the deal.' }
             ].map((item, i) => (
               <div key={i} style={{ background: '#0F1B30', border: '1px solid rgba(255,255,255,.12)', borderRadius: '20px', padding: '32px 28px', position: 'relative', transition: 'border-color 0.2s' }} onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#19C6C0')} onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,.12)')}>
                 <div style={{ position: 'absolute', top: '22px', right: '22px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: '#FF4D8D', textTransform: 'uppercase' }}>{item.tag}</div>
                 <div style={{ fontSize: '30px', marginBottom: '16px' }}>{item.icon}</div>
                 <h3 className="display" style={{ fontSize: '18px', marginBottom: '10px', fontVariationSettings: "'wdth' 115" }}>{item.title}</h3>
-                <p style={{ color: '#B8C4D4', fontSize: '15px' }}>{item.desc}</p>
+                <p className="desktop-copy" style={{ color: '#B8C4D4', fontSize: '15px' }}>{item.descLong}</p>
+                <p className="mobile-copy" style={{ display: 'none', color: '#B8C4D4', fontSize: '15px' }}>{item.descShort}</p>
               </div>
             ))}
           </div>
@@ -209,19 +217,20 @@ export default function HomePage() {
 
           <div className="neighborhoods-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
             {[
-              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.27.49%E2%80%AFPM.png-quNNm2yJanE4YvhAq5LXnzZU6Bc1M0.jpeg)', name: 'Brickell', desc: 'High-rise living · from $2,300', link: '/map?neighborhood=brickell' },
-              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.34.40%E2%80%AFPM-ZdxO8b0IP4gFzwYPxlmOfFTLS6OGuY.png)', name: 'Wynwood', desc: 'Art & nightlife · from $2,200', link: '/map?neighborhood=wynwood' },
-              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.38.24%E2%80%AFPM.png-C6ysCh1CAGzrOi7ivCOVLJTCWhFokI.jpeg)', name: 'Edgewater', desc: 'Bay views · from $2,100', link: '/map?neighborhood=edgewater' },
-              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.41.20%E2%80%AFPM.png-6rvSsbBMrjH0sS02nFjhvTWWW0Jt1E.jpeg)', name: 'Downtown', desc: 'Walk everywhere · from $2,000', link: '/map?neighborhood=downtown' },
-              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.47.08%E2%80%AFPM-ZtrGk3664gXnLZIQZTlI374n4AcxOt.png)', name: 'Midtown', desc: 'Best of both · from $2,250', link: '/map?neighborhood=midtown' },
-              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.47.41%E2%80%AFPM.png-8JILMw3ZIOOoo1Vww651TGRuXyncEB.jpeg)', name: 'Coconut Grove', desc: 'Lush & quiet · from $2,400', link: '/map?neighborhood=coconut-grove' },
-              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.53.27%E2%80%AFPM-rKhZBWNNlhdMcwcehum4MbRpcnV1an.png)', name: 'Coral Gables', desc: 'Classic Miami · from $2,300', link: '/map?neighborhood=coral-gables' },
-              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.56.40%E2%80%AFPM.png-r2HiLx3k65C0Alzh9JKpRGDjarhiN7.jpeg)', name: 'Miami Beach', desc: 'Ocean life · from $2,200', link: '/map?neighborhood=miami-beach' }
+              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.27.49%E2%80%AFPM.png-quNNm2yJanE4YvhAq5LXnzZU6Bc1M0.jpeg)', name: 'Brickell', descLong: 'High-rise living · from $2,300', descShort: 'From $2,300', link: '/map?neighborhood=brickell' },
+              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.34.40%E2%80%AFPM-ZdxO8b0IP4gFzwYPxlmOfFTLS6OGuY.png)', name: 'Wynwood', descLong: 'Art & nightlife · from $2,200', descShort: 'From $2,200', link: '/map?neighborhood=wynwood' },
+              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.38.24%E2%80%AFPM.png-C6ysCh1CAGzrOi7ivCOVLJTCWhFokI.jpeg)', name: 'Edgewater', descLong: 'Bay views · from $2,100', descShort: 'From $2,100', link: '/map?neighborhood=edgewater' },
+              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.41.20%E2%80%AFPM.png-6rvSsbBMrjH0sS02nFjhvTWWW0Jt1E.jpeg)', name: 'Downtown', descLong: 'Walk everywhere · from $2,000', descShort: 'From $2,000', link: '/map?neighborhood=downtown' },
+              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.47.08%E2%80%AFPM-ZtrGk3664gXnLZIQZTlI374n4AcxOt.png)', name: 'Midtown', descLong: 'Best of both · from $2,250', descShort: 'From $2,250', link: '/map?neighborhood=midtown' },
+              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.47.41%E2%80%AFPM.png-8JILMw3ZIOOoo1Vww651TGRuXyncEB.jpeg)', name: 'Coconut Grove', descLong: 'Lush & quiet · from $2,400', descShort: 'From $2,400', link: '/map?neighborhood=coconut-grove' },
+              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.53.27%E2%80%AFPM-rKhZBWNNlhdMcwcehum4MbRpcnV1an.png)', name: 'Coral Gables', descLong: 'Classic Miami · from $2,300', descShort: 'From $2,300', link: '/map?neighborhood=coral-gables' },
+              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.56.40%E2%80%AFPM.png-r2HiLx3k65C0Alzh9JKpRGDjarhiN7.jpeg)', name: 'Miami Beach', descLong: 'Ocean life · from $2,200', descShort: 'From $2,200', link: '/map?neighborhood=miami-beach' }
             ].map((hood, i) => (
               <a key={i} href={hood.link} className="hood" style={{ position: 'relative', borderRadius: '18px', overflow: 'hidden', aspectRatio: '4/5', display: 'flex', alignItems: 'flex-end', padding: '20px', border: '1px solid rgba(255,255,255,.12)', transition: 'transform 0.2s', backgroundImage: hood.bg || hood.g, backgroundSize: 'cover', backgroundPosition: 'center', cursor: 'pointer' }} onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-4px)')} onMouseLeave={(e) => (e.currentTarget.style.transform = 'none')}>
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 30%, rgba(11,18,32,.92))', pointerEvents: 'none' }} />
                 <h3 className="display" style={{ fontFamily: 'Archivo', fontVariationSettings: "'wdth' 118", textTransform: 'uppercase', fontSize: '19px', position: 'relative', zIndex: 2 }}>{hood.name}</h3>
-                <small style={{ position: 'relative', zIndex: 2, color: '#D7E2EE', fontSize: '12px' }}>{hood.desc}</small>
+                <small className="desktop-copy" style={{ position: 'relative', zIndex: 2, color: '#D7E2EE', fontSize: '12px' }}>{hood.descLong}</small>
+                <small className="mobile-copy" style={{ display: 'none', position: 'relative', zIndex: 2, color: '#D7E2EE', fontSize: '12px' }}>{hood.descShort}</small>
               </a>
             ))}
           </div>
@@ -239,8 +248,16 @@ export default function HomePage() {
             <div style={{ borderRadius: '20px', padding: '34px', background: '#E9EDF2', color: '#44506A' }}>
               <h3 className="display" style={{ fontFamily: 'Archivo', textTransform: 'uppercase', fontVariationSettings: "'wdth' 115", fontSize: '20px' }}>The big listing sites</h3>
               <ul style={{ listStyle: 'none', marginTop: '18px' }}>
-                {['Show 10–30% of what\'s actually available', 'Stale pricing, no concessions shown', 'Your info sold to a call-center funnel', 'You do all the legwork yourself'].map((item, i) => (
-                  <li key={i} style={{ padding: '10px 0', borderBottom: 'rgba(0,0,0,.08) 1px solid', fontSize: '15px', display: 'flex', gap: '10px' }}>❌ {item}</li>
+                {[
+                  { long: 'Show 10–30% of what\'s actually available', short: 'Hide most listings' },
+                  { long: 'Stale pricing, no concessions shown', short: 'Outdated prices' },
+                  { long: 'Your info sold to a call-center funnel', short: 'Sell your info' },
+                  { long: 'You do all the legwork yourself', short: 'DIY everything' }
+                ].map((item, i) => (
+                  <li key={i} style={{ padding: '10px 0', borderBottom: 'rgba(0,0,0,.08) 1px solid', fontSize: '15px', display: 'flex', gap: '10px' }}>
+                    <span className="desktop-copy">❌ {item.long}</span>
+                    <span className="mobile-copy" style={{ display: 'none' }}>❌ {item.short}</span>
+                  </li>
                 ))}
               </ul>
             </div>
@@ -248,8 +265,16 @@ export default function HomePage() {
             <div style={{ borderRadius: '20px', padding: '34px', background: '#0B1220', color: '#F6F8F9', boxShadow: '0 24px 60px rgba(11,18,32,.35)' }}>
               <h3 className="display" style={{ fontFamily: 'Archivo', textTransform: 'uppercase', fontVariationSettings: "'wdth' 115", fontSize: '20px' }}>Miami Apartment <span style={{ color: '#FF4D8D' }}>Guy™</span></h3>
               <ul style={{ listStyle: 'none', marginTop: '18px' }}>
-                {['Live pricing across 108+ buildings, updated daily', 'Net effective rent — the real number after concessions', 'One human. My number. Straight answers.', 'I negotiate, book tours, and chase the paperwork'].map((item, i) => (
-                  <li key={i} style={{ padding: '10px 0', borderBottom: 'rgba(255,255,255,.12) 1px solid', fontSize: '15px', display: 'flex', gap: '10px' }}>✅ {item}</li>
+                {[
+                  { long: 'Live pricing across 108+ buildings, updated daily', short: '108+ live updates' },
+                  { long: 'Net effective rent — the real number after concessions', short: 'Real net pricing' },
+                  { long: 'One human. My number. Straight answers.', short: 'Human, not bots' },
+                  { long: 'I negotiate, book tours, and chase the paperwork', short: 'I handle everything' }
+                ].map((item, i) => (
+                  <li key={i} style={{ padding: '10px 0', borderBottom: 'rgba(255,255,255,.12) 1px solid', fontSize: '15px', display: 'flex', gap: '10px' }}>
+                    <span className="desktop-copy">✅ {item.long}</span>
+                    <span className="mobile-copy" style={{ display: 'none' }}>✅ {item.short}</span>
+                  </li>
                 ))}
               </ul>
             </div>
@@ -265,13 +290,14 @@ export default function HomePage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
             {[
-              { stars: '★★★★★', text: '"Texted Don a budget at 9pm, had five quotes with net pricing by morning. Signed at Flow with two months free I never would have found on my own."', name: 'Jessica M.', location: 'Brickell', initials: 'JM', bg: '#19C6C0' },
-              { stars: '★★★★★', text: '"Relocated from NYC sight unseen. Don FaceTimed me through three tours and negotiated my admin fee to zero. Didn\'t pay him a dime."', name: 'Carlos R.', location: 'Edgewater', initials: 'CR', bg: '#FF4D8D' },
-              { stars: '★★★★★', text: '"Every other \'locator\' sent me a Zillow link. Don sent me a quote sheet with move-in costs down to the dollar. Different level."', name: 'Aaliyah T.', location: 'Wynwood', initials: 'AT', bg: '#FFC24B' }
+              { stars: '★★★★★', textLong: '"Texted Don a budget at 9pm, had five quotes with net pricing by morning. Signed at Flow with two months free I never would have found on my own."', textShort: '"Texted budget, got 5 quotes with real pricing by morning."', name: 'Jessica M.', location: 'Brickell', initials: 'JM', bg: '#19C6C0' },
+              { stars: '★★★★★', textLong: '"Relocated from NYC sight unseen. Don FaceTimed me through three tours and negotiated my admin fee to zero. Didn\'t pay him a dime."', textShort: '"Got me in from NYC, zero fees. Amazing."', name: 'Carlos R.', location: 'Edgewater', initials: 'CR', bg: '#FF4D8D' },
+              { stars: '★★★★★', textLong: '"Every other \'locator\' sent me a Zillow link. Don sent me a quote sheet with move-in costs down to the dollar. Different level."', textShort: '"Don sent real quotes. Everyone else just links."', name: 'Aaliyah T.', location: 'Wynwood', initials: 'AT', bg: '#FFC24B' }
             ].map((review, i) => (
               <div key={i} style={{ background: '#0F1B30', border: '1px solid rgba(255,255,255,.12)', borderRadius: '18px', padding: '26px' }}>
                 <div style={{ color: '#FFC24B', letterSpacing: '2px', marginBottom: '12px' }}>{review.stars}</div>
-                <p style={{ fontSize: '15px', color: '#C9D4E2', marginBottom: '16px' }}>{review.text}</p>
+                <p className="desktop-copy" style={{ fontSize: '15px', color: '#C9D4E2', marginBottom: '16px' }}>{review.textLong}</p>
+                <p className="mobile-copy" style={{ display: 'none', fontSize: '15px', color: '#C9D4E2', marginBottom: '16px' }}>{review.textShort}</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: 700 }}>
                   <div style={{ width: '34px', height: '34px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 900, fontFamily: 'Archivo', background: review.bg, color: review.bg === '#FFC24B' ? '#0B1220' : '#fff' }}>
                     {review.initials}
