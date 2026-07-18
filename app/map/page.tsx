@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import mapboxgl from 'mapbox-gl';
+import { HowItWorksModal } from '@/components/how-it-works-modal';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { ImageCarousel } from '@/components/image-carousel';
 import { MapFilterModal, type FilterState } from '@/components/map-filter-modal';
@@ -367,6 +368,7 @@ export default function MiamiApp() {
   const [selectedBuildingForDetail, setSelectedBuildingForDetail] = useState(null);
   const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], price: [], moveInDate: [], neighborhood: null });
   const [mapInstance, setMapInstance] = useState<any>(null);
+  const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
   
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -791,22 +793,49 @@ export default function MiamiApp() {
           </span>
         </div>
         
-        {/* Text Don Button */}
-        <button 
-          onClick={() => setShowMoveWithDonModal(true)}
-          className="bg-[#ec4899] hover:bg-[#db2777] text-white px-4 py-2 rounded-full font-semibold text-sm transition-colors"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            lineHeight: '1',
-            gap: '8px',
-            height: '36px'
-          }}
-        >
-          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span>
-          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Move with Don</span>
-        </button>
+        {/* Header Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* How it Works Button */}
+          <button 
+            onClick={() => setShowHowItWorksModal(true)}
+            style={{
+              background: 'transparent',
+              border: '1px solid #19C6C0',
+              color: '#19C6C0',
+              padding: '8px 14px',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(25,198,192,0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+            }}
+          >
+            How it works
+          </button>
+
+          {/* Text Don Button */}
+          <button 
+            onClick={() => setShowMoveWithDonModal(true)}
+            className="bg-[#ec4899] hover:bg-[#db2777] text-white px-4 py-2 rounded-full font-semibold text-sm transition-colors"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              lineHeight: '1',
+              gap: '8px',
+              height: '36px'
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span>
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Move with Don</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter Bar - Full Width */}
@@ -943,6 +972,12 @@ export default function MiamiApp() {
           onBack={() => setSelectedBuildingForDetail(null)} 
         />
       )}
+
+      {/* How It Works Modal */}
+      <HowItWorksModal
+        isOpen={showHowItWorksModal}
+        onClose={() => setShowHowItWorksModal(false)}
+      />
     </div>
   );
 }
