@@ -718,11 +718,11 @@ export default function MiamiApp() {
       <div className="hidden md:flex items-center justify-between px-8 py-7 bg-[#0B1220] flex-shrink-0" style={{ height: '74px' }}>
         {/* Wordmark */}
         <div className="flex items-center gap-1">
-          <h1 className="font-black tracking-tighter uppercase text-white" style={{ fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '30px', lineHeight: '1' }}>
+          <h1 className="font-black tracking-tighter uppercase text-white" style={{ fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '20px', lineHeight: '1' }}>
             Miami Apartment
           </h1>
-          <span className="font-black uppercase" style={{ color: '#ec4899', fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '30px', lineHeight: '1' }}>
-            Guy<sup className="align-top relative" style={{ fontSize: '14px', top: '-4px', marginLeft: '2px' }}>™</sup>
+          <span className="font-black uppercase" style={{ color: '#FF4D8D', fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '20px', lineHeight: '1' }}>
+            Guy<sup className="align-top relative" style={{ fontSize: '11px', top: '-3px', marginLeft: '2px' }}>™</sup>
           </span>
         </div>
         
