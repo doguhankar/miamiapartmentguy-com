@@ -797,16 +797,6 @@ export default function MiamiApp() {
                     Save ({starredBuildings.size})
                   </button>
                 )}
-                <button 
-                  onClick={() => isAgentMode ? setIsAgentMode(false) : setShowPinModal(true)} 
-                  className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
-                    isAgentMode 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-[#1B2A45] text-[#B8C4D4] hover:bg-gray-200'
-                  }`}
-                >
-                  {isAgentMode ? '✓ Agent Mode' : 'Agent?'}
-                </button>
               </div>
             </div>
           </div>
