@@ -1203,10 +1203,18 @@ export default function MiamiApp() {
 
       {/* Full-Screen Building Detail View */}
       {selectedBuildingForDetail && (
-        <BuildingDetailView 
-          building={selectedBuildingForDetail} 
-          onBack={() => setSelectedBuildingForDetail(null)} 
-        />
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 1000,
+          background: '#fff',
+          overflow: 'auto',
+        }}>
+          <BuildingDetailView 
+            building={selectedBuildingForDetail} 
+            onBack={() => setSelectedBuildingForDetail(null)} 
+          />
+        </div>
       )}
 
       {/* How It Works Modal */}
