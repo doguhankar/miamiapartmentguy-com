@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import mapboxgl from 'mapbox-gl';
 import { HowItWorksModal } from '@/components/how-it-works-modal';
@@ -840,9 +841,11 @@ export default function MiamiApp() {
           background: 'rgba(11,18,32,0.9)',
           borderBottom: '0.5px solid rgba(255,255,255,0.08)',
         }}>
-          <div style={{ fontFamily: 'Archivo', fontWeight: 900, fontSize: '15px', color: '#fff', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
-            MAG<span style={{ color: '#FF4D8D' }}>™</span>
-          </div>
+          <Link href="/" style={{ textDecoration: 'none', cursor: 'pointer' }}>
+            <div style={{ fontFamily: 'Archivo', fontWeight: 900, fontSize: '15px', color: '#fff', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
+              MAG<span style={{ color: '#FF4D8D' }}>™</span>
+            </div>
+          </Link>
           <button
             onClick={() => setShowMoveWithDonModal(true)}
             style={{
