@@ -11,7 +11,7 @@ import { MapFilterModal, type FilterState } from '@/components/map-filter-modal'
 import { FlowBrickellCard } from '@/components/flow-brickell-card';
 import { MoveWithDon } from '@/components/move-with-don';
 import { DesktopBuildingCard } from '@/components/desktop-building-card';
-import { BuildingDetailView } from '@/components/building-detail-view';
+
 import { BuildingDetailModal } from '@/components/building-detail-modal';
 import { MapFilterCard, type MapFilterState } from '@/components/map-filter-card';
 import { copyToClipboard, showToast } from '@/lib/toast-utils';
@@ -152,7 +152,7 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setBottomSheetSnapPoint, setSelectedBuildingForDetail, onMapReady }) => {
+const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setBottomSheetSnapPoint, setInfoBuilding: setInfoBuildingFromMap, onMapReady }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
@@ -281,7 +281,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       button.onmouseover = () => button.style.backgroundColor = '#E53A73';
       button.onmouseout = () => button.style.backgroundColor = '#FF4D8D';
       button.onclick = () => {
-        setSelectedBuildingForDetail(building);
+        setInfoBuildingFromMap(building);
         popup.remove();
       };
       popupContent.appendChild(button);
@@ -366,7 +366,7 @@ export default function MiamiApp() {
   const [showMoveWithDonModal, setShowMoveWithDonModal] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [] });
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
-  const [selectedBuildingForDetail, setSelectedBuildingForDetail] = useState(null);
+
   const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], price: [], moveInDate: [], neighborhood: null });
   const [mapInstance, setMapInstance] = useState<any>(null);
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
@@ -824,11 +824,11 @@ export default function MiamiApp() {
             expandedNeighborhoods={expandedNeighborhoods}
             selectedBuilding={selectedBuilding}
             highlightedBuilding={highlightedBuilding}
-            onPinClick={(b) => { setSelectedBuilding(b); setSelectedBuildingForDetail(b); }}
+            onPinClick={(b) => { setSelectedBuilding(b); setInfoBuilding(b); }}
             geocodedBuildings={geocodedBuildings}
             setSelectedBuilding={setSelectedBuilding}
             setBottomSheetSnapPoint={setBottomSheetSnapPoint}
-            setSelectedBuildingForDetail={setSelectedBuildingForDetail}
+            setInfoBuilding={setInfoBuilding}
             onMapReady={handleMapReady}
           />
         </div>
@@ -969,7 +969,7 @@ export default function MiamiApp() {
                       ))}
                       <span style={{ flex: 1 }} />
                       <button
-                        onClick={(e) => { e.stopPropagation(); setSelectedBuildingForDetail(building); }}
+                        onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }}
                         style={{
                           fontSize: 10, fontWeight: 600, color: '#fff',
                           background: '#FF4D8D', borderRadius: 5, padding: '3px 8px',
@@ -1093,11 +1093,11 @@ export default function MiamiApp() {
             expandedNeighborhoods={expandedNeighborhoods} 
             selectedBuilding={selectedBuilding} 
             highlightedBuilding={highlightedBuilding}
-            onPinClick={setSelectedBuilding} 
+            onPinClick={(b) => { setSelectedBuilding(b); setInfoBuilding(b); }}
             geocodedBuildings={geocodedBuildings}
             setSelectedBuilding={setSelectedBuilding}
             setBottomSheetSnapPoint={setBottomSheetSnapPoint}
-            setSelectedBuildingForDetail={setSelectedBuildingForDetail}
+            setInfoBuilding={setInfoBuilding}
             onMapReady={handleMapReady}
           />
         </div>
@@ -1156,7 +1156,7 @@ export default function MiamiApp() {
                     }
                     setStarredBuildings(newStarred);
                   }}
-                  onViewDetails={setSelectedBuildingForDetail}
+                  onViewDetails={setInfoBuilding}
                 />
               ))}
             </div>
@@ -1201,21 +1201,6 @@ export default function MiamiApp() {
         onApply={handleApplyFilters}
       />
 
-      {/* Full-Screen Building Detail View */}
-      {selectedBuildingForDetail && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 1000,
-          background: '#fff',
-          overflow: 'auto',
-        }}>
-          <BuildingDetailView 
-            building={selectedBuildingForDetail} 
-            onBack={() => setSelectedBuildingForDetail(null)} 
-          />
-        </div>
-      )}
 
       {/* How It Works Modal */}
       <HowItWorksModal
