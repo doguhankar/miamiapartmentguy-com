@@ -781,7 +781,8 @@ export default function MiamiApp() {
               placeholder="Search buildings..." 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className="w-full px-4 py-2.5 rounded-lg border border-[#19C6C0] text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[#FF4D8D]" 
+              className="w-full px-4 py-2.5 rounded-lg border border-[#19C6C0] text-white text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-[#FF4D8D]" 
+              style={{ background: '#0F1B30' }}
             />
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-[#B8C4D4]">
