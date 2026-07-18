@@ -27,65 +27,60 @@ export default function HomePage() {
         
         @media(prefers-reduced-motion:reduce) { .ticker-track { animation: none; } }
         
-        /* Mobile responsive fixes */
+        /* Mobile responsive fixes - media queries for all key elements */
         @media (max-width: 600px) {
           html, body { overflow-x: hidden; max-width: 100vw; }
           
           /* Nav */
-          nav { padding: 0; }
-          nav > div { padding: 0 16px; height: 56px; }
-          .logo { font-size: 18px; white-space: nowrap; }
-          .logo-full { display: none; }
-          .logo-short { display: inline; }
+          nav > div { height: 56px !important; padding: 0 16px !important; }
+          .logo-full { display: none !important; }
+          .logo-short { display: block !important; }
           
-          /* Button */
-          .btn { padding: 9px 16px; font-size: 13px; gap: 6px; }
-          .btn-pink { box-shadow: none; }
+          /* Hero section grid - stack vertically */
+          .hero-grid { grid-template-columns: 1fr !important; gap: 32px !important; padding: 0 16px !important; }
+          header { padding: 40px 0 44px !important; }
           
-          /* Hero */
-          header { padding: 40px 0 44px; }
-          header > div:first-child { background: radial-gradient(400px 300px at 90% 0%, rgba(255,77,141,.18), transparent 60%), radial-gradient(360px 260px at 0% 100%, rgba(25,198,192,.14), transparent 60%); }
-          h1 { font-size: clamp(32px, 10vw, 44px) !important; margin: 12px 0 16px !important; }
-          .section-lede { font-size: 15px; }
-          .hero-ctas { gap: 10px; }
-          .hero-ctas .btn { width: 100%; justify-content: center; }
+          /* Hero headline - smaller on mobile */
+          header h1 { font-size: clamp(32px, 9vw, 48px) !important; }
           
-          /* Phone mock */
-          .phone { max-width: 100%; padding: 16px; border-radius: 20px; }
+          /* Hero description */
+          header p { font-size: 16px !important; }
           
-          /* Proof stats */
-          .proof-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-          .proof .num { font-size: 26px; }
-          .proof .lbl { font-size: 11px; }
+          /* Hero buttons - stack full width */
+          .hero-grid > div:first-child > div:nth-child(3) { 
+            flex-direction: column !important; 
+            gap: 12px !important; 
+          }
+          .hero-grid .btn { width: 100% !important; justify-content: center !important; }
+          
+          /* Phone mockup - fit viewport */
+          .phone-mock { 
+            max-width: 100% !important; 
+            width: 100% !important; 
+            margin-left: 0 !important;
+            padding: 16px !important;
+          }
+          
+          /* Proof bar - 2 column grid */
+          .proof-stats { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
+          .proof-stats div { font-size: 14px !important; }
+          .proof-stats div:first-child { font-size: 26px !important; }
           
           /* Sections */
-          section { padding: 56px 0; }
-          h2 { font-size: clamp(24px, 7vw, 32px); }
+          section { padding: 56px 0 !important; }
+          section > div { padding: 0 16px !important; }
           
-          /* Neighborhoods */
-          .neighborhoods-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-          .hood { padding: 12px; aspect-ratio: 1/1; }
-          .hood h3 { font-size: 15px; }
-          .hood small { font-size: 10px; }
-          
-          /* Steps */
-          .steps { gap: 14px; }
-          .step { padding: 22px 18px; }
-          
-          /* Compare cards */
-          .compare { gap: 14px; }
-          .card { padding: 22px; }
-          
-          /* Reviews */
-          .reviews-grid { gap: 14px; }
-          .review { padding: 20px; }
-          
-          /* Final CTA */
-          .final h2 { font-size: clamp(28px, 9vw, 40px); }
-          .sms-pill { padding: 12px 18px; font-size: 14px; flex-wrap: wrap; justify-content: center; text-align: center; }
-          
-          /* Footer */
-          .foot-grid { grid-template-columns: 1fr; gap: 28px; }
+          /* Neighborhoods - 2 column grid with 1:1 aspect */
+          .neighborhoods-grid { 
+            grid-template-columns: repeat(2, 1fr) !important; 
+            gap: 12px !important; 
+          }
+          .hood { 
+            aspect-ratio: 1 !important; 
+            padding: 14px !important; 
+          }
+          .hood h3 { font-size: 15px !important; }
+          .hood small { font-size: 10px !important; }
         }
       `}</style>
 
@@ -99,7 +94,8 @@ export default function HomePage() {
       {/* NAV */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(11,18,32,.85)', backdropFilter: 'blur(14px)', borderBottom: '1px solid rgba(255,255,255,.12)' }}>
         <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '68px' }}>
-          <div className="flex items-center gap-1 logo-full">
+          {/* Full logo - hidden on mobile */}
+          <div className="logo-full flex items-center gap-1" style={{ display: 'flex' }}>
             <h1 className="font-black tracking-tighter uppercase text-white" style={{ fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '20px', lineHeight: '1' }}>
               Miami Apartment
             </h1>
@@ -107,6 +103,7 @@ export default function HomePage() {
               Guy<sup className="align-top relative" style={{ fontSize: '11px', top: '-3px', marginLeft: '2px' }}>™</sup>
             </span>
           </div>
+          {/* Short logo - visible on mobile only */}
           <div className="logo-short" style={{ display: 'none', fontFamily: 'Archivo', fontWeight: 900, letterSpacing: '-0.02em', fontSize: '18px', lineHeight: '1', textTransform: 'uppercase' }}>
             MAG<span style={{ color: '#FF4D8D' }}>™</span>
           </div>
@@ -117,7 +114,7 @@ export default function HomePage() {
       {/* HERO */}
       <header style={{ position: 'relative', padding: '90px 0 70px', overflow: 'hidden', background: '#0B1220' }}>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(700px 420px at 85% 0%, rgba(255,77,141,.22), transparent 60%), radial-gradient(600px 400px at 0% 100%, rgba(25,198,192,.18), transparent 60%)' }} />
-        <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 24px', position: 'relative', display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: '56px', alignItems: 'center' }}>
+        <div className="hero-grid" style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 24px', position: 'relative', display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: '56px', alignItems: 'center' }}>
           <div>
             <div className="eyebrow">Free for renters · Paid by the buildings</div>
             <h1 style={{ fontFamily: 'Archivo', fontVariationSettings: "'wdth' 120", fontSize: 'clamp(44px, 6.4vw, 84px)', lineHeight: 0.95, margin: '18px 0 22px', fontWeight: 900 }}>
@@ -134,7 +131,7 @@ export default function HomePage() {
           </div>
 
           {/* PHONE MOCK */}
-          <div style={{ background: '#0F1B30', border: '1px solid rgba(255,255,255,.12)', borderRadius: '28px', padding: '22px', boxShadow: '0 30px 80px rgba(0,0,0,.5)', maxWidth: '380px', marginLeft: 'auto' }}>
+          <div className="phone-mock" style={{ background: '#0F1B30', border: '1px solid rgba(255,255,255,.12)', borderRadius: '28px', padding: '22px', boxShadow: '0 30px 80px rgba(0,0,0,.5)', maxWidth: '380px', marginLeft: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '14px', borderBottom: '1px solid rgba(255,255,255,.12)', marginBottom: '14px' }}>
               <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'linear-gradient(135deg, #FF4D8D, #FFC24B)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontFamily: 'Archivo', fontSize: '13px' }}>MAG</div>
               <div><strong>Don · Miami Apartment Guy</strong><small style={{ display: 'block', color: '#7E8CA0', fontSize: '11px' }}>Typically replies in minutes</small></div>
@@ -165,7 +162,7 @@ export default function HomePage() {
 
       {/* PROOF BAR */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,.12)', borderBottom: '1px solid rgba(255,255,255,.12)', padding: '28px 0' }}>
-        <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', textAlign: 'center' }}>
+        <div className="proof-stats" style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', textAlign: 'center' }}>
           {[
             { num: '108+', lbl: 'Buildings tracked' },
             { num: '$0', lbl: 'Cost to you' },
