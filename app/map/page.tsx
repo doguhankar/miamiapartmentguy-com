@@ -824,7 +824,7 @@ export default function MiamiApp() {
             expandedNeighborhoods={expandedNeighborhoods}
             selectedBuilding={selectedBuilding}
             highlightedBuilding={highlightedBuilding}
-            onPinClick={(b) => { setSelectedBuilding(b); setInfoBuilding(b); }}
+            onPinClick={(b) => { setSelectedBuilding(b); setSelectedBuildingForDetail(b); }}
             geocodedBuildings={geocodedBuildings}
             setSelectedBuilding={setSelectedBuilding}
             setBottomSheetSnapPoint={setBottomSheetSnapPoint}
