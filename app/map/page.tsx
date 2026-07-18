@@ -369,6 +369,12 @@ export default function MiamiApp() {
   const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], price: [], moveInDate: [], neighborhood: null });
   const [mapInstance, setMapInstance] = useState<any>(null);
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
+
+  // Mobile bottom sheet state
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(true);
+  const mobileTouchStartY = useRef(0);
+  const mobileTouchCurrentY = useRef(0);
+  const mobileSheetEl = useRef<HTMLDivElement>(null);
   
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -458,6 +464,34 @@ export default function MiamiApp() {
       zoom: center.zoom,
       duration: 1500
     });
+  };
+
+  // Mobile bottom sheet touch drag handlers
+  const handleMobileTouchStart = (e: React.TouchEvent) => {
+    mobileTouchStartY.current = e.touches[0].clientY;
+    mobileTouchCurrentY.current = e.touches[0].clientY;
+    if (mobileSheetEl.current) {
+      mobileSheetEl.current.style.transition = 'none';
+    }
+  };
+
+  const handleMobileTouchMove = (e: React.TouchEvent) => {
+    const diff = e.touches[0].clientY - mobileTouchStartY.current;
+    mobileTouchCurrentY.current = e.touches[0].clientY;
+    if (diff > 0 && mobileSheetEl.current) {
+      mobileSheetEl.current.style.transform = `translateY(${diff}px)`;
+    }
+  };
+
+  const handleMobileTouchEnd = () => {
+    const diff = mobileTouchCurrentY.current - mobileTouchStartY.current;
+    if (mobileSheetEl.current) {
+      mobileSheetEl.current.style.transition = 'transform 0.3s ease';
+      mobileSheetEl.current.style.transform = '';
+    }
+    if (diff > 80) {
+      setMobileSheetOpen(false);
+    }
   };
 
   const SNAP_POINTS = {
@@ -778,9 +812,206 @@ export default function MiamiApp() {
 
   return (
     <div className="flex flex-col h-screen bg-[#0B1220]">
-      <Ticker />
       <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
-      
+
+      {/* ── MOBILE LAYOUT (< md) ────────────────────────────────────────── */}
+      <div className="md:hidden" style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0B1220' }}>
+
+        {/* Full-screen map */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}>
+          <MapComponent
+            expandedNeighborhoods={expandedNeighborhoods}
+            selectedBuilding={selectedBuilding}
+            highlightedBuilding={highlightedBuilding}
+            onPinClick={(b) => { setSelectedBuilding(b); setInfoBuilding(b); }}
+            geocodedBuildings={geocodedBuildings}
+            setSelectedBuilding={setSelectedBuilding}
+            setBottomSheetSnapPoint={setBottomSheetSnapPoint}
+            setSelectedBuildingForDetail={setSelectedBuildingForDetail}
+            onMapReady={handleMapReady}
+          />
+        </div>
+
+        {/* Fixed header overlay */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, zIndex: 30,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '10px 14px',
+          background: 'rgba(11,18,32,0.9)',
+          borderBottom: '0.5px solid rgba(255,255,255,0.08)',
+        }}>
+          <div style={{ fontFamily: 'Archivo', fontWeight: 900, fontSize: '15px', color: '#fff', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
+            MAG<span style={{ color: '#FF4D8D' }}>™</span>
+          </div>
+          <button
+            onClick={() => setShowMoveWithDonModal(true)}
+            style={{
+              background: '#FF4D8D', color: '#fff', border: 'none',
+              borderRadius: '6px', padding: '7px 12px',
+              fontSize: '11px', fontWeight: 600, cursor: 'pointer',
+            }}
+          >
+            Move with Don
+          </button>
+        </div>
+
+        {/* Backdrop */}
+        {mobileSheetOpen && (
+          <div
+            onClick={() => setMobileSheetOpen(false)}
+            style={{
+              position: 'absolute', inset: 0, zIndex: 40,
+              background: 'rgba(0,0,0,0.3)',
+            }}
+          />
+        )}
+
+        {/* Bottom Sheet */}
+        <div
+          ref={mobileSheetEl}
+          style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 50,
+            background: '#111C2E',
+            borderTop: '0.5px solid rgba(255,255,255,0.08)',
+            borderRadius: '20px 20px 0 0',
+            maxHeight: '75vh',
+            display: 'flex',
+            flexDirection: 'column',
+            transform: mobileSheetOpen ? 'translateY(0)' : 'translateY(100%)',
+            transition: 'transform 0.3s ease',
+          }}
+          onTouchStart={handleMobileTouchStart}
+          onTouchMove={handleMobileTouchMove}
+          onTouchEnd={handleMobileTouchEnd}
+        >
+          {/* Drag handle */}
+          <div style={{ padding: '12px 0 8px', textAlign: 'center', flexShrink: 0 }}>
+            <div style={{ width: 32, height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 2, margin: '0 auto' }} />
+          </div>
+
+          {/* Scrollable content */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '0 14px 14px' }}>
+            {/* Search */}
+            <div style={{ marginBottom: 12 }}>
+              <input
+                type="text"
+                placeholder="Search buildings…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%', background: 'transparent',
+                  border: '0.5px solid rgba(255,255,255,0.12)',
+                  borderRadius: 999, padding: '9px 14px',
+                  fontSize: 13, color: '#E6ECF5', outline: 'none',
+                }}
+              />
+            </div>
+
+            {/* Filter chips */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12, overflowX: 'auto', paddingBottom: 4 }}>
+              {['Neighborhood', 'Beds', 'Price', 'Move in'].map((label) => (
+                <button
+                  key={label}
+                  style={{
+                    flexShrink: 0, background: 'transparent', cursor: 'pointer',
+                    border: '0.5px solid rgba(255,255,255,0.14)',
+                    borderRadius: 999, padding: '5px 10px',
+                    fontSize: 11, color: '#C3CEDD', whiteSpace: 'nowrap',
+                  }}
+                >
+                  {label} ⌄
+                </button>
+              ))}
+            </div>
+
+            {/* Building cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {filteredBuildings.map((building) => (
+                <div
+                  key={building.id}
+                  onClick={() => { setSelectedBuilding(building); setInfoBuilding(building); }}
+                  style={{
+                    display: 'flex', gap: 10, background: '#111C2E',
+                    border: '0.5px solid rgba(255,255,255,0.06)',
+                    borderRadius: 12, padding: 10, cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,77,141,0.3)'; e.currentTarget.style.background = '#16253A'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.background = '#111C2E'; }}
+                >
+                  {/* Thumbnail */}
+                  <div style={{ width: 70, height: 70, borderRadius: 8, background: '#22334F', flexShrink: 0, overflow: 'hidden', position: 'relative' }}>
+                    {building.images?.[0] && (
+                      <img src={building.images[0]} alt={building.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    )}
+                    <div style={{
+                      position: 'absolute', bottom: 4, left: 4,
+                      fontSize: 8, color: '#9FB0C6', background: 'rgba(11,18,32,0.78)',
+                      padding: '2px 5px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: '0.06em',
+                    }}>
+                      {building.neighborhood}
+                    </div>
+                  </div>
+
+                  {/* Body */}
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{building.name}</div>
+                    <div style={{ fontSize: 11, color: '#8FA0B8', marginTop: 2, lineHeight: 1.4 }}>{building.tagline}</div>
+                    <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 5, paddingTop: 6 }}>
+                      {building.units?.slice(0, 2).map((u) => (
+                        <span key={u} style={{
+                          fontSize: 9, color: '#C3CEDD',
+                          border: '0.5px solid rgba(255,255,255,0.14)',
+                          borderRadius: 5, padding: '2px 5px',
+                        }}>{u}</span>
+                      ))}
+                      <span style={{ flex: 1 }} />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedBuildingForDetail(building); }}
+                        style={{
+                          fontSize: 10, fontWeight: 600, color: '#fff',
+                          background: '#FF4D8D', borderRadius: 5, padding: '3px 8px',
+                          border: 'none', cursor: 'pointer',
+                        }}
+                      >
+                        Info
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer hint */}
+            <div style={{ textAlign: 'center', fontSize: 10, color: '#6F7F96', padding: '12px 0 4px', borderTop: '0.5px solid rgba(255,255,255,0.06)', marginTop: 10 }}>
+              Swipe down to close · tap outside to close
+            </div>
+          </div>
+        </div>
+
+        {/* Show list FAB — visible when sheet is closed */}
+        {!mobileSheetOpen && (
+          <button
+            onClick={() => setMobileSheetOpen(true)}
+            style={{
+              position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+              zIndex: 35, background: '#FF4D8D', color: '#fff',
+              border: 'none', borderRadius: 999, padding: '10px 22px',
+              fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              boxShadow: '0 4px 20px rgba(255,77,141,0.4)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Show list
+          </button>
+        )}
+      </div>
+      {/* ── END MOBILE LAYOUT ─────────────────────────────────────────────── */}
+
+      {/* Ticker — desktop only */}
+      <div className="hidden md:block">
+        <Ticker />
+      </div>
+
       {/* Desktop Header - Fixed at Top */}
       <div className="hidden md:flex items-center justify-between px-8 py-7 bg-[#0B1220] flex-shrink-0" style={{ height: '74px' }}>
         {/* Wordmark */}
