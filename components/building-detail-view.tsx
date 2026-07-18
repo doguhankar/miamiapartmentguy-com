@@ -178,36 +178,35 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
         <hr style={{ border: "none", borderTop: "1px solid #eee", margin: "16px 0" }} />
 
         {/* Move-In Fees */}
-        {(building.moveInFees || building.fees) && (
+        {building.moveInFees && building.moveInFees.length > 0 && (
           <>
             <p style={{ fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
               Move-in fees
             </p>
-            {(building.moveInFees || building.fees) &&
-              Object.entries(building.moveInFees || building.fees || {}).map(([label, val], idx) => (
-                <div key={idx}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "8px 0", borderBottom: "1px solid #f0f0f0" }}>
-                    <span style={{ color: "#555" }}>{label}</span>
-                    <span style={{ fontWeight: 500 }}>{typeof val === "number" ? `$${val}` : val}</span>
-                  </div>
+            {building.moveInFees.map((fee, idx) => (
+              <div key={idx}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "8px 0", borderBottom: "1px solid #f0f0f0" }}>
+                  <span style={{ color: "#555" }}>{fee.type}</span>
+                  <span style={{ fontWeight: 500 }}>{`$${fee.amount.toLocaleString()}`}</span>
                 </div>
-              ))}
+              </div>
+            ))}
           </>
         )}
 
         <hr style={{ border: "none", borderTop: "1px solid #eee", margin: "16px 0" }} />
 
         {/* Monthly Charges */}
-        {building.monthlyCharges && (
+        {building.monthlyCharges && building.monthlyCharges.length > 0 && (
           <>
             <p style={{ fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
               Monthly charges
             </p>
-            {Object.entries(building.monthlyCharges).map(([label, val], idx) => (
+            {building.monthlyCharges.map((charge, idx) => (
               <div key={idx}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "8px 0", borderBottom: "1px solid #f0f0f0" }}>
-                  <span style={{ color: "#555" }}>{label}</span>
-                  <span style={{ fontWeight: 500 }}>{typeof val === "number" ? `$${val}/mo` : val}</span>
+                  <span style={{ color: "#555" }}>{charge.type}</span>
+                  <span style={{ fontWeight: 500 }}>{charge.amount === 0 ? "Included" : `$${charge.amount.toLocaleString()}/mo`}</span>
                 </div>
               </div>
             ))}
