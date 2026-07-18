@@ -26,6 +26,67 @@ export default function HomePage() {
         .ticker b { color: #0B1220; margin: 0 6px; }
         
         @media(prefers-reduced-motion:reduce) { .ticker-track { animation: none; } }
+        
+        /* Mobile responsive fixes */
+        @media (max-width: 600px) {
+          html, body { overflow-x: hidden; max-width: 100vw; }
+          
+          /* Nav */
+          nav { padding: 0; }
+          nav > div { padding: 0 16px; height: 56px; }
+          .logo { font-size: 18px; white-space: nowrap; }
+          .logo-full { display: none; }
+          .logo-short { display: inline; }
+          
+          /* Button */
+          .btn { padding: 9px 16px; font-size: 13px; gap: 6px; }
+          .btn-pink { box-shadow: none; }
+          
+          /* Hero */
+          header { padding: 40px 0 44px; }
+          header > div:first-child { background: radial-gradient(400px 300px at 90% 0%, rgba(255,77,141,.18), transparent 60%), radial-gradient(360px 260px at 0% 100%, rgba(25,198,192,.14), transparent 60%); }
+          h1 { font-size: clamp(32px, 10vw, 44px) !important; margin: 12px 0 16px !important; }
+          .section-lede { font-size: 15px; }
+          .hero-ctas { gap: 10px; }
+          .hero-ctas .btn { width: 100%; justify-content: center; }
+          
+          /* Phone mock */
+          .phone { max-width: 100%; padding: 16px; border-radius: 20px; }
+          
+          /* Proof stats */
+          .proof-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+          .proof .num { font-size: 26px; }
+          .proof .lbl { font-size: 11px; }
+          
+          /* Sections */
+          section { padding: 56px 0; }
+          h2 { font-size: clamp(24px, 7vw, 32px); }
+          
+          /* Neighborhoods */
+          .neighborhoods-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+          .hood { padding: 12px; aspect-ratio: 1/1; }
+          .hood h3 { font-size: 15px; }
+          .hood small { font-size: 10px; }
+          
+          /* Steps */
+          .steps { gap: 14px; }
+          .step { padding: 22px 18px; }
+          
+          /* Compare cards */
+          .compare { gap: 14px; }
+          .card { padding: 22px; }
+          
+          /* Reviews */
+          .reviews-grid { gap: 14px; }
+          .review { padding: 20px; }
+          
+          /* Final CTA */
+          .final h2 { font-size: clamp(28px, 9vw, 40px); }
+          .sms-pill { padding: 12px 18px; font-size: 14px; flex-wrap: wrap; justify-content: center; text-align: center; }
+          
+          /* Footer */
+          .foot-grid { grid-template-columns: 1fr; gap: 28px; }
+        }
       `}</style>
 
       {/* TICKER */}
@@ -38,13 +99,16 @@ export default function HomePage() {
       {/* NAV */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(11,18,32,.85)', backdropFilter: 'blur(14px)', borderBottom: '1px solid rgba(255,255,255,.12)' }}>
         <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '68px' }}>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 logo-full">
             <h1 className="font-black tracking-tighter uppercase text-white" style={{ fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '20px', lineHeight: '1' }}>
               Miami Apartment
             </h1>
             <span className="font-black uppercase" style={{ color: '#FF4D8D', fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '20px', lineHeight: '1' }}>
               Guy<sup className="align-top relative" style={{ fontSize: '11px', top: '-3px', marginLeft: '2px' }}>™</sup>
             </span>
+          </div>
+          <div className="logo-short" style={{ display: 'none', fontFamily: 'Archivo', fontWeight: 900, letterSpacing: '-0.02em', fontSize: '18px', lineHeight: '1', textTransform: 'uppercase' }}>
+            MAG<span style={{ color: '#FF4D8D' }}>™</span>
           </div>
           <a href="/map" className="btn btn-pink">View Map</a>
         </div>
@@ -146,7 +210,7 @@ export default function HomePage() {
           <div className="eyebrow">Neighborhoods</div>
           <h2 className="display" style={{ fontSize: 'clamp(30px, 4vw, 48px)', margin: '12px 0 44px' }}>Where do you want to wake up?</h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+          <div className="neighborhoods-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
             {[
               { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.27.49%E2%80%AFPM.png-quNNm2yJanE4YvhAq5LXnzZU6Bc1M0.jpeg)', name: 'Brickell', desc: 'High-rise living · from $2,300', link: '/map?neighborhood=brickell' },
               { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.34.40%E2%80%AFPM-ZdxO8b0IP4gFzwYPxlmOfFTLS6OGuY.png)', name: 'Wynwood', desc: 'Art & nightlife · from $2,200', link: '/map?neighborhood=wynwood' },
@@ -157,7 +221,7 @@ export default function HomePage() {
               { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.53.27%E2%80%AFPM-rKhZBWNNlhdMcwcehum4MbRpcnV1an.png)', name: 'Coral Gables', desc: 'Classic Miami · from $2,300', link: '/map?neighborhood=coral-gables' },
               { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.56.40%E2%80%AFPM.png-r2HiLx3k65C0Alzh9JKpRGDjarhiN7.jpeg)', name: 'Miami Beach', desc: 'Ocean life · from $2,200', link: '/map?neighborhood=miami-beach' }
             ].map((hood, i) => (
-              <a key={i} href={hood.link} style={{ position: 'relative', borderRadius: '18px', overflow: 'hidden', aspectRatio: '4/5', display: 'flex', alignItems: 'flex-end', padding: '20px', border: '1px solid rgba(255,255,255,.12)', transition: 'transform 0.2s', backgroundImage: hood.bg || hood.g, backgroundSize: 'cover', backgroundPosition: 'center', cursor: 'pointer' }} onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-4px)')} onMouseLeave={(e) => (e.currentTarget.style.transform = 'none')}>
+              <a key={i} href={hood.link} className="hood" style={{ position: 'relative', borderRadius: '18px', overflow: 'hidden', aspectRatio: '4/5', display: 'flex', alignItems: 'flex-end', padding: '20px', border: '1px solid rgba(255,255,255,.12)', transition: 'transform 0.2s', backgroundImage: hood.bg || hood.g, backgroundSize: 'cover', backgroundPosition: 'center', cursor: 'pointer' }} onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-4px)')} onMouseLeave={(e) => (e.currentTarget.style.transform = 'none')}>
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 30%, rgba(11,18,32,.92))', pointerEvents: 'none' }} />
                 <h3 className="display" style={{ fontFamily: 'Archivo', fontVariationSettings: "'wdth' 118", textTransform: 'uppercase', fontSize: '19px', position: 'relative', zIndex: 2 }}>{hood.name}</h3>
                 <small style={{ position: 'relative', zIndex: 2, color: '#D7E2EE', fontSize: '12px' }}>{hood.desc}</small>

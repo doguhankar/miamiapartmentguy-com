@@ -131,4 +131,12 @@
     font-variation-settings: 'wdth' 118;
     letter-spacing: -0.01em;
   }
+
+  /* Mobile responsive fixes */
+  @media (max-width: 600px) {
+    html, body {
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+  }
 }
