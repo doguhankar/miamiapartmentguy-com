@@ -150,7 +150,7 @@ export default function HomePage() {
             {[
               { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.27.49%E2%80%AFPM.png-quNNm2yJanE4YvhAq5LXnzZU6Bc1M0.jpeg)', name: 'Brickell', desc: 'High-rise living · from $2,300', link: '/map?neighborhood=brickell' },
               { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.34.40%E2%80%AFPM-ZdxO8b0IP4gFzwYPxlmOfFTLS6OGuY.png)', name: 'Wynwood', desc: 'Art & nightlife · from $2,200', link: '/map?neighborhood=wynwood' },
-              { g: 'linear-gradient(135deg, #3E2F8F, #FF4D8D)', name: 'Edgewater', desc: 'Bay views · from $2,100', link: '/map?neighborhood=edgewater' },
+              { bg: 'url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.38.24%E2%80%AFPM.png-C6ysCh1CAGzrOi7ivCOVLJTCWhFokI.jpeg)', name: 'Edgewater', desc: 'Bay views · from $2,100', link: '/map?neighborhood=edgewater' },
               { g: 'linear-gradient(135deg, #0E5E6F, #FFC24B)', name: 'Downtown', desc: 'Walk everywhere · from $2,000', link: '/map?neighborhood=downtown' },
               { g: 'linear-gradient(135deg, #233A7D, #8E54E9)', name: 'Midtown', desc: 'Best of both · from $2,250', link: '/map?neighborhood=midtown' },
               { g: 'linear-gradient(135deg, #FF6B6B, #FFC24B)', name: 'Coconut Grove', desc: 'Lush & quiet · from $2,400', link: '/map?neighborhood=coconut-grove' },
