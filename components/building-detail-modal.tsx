@@ -24,8 +24,24 @@ function formatAmount(v: string | number): string {
   return s
 }
 
-function parseFees(fees?: Record<string, string | number>): FeeEntry[] {
+function parseFees(fees?: Record<string, string | number> | Array<{ type?: string; label?: string; amount?: string | number }> | any[]): FeeEntry[] {
   if (!fees) return []
+  
+  // Handle array format: [{type: "Deposit", amount: 1000}, ...]
+  if (Array.isArray(fees)) {
+    return fees
+      .map((entry) => {
+        const label = entry.type || entry.label || ""
+        const raw = entry.amount || entry.raw || ""
+        return { label, raw }
+      })
+      .filter(({ raw }) => {
+        const s = String(raw).trim().toLowerCase()
+        return s !== "" && s !== "tbd" && s !== "none"
+      })
+  }
+  
+  // Handle object format: {deposit: "1000", application: "125", ...}
   return Object.entries(fees)
     .map(([k, v]) => ({ label: k, raw: v }))
     .filter(({ raw }) => {
