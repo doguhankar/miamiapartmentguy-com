@@ -165,22 +165,33 @@ export async function POST(request: NextRequest) {
   function initUnzipper(buildingLookup: Map<string, string>) {
     const uz = new Unzip((file) => {
       const fullPath = file.name
+      console.log('[v0] zip entry:', fullPath)
       if (
         fullPath.startsWith('__MACOSX') ||
         fullPath.includes('/.') ||
         fullPath.startsWith('.') ||
         fullPath.endsWith('/')
       ) {
+        console.log('[v0] skipped (mac/hidden/dir):', fullPath)
         file.terminate()
         return
       }
       const parts = fullPath.split('/')
-      if (parts.length < 2 || !parts[1]) { file.terminate(); return }
+      if (parts.length < 2 || !parts[1]) {
+        console.log('[v0] skipped (no subfolder):', fullPath)
+        file.terminate()
+        return
+      }
 
       const folderName = parts[0]
       const fileName = parts[parts.length - 1]
       const ext = fileName.split('.').pop()?.toLowerCase() ?? ''
-      if (!IMAGE_MIME[ext]) { file.terminate(); return }
+      console.log('[v0] folder:', folderName, '| file:', fileName, '| ext:', ext)
+      if (!IMAGE_MIME[ext]) {
+        console.log('[v0] skipped (bad ext):', ext, fullPath)
+        file.terminate()
+        return
+      }
 
       if (!folderResults.has(folderName)) {
         folderResults.set(folderName, {
@@ -191,6 +202,7 @@ export async function POST(request: NextRequest) {
         })
       }
       const result = folderResults.get(folderName)!
+      console.log('[v0] buildingId match for', folderName, '->', result.buildingId)
       if (!result.buildingId) {
         result.failed++
         if (!result.errors.some((e) => e.startsWith('No building matched'))) {
@@ -243,15 +255,18 @@ export async function POST(request: NextRequest) {
               const storagePath = `${buildingId}/${safeName}`
               const mime = IMAGE_MIME[ext] ?? 'image/jpeg'
 
+              console.log('[v0] uploading', storagePath, fileData.length, 'bytes')
               const { error: storageErr } = await supabase.storage
                 .from('building-images')
                 .upload(storagePath, fileData, { contentType: mime, upsert: true })
 
               if (storageErr) {
+                console.log('[v0] storage error:', storageErr.message)
                 result.failed++
                 result.errors.push(`${fileName}: ${storageErr.message}`)
                 return
               }
+              console.log('[v0] uploaded ok:', storagePath)
               const { data: { publicUrl } } = supabase.storage
                 .from('building-images').getPublicUrl(storagePath)
 
