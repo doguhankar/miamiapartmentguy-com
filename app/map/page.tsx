@@ -364,6 +364,14 @@ export default function MiamiApp() {
   const [pinInput, setPinInput] = useState('');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showMoveWithDonModal, setShowMoveWithDonModal] = useState(false);
+
+  // Auto-open the intake modal once per browser session
+  useEffect(() => {
+    if (!sessionStorage.getItem('mwd_shown')) {
+      setShowMoveWithDonModal(true);
+      sessionStorage.setItem('mwd_shown', '1');
+    }
+  }, []);
   const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [] });
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
 
