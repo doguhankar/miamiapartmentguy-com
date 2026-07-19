@@ -155,12 +155,22 @@ export async function POST(request: NextRequest) {
 
   // fflate Unzip instance — created once we locate the zip part
   let unzipper: Unzip | null = null
-  let unzipperDone: (() => void) | null = null
-  let unzipperReject: ((e: unknown) => void) | null = null
+
+  // Track in-flight files so we know when all ondata callbacks have fired.
+  // zipStreamDone is set to true when we've pushed the final byte to fflate.
+  // Each time a file's `final` flag fires we decrement; when both conditions
+  // are met (stream done AND counter at 0) we resolve unzipperPromise.
+  let zipStreamDone = false
+  let inFlightFiles = 0
+  let resolveUnzipper: (() => void) | null = null
+  let rejectUnzipper: ((e: unknown) => void) | null = null
   const unzipperPromise = new Promise<void>((res, rej) => {
-    unzipperDone = res
-    unzipperReject = rej
+    resolveUnzipper = res
+    rejectUnzipper = rej
   })
+  function checkUnzipperDone() {
+    if (zipStreamDone && inFlightFiles === 0) resolveUnzipper?.()
+  }
 
   function initUnzipper(buildingLookup: Map<string, string>) {
     const uz = new Unzip((file) => {
@@ -216,6 +226,7 @@ export async function POST(request: NextRequest) {
       }
       const buildingId = result.buildingId
       const chunks: Uint8Array[] = []
+      inFlightFiles++
 
       file.ondata = (err, chunk, final) => {
         if (err) {
@@ -225,6 +236,8 @@ export async function POST(request: NextRequest) {
         }
         chunks.push(chunk)
         if (final) {
+          inFlightFiles--
+          checkUnzipperDone()
           // Assemble this one file and kick off upload immediately
           const totalLen = chunks.reduce((s, c) => s + c.length, 0)
           const fileData = new Uint8Array(totalLen)
@@ -416,7 +429,8 @@ export async function POST(request: NextRequest) {
           } else if (unzipper) {
             unzipper.push(new Uint8Array(0), true)
           }
-          unzipperDone?.()
+          zipStreamDone = true
+          checkUnzipperDone()
 
           // Consume up to and including the CRLF before the boundary
           window = window.slice(endPos + CRLF.length)
@@ -437,10 +451,10 @@ export async function POST(request: NextRequest) {
   // flush whatever is left to fflate and signal done.
   if (unzipper) {
     try { unzipper.push(new Uint8Array(0), true) } catch { /* ignore */ }
-    unzipperDone?.()
-  } else {
-    // Already done or never started
-    unzipperDone?.()
+  }
+  if (!zipStreamDone) {
+    zipStreamDone = true
+    checkUnzipperDone()
   }
 
   // Wait for unzipper to finish dispatching all file events, then all uploads
