@@ -131,6 +131,10 @@ export async function POST(request: NextRequest) {
   const supabase = createAdminClient()
   const lookup = buildLookup()
 
+  // Structured trace — appended throughout, returned in response JSON
+  const trace: string[] = []
+  const t = (msg: string) => { trace.push(msg); console.log('[v0] ' + msg) }
+
   // State machine: searching for parts, reading headers, streaming file data
   type State = 'PREAMBLE' | 'HEADER' | 'TEXT_BODY' | 'FILE_BODY' | 'DONE'
   let state: State = 'PREAMBLE'
@@ -173,50 +177,55 @@ export async function POST(request: NextRequest) {
   }
 
   function initUnzipper(buildingLookup: Map<string, string>) {
+    t('unzipper: initialized')
     const uz = new Unzip((file) => {
       const fullPath = file.name
-      console.log('[v0] zip entry:', fullPath)
+      t(`entry: "${fullPath}"`)
+
       if (
         fullPath.startsWith('__MACOSX') ||
         fullPath.includes('/.') ||
         fullPath.startsWith('.') ||
         fullPath.endsWith('/')
       ) {
-        console.log('[v0] skipped (mac/hidden/dir):', fullPath)
-        file.terminate()
-        return
-      }
-      const parts = fullPath.split('/')
-      // Support both subfolder layout (folder/file.webp) and root layout (file.webp)
-      const isRootLevel = parts.length === 1 || (parts.length === 2 && parts[1] === '')
-      if (isRootLevel && !parts[0]) {
-        console.log('[v0] skipped (empty path):', fullPath)
+        t(`skip: mac/hidden/dir — "${fullPath}"`)
         file.terminate()
         return
       }
 
-      // folderName: use directory component, or fall back to the filename stem
+      const parts = fullPath.split('/')
+      const isRootLevel = parts.length === 1 || (parts.length === 2 && parts[1] === '')
+      if (isRootLevel && !parts[0]) {
+        t(`skip: empty path — "${fullPath}"`)
+        file.terminate()
+        return
+      }
+
       const folderName = (!isRootLevel) ? parts[0] : parts[0].replace(/\.[^.]+$/, '')
       const fileName = parts[parts.length - 1] || parts[parts.length - 2]
       const ext = fileName.split('.').pop()?.toLowerCase() ?? ''
-      console.log('[v0] folder:', folderName, '| file:', fileName, '| ext:', ext)
+      t(`parsed: folder="${folderName}" file="${fileName}" ext="${ext}"`)
+
       if (!IMAGE_MIME[ext]) {
-        console.log('[v0] skipped (bad ext):', ext, fullPath)
+        t(`skip: unsupported ext "${ext}" — "${fullPath}"`)
         file.terminate()
         return
       }
 
       if (!folderResults.has(folderName)) {
+        const matched = matchFolder(folderName, buildingLookup)
+        t(`match: folder="${folderName}" → buildingId=${matched ?? 'NO MATCH'}`)
         folderResults.set(folderName, {
-          buildingId: matchFolder(folderName, buildingLookup),
+          buildingId: matched,
           uploaded: 0,
           failed: 0,
           errors: [],
         })
       }
+
       const result = folderResults.get(folderName)!
-      console.log('[v0] buildingId match for', folderName, '->', result.buildingId)
       if (!result.buildingId) {
+        t(`skip: no building matched for folder "${folderName}"`)
         result.failed++
         if (!result.errors.some((e) => e.startsWith('No building matched'))) {
           result.errors.push(`No building matched for folder "${folderName}"`)
@@ -224,31 +233,38 @@ export async function POST(request: NextRequest) {
         file.terminate()
         return
       }
+
       const buildingId = result.buildingId
+      t(`accept: "${fileName}" → building "${buildingId}" (inFlightFiles now ${inFlightFiles + 1})`)
       const chunks: Uint8Array[] = []
       inFlightFiles++
 
       file.ondata = (err, chunk, final) => {
         if (err) {
+          t(`error: decompression "${fileName}" — ${err.message}`)
           result.failed++
           result.errors.push(`${fileName}: decompression error — ${err.message}`)
+          inFlightFiles--
+          checkUnzipperDone()
           return
         }
         chunks.push(chunk)
         if (final) {
+          const totalLen = chunks.reduce((s, c) => s + c.length, 0)
+          t(`decomp done: "${fileName}" ${totalLen} bytes, assembling for upload`)
           inFlightFiles--
           checkUnzipperDone()
-          // Assemble this one file and kick off upload immediately
-          const totalLen = chunks.reduce((s, c) => s + c.length, 0)
+
           const fileData = new Uint8Array(totalLen)
           let offset = 0
           for (const c of chunks) { fileData.set(c, offset); offset += c.length }
-          chunks.length = 0 // free chunk refs
+          chunks.length = 0
 
           uploadPromises.push((async () => {
             try {
               if (replaceMode && !replaced.has(buildingId)) {
                 replaced.add(buildingId)
+                t(`replace: clearing existing images for "${buildingId}"`)
                 await supabase.from('building_images').delete().eq('building_id', buildingId)
                 const { data: existing } = await supabase.storage
                   .from('building-images').list(buildingId)
@@ -257,6 +273,7 @@ export async function POST(request: NextRequest) {
                     .remove(existing.map((f) => `${buildingId}/${f.name}`))
                 }
               }
+
               if (!orderCounters.has(buildingId)) {
                 const { data: rows } = await supabase.from('building_images')
                   .select('sort_order').eq('building_id', buildingId)
@@ -271,27 +288,30 @@ export async function POST(request: NextRequest) {
               const storagePath = `${buildingId}/${safeName}`
               const mime = IMAGE_MIME[ext] ?? 'image/jpeg'
 
-              console.log('[v0] uploading', storagePath, fileData.length, 'bytes')
+              t(`upload: "${storagePath}" (${fileData.length} bytes, ${mime})`)
               const { error: storageErr } = await supabase.storage
                 .from('building-images')
                 .upload(storagePath, fileData, { contentType: mime, upsert: true })
 
               if (storageErr) {
-                console.log('[v0] storage error:', storageErr.message)
+                t(`upload error: "${storagePath}" — ${storageErr.message}`)
                 result.failed++
                 result.errors.push(`${fileName}: ${storageErr.message}`)
                 return
               }
-              console.log('[v0] uploaded ok:', storagePath)
+
               const { data: { publicUrl } } = supabase.storage
                 .from('building-images').getPublicUrl(storagePath)
+              t(`upload ok: "${storagePath}" → ${publicUrl}`)
 
               dbRows.push({ building_id: buildingId, image_url: publicUrl,
                 file_name: safeName, sort_order: sortOrder })
               result.uploaded++
             } catch (e) {
+              const msg = e instanceof Error ? e.message : String(e)
+              t(`upload exception: "${fileName}" — ${msg}`)
               result.failed++
-              result.errors.push(`${fileName}: ${e instanceof Error ? e.message : String(e)}`)
+              result.errors.push(`${fileName}: ${msg}`)
             }
           })())
         }
@@ -367,12 +387,16 @@ export async function POST(request: NextRequest) {
           currentPart = { name: partName, filename: partFilename }
 
           if (partFilename) {
-            // File part — init unzipper if this is the zip field
+            t(`part: file field name="${partName}" filename="${partFilename}"`)
             if (partName === 'zip' || partFilename.endsWith('.zip')) {
+              t(`zip field found — initializing unzipper`)
               unzipper = initUnzipper(lookup)
+            } else {
+              t(`skip: file field "${partName}" is not a zip`)
             }
             state = 'FILE_BODY'
           } else {
+            t(`part: text field name="${partName}"`)
             state = 'TEXT_BODY'
           }
           continue processWindow
@@ -457,9 +481,13 @@ export async function POST(request: NextRequest) {
     checkUnzipperDone()
   }
 
+  t(`stream done: zipStreamDone=${zipStreamDone} inFlightFiles=${inFlightFiles} uploadPromises=${uploadPromises.length}`)
+
   // Wait for unzipper to finish dispatching all file events, then all uploads
   await unzipperPromise
+  t(`unzipperPromise resolved — awaiting ${uploadPromises.length} upload(s)`)
   await Promise.all(uploadPromises)
+  t(`all uploads complete — dbRows=${dbRows.length}`)
 
   // Batch-insert DB rows
   if (dbRows.length) {
@@ -489,11 +517,16 @@ export async function POST(request: NextRequest) {
     errors: r.errors,
   }))
 
+  const totalUploaded = results.reduce((s, r) => s + r.uploaded, 0)
+  const totalFailed   = results.reduce((s, r) => s + r.failed, 0)
+  t(`summary: totalUploaded=${totalUploaded} totalFailed=${totalFailed} buildingsProcessed=${results.filter(r => r.buildingId).length} unmatched=${results.filter(r => !r.buildingId).length}`)
+
   return NextResponse.json({
-    totalUploaded: results.reduce((s, r) => s + r.uploaded, 0),
-    totalFailed: results.reduce((s, r) => s + r.failed, 0),
+    totalUploaded,
+    totalFailed,
     buildingsProcessed: results.filter((r) => r.buildingId).length,
     unmatched: results.filter((r) => !r.buildingId).map((r) => r.folder),
     results,
+    trace,
   })
 }
