@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { unzip } from 'fflate'
-import { Readable } from 'stream'
+import { Unzip, UnzipInflate, AsyncUnzipInflate } from 'fflate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildings } from '@/lib/buildings'
 
@@ -8,15 +7,13 @@ export const runtime = 'nodejs'
 export const maxDuration = 300
 
 // ---------------------------------------------------------------------------
-// Folder-name → building-id fuzzy matcher
+// Folder-name → building-id fuzzy matcher (unchanged)
 // ---------------------------------------------------------------------------
 function buildLookup() {
   const map = new Map<string, string>()
   for (const b of buildings) {
     const norm = (s: string) =>
       s.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim()
-
-    // slug as-is
     map.set(b.id.toLowerCase(), b.id)
     const n = norm(b.name)
     map.set(n, b.id)
@@ -32,7 +29,6 @@ function matchFolder(folderName: string, lookup: Map<string, string>): string | 
     .replace(/[^a-z0-9 ]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
-
   return (
     lookup.get(norm) ??
     lookup.get(norm.replace(/ /g, '-')) ??
@@ -56,36 +52,7 @@ const IMAGE_MIME: Record<string, string> = {
 }
 
 // ---------------------------------------------------------------------------
-// Convert Web Streams API ReadableStream to Node Readable
-// ---------------------------------------------------------------------------
-function webStreamToNodeStream(webStream: ReadableStream<Uint8Array>): Readable {
-  const reader = webStream.getReader()
-  return new Readable({
-    async read() {
-      try {
-        const { done, value } = await reader.read()
-        this.push(done ? null : Buffer.from(value))
-      } catch (err) {
-        this.destroy(err as Error)
-      }
-    },
-  })
-}
-
-// ---------------------------------------------------------------------------
-// Accumulate buffer chunks from stream
-// ---------------------------------------------------------------------------
-async function streamToBuffer(stream: Readable): Promise<Buffer> {
-  const chunks: Buffer[] = []
-  return new Promise((resolve, reject) => {
-    stream.on('data', (chunk) => chunks.push(Buffer.from(chunk)))
-    stream.on('end', () => resolve(Buffer.concat(chunks)))
-    stream.on('error', reject)
-  })
-}
-
-// ---------------------------------------------------------------------------
-// POST /api/admin/bulk-upload (streaming)
+// POST /api/admin/bulk-upload — true streaming: extract one → upload one
 // ---------------------------------------------------------------------------
 export async function POST(request: NextRequest) {
   const supabase = createAdminClient()
@@ -105,173 +72,271 @@ export async function POST(request: NextRequest) {
 
   const replace = formData.get('replace') === 'true'
 
-  // Convert Web Stream to Node Stream
-  let nodeStream: Readable
-  try {
-    if (zipFile.stream) {
-      nodeStream = webStreamToNodeStream(zipFile.stream())
-    } else {
-      // Fallback for older File API — still buffer but at least warn
-      const buf = await zipFile.arrayBuffer()
-      nodeStream = Readable.from([buf])
-    }
-  } catch (err) {
-    return NextResponse.json(
-      { error: `Stream setup failed: ${err instanceof Error ? err.message : String(err)}` },
-      { status: 400 },
-    )
-  }
+  // Per-folder result tracking
+  const folderResults = new Map<
+    string,
+    { buildingId: string | null; uploaded: number; failed: number; errors: string[] }
+  >()
 
-  // Buffer the entire stream (still necessary since fflate.unzip needs the full buffer)
-  // But this happens incrementally as the stream arrives, reducing peak memory
-  let zipBuffer: Buffer
-  try {
-    zipBuffer = await streamToBuffer(nodeStream)
-  } catch (err) {
-    return NextResponse.json(
-      { error: `Failed to read stream: ${err instanceof Error ? err.message : String(err)}` },
-      { status: 400 },
-    )
-  }
-
-  // Extract ZIP with fflate — decompress already-buffered data
-  let entries: Record<string, Uint8Array>
-  try {
-    const zipUint8 = new Uint8Array(zipBuffer)
-    entries = await new Promise((resolve, reject) => {
-      unzip(zipUint8, (err, data) => (err ? reject(err) : resolve(data)))
-    })
-  } catch (err) {
-    return NextResponse.json(
-      { error: `Failed to extract zip: ${err instanceof Error ? err.message : String(err)}` },
-      { status: 400 },
-    )
-  }
-
-  // Group files by top-level folder name
-  const folderFiles = new Map<string, { name: string; data: Uint8Array; ext: string }[]>()
-
-  for (const [fullPath, data] of Object.entries(entries)) {
-    // Skip macOS metadata, hidden, and empty entries
-    if (
-      fullPath.startsWith('__MACOSX') ||
-      fullPath.includes('/.') ||
-      fullPath.startsWith('.') ||
-      data.length === 0
-    )
-      continue
-
-    const parts = fullPath.split('/')
-    if (parts.length < 2 || !parts[1]) continue // not inside a folder
-
-    const folderName = parts[0]
-    const fileName = parts[parts.length - 1]
-    const ext = fileName.split('.').pop()?.toLowerCase() ?? ''
-    if (!IMAGE_MIME[ext]) continue // not an image
-
-    if (!folderFiles.has(folderName)) folderFiles.set(folderName, [])
-    folderFiles.get(folderName)!.push({ name: fileName, data, ext })
-  }
-
-  // Process each folder and upload immediately
-  const results: {
-    folder: string
-    buildingId: string | null
-    uploaded: number
-    failed: number
-    errors: string[]
+  // DB rows to batch-insert at the end (tiny — just strings, no binary data)
+  const dbRows: {
+    building_id: string
+    image_url: string
+    file_name: string
+    sort_order: number
   }[] = []
 
-  for (const [folder, files] of folderFiles) {
-    const buildingId = matchFolder(folder, lookup)
+  // Per-building sort_order counters & replace-mode tracking
+  const orderCounters = new Map<string, number>()
+  const replaced = new Set<string>()
 
-    if (!buildingId) {
-      results.push({
-        folder,
-        buildingId: null,
-        uploaded: 0,
-        failed: files.length,
-        errors: [`No building matched for folder "${folder}"`],
-      })
-      continue
-    }
+  // In-flight upload promises — we track them so we can await all before returning
+  const uploadPromises: Promise<void>[] = []
 
-    // Replace mode: clear existing
-    if (replace) {
-      await supabase.from('building_images').delete().eq('building_id', buildingId)
-      const { data: existing } = await supabase.storage
-        .from('building-images')
-        .list(buildingId)
-      if (existing?.length) {
-        await supabase.storage
-          .from('building-images')
-          .remove(existing.map((f) => `${buildingId}/${f.name}`))
+  await new Promise<void>((resolve, reject) => {
+    const unzipper = new Unzip((file) => {
+      const fullPath = file.name
+
+      // Skip macOS metadata, hidden files, directories (end with /)
+      if (
+        fullPath.startsWith('__MACOSX') ||
+        fullPath.includes('/.') ||
+        fullPath.startsWith('.') ||
+        fullPath.endsWith('/')
+      ) {
+        file.terminate()
+        return
       }
-    }
 
-    // Get current max sort_order
-    const { data: existingRows } = await supabase
-      .from('building_images')
-      .select('sort_order')
-      .eq('building_id', buildingId)
-      .order('sort_order', { ascending: false })
-      .limit(1)
-    let nextOrder =
-      existingRows?.[0]?.sort_order != null ? existingRows[0].sort_order + 1 : 0
+      const parts = fullPath.split('/')
+      if (parts.length < 2 || !parts[1]) {
+        file.terminate()
+        return
+      }
 
-    const errors: string[] = []
-    const dbRows: {
-      building_id: string
-      image_url: string
-      file_name: string
-      sort_order: number
-    }[] = []
-    let uploaded = 0
+      const folderName = parts[0]
+      const fileName = parts[parts.length - 1]
+      const ext = fileName.split('.').pop()?.toLowerCase() ?? ''
+      if (!IMAGE_MIME[ext]) {
+        file.terminate()
+        return
+      }
 
-    // Upload in parallel batches of 4
-    const batchSize = 4
-    for (let i = 0; i < files.length; i += batchSize) {
-      const batch = files.slice(i, i + batchSize)
-      await Promise.all(
-        batch.map(async (f) => {
-          const safeName = f.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-          const storagePath = `${buildingId}/${safeName}`
-          const mime = IMAGE_MIME[f.ext] ?? 'image/jpeg'
+      // Initialise folder result entry
+      if (!folderResults.has(folderName)) {
+        folderResults.set(folderName, {
+          buildingId: matchFolder(folderName, lookup),
+          uploaded: 0,
+          failed: 0,
+          errors: [],
+        })
+      }
+      const result = folderResults.get(folderName)!
 
-          const { error: storageError } = await supabase.storage
-            .from('building-images')
-            .upload(storagePath, f.data, { contentType: mime, upsert: true })
+      if (!result.buildingId) {
+        result.failed++
+        if (!result.errors.some((e) => e.startsWith('No building matched'))) {
+          result.errors.push(`No building matched for folder "${folderName}"`)
+        }
+        file.terminate()
+        return
+      }
 
-          if (storageError) {
-            errors.push(`${f.name}: ${storageError.message}`)
-            return
+      const buildingId = result.buildingId
+
+      // Collect per-file chunks in a small local array — freed after upload
+      const chunks: Uint8Array[] = []
+
+      file.ondata = (err, chunk, final) => {
+        if (err) {
+          result.failed++
+          result.errors.push(`${fileName}: decompression error — ${err.message}`)
+          return
+        }
+
+        chunks.push(chunk)
+
+        if (final) {
+          // Concatenate this one file's chunks and immediately kick off an upload.
+          // The chunks array is local to this closure and will be GC'd once the
+          // upload promise resolves and this scope exits.
+          const totalLen = chunks.reduce((s, c) => s + c.length, 0)
+          const fileData = new Uint8Array(totalLen)
+          let offset = 0
+          for (const c of chunks) {
+            fileData.set(c, offset)
+            offset += c.length
+          }
+          // Drop chunk references immediately
+          chunks.length = 0
+
+          const uploadPromise = (async () => {
+            try {
+              // Replace mode: clear existing images once per building
+              if (replace && !replaced.has(buildingId)) {
+                replaced.add(buildingId)
+                await supabase.from('building_images').delete().eq('building_id', buildingId)
+                const { data: existingStorage } = await supabase.storage
+                  .from('building-images')
+                  .list(buildingId)
+                if (existingStorage?.length) {
+                  await supabase.storage
+                    .from('building-images')
+                    .remove(existingStorage.map((f) => `${buildingId}/${f.name}`))
+                }
+              }
+
+              // Initialise sort_order counter for this building on first use
+              if (!orderCounters.has(buildingId)) {
+                const { data: existingRows } = await supabase
+                  .from('building_images')
+                  .select('sort_order')
+                  .eq('building_id', buildingId)
+                  .order('sort_order', { ascending: false })
+                  .limit(1)
+                const startOrder =
+                  existingRows?.[0]?.sort_order != null
+                    ? existingRows[0].sort_order + 1
+                    : 0
+                orderCounters.set(buildingId, startOrder)
+              }
+
+              const sortOrder = orderCounters.get(buildingId)!
+              orderCounters.set(buildingId, sortOrder + 1)
+
+              const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_')
+              const storagePath = `${buildingId}/${safeName}`
+              const mime = IMAGE_MIME[ext] ?? 'image/jpeg'
+
+              const { error: storageError } = await supabase.storage
+                .from('building-images')
+                .upload(storagePath, fileData, { contentType: mime, upsert: true })
+
+              if (storageError) {
+                result.failed++
+                result.errors.push(`${fileName}: ${storageError.message}`)
+                return
+              }
+
+              const {
+                data: { publicUrl },
+              } = supabase.storage.from('building-images').getPublicUrl(storagePath)
+
+              // Queue DB row — batched at the end
+              dbRows.push({
+                building_id: buildingId,
+                image_url: publicUrl,
+                file_name: safeName,
+                sort_order: sortOrder,
+              })
+              result.uploaded++
+            } catch (e) {
+              result.failed++
+              result.errors.push(
+                `${fileName}: unexpected error — ${e instanceof Error ? e.message : String(e)}`,
+              )
+            }
+          })()
+
+          uploadPromises.push(uploadPromise)
+        }
+      }
+
+      // Register decoders: use async inflate for large files, sync for small ones
+      file.start = true
+      try {
+        if ((file as any).size != null && (file as any).size < 512 * 1024) {
+          file.start = false
+          UnzipInflate.prototype.constructor.call(file as any)
+        }
+      } catch {
+        // ignore — file will use whatever decoder it has
+      }
+    })
+
+    // Register decoders before pushing data
+    unzipper.register(UnzipInflate)
+    unzipper.register(AsyncUnzipInflate)
+
+    // Stream zip bytes through the Unzip parser in 64 KB chunks.
+    // We never hold more than one chunk + one decompressed file at a time.
+    ;(async () => {
+      try {
+        const reader = zipFile.stream().getReader()
+        const CHUNK = 65536 // 64 KB read window
+        let remainder = new Uint8Array(0)
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) {
+            // Push any remaining bytes as final
+            if (remainder.length) unzipper.push(remainder, true)
+            else unzipper.push(new Uint8Array(0), true)
+            break
           }
 
-          const {
-            data: { publicUrl },
-          } = supabase.storage.from('building-images').getPublicUrl(storagePath)
+          // Prepend any leftover bytes from previous iteration
+          let chunk: Uint8Array
+          if (remainder.length) {
+            chunk = new Uint8Array(remainder.length + value.length)
+            chunk.set(remainder)
+            chunk.set(value, remainder.length)
+            remainder = new Uint8Array(0)
+          } else {
+            chunk = value
+          }
 
-          dbRows.push({
-            building_id: buildingId,
-            image_url: publicUrl,
-            file_name: safeName,
-            sort_order: nextOrder++,
-          })
-          uploaded++
-        }),
-      )
-    }
+          // Push in CHUNK-sized windows to give fflate a steady feed
+          let pos = 0
+          while (pos + CHUNK <= chunk.length) {
+            unzipper.push(chunk.slice(pos, pos + CHUNK), false)
+            pos += CHUNK
+          }
+          // Hold the tail for the next iteration
+          if (pos < chunk.length) {
+            remainder = chunk.slice(pos)
+          }
+        }
 
-    // Batch insert DB rows
-    if (dbRows.length) {
+        resolve()
+      } catch (err) {
+        reject(err)
+      }
+    })()
+  })
+
+  // Wait for all in-flight storage uploads to complete
+  await Promise.all(uploadPromises)
+
+  // Batch-insert all DB rows at once (just string metadata — tiny payload)
+  if (dbRows.length) {
+    const BATCH = 100
+    for (let i = 0; i < dbRows.length; i += BATCH) {
       const { error: dbError } = await supabase
         .from('building_images')
-        .insert(dbRows)
-      if (dbError) errors.push(`DB insert: ${dbError.message}`)
+        .insert(dbRows.slice(i, i + BATCH))
+      if (dbError) {
+        // Attach to the relevant building's result
+        const affectedBuildings = new Set(dbRows.slice(i, i + BATCH).map((r) => r.building_id))
+        for (const bid of affectedBuildings) {
+          for (const [, result] of folderResults) {
+            if (result.buildingId === bid) {
+              result.errors.push(`DB insert batch: ${dbError.message}`)
+            }
+          }
+        }
+      }
     }
-
-    results.push({ folder, buildingId, uploaded, failed: errors.length, errors })
   }
+
+  // Build response
+  const results = Array.from(folderResults.entries()).map(([folder, r]) => ({
+    folder,
+    buildingId: r.buildingId,
+    uploaded: r.uploaded,
+    failed: r.failed,
+    errors: r.errors,
+  }))
 
   const totalUploaded = results.reduce((s, r) => s + r.uploaded, 0)
   const totalFailed = results.reduce((s, r) => s + r.failed, 0)
