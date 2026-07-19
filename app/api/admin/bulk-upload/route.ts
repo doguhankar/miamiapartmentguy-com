@@ -177,14 +177,17 @@ export async function POST(request: NextRequest) {
         return
       }
       const parts = fullPath.split('/')
-      if (parts.length < 2 || !parts[1]) {
-        console.log('[v0] skipped (no subfolder):', fullPath)
+      // Support both subfolder layout (folder/file.webp) and root layout (file.webp)
+      const isRootLevel = parts.length === 1 || (parts.length === 2 && parts[1] === '')
+      if (isRootLevel && !parts[0]) {
+        console.log('[v0] skipped (empty path):', fullPath)
         file.terminate()
         return
       }
 
-      const folderName = parts[0]
-      const fileName = parts[parts.length - 1]
+      // folderName: use directory component, or fall back to the filename stem
+      const folderName = (!isRootLevel) ? parts[0] : parts[0].replace(/\.[^.]+$/, '')
+      const fileName = parts[parts.length - 1] || parts[parts.length - 2]
       const ext = fileName.split('.').pop()?.toLowerCase() ?? ''
       console.log('[v0] folder:', folderName, '| file:', fileName, '| ext:', ext)
       if (!IMAGE_MIME[ext]) {
