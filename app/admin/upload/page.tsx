@@ -10,7 +10,7 @@ interface UploadResult {
   error?: string
 }
 
-interface UploadResponse {
+interface UploadSummary {
   buildingId: string
   uploaded: number
   failed: number
@@ -40,7 +40,7 @@ export default function AdminUploadPage() {
   const [dragging, setDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
-  const [response, setResponse] = useState<UploadResponse | null>(null)
+  const [response, setResponse] = useState<UploadSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([])
   const [loadingExisting, setLoadingExisting] = useState(false)
@@ -94,42 +94,52 @@ export default function AdminUploadPage() {
     setResponse(null)
     setError(null)
 
-    const batchSize = 3
     const allResults: UploadResult[] = []
     let uploaded = 0, failed = 0
 
-    for (let i = 0; i < files.length; i += batchSize) {
-      const batch = files.slice(i, i + batchSize)
-      const form = new FormData()
-      form.append('buildingId', buildingId)
-      form.append('replace', (replace && i === 0).toString())
-      batch.forEach((f) => form.append('images', f))
+    // Upload each file individually as a raw binary body (no multipart).
+    // This bypasses Next.js's 4.5 MB body-buffer limit entirely — the file
+    // bytes stream straight through to Supabase Storage.
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      const params = new URLSearchParams({
+        buildingId,
+        fileName:  file.name,
+        replace:   (replace && i === 0).toString(),
+        sortOrder: String(i),
+      })
 
       let lastError: string | null = null
-      let success = false
+      let result: UploadResult | null = null
 
       for (let attempt = 0; attempt <= 2; attempt++) {
         try {
-          const res = await fetch('/api/admin/upload-images', { method: 'POST', body: form })
-          if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`)
-          const data: UploadResponse = await res.json()
-          allResults.push(...data.results)
-          uploaded += data.uploaded
-          failed += data.failed
-          success = true
+          const res = await fetch(`/api/admin/upload-images?${params}`, {
+            method: 'POST',
+            headers: { 'Content-Type': file.type || 'application/octet-stream' },
+            body: file,
+            // @ts-ignore — duplex required for streaming uploads in some runtimes
+            duplex: 'half',
+          })
+          const data = await res.json()
+          if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`)
+          result = { fileName: file.name, url: data.url }
+          uploaded++
           break
         } catch (err) {
           lastError = err instanceof Error ? err.message : 'Unknown error'
-          if (attempt < 2) await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
+          if (attempt < 2) await new Promise((r) => setTimeout(r, 800 * (attempt + 1)))
         }
       }
 
-      if (!success) {
-        setError(`Upload failed: ${lastError}`)
-        setUploading(false)
-        return
+      if (result) {
+        allResults.push(result)
+      } else {
+        allResults.push({ fileName: file.name, url: '', error: lastError ?? 'Upload failed' })
+        failed++
       }
-      setProgress(Math.round(((i + batch.length) / files.length) * 100))
+
+      setProgress(Math.round(((i + 1) / files.length) * 100))
     }
 
     setResponse({ buildingId, uploaded, failed, results: allResults })
@@ -137,7 +147,6 @@ export default function AdminUploadPage() {
     const d = await fetch(`/api/admin/upload-images?buildingId=${encodeURIComponent(buildingId)}`).then((r) => r.json())
     setExistingImages(d.images ?? [])
     setUploading(false)
-    setProgress(100)
   }
 
   const handleDeleteAll = async () => {
