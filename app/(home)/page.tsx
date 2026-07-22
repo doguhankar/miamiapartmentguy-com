@@ -1,8 +1,11 @@
 'use client'
 
+import Topbar from '@/components/topbar'
+
 export default function HomePage() {
   return (
     <div style={{ background: '#0B1220', color: '#F6F8F9', fontFamily: "'Space Grotesk', sans-serif" }}>
+      <Topbar />
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Space+Grotesk:wght@400;500;700&display=swap');
         
@@ -244,28 +247,10 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* NAV */}
-      <nav style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(11,18,32,.85)', backdropFilter: 'blur(14px)', borderBottom: '1px solid rgba(255,255,255,.12)' }}>
-        <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '68px' }}>
-          {/* Full logo - hidden on mobile */}
-          <div className="logo-full flex items-center gap-1" style={{ display: 'flex' }}>
-            <h1 className="font-black tracking-tighter uppercase text-white" style={{ fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '20px', lineHeight: '1' }}>
-              Miami Apartment
-            </h1>
-            <span className="font-black uppercase" style={{ color: '#FF4D8D', fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '20px', lineHeight: '1' }}>
-              Guy<sup className="align-top relative" style={{ fontSize: '11px', top: '-3px', marginLeft: '2px' }}>™</sup>
-            </span>
-          </div>
-          {/* Short logo - visible on mobile only */}
-          <div className="logo-short" style={{ display: 'none', fontFamily: 'Archivo', fontWeight: 900, letterSpacing: '-0.02em', fontSize: '18px', lineHeight: '1', textTransform: 'uppercase' }}>
-            MAG<span style={{ color: '#FF4D8D' }}>™</span>
-          </div>
-          <a href="/map" className="btn btn-pink">View Map</a>
-        </div>
-      </nav>
+
 
       {/* HERO */}
-      <header style={{ position: 'relative', padding: '90px 0 70px', overflow: 'hidden', background: '#0B1220' }}>
+      <header style={{ position: 'relative', paddingTop: 'calc(61px + 90px)', paddingBottom: '70px', overflow: 'hidden', background: '#0B1220', marginTop: '0' }}>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(700px 420px at 85% 0%, rgba(255,77,141,.22), transparent 60%), radial-gradient(600px 400px at 0% 100%, rgba(25,198,192,.18), transparent 60%)' }} />
         <div className="hero-grid" style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 24px', position: 'relative', display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: '56px', alignItems: 'center' }}>
           <div>
