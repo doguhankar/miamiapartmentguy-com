@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 interface Lead {
   id: string
@@ -104,14 +105,70 @@ function Toast({ message }: { message: string }) {
 
 export default function AgentPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [user, setUser] = useState<{ email?: string; name?: string } | null>(null)
   const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS)
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [leadUpdates, setLeadUpdates] = useState<Record<string, Partial<Lead>>>({})
 
-  const handleGoogleLogin = () => {
-    setIsLoggedIn(true)
-    setToast('Welcome back, Marcus!')
+  const supabase = createClient()
+
+  // Check for existing session on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        setIsLoggedIn(true)
+        setUser({
+          email: session.user.email,
+          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+        })
+      }
+    }
+    checkSession()
+
+    // Also listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setIsLoggedIn(true)
+        setUser({
+          email: session.user.email,
+          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+        })
+        showToast(`Welcome back, ${session.user.user_metadata?.full_name || 'there'}!`)
+      } else if (event === 'SIGNED_OUT') {
+        setIsLoggedIn(false)
+        setUser(null)
+      }
+    })
+
+    return () => subscription?.unsubscribe()
+  }, [])
+
+  const handleGoogleLogin = async () => {
+    const redirectUrl = typeof window !== 'undefined' 
+      ? window.location.origin + '/agent'
+      : 'https://miamiapartmentguy.com/agent'
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl,
+      },
+    })
+
+    if (error) {
+      showToast(`Login error: ${error.message}`)
+    }
+  }
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (!error) {
+      setIsLoggedIn(false)
+      setUser(null)
+      showToast('Logged out')
+    }
   }
 
   const showToast = (msg: string) => {
@@ -268,7 +325,14 @@ export default function AgentPage() {
             borderRadius: '100px',
             background: '#111B2E',
             border: '1px solid #223252',
-          }}>
+            cursor: 'pointer',
+            transition: 'border-color 0.12s ease',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#19C6C0')}
+          onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#223252')}
+          onClick={handleLogout}
+          title="Click to logout"
+          >
             <div style={{
               width: '26px',
               height: '26px',
@@ -281,9 +345,9 @@ export default function AgentPage() {
               fontWeight: 700,
               color: '#03211F',
             }}>
-              MW
+              {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
             </div>
-            <span style={{ fontSize: '13px', color: '#8C97AE' }}>Marcus Webb · Agent</span>
+            <span style={{ fontSize: '13px', color: '#8C97AE' }}>{user?.name || 'User'} · Agent</span>
           </div>
         </div>
       </div>
