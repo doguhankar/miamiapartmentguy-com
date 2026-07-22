@@ -146,6 +146,28 @@ export default function AgentPage() {
   }, [])
 
   const handleGoogleLogin = async () => {
+    // REQUIRED OAUTH CONFIGURATION:
+    // Before this works, you must configure OAuth in THREE places:
+    //
+    // 1. SUPABASE DASHBOARD (https://app.supabase.com/project/thmklqucaqohzjqmpnqe/auth/url-configuration)
+    //    - Site URL: https://miamiapartmentguy.com
+    //    - Redirect URLs (allowlist): Add both:
+    //      * https://miamiapartmentguy.com/agent
+    //      * http://localhost:3000/agent (for local dev)
+    //
+    // 2. GOOGLE CLOUD CONSOLE (https://console.cloud.google.com/apis/credentials)
+    //    - Find the OAuth 2.0 Client ID used in this project
+    //    - Add to "Authorized redirect URIs":
+    //      * https://thmklqucaqohzjqmpnqe.supabase.co/auth/v1/callback
+    //    - Ensure OAuth consent screen is set to "Production" status
+    //
+    // 3. CODE (already correct below):
+    //    - Redirects to: window.location.origin + '/agent' (dynamic per environment)
+    //
+    // After OAuth succeeds, Google redirects to Supabase callback URL, which then
+    // redirects back to /agent. The onAuthStateChange listener detects the session
+    // and displays the dashboard.
+
     const redirectUrl = typeof window !== 'undefined' 
       ? window.location.origin + '/agent'
       : 'https://miamiapartmentguy.com/agent'
