@@ -104,17 +104,10 @@ function Toast({ message }: { message: string }) {
 
 export default function AgentPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [email, setEmail] = useState('')
   const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS)
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [leadUpdates, setLeadUpdates] = useState<Record<string, Partial<Lead>>>({})
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoggedIn(true)
-    setToast('Welcome back, Marcus!')
-  }
 
   const handleGoogleLogin = () => {
     setIsLoggedIn(true)
@@ -187,74 +180,6 @@ export default function AgentPage() {
           }}>
             Sign in to MIAMI APARTMENT<span style={{ color: '#FF4D8D' }}> GUY</span>
           </h2>
-
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{
-                display: 'block',
-                fontSize: '11px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.6px',
-                color: '#5B6780',
-                fontWeight: 700,
-                marginBottom: '8px',
-              }}>
-                Email Address *
-              </label>
-              <input
-                type="email"
-                placeholder="name@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  background: '#0B1220',
-                  border: '1px solid #223252',
-                  borderRadius: '8px',
-                  color: '#E9EDF6',
-                  fontSize: '13px',
-                  fontFamily: '"Inter", sans-serif',
-                  outline: 'none',
-                  transition: 'border-color 0.12s ease',
-                }}
-                onFocus={(e) => (e.target.style.borderColor = '#19C6C0')}
-                onBlur={(e) => (e.target.style.borderColor = '#223252')}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              style={{
-                padding: '14px',
-                background: '#1a1f2e',
-                border: '1px solid #223252',
-                borderRadius: '8px',
-                color: '#E9EDF6',
-                fontWeight: 700,
-                fontSize: '14px',
-                fontFamily: '"Archivo", sans-serif',
-                cursor: 'pointer',
-                transition: 'filter 0.12s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(1.1)')}
-              onMouseLeave={(e) => (e.currentTarget.style.filter = 'brightness(1)')}
-            >
-              SIGN IN
-            </button>
-          </form>
-
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            margin: '24px 0',
-            gap: '12px',
-          }}>
-            <div style={{ flex: 1, height: '1px', background: '#223252' }} />
-            <span style={{ color: '#5B6780', fontSize: '12px', fontWeight: 600 }}>OR</span>
-            <div style={{ flex: 1, height: '1px', background: '#223252' }} />
-          </div>
 
           <button
             onClick={handleGoogleLogin}
