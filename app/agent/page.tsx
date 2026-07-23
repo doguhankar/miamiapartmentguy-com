@@ -97,13 +97,13 @@ function dbLeadToLead(row: DbLead): Lead {
 }
 
 const COLUMNS = [
-  { key: 'newlead', label: 'New Lead', color: '#5B6780' },
-  { key: 'discoverycall', label: 'Discovery Call Made', color: '#19C6C0' },
-  { key: 'optionssent', label: 'Options Sent', color: '#19C6C0' },
-  { key: 'followup', label: 'Follow Up', color: '#FFC24B' },
-  { key: 'tourscheduled', label: 'Tour Scheduled', color: '#FF4D8D' },
-  { key: 'applied', label: 'Applied / Signed Lease', color: '#FF4D8D' },
-  { key: 'archive', label: 'Archive', color: '#5B6780' },
+  { key: 'newlead', label: 'New Lead', color: '#5B6780', stage: 'New Lead' },
+  { key: 'discoverycall', label: 'Discovery Call Made', color: '#19C6C0', stage: 'Discovery Call Made' },
+  { key: 'optionssent', label: 'Options Sent', color: '#19C6C0', stage: 'Options Sent' },
+  { key: 'followup', label: 'Follow Up', color: '#FFC24B', stage: 'Follow Up' },
+  { key: 'tourscheduled', label: 'Tour Scheduled', color: '#FF4D8D', stage: 'Tour Scheduled' },
+  { key: 'applied', label: 'Applied / Signed Lease', color: '#FF4D8D', stage: 'Applied / Signed Lease' },
+  { key: 'archive', label: 'Archive', color: '#5B6780', stage: 'Archive' },
 ]
 
 const BUILDINGS = [
@@ -173,6 +173,7 @@ export default function AgentPage() {
   const [toast, setToast] = useState<string | null>(null)
   const [leadUpdates, setLeadUpdates] = useState<Record<string, Partial<Lead>>>({})
   const [allowlistError, setAllowlistError] = useState<string | null>(null)
+  const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null)
 
   // Null until hydrated in useEffect — prevents createClient() from running
   // during SSR/build prerender where NEXT_PUBLIC env vars are unavailable.
@@ -406,6 +407,68 @@ export default function AgentPage() {
   )
 
   // ── IDLE: login screen ──────────────────���───────────────────────────────────
+  const handleDragStart = (e: React.DragEvent, leadId: string) => {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('leadId', leadId)
+    setDraggedLeadId(leadId)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDropOnColumn = async (e: React.DragEvent, targetColumnKey: string) => {
+    e.preventDefault()
+    const draggedId = e.dataTransfer.getData('leadId')
+    const targetCol = COLUMNS.find(c => c.key === targetColumnKey)
+    if (!draggedId || !targetCol) return
+
+    const draggedLead = leads.find(l => l.id === draggedId)
+    if (!draggedLead || draggedLead.column === targetColumnKey) {
+      setDraggedLeadId(null)
+      return
+    }
+
+    // Update local state immediately for visual feedback
+    const newColumnKey = targetColumnKey
+    const newStage = targetCol.stage
+    updateLead(draggedId, { column: newColumnKey })
+    if (selectedLead?.id === draggedId) {
+      setSelectedLead({ ...selectedLead, column: newColumnKey })
+    }
+
+    // Persist to Supabase with error handling
+    try {
+      if (supabaseRef.current) {
+        const { error } = await supabaseRef.current
+          .from('leads')
+          .update({ stage: newStage })
+          .eq('id', parseInt(draggedId))
+
+        if (error) {
+          console.error('[supabase] drag-drop save failed:', error.message)
+          // Revert local state on error
+          const oldLead = leads.find(l => l.id === draggedId)
+          if (oldLead) {
+            updateLead(draggedId, { column: oldLead.column })
+            if (selectedLead?.id === draggedId) {
+              setSelectedLead({ ...selectedLead, column: oldLead.column })
+            }
+          }
+          showToast('Failed to move lead — changes reverted')
+        } else {
+          showToast(`Lead moved to ${newStage}`)
+        }
+      }
+    } catch (err) {
+      console.error('[supabase] drag-drop exception:', err)
+      showToast('Error moving lead')
+    } finally {
+      setDraggedLeadId(null)
+    }
+  }
+
   if (authStatus === 'idle') {
     return (
       <div style={centeredWrap}>
@@ -581,7 +644,21 @@ export default function AgentPage() {
             {COLUMNS.map((col) => {
               const colLeads = leads.filter(l => l.column === col.key)
               return (
-                <div key={col.key} style={{ minWidth: '216px', maxWidth: '216px', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                <div
+                  key={col.key}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDropOnColumn(e, col.key)}
+                  style={{
+                    minWidth: '216px',
+                    maxWidth: '216px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flexShrink: 0,
+                    borderRadius: '8px',
+                    padding: '8px',
+                    transition: 'background-color 0.15s ease',
+                  }}
+                >
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -605,19 +682,22 @@ export default function AgentPage() {
                       return (
                         <div
                           key={lead.id}
+                          draggable={true}
+                          onDragStart={(e) => handleDragStart(e, lead.id)}
                           onClick={() => setSelectedLead(lead)}
                           style={{
-                            background: '#152238',
+                            background: draggedLeadId === lead.id ? '#0B1220' : '#152238',
                             border: selectedLead?.id === lead.id ? '1px solid #FF4D8D' : '1px solid #223252',
                             borderRadius: '10px',
                             padding: '11px 12px',
-                            cursor: 'pointer',
-                            transition: 'border-color 0.15s ease, transform 0.1s ease',
+                            cursor: draggedLeadId === lead.id ? 'grabbing' : 'grab',
+                            transition: 'border-color 0.15s ease, transform 0.1s ease, opacity 0.1s ease',
                             position: 'relative',
                             boxShadow: selectedLead?.id === lead.id ? '0 0 0 1px #FF4D8D, 0 4px 14px rgba(255,77,141,0.15)' : 'none',
+                            opacity: draggedLeadId === lead.id ? 0.6 : 1,
                           }}
-                          onMouseEnter={(e) => !selectedLead?.id === lead.id && (e.currentTarget.style.borderColor = '#5B6780')}
-                          onMouseLeave={(e) => !selectedLead?.id === lead.id && (e.currentTarget.style.borderColor = '#223252')}
+                          onMouseEnter={(e) => !selectedLead?.id === lead.id && draggedLeadId !== lead.id && (e.currentTarget.style.borderColor = '#5B6780')}
+                          onMouseLeave={(e) => !selectedLead?.id === lead.id && draggedLeadId !== lead.id && (e.currentTarget.style.borderColor = '#223252')}
                         >
                           <div style={{
                             position: 'absolute',
