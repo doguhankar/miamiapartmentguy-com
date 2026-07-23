@@ -355,8 +355,17 @@ export default function AgentPage() {
     updateLead(leadId, { favorited: newFav })
   }
 
-  const markContacted = (leadId: string) => {
-    updateLead(leadId, { lastContacted: new Date() })
+  const markContacted = async (leadId: string) => {
+    const now = new Date()
+    updateLead(leadId, { lastContacted: now })
+    // Persist spoke_with timestamp to Supabase
+    if (supabaseRef.current) {
+      const { error } = await supabaseRef.current
+        .from('leads')
+        .update({ spoke_with: now.toISOString() })
+        .eq('id', parseInt(leadId))
+      if (error) console.error('[supabase] markContacted error:', error.message)
+    }
   }
 
   const generateInvoice = (leadId: string) => {
@@ -780,7 +789,7 @@ export default function AgentPage() {
                   </div>
                 </div>
               </div>
-              <div style={{ textAlign: 'right', fontSize: '11px', color: '#5B6780', lineHeight: 1.8 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px', fontSize: '11px', color: '#5B6780', lineHeight: 1.8 }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                   <div style={{
                     width: '12px',
@@ -791,22 +800,24 @@ export default function AgentPage() {
                   }} />
                   <b style={{ color: '#E9EDF6' }}>Contacted {spokeText(safeGetDays(selectedLead.lastContacted))}</b>
                 </div>
-                <div
-                  onClick={() => markContacted(selectedLead.id)}
-                  style={{
-                    color: '#FF4D8D',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    textDecoration: 'underline',
-                    textDecorationOffset: '2px',
-                    transition: 'color 0.12s ease',
-                    display: 'block',
-                    marginTop: '4px',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#FF6FA0')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#FF4D8D')}
-                >
-                  Mark contacted
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div
+                    onClick={() => markContacted(selectedLead.id)}
+                    style={{
+                      color: '#FF4D8D',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                      textDecorationOffset: '2px',
+                      transition: 'color 0.12s ease',
+                      display: 'block',
+                      marginTop: '4px',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = '#FF6FA0')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = '#FF4D8D')}
+                  >
+                    Mark contacted
+                  </div>
                 </div>
               </div>
             </div>
@@ -834,31 +845,31 @@ export default function AgentPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 18px' }}>
                 <div>
                   <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Beds</label>
-                  <input value={selectedLead.beds} onChange={(e) => updateLead(selectedLead.id, { beds: e.target.value })} style={{
+                  <input value={selectedLead.beds} onChange={(e) => updateLead(selectedLead.id, { beds: e.target.value })} onBlur={(e) => saveLead(selectedLead.id, { beds: e.target.value })} style={{
                     width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
                   }} />
                 </div>
                 <div>
                   <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Budget</label>
-                  <input value={selectedLead.budget} onChange={(e) => updateLead(selectedLead.id, { budget: e.target.value })} style={{
+                  <input value={selectedLead.budget} onChange={(e) => updateLead(selectedLead.id, { budget: e.target.value })} onBlur={(e) => saveLead(selectedLead.id, { budget: e.target.value })} style={{
                     width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
                   }} />
                 </div>
                 <div>
                   <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Move-in</label>
-                  <input value={selectedLead.move} onChange={(e) => updateLead(selectedLead.id, { move: e.target.value })} style={{
+                  <input value={selectedLead.move} onChange={(e) => updateLead(selectedLead.id, { move: e.target.value })} onBlur={(e) => saveLead(selectedLead.id, { move: e.target.value })} style={{
                     width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
                   }} />
                 </div>
                 <div>
                   <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Area</label>
-                  <input value={selectedLead.area} onChange={(e) => updateLead(selectedLead.id, { area: e.target.value })} style={{
+                  <input value={selectedLead.area} onChange={(e) => updateLead(selectedLead.id, { area: e.target.value })} onBlur={(e) => saveLead(selectedLead.id, { area: e.target.value })} style={{
                     width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
                   }} />
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Notes</label>
-                  <textarea value={selectedLead.notes} onChange={(e) => updateLead(selectedLead.id, { notes: e.target.value })} style={{
+                  <textarea value={selectedLead.notes} onChange={(e) => updateLead(selectedLead.id, { notes: e.target.value })} onBlur={(e) => saveLead(selectedLead.id, { notes: e.target.value })} style={{
                     width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none', resize: 'none', height: '56px', fontFamily: '"Inter", sans-serif',
                   }} />
                 </div>
