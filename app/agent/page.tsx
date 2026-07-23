@@ -734,15 +734,18 @@ export default function AgentPage() {
                             <span style={{ color: '#FFC24B', fontWeight: 600, fontFamily: '"Space Mono", monospace' }}>{lead.budget}</span>
                           </div>
                           <div style={{ fontSize: '11.5px', color: '#8C97AE', marginTop: '3px' }}>{lead.move}</div>
-                          <div style={{
-                            marginTop: '8px',
-                            fontSize: '10.5px',
-                            color: '#5B6780',
-                            borderTop: '1px dashed #223252',
-                            paddingTop: '6px',
-                          }}>
-                            {lead.activity}
-                          </div>
+                          {lead.quick_note && (
+                            <div style={{
+                              marginTop: '8px',
+                              fontSize: '11px',
+                              fontStyle: 'italic',
+                              color: '#6B7488',
+                              borderTop: '1px dashed #223252',
+                              paddingTop: '6px',
+                            }}>
+                              {lead.quick_note}
+                            </div>
+                          )}
                         </div>
                       )
                     })}
