@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 interface Lead {
@@ -120,125 +120,79 @@ export default function AgentPage() {
   const [leadUpdates, setLeadUpdates] = useState<Record<string, Partial<Lead>>>({})
   const [allowlistError, setAllowlistError] = useState<string | null>(null)
 
-  const supabase = createClient()
+  // Stable client ref — never recreated on re-render
+  const supabaseRef = useRef(createClient())
+  const supabase = supabaseRef.current
 
-  // Check agent_allowlist for the signed-in user's email.
-  // Returns 'approved' | 'denied' | 'error'.
-  // Includes 10-second timeout to prevent hanging.
-  const checkAllowlist = async (email: string): Promise<'approved' | 'denied' | 'error'> => {
+  // Guard against concurrent allowlist checks (e.g. getSession + SIGNED_IN racing)
+  const checkingRef = useRef(false)
+
+  // Runs OUTSIDE any auth event callback to avoid locking the Supabase
+  // internal event queue. signOut() is also deferred via setTimeout for the
+  // same reason — calling it synchronously inside onAuthStateChange deadlocks.
+  const runAllowlistCheck = useCallback(async (
+    email: string,
+    name: string,
+    onApproved: () => void,
+  ) => {
+    if (checkingRef.current) return
+    checkingRef.current = true
+    setAuthStatus('checking')
+    setUser({ email, name })
+
     try {
-      console.log('[v0] checkAllowlist: checking email:', JSON.stringify(email), 'type:', typeof email)
-      console.log('[v0] checkAllowlist: query starting at', new Date().toISOString())
-
-      // Wrap the query in a timeout promise
-      const queryPromise = supabase
+      const { data, error } = await supabase
         .from('agent_allowlist')
         .select('approved')
         .eq('email', email)
         .eq('approved', true)
         .maybeSingle()
 
-      const timeoutPromise = new Promise<{ data: null; error: { message: string } }>((resolve) => {
-        setTimeout(() => {
-          console.log('[v0] checkAllowlist: Query timeout — no response after 10 seconds')
-          resolve({ data: null, error: { message: 'Query timeout' } })
-        }, 10000)
-      })
-
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise])
-
-      console.log('[v0] checkAllowlist: query completed at', new Date().toISOString())
-      console.log('[v0] checkAllowlist: query result data:', JSON.stringify(data), 'error:', error ? JSON.stringify(error) : 'null')
-
-      if (error) {
-        console.log('[v0] checkAllowlist: query error/timeout, returning "error"')
-        return 'error'
+      if (error || !data) {
+        setTimeout(() => supabase.auth.signOut(), 0)
+        setAllowlistError(error ? 'Error checking authorization. Try again.' : null)
+        setAuthStatus('denied')
+      } else {
+        setAuthStatus('approved')
+        onApproved()
       }
-
-      const result = data ? 'approved' : 'denied'
-      console.log('[v0] checkAllowlist: final result:', result, '(data truthy?', !!data, ')')
-      return result
-    } catch (e) {
-      console.log('[v0] checkAllowlist: exception caught:', e instanceof Error ? e.message : String(e))
-      return 'error'
+    } catch {
+      setTimeout(() => supabase.auth.signOut(), 0)
+      setAllowlistError('Error checking authorization. Try again.')
+      setAuthStatus('denied')
+    } finally {
+      checkingRef.current = false
     }
-  }
+  }, [supabase])
 
   useEffect(() => {
-    const checkSession = async () => {
-      console.log('[v0] checkSession: starting')
-      const { data: { session } } = await supabase.auth.getSession()
-      console.log('[v0] checkSession: got session:', session?.user?.email)
-      if (!session?.user) {
-        console.log('[v0] checkSession: no session, setting idle')
-        setAuthStatus('idle')
-        return
-      }
-      // Session exists — run allowlist check
-      const email = session.user.email ?? ''
-      console.log('[v0] checkSession: session email:', JSON.stringify(email))
-      setUser({
-        email,
-        name: session.user.user_metadata?.full_name || email.split('@')[0] || 'User',
-      })
-      setAuthStatus('checking')
-      console.log('[v0] checkSession: calling checkAllowlist with email:', JSON.stringify(email))
-      const result = await checkAllowlist(email)
-      console.log('[v0] checkSession: checkAllowlist returned:', result)
-      if (result === 'approved') {
-        console.log('[v0] checkSession: setting authStatus to approved')
-        setAuthStatus('approved')
-      } else if (result === 'denied') {
-        console.log('[v0] checkSession: setting authStatus to denied')
-        await supabase.auth.signOut()
-        setAuthStatus('denied')
-        setAllowlistError(null)
-      } else {
-        console.log('[v0] checkSession: setting authStatus to denied (error result)')
-        setAllowlistError('Error checking authorization. Try again.')
-        await supabase.auth.signOut()
-        setAuthStatus('denied')
-      }
-    }
-    checkSession()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[v0] onAuthStateChange: event:', event, 'email:', session?.user?.email)
+    // onAuthStateChange is the single source of truth for session state.
+    // We do NOT call getSession() separately to avoid double-checking.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         const email = session.user.email ?? ''
-        console.log('[v0] onAuthStateChange SIGNED_IN: email:', JSON.stringify(email))
-        setUser({
-          email,
-          name: session.user.user_metadata?.full_name || email.split('@')[0] || 'User',
-        })
-        setAuthStatus('checking')
-        console.log('[v0] onAuthStateChange: calling checkAllowlist')
-        const result = await checkAllowlist(email)
-        console.log('[v0] onAuthStateChange: checkAllowlist returned:', result)
-        if (result === 'approved') {
-          console.log('[v0] onAuthStateChange: approved, showing dashboard')
-          setAuthStatus('approved')
-          showToast(`Welcome back, ${session.user.user_metadata?.full_name || 'there'}!`)
-        } else if (result === 'denied') {
-          console.log('[v0] onAuthStateChange: denied')
-          await supabase.auth.signOut()
-          setAuthStatus('denied')
-          setAllowlistError(null)
-        } else {
-          console.log('[v0] onAuthStateChange: error result')
-          setAllowlistError('Error checking authorization. Try again.')
-          await supabase.auth.signOut()
-          setAuthStatus('denied')
-        }
+        const name = session.user.user_metadata?.full_name || email.split('@')[0] || 'User'
+        // Defer the DB query outside the event callback to keep the auth
+        // queue unblocked — this is the key fix for the deadlock
+        setTimeout(() => {
+          runAllowlistCheck(email, name, () => {
+            showToast(`Welcome back, ${name}!`)
+          })
+        }, 0)
       } else if (event === 'SIGNED_OUT') {
-        console.log('[v0] onAuthStateChange SIGNED_OUT')
+        checkingRef.current = false
         setUser(null)
         setAuthStatus('idle')
+      } else if (event === 'INITIAL_SESSION') {
+        if (!session?.user) {
+          setAuthStatus('idle')
+        }
+        // If there IS a session, SIGNED_IN will also fire — let that handle it
       }
     })
 
     return () => subscription?.unsubscribe()
-  }, [])
+  }, [runAllowlistCheck, supabase])
 
   const handleGoogleLogin = async () => {
     // REQUIRED OAUTH CONFIGURATION:
@@ -279,10 +233,8 @@ export default function AgentPage() {
     }
   }
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    setAuthStatus('idle')
+  const handleLogout = () => {
+    supabase.auth.signOut()
   }
 
   const showToast = (msg: string) => {
