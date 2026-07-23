@@ -30,6 +30,70 @@ interface Lead {
   }
 }
 
+// Matches the Supabase leads table schema exactly
+interface DbLead {
+  id: number
+  created_at: string | null
+  name: string | null
+  email: string | null
+  phone: string | null
+  move_in_timing: string | null
+  beds: string | null
+  budget: string | null
+  area: string | null
+  credit_range: string | null
+  notes: string | null
+  agent_id: string | null
+  stage: string | null
+  spoke_with: string | null
+  source: string | null
+}
+
+// Map DB stage value → COLUMNS key
+function stageToColumnKey(stage: string | null): string {
+  if (!stage) return 'newlead'
+  const s = stage.toLowerCase().replace(/[\s\/]+/g, '')
+  if (s.includes('new') || s.includes('newlead')) return 'newlead'
+  if (s.includes('discovery') || s.includes('call')) return 'discoverycall'
+  if (s.includes('option') || s.includes('sent')) return 'optionssent'
+  if (s.includes('follow') || s.includes('followup')) return 'followup'
+  if (s.includes('tour')) return 'tourscheduled'
+  if (s.includes('applied') || s.includes('signed') || s.includes('lease')) return 'applied'
+  if (s.includes('archive')) return 'archive'
+  return 'newlead'
+}
+
+function dbLeadToLead(row: DbLead): Lead {
+  const nameParts = (row.name ?? 'Unknown').trim().split(' ')
+  const first = nameParts[0] ?? 'Unknown'
+  const last = nameParts.slice(1).join(' ') || ''
+  const lastContacted = row.spoke_with ? new Date(row.spoke_with) : new Date(row.created_at ?? Date.now())
+  const daysSince = Math.floor((Date.now() - lastContacted.getTime()) / 86400000)
+  const activity = row.spoke_with
+    ? `Last contact · ${daysSince === 0 ? 'today' : `${daysSince}d ago`}`
+    : row.source
+      ? `Via ${row.source}`
+      : 'New lead'
+  return {
+    id: String(row.id),
+    first,
+    last,
+    phone: row.phone ?? '',
+    email: row.email ?? '',
+    budget: row.budget ?? '',
+    beds: row.beds ?? '',
+    move: row.move_in_timing ?? '',
+    activity,
+    column: stageToColumnKey(row.stage),
+    lastContacted,
+    area: row.area ?? '',
+    notes: row.notes ?? '',
+    buildings: [],
+    favorited: [],
+    deal: { building: '', unit: '', tour: '', leaseStart: '', leaseTerm: '', marketRent: '', invoiceEst: '' },
+  }
+}
+
 const COLUMNS = [
   { key: 'newlead', label: 'New Lead', color: '#5B6780' },
   { key: 'discoverycall', label: 'Discovery Call Made', color: '#19C6C0' },
@@ -45,33 +109,11 @@ const BUILDINGS = [
   'Yacht Club at Brickell', 'Nine at Mary Brickell', 'SLS Lux Brickell',
 ]
 
-function daysAgo(n: number) {
-  const d = new Date()
-  d.setDate(d.getDate() - n)
-  return d
-}
-
-function spokeText(days: number) {
-  return days <= 0 ? 'today' : `${days}d ago`
-}
-
 function spokeColor(days: number) {
   if (days < 2) return 'green'
   if (days < 3) return 'yellow'
   return 'red'
 }
-
-const INITIAL_LEADS: Lead[] = [
-  { id: '1', first: 'Diego', last: 'Alvarez', phone: '(305) 660-2214', email: 'd.alvarez@gmail.com', budget: '$2,100/mo', beds: 'Studio', move: 'Aug 1', activity: 'Texted 3h ago', column: 'newlead', lastContacted: daysAgo(0), area: 'Edgewater', notes: 'Wants gym + pet friendly', buildings: ['Icon Bay', 'Society Wynwood'], favorited: ['Icon Bay'], deal: { building: '', unit: '', tour: '', leaseStart: '', leaseTerm: '', marketRent: '', invoiceEst: '' } },
-  { id: '2', first: 'Tram', last: 'Nguyen', phone: '(786) 511-9902', email: 'tram.nguyen@outlook.com', budget: '$1,850/mo', beds: '1BR', move: 'Aug 15', activity: 'Inquired via IG · 1d ago', column: 'newlead', lastContacted: daysAgo(1), area: 'Wynwood', notes: 'Remote worker, needs office nook', buildings: ['Society Wynwood'], favorited: [], deal: { building: '', unit: '', tour: '', leaseStart: '', leaseTerm: '', marketRent: '', invoiceEst: '' } },
-  { id: '3', first: 'Rachel', last: 'Marsh', phone: '(954) 220-7761', email: 'rachel.marsh@yahoo.com', budget: '$3,200/mo', beds: '1BR', move: 'Sep 1', activity: 'New lead · 6h ago', column: 'newlead', lastContacted: daysAgo(0), area: 'Brickell', notes: 'Relocating from NYC, flexible', buildings: [], favorited: [], deal: { building: '', unit: '', tour: '', leaseStart: '', leaseTerm: '', marketRent: '', invoiceEst: '' } },
-  { id: '4', first: 'Kayla', last: 'Bloom', phone: '(305) 903-4471', email: 'kbloom@gmail.com', budget: '$2,600/mo', beds: '1BR', move: 'Aug 5', activity: 'Call booked · 2d ago', column: 'discoverycall', lastContacted: daysAgo(2), area: 'Edgewater', notes: 'Wants water view', buildings: ['One Paraiso'], favorited: ['One Paraiso'], deal: { building: '', unit: '', tour: '', leaseStart: '', leaseTerm: '', marketRent: '', invoiceEst: '' } },
-  { id: '5', first: 'Ana', last: 'Reyes', phone: '(305) 771-2093', email: 'ana.reyes92@gmail.com', budget: '$2,400/mo', beds: '1BR', move: 'Aug 10', activity: '3 options sent · 1d ago', column: 'optionssent', lastContacted: daysAgo(1), area: 'Edgewater', notes: 'Needs in-unit W/D', buildings: ['Icon Bay', 'Elysee Miami', 'Yacht Club at Brickell'], favorited: ['Icon Bay', 'Elysee Miami'], deal: { building: '', unit: '', tour: '', leaseStart: '', leaseTerm: '', marketRent: '', invoiceEst: '' } },
-  { id: '6', first: 'Marcus', last: 'Okafor', phone: '(305) 118-6620', email: 'm.okafor@gmail.com', budget: '$4,100/mo', beds: '2BR', move: 'Aug 1', activity: 'Options sent · 5h ago', column: 'optionssent', lastContacted: daysAgo(0), area: 'Brickell', notes: 'Two dogs, needs pet park nearby', buildings: ['One Paraiso', 'Nine at Mary Brickell'], favorited: ['Nine at Mary Brickell'], deal: { building: '', unit: '', tour: '', leaseStart: '', leaseTerm: '', marketRent: '', invoiceEst: '' } },
-  { id: '7', first: 'Priya', last: 'Suarez', phone: '(305) 662-8814', email: 'psuarez@gmail.com', budget: '$1,700/mo', beds: 'Studio', move: 'Aug 25', activity: 'No response · 2d ago', column: 'followup', lastContacted: daysAgo(2), area: 'Downtown', notes: 'Price sensitive', buildings: ['Society Wynwood'], favorited: [], deal: { building: '', unit: '', tour: '', leaseStart: '', leaseTerm: '', marketRent: '', invoiceEst: '' } },
-  { id: '8', first: 'Brianna', last: 'Whitfield', phone: '(305) 774-1120', email: 'b.whitfield@gmail.com', budget: '$2,800/mo', beds: '1BR', move: 'Aug 3', activity: 'Tour confirmed · 12h ago', column: 'tourscheduled', lastContacted: daysAgo(0), area: 'Brickell', notes: 'Touring Thursday 2pm', buildings: ['One Paraiso', 'Yacht Club at Brickell'], favorited: ['Yacht Club at Brickell'], deal: { building: 'Yacht Club at Brickell', unit: '', tour: 'Thu 2:00pm', leaseStart: '', leaseTerm: '', marketRent: '', invoiceEst: '' } },
-  { id: '9', first: 'Gabriel', last: 'Ibarra', phone: '(305) 441-8820', email: 'g.ibarra@gmail.com', budget: '$3,050/mo', beds: '2BR', move: 'Jul 19', activity: 'Signed · closed', column: 'applied', lastContacted: daysAgo(0), area: 'Brickell', notes: 'Signed 14-month lease', buildings: ['Nine at Mary Brickell'], favorited: ['Nine at Mary Brickell'], deal: { building: 'Nine at Mary Brickell', unit: '2104', tour: 'Jul 10', leaseStart: 'Jul 19', leaseTerm: '14 mo', marketRent: '$3,050', invoiceEst: '$3,050' } },
-]
 
 function Toast({ message }: { message: string }) {
   return (
@@ -114,7 +156,7 @@ type AuthStatus = 'idle' | 'loading' | 'checking' | 'denied' | 'approved'
 export default function AgentPage() {
   const [authStatus, setAuthStatus] = useState<AuthStatus>('loading')
   const [user, setUser] = useState<{ email?: string; name?: string } | null>(null)
-  const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS)
+  const [leads, setLeads] = useState<Lead[]>([])
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [leadUpdates, setLeadUpdates] = useState<Record<string, Partial<Lead>>>({})
@@ -172,7 +214,7 @@ export default function AgentPage() {
     } finally {
       checkingRef.current = false
     }
-  }, [supabase])
+  }, [supabase, fetchLeads])
 
   useEffect(() => {
     // onAuthStateChange fires INITIAL_SESSION first (existing session or null),
@@ -187,9 +229,9 @@ export default function AgentPage() {
         const showWelcome = event === 'SIGNED_IN'
         // Defer DB query outside the event callback — keeps auth queue unblocked
         setTimeout(() => {
-          console.log('[v0] runAllowlistCheck start | email:', email, '| event:', event)
           runAllowlistCheck(email, name, () => {
             if (showWelcome) showToast(`Welcome back, ${name}!`)
+            fetchLeads()
           })
         }, 0)
       } else if (event === 'INITIAL_SESSION' && !session?.user) {
@@ -205,6 +247,18 @@ export default function AgentPage() {
 
     return () => subscription?.unsubscribe()
   }, [runAllowlistCheck, supabase])
+
+  const fetchLeads = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('leads')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error) {
+      console.error('[supabase] fetchLeads error:', error.message)
+      return
+    }
+    setLeads((data as DbLead[]).map(dbLeadToLead))
+  }, [supabase])
 
   const handleGoogleLogin = async () => {
     // REQUIRED OAUTH CONFIGURATION:
