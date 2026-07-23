@@ -333,7 +333,12 @@ export default function AgentPage() {
   }
 
   const updateLead = (leadId: string, updates: Partial<Lead>) => {
-    setLeads(leads.map(l => l.id === leadId ? { ...l, ...updates } : l))
+    const updatedLeads = leads.map(l => l.id === leadId ? { ...l, ...updates } : l)
+    setLeads(updatedLeads)
+    // Also update selectedLead if it's the one being edited — keeps the input synced
+    if (selectedLead?.id === leadId) {
+      setSelectedLead({ ...selectedLead, ...updates })
+    }
     setLeadUpdates(prev => ({ ...prev, [leadId]: updates }))
   }
 
@@ -431,7 +436,7 @@ export default function AgentPage() {
     )
   }
 
-  // ── DENIED: access denied screen ───────────────────────────────────────────
+  // ── DENIED: access denied screen ──────────────���────────────────────────────
   if (authStatus === 'denied') {
     return (
       <div style={centeredWrap}>
