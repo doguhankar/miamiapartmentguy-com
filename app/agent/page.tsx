@@ -103,42 +103,95 @@ function Toast({ message }: { message: string }) {
   )
 }
 
+// Auth status drives which screen is shown:
+//   idle      → login page
+//   loading   → spinner (OAuth redirect returned, checking session)
+//   checking  → spinner (querying agent_allowlist)
+//   denied    → Access Denied card
+//   approved  → dashboard
+type AuthStatus = 'idle' | 'loading' | 'checking' | 'denied' | 'approved'
+
 export default function AgentPage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [authStatus, setAuthStatus] = useState<AuthStatus>('loading')
   const [user, setUser] = useState<{ email?: string; name?: string } | null>(null)
   const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS)
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [leadUpdates, setLeadUpdates] = useState<Record<string, Partial<Lead>>>({})
+  const [allowlistError, setAllowlistError] = useState<string | null>(null)
 
   const supabase = createClient()
 
-  // Check for existing session on mount
+  // Check agent_allowlist for the signed-in user's email.
+  // Returns 'approved' | 'denied' | 'error'.
+  const checkAllowlist = async (email: string): Promise<'approved' | 'denied' | 'error'> => {
+    try {
+      const { data, error } = await supabase
+        .from('agent_allowlist')
+        .select('approved')
+        .eq('email', email)
+        .eq('approved', true)
+        .maybeSingle()
+      if (error) return 'error'
+      return data ? 'approved' : 'denied'
+    } catch {
+      return 'error'
+    }
+  }
+
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
-        setIsLoggedIn(true)
-        setUser({
-          email: session.user.email,
-          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
-        })
+      if (!session?.user) {
+        setAuthStatus('idle')
+        return
+      }
+      // Session exists — run allowlist check
+      const email = session.user.email ?? ''
+      setUser({
+        email,
+        name: session.user.user_metadata?.full_name || email.split('@')[0] || 'User',
+      })
+      setAuthStatus('checking')
+      const result = await checkAllowlist(email)
+      if (result === 'approved') {
+        setAuthStatus('approved')
+      } else if (result === 'denied') {
+        await supabase.auth.signOut()
+        setAuthStatus('denied')
+        setAllowlistError(null)
+      } else {
+        setAllowlistError('Error checking authorization. Try again.')
+        await supabase.auth.signOut()
+        setAuthStatus('denied')
       }
     }
     checkSession()
 
-    // Also listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        setIsLoggedIn(true)
+        const email = session.user.email ?? ''
         setUser({
-          email: session.user.email,
-          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+          email,
+          name: session.user.user_metadata?.full_name || email.split('@')[0] || 'User',
         })
-        showToast(`Welcome back, ${session.user.user_metadata?.full_name || 'there'}!`)
+        setAuthStatus('checking')
+        const result = await checkAllowlist(email)
+        if (result === 'approved') {
+          setAuthStatus('approved')
+          showToast(`Welcome back, ${session.user.user_metadata?.full_name || 'there'}!`)
+        } else if (result === 'denied') {
+          await supabase.auth.signOut()
+          setAuthStatus('denied')
+          setAllowlistError(null)
+        } else {
+          setAllowlistError('Error checking authorization. Try again.')
+          await supabase.auth.signOut()
+          setAuthStatus('denied')
+        }
       } else if (event === 'SIGNED_OUT') {
-        setIsLoggedIn(false)
         setUser(null)
+        setAuthStatus('idle')
       }
     })
 
@@ -185,12 +238,9 @@ export default function AgentPage() {
   }
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (!error) {
-      setIsLoggedIn(false)
-      setUser(null)
-      showToast('Logged out')
-    }
+    await supabase.auth.signOut()
+    setUser(null)
+    setAuthStatus('idle')
   }
 
   const showToast = (msg: string) => {
@@ -226,69 +276,107 @@ export default function AgentPage() {
     showToast(`Invoice generated for ${lead.first} — Don notified, filed to team drive.`)
   }
 
-  if (!isLoggedIn) {
-    return (
-      <div style={{
-        background: '#0B1220',
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: '"Inter", sans-serif',
-      }}>
-        <style>{`
-          * { box-sizing: border-box; }
-          body { margin: 0; }
-        `}</style>
-        <div style={{
-          width: '360px',
-          background: '#111B2E',
-          border: '1px solid #223252',
-          borderRadius: '16px',
-          padding: '40px 32px',
-          boxShadow: '0 24px 48px rgba(0,0,0,0.4)',
-        }}>
-          <h2 style={{
-            fontSize: '18px',
-            fontWeight: 700,
-            color: '#E9EDF6',
-            marginTop: 0,
-            marginBottom: '28px',
-            textAlign: 'center',
-            fontFamily: '"Archivo", sans-serif',
-          }}>
-            Sign in to MIAMI APARTMENT<span style={{ color: '#FF4D8D' }}> GUY</span>
-          </h2>
+  const centeredWrap = {
+    background: '#0B1220' as const,
+    minHeight: '100vh',
+    display: 'flex' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    fontFamily: '"Inter", sans-serif',
+  }
+  const card = {
+    width: '360px',
+    background: '#111B2E',
+    border: '1px solid #223252',
+    borderRadius: '16px',
+    padding: '40px 32px',
+    boxShadow: '0 24px 48px rgba(0,0,0,0.4)',
+  }
+  const baseStyles = <style>{`* { box-sizing: border-box; } body { margin: 0; }`}</style>
+  const logoHeading = (
+    <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#E9EDF6', marginTop: 0, marginBottom: '28px', textAlign: 'center', fontFamily: '"Archivo", sans-serif' }}>
+      Sign in to MIAMI APARTMENT<span style={{ color: '#FF4D8D' }}> GUY</span>
+    </h2>
+  )
+  const googleSvg = (
+    <svg width="18" height="18" viewBox="0 0 24 24">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#19C6C0" />
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#FF4D8D" />
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FFC24B" />
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#E9EDF6" />
+    </svg>
+  )
 
+  // ── IDLE: login screen ──────────────────────────────────────────────────────
+  if (authStatus === 'idle') {
+    return (
+      <div style={centeredWrap}>
+        {baseStyles}
+        <div style={card}>
+          {logoHeading}
           <button
             onClick={handleGoogleLogin}
-            style={{
-              width: '100%',
-              padding: '14px',
-              background: 'transparent',
-              border: '1px solid #223252',
-              borderRadius: '8px',
-              color: '#E9EDF6',
-              fontWeight: 700,
-              fontSize: '14px',
-              fontFamily: '"Archivo", sans-serif',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '10px',
-              transition: 'all 0.12s ease',
-            }}
+            style={{ width: '100%', padding: '14px', background: 'transparent', border: '1px solid #223252', borderRadius: '8px', color: '#E9EDF6', fontWeight: 700, fontSize: '14px', fontFamily: '"Archivo", sans-serif', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', transition: 'all 0.12s ease' }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(25,198,192,0.08)')}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#19C6C0" />
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#FF4D8D" />
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FFC24B" />
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#E9EDF6" />
-            </svg>
+            {googleSvg}
             Sign in with Google
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── LOADING / CHECKING: spinner ─────────────────────────────────────────────
+  if (authStatus === 'loading' || authStatus === 'checking') {
+    return (
+      <div style={centeredWrap}>
+        {baseStyles}
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <div style={{ ...card, textAlign: 'center' }}>
+          {logoHeading}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '3px solid #223252', borderTopColor: '#19C6C0', animation: 'spin 0.8s linear infinite' }} />
+            <p style={{ margin: 0, fontSize: '13px', color: '#5B6780' }}>
+              {authStatus === 'checking' ? 'Verifying access...' : 'Loading...'}
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── DENIED: access denied screen ───────────────────────────────────────────
+  if (authStatus === 'denied') {
+    return (
+      <div style={centeredWrap}>
+        {baseStyles}
+        <div style={{ ...card, maxWidth: '400px', width: '100%' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(255,77,141,0.12)', border: '1px solid rgba(255,77,141,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF4D8D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+            </div>
+            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#E9EDF6', margin: '0 0 10px', fontFamily: '"Archivo", sans-serif' }}>
+              Access Denied
+            </h2>
+            <p style={{ fontSize: '14px', color: '#5B6780', margin: 0, lineHeight: 1.6 }}>
+              {allowlistError
+                ? allowlistError
+                : 'Your email is not authorized to access the agent portal. Contact Don Karahan for access.'}
+            </p>
+          </div>
+          <button
+            onClick={async () => { await supabase.auth.signOut(); window.location.href = '/' }}
+            style={{ width: '100%', padding: '14px', background: 'rgba(255,77,141,0.1)', border: '1px solid rgba(255,77,141,0.3)', borderRadius: '8px', color: '#FF4D8D', fontWeight: 700, fontSize: '14px', fontFamily: '"Archivo", sans-serif', cursor: 'pointer', transition: 'all 0.12s ease' }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,77,141,0.18)')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,77,141,0.1)')}
+          >
+            Sign out
           </button>
         </div>
       </div>
