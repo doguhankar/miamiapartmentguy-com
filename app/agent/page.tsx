@@ -307,6 +307,31 @@ export default function AgentPage() {
     setTimeout(() => setToast(null), 3200)
   }
 
+  const saveLead = async (leadId: string, updates: Partial<Lead>) => {
+    const lead = leads.find(l => l.id === leadId)
+    if (!lead || !supabaseRef.current) return
+
+    // Map Lead fields to DB column names
+    const dbUpdates: Record<string, any> = {}
+    if (updates.phone !== undefined) dbUpdates.phone = updates.phone
+    if (updates.email !== undefined) dbUpdates.email = updates.email
+    if (updates.beds !== undefined) dbUpdates.beds = updates.beds
+    if (updates.budget !== undefined) dbUpdates.budget = updates.budget
+    if (updates.move !== undefined) dbUpdates.move_in_timing = updates.move
+    if (updates.area !== undefined) dbUpdates.area = updates.area
+    if (updates.notes !== undefined) dbUpdates.notes = updates.notes
+
+    const { error } = await supabaseRef.current
+      .from('leads')
+      .update(dbUpdates)
+      .eq('id', parseInt(leadId))
+
+    if (error) {
+      console.error('[supabase] saveLead error:', error.message)
+      showToast('Failed to save changes')
+    }
+  }
+
   const updateLead = (leadId: string, updates: Partial<Lead>) => {
     setLeads(leads.map(l => l.id === leadId ? { ...l, ...updates } : l))
     setLeadUpdates(prev => ({ ...prev, [leadId]: updates }))
@@ -703,7 +728,16 @@ export default function AgentPage() {
                       </button>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                      <span>{selectedLead.phone}</span>
+                      <input
+                        value={selectedLead.phone}
+                        onChange={(e) => updateLead(selectedLead.id, { phone: e.target.value })}
+                        onBlur={(e) => saveLead(selectedLead.id, { phone: e.target.value })}
+                        placeholder="Add phone"
+                        style={{
+                          flex: 1, background: '#0B1220', border: '1px solid #223252', borderRadius: '6px', padding: '8px 10px',
+                          fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
+                        }}
+                      />
                       <button onClick={() => copyToClipboard(selectedLead.phone)} style={{
                         width: '22px', height: '22px', flexShrink: 0, borderRadius: '6px', background: '#152238',
                         border: '1px solid #223252', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -711,6 +745,29 @@ export default function AgentPage() {
                       }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = '#19C6C0'; e.currentTarget.style.borderColor = '#19C6C0'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = '#5B6780'; e.currentTarget.style.borderColor = '#223252'; }}
+                      >
+                        ⧉
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <input
+                        value={selectedLead.email}
+                        onChange={(e) => updateLead(selectedLead.id, { email: e.target.value })}
+                        onBlur={(e) => saveLead(selectedLead.id, { email: e.target.value })}
+                        placeholder="Add email"
+                        type="email"
+                        style={{
+                          flex: 1, background: '#0B1220', border: '1px solid #223252', borderRadius: '6px', padding: '8px 10px',
+                          fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
+                        }}
+                      />
+                      <button onClick={() => selectedLead.email && copyToClipboard(selectedLead.email)} style={{
+                        width: '22px', height: '22px', flexShrink: 0, borderRadius: '6px', background: '#152238',
+                        border: '1px solid #223252', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: selectedLead.email ? 'pointer' : 'not-allowed', fontSize: '11px', color: selectedLead.email ? '#5B6780' : '#3A4A5E', transition: 'all 0.12s ease',
+                      }}
+                      onMouseEnter={(e) => { if (selectedLead.email) { e.currentTarget.style.color = '#19C6C0'; e.currentTarget.style.borderColor = '#19C6C0'; } }}
+                      onMouseLeave={(e) => { if (selectedLead.email) { e.currentTarget.style.color = '#5B6780'; e.currentTarget.style.borderColor = '#223252'; } }}
                       >
                         ⧉
                       </button>
