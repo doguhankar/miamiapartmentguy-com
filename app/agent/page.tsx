@@ -781,119 +781,111 @@ export default function AgentPage() {
               ✕
             </button>
 
-            {/* HEADER — Avatar, Name, Quick Note */}
-            <div style={{ marginBottom: '20px', paddingBottom: '18px', borderBottom: '1px solid #223252' }}>
-              {/* Row 1: Avatar + Name (flex-start for close button space) */}
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+            {/* HEADER — Compact design with avatar, name, contacted status, quick note, email/phone */}
+            <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '0.5px solid #223252' }}>
+              {/* Top row: Avatar + Name + Contacted Status */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingRight: '28px' }}>
                 <div style={{
-                  width: '52px',
-                  height: '52px',
-                  borderRadius: '14px',
+                  width: '38px',
+                  height: '38px',
+                  flex: '0 0 38px',
+                  borderRadius: '10px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontFamily: '"Archivo", sans-serif',
-                  fontWeight: 700,
-                  fontSize: '17px',
-                  color: '#03211F',
-                  background: '#19C6C0',
-                  flexShrink: 0,
+                  fontWeight: 500,
+                  fontSize: '13px',
+                  color: '#19C6C0',
+                  background: 'rgba(25, 198, 192, 0.15)',
                 }}>
                   {selectedLead.first.charAt(0)}{selectedLead.last.charAt(0)}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: '"Archivo", sans-serif', fontWeight: 700, fontSize: '17px', color: '#fff', lineHeight: 1.2 }}>
-                    {selectedLead.first} {selectedLead.last}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                    <p style={{ fontWeight: 500, fontSize: '15px', margin: 0, color: '#fff' }}>
+                      {selectedLead.first} {selectedLead.last}
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flex: '0 0 auto' }}>
+                      <span style={{
+                        width: '5px',
+                        height: '5px',
+                        borderRadius: '50%',
+                        background: spokeColor(safeGetDays(selectedLead.lastContacted)) === 'green' ? '#4ADE80' : spokeColor(safeGetDays(selectedLead.lastContacted)) === 'yellow' ? '#F39C12' : '#EF4444',
+                        display: 'inline-block',
+                      }} />
+                      <span style={{ fontSize: '11px', color: '#A9B2C3' }}>Contacted {spokeText(safeGetDays(selectedLead.lastContacted))}</span>
+                    </div>
                   </div>
+                  {/* Quick note input — borderless, italic, muted */}
+                  <input
+                    type="text"
+                    value={selectedLead.quick_note}
+                    onChange={(e) => updateLead(selectedLead.id, { quick_note: e.target.value })}
+                    onBlur={(e) => saveLead(selectedLead.id, { quick_note: e.target.value })}
+                    placeholder="Add a note..."
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      padding: 0,
+                      marginTop: '1px',
+                      fontSize: '12px',
+                      fontStyle: 'italic',
+                      color: selectedLead.quick_note ? '#E9EDF6' : '#6B7488',
+                      width: '100%',
+                      height: 'auto',
+                      fontFamily: '"Inter", sans-serif',
+                      outline: 'none',
+                    }}
+                    onFocus={(e) => { if (!selectedLead.quick_note) e.target.style.color = '#E9EDF6' }}
+                    onBlur={(e) => { if (!e.target.value) e.target.style.color = '#6B7488' }}
+                  />
                 </div>
               </div>
-
-              {/* Row 2: Quick Note Input (full width below name) */}
-              <textarea
-                value={selectedLead.quick_note}
-                onChange={(e) => updateLead(selectedLead.id, { quick_note: e.target.value })}
-                onBlur={(e) => saveLead(selectedLead.id, { quick_note: e.target.value })}
-                placeholder="Add quick note..."
-                style={{
-                  width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px',
-                  fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none', resize: 'none', height: '56px',
-                  boxSizing: 'border-box',
-                }}
-              />
             </div>
 
-            {/* EMAIL SECTION — Moved to its own section below header */}
-            <div style={{ marginBottom: '20px', paddingBottom: '18px', borderBottom: '1px solid #223252' }}>
-              <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '8px' }}>Email</div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '13px', color: '#E9EDF6', wordBreak: 'break-all' }}>{selectedLead.email}</span>
-                <button onClick={() => selectedLead.email && copyToClipboard(selectedLead.email)} style={{
-                  width: '22px', height: '22px', flexShrink: 0, borderRadius: '6px', background: '#152238',
-                  border: '1px solid #223252', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: selectedLead.email ? 'pointer' : 'not-allowed', fontSize: '11px', color: selectedLead.email ? '#5B6780' : '#3A4A5E', transition: 'all 0.12s ease',
-                }}
-                onMouseEnter={(e) => { if (selectedLead.email) { e.currentTarget.style.color = '#19C6C0'; e.currentTarget.style.borderColor = '#19C6C0'; } }}
-                onMouseLeave={(e) => { if (selectedLead.email) { e.currentTarget.style.color = '#5B6780'; e.currentTarget.style.borderColor = '#223252'; } }}
-                >
-                  ⧉
-                </button>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            {/* EMAIL & PHONE — Icon + borderless input */}
+            <div style={{ borderTop: '0.5px solid #223252', marginTop: '8px', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '0.5px solid #223252' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '14px', color: '#6B7488', flex: '0 0 auto' }}>✉</span>
                 <input
+                  type="text"
+                  value={selectedLead.email}
+                  onChange={(e) => updateLead(selectedLead.id, { email: e.target.value })}
+                  onBlur={(e) => saveLead(selectedLead.id, { email: e.target.value })}
+                  placeholder="Add email"
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    fontSize: '12px',
+                    padding: 0,
+                    flex: 1,
+                    color: '#E9EDF6',
+                    height: 'auto',
+                    fontFamily: '"Inter", sans-serif',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '14px', color: '#6B7488', flex: '0 0 auto' }}>☎</span>
+                <input
+                  type="text"
                   value={selectedLead.phone}
                   onChange={(e) => updateLead(selectedLead.id, { phone: e.target.value })}
                   onBlur={(e) => saveLead(selectedLead.id, { phone: e.target.value })}
                   placeholder="Add phone"
                   style={{
-                    flex: 1, background: '#0B1220', border: '1px solid #223252', borderRadius: '6px', padding: '8px 10px',
-                    fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
+                    border: 'none',
+                    background: 'transparent',
+                    fontSize: '12px',
+                    padding: 0,
+                    flex: 1,
+                    color: '#E9EDF6',
+                    height: 'auto',
+                    fontFamily: '"Inter", sans-serif',
+                    outline: 'none',
                   }}
                 />
-                <button onClick={() => copyToClipboard(selectedLead.phone)} style={{
-                  width: '22px', height: '22px', flexShrink: 0, borderRadius: '6px', background: '#152238',
-                  border: '1px solid #223252', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', fontSize: '11px', color: '#5B6780', transition: 'all 0.12s ease',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = '#19C6C0'; e.currentTarget.style.borderColor = '#19C6C0'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = '#5B6780'; e.currentTarget.style.borderColor = '#223252'; }}
-                >
-                  ⧉
-                </button>
-              </div>
-            </div>
-
-            {/* CONTACT STATUS — Contacted indicator + Mark contacted */}
-            <div style={{ fontSize: '11px', color: '#5B6780', lineHeight: 1.8, marginBottom: '20px', paddingBottom: '18px', borderBottom: '1px solid #223252' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <div style={{
-                    width: '12px',
-                    height: '12px',
-                    borderRadius: '50%',
-                    background: spokeColor(safeGetDays(selectedLead.lastContacted)) === 'green' ? '#2ECC71' : spokeColor(safeGetDays(selectedLead.lastContacted)) === 'yellow' ? '#F39C12' : '#E74C3C',
-                    flexShrink: 0,
-                  }} />
-                  <b style={{ color: '#E9EDF6' }}>Contacted {spokeText(safeGetDays(selectedLead.lastContacted))}</b>
-                </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div
-                    onClick={() => markContacted(selectedLead.id)}
-                    style={{
-                      color: '#FF4D8D',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      textDecoration: 'underline',
-                      textDecorationOffset: '2px',
-                      transition: 'color 0.12s ease',
-                      display: 'block',
-                      marginTop: '4px',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = '#FF6FA0')}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = '#FF4D8D')}
-                  >
-                    Mark contacted
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -902,50 +894,49 @@ export default function AgentPage() {
               background: '#152238',
               border: '1px solid #223252',
               borderRadius: '14px',
-              padding: '22px',
+              padding: '12px',
               marginBottom: '20px',
               borderLeft: '3px solid #19C6C0',
             }}>
-              <h4 style={{
-                margin: '0 0 16px',
-                fontFamily: '"Archivo", sans-serif',
-                fontSize: '13.5px',
-                fontWeight: 700,
+              <p style={{
+                margin: '0 0 10px',
+                fontSize: '10px',
+                fontWeight: 500,
+                color: '#6B7488',
                 textTransform: 'uppercase',
-                letterSpacing: '0.8px',
-                color: '#E9EDF6',
+                letterSpacing: '0.03em',
               }}>
                 INQUIRY
-              </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 18px' }}>
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
                 <div>
-                  <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Beds</label>
+                  <p style={{ fontSize: '10px', color: '#6B7488', margin: '0 0 2px' }}>beds</p>
                   <input value={selectedLead.beds} onChange={(e) => updateLead(selectedLead.id, { beds: e.target.value })} onBlur={(e) => saveLead(selectedLead.id, { beds: e.target.value })} style={{
-                    width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
+                    width: '100%', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '6px 8px', fontSize: '12px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
                   }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Budget</label>
+                  <p style={{ fontSize: '10px', color: '#6B7488', margin: '0 0 2px' }}>budget</p>
                   <input value={selectedLead.budget} onChange={(e) => updateLead(selectedLead.id, { budget: e.target.value })} onBlur={(e) => saveLead(selectedLead.id, { budget: e.target.value })} style={{
-                    width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
+                    width: '100%', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '6px 8px', fontSize: '12px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
                   }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Move-in</label>
+                  <p style={{ fontSize: '10px', color: '#6B7488', margin: '0 0 2px' }}>move-in</p>
                   <input value={selectedLead.move} onChange={(e) => updateLead(selectedLead.id, { move: e.target.value })} onBlur={(e) => saveLead(selectedLead.id, { move: e.target.value })} style={{
-                    width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
+                    width: '100%', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '6px 8px', fontSize: '12px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
                   }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Area</label>
+                  <p style={{ fontSize: '10px', color: '#6B7488', margin: '0 0 2px' }}>area</p>
                   <input value={selectedLead.area} onChange={(e) => updateLead(selectedLead.id, { area: e.target.value })} onBlur={(e) => saveLead(selectedLead.id, { area: e.target.value })} style={{
-                    width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
+                    width: '100%', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '6px 8px', fontSize: '12px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
                   }} />
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Notes</label>
+                  <p style={{ fontSize: '10px', color: '#6B7488', margin: '0 0 2px' }}>notes</p>
                   <textarea value={selectedLead.notes} onChange={(e) => updateLead(selectedLead.id, { notes: e.target.value })} onBlur={(e) => saveLead(selectedLead.id, { notes: e.target.value })} style={{
-                    width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none', resize: 'none', height: '56px', fontFamily: '"Inter", sans-serif',
+                    width: '100%', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '6px 8px', fontSize: '12px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none', resize: 'none', height: '48px',
                   }} />
                 </div>
               </div>
