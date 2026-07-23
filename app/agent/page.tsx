@@ -20,6 +20,7 @@ interface Lead {
   area: string
   notes: string
   quick_note: string
+  deal_value: number
   buildings: string[]
   favorited: string[]
   deal: {
@@ -51,6 +52,7 @@ interface DbLead {
   spoke_with: string | null
   source: string | null
   quick_note: string | null
+  deal_value: number | null
 }
 
 // Map DB stage value → COLUMNS key
@@ -93,10 +95,20 @@ function dbLeadToLead(row: DbLead): Lead {
     area: row.area ?? '',
     notes: row.notes ?? '',
     quick_note: row.quick_note ?? '',
+    deal_value: row.deal_value ?? 0,
     buildings: [],
     favorited: [],
     deal: { building: '', unit: '', tour: '', leaseStart: '', leaseTerm: '', marketRent: '', invoiceEst: '' },
   }
+}
+
+// Parse a budget string into a midpoint dollar value for PPV calculation
+function parseBudgetMidpoint(budget: string): number {
+  if (!budget) return 0
+  const nums = budget.replace(/[,$]/g, '').match(/\d+/g)?.map(Number) ?? []
+  if (nums.length === 0) return 0
+  if (nums.length === 1) return nums[0]
+  return Math.round((nums[0] + nums[1]) / 2)
 }
 
 const COLUMNS = [
@@ -325,6 +337,7 @@ export default function AgentPage() {
     if (updates.area !== undefined) dbUpdates.area = updates.area
     if (updates.notes !== undefined) dbUpdates.notes = updates.notes
     if (updates.quick_note !== undefined) dbUpdates.quick_note = updates.quick_note
+    if (updates.deal_value !== undefined) dbUpdates.deal_value = updates.deal_value
 
     const { error } = await supabaseRef.current
       .from('leads')
@@ -630,7 +643,7 @@ export default function AgentPage() {
       {/* MAIN LAYOUT */}
       <div style={{ display: 'flex', height: 'calc(100vh - 61px)' }}>
         {/* KANBAN */}
-        <div style={{ flex: 1, minWidth: 0, padding: '20px 0 20px 24px', display: 'flex', flexDirection: 'column', paddingRight: selectedLead ? 0 : 24 }}>
+        <div style={{ flex: 1, minWidth: 0, padding: '20px 0 0 24px', display: 'flex', flexDirection: 'column', paddingRight: selectedLead ? 0 : 24, overflowY: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
             <h1 style={{ fontFamily: '"Archivo", sans-serif', fontSize: '17px', fontWeight: 700, margin: 0, color: '#E9EDF6' }}>
               Your Pipeline <span style={{ color: '#5B6780', fontSize: '12px', fontWeight: 500, marginLeft: '8px' }}>· {leads.length}</span>
@@ -738,6 +751,109 @@ export default function AgentPage() {
               )
             })}
           </div>
+
+          {/* METRICS ROW */}
+          {(() => {
+            const now = new Date()
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
+            // GCI: sum of deal_value for closed leads this calendar month
+            const closedThisMonth = leads.filter(l =>
+              l.column === 'applied' && l.lastContacted >= monthStart
+            )
+            const gci = closedThisMonth.reduce((sum, l) => sum + (l.deal_value ?? 0), 0)
+
+            // PPV: sum of budget midpoints across active (non-archive, non-closed) leads
+            const activeLeads = leads.filter(l => l.column !== 'archive' && l.column !== 'applied')
+            const ppv = activeLeads.reduce((sum, l) => sum + parseBudgetMidpoint(l.budget), 0)
+
+            // Conversion rate: closed ÷ total
+            const totalLeads = leads.length
+            const closedTotal = leads.filter(l => l.column === 'applied').length
+            const convRate = totalLeads > 0 ? Math.round((closedTotal / totalLeads) * 100) : 0
+
+            const fmt = (n: number) => n >= 1000
+              ? '$' + (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + 'k'
+              : '$' + n.toLocaleString()
+
+            return (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                paddingRight: 24,
+                paddingBottom: 20,
+                flexShrink: 0,
+              }}>
+                {/* GCI */}
+                <div style={{
+                  background: '#151E33',
+                  border: '0.5px solid rgba(255,77,141,0.25)',
+                  borderLeft: '2px solid #FF4D8D',
+                  borderRadius: '12px',
+                  padding: '1rem 1.25rem',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 500, color: '#6B7488', letterSpacing: '0.05em', margin: 0 }}>GCI</p>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF4D8D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
+                    </svg>
+                  </div>
+                  <p style={{ fontSize: '28px', fontWeight: 500, color: '#FFFFFF', margin: 0 }}>{fmt(gci)}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF4D8D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <p style={{ fontSize: '12px', color: '#F4C0D1', margin: 0 }}>{closedThisMonth.length} deals closed this month</p>
+                  </div>
+                </div>
+
+                {/* PPV */}
+                <div style={{
+                  background: '#151E33',
+                  border: '0.5px solid rgba(25,198,192,0.25)',
+                  borderLeft: '2px solid #19C6C0',
+                  borderRadius: '12px',
+                  padding: '1rem 1.25rem',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 500, color: '#6B7488', letterSpacing: '0.05em', margin: 0 }}>PPV</p>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#19C6C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+                    </svg>
+                  </div>
+                  <p style={{ fontSize: '28px', fontWeight: 500, color: '#FFFFFF', margin: 0 }}>{fmt(ppv)}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#19C6C0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+                    </svg>
+                    <p style={{ fontSize: '12px', color: '#9FE1CB', margin: 0 }}>{activeLeads.length} active leads in motion</p>
+                  </div>
+                </div>
+
+                {/* Conversion Rate */}
+                <div style={{
+                  background: '#151E33',
+                  border: '0.5px solid rgba(255,194,75,0.25)',
+                  borderLeft: '2px solid #FFC24B',
+                  borderRadius: '12px',
+                  padding: '1rem 1.25rem',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 500, color: '#6B7488', letterSpacing: '0.05em', margin: 0 }}>conversion rate</p>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC24B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+                    </svg>
+                  </div>
+                  <p style={{ fontSize: '28px', fontWeight: 500, color: '#FFFFFF', margin: 0 }}>{convRate}%</p>
+                  <div style={{ margin: '8px 0 0', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', height: '4px', overflow: 'hidden' }}>
+                    <div style={{ background: '#FFC24B', height: '100%', width: `${convRate}%`, borderRadius: '4px', transition: 'width 0.4s ease' }} />
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#FAC775', margin: '6px 0 0' }}>{closedTotal} of {totalLeads} leads closed</p>
+                </div>
+              </div>
+            )
+          })()}
         </div>
 
         {/* DOSSIER */}
