@@ -309,22 +309,64 @@ export async function POST(request: NextRequest) {
     // Always send to Supabase (service-role key is required)
     integrationPromises.push(sendToSupabase(body).catch(e => ({ sent: false, error: String(e) })))
 
-    // Use Promise.allSettled to wait for all integrations (for logging), but don't return immediately
+    // Use Promise.allSettled to wait for all integrations and capture their results
     const integrationResults = await Promise.allSettled(integrationPromises)
     
     console.log('[v0] ===== LEAD SUBMISSION END =====')
     console.log('[v0] Integration results:', JSON.stringify(integrationResults, null, 2))
 
-    // Return success immediately - background integrations may still be processing
-    // This gives the user instant feedback while integrations complete in parallel
+    // Extract results from Promise.allSettled for each integration
+    // Index mapping depends on which integrations were included:
+    // - Slack (if configured) → index 0
+    // - Notion (if configured) → index 0 or 1 (after Slack)
+    // - Supabase (always) → always last
+    let slackResult = null
+    let notionResult = null
+    let supabaseResult = null
+    let resultIndex = 0
+
+    // Slack result (if sent)
+    if (SLACK_WEBHOOK_URL) {
+      const result = integrationResults[resultIndex]
+      slackResult = result.status === 'fulfilled' 
+        ? { status: result.value?.sent ? 'success' : 'failed', ...result.value }
+        : { status: 'error', error: String(result.reason) }
+      resultIndex++
+    }
+
+    // Notion result (if sent)
+    if (NOTION_TOKEN && NOTION_DATABASE_ID) {
+      const result = integrationResults[resultIndex]
+      notionResult = result.status === 'fulfilled'
+        ? { status: result.value?.sent ? 'success' : 'failed', ...result.value }
+        : { status: 'error', error: String(result.reason) }
+      resultIndex++
+    }
+
+    // Supabase result (always sent)
+    const supabaseSettledResult = integrationResults[resultIndex]
+    if (supabaseSettledResult.status === 'fulfilled') {
+      const value = supabaseSettledResult.value
+      supabaseResult = value?.sent 
+        ? { status: 'success', data: value.data }
+        : { status: 'error', error: value?.error }
+    } else {
+      supabaseResult = { status: 'error', error: String(supabaseSettledResult.reason) }
+    }
+
+    const timestamp = new Date().toISOString()
+    const allSucceeded = [slackResult, notionResult, supabaseResult].every(r => r === null || r.status === 'success')
+
     return NextResponse.json(
       { 
-        success: true, 
-        message: 'Lead submitted successfully',
+        success: allSucceeded,
+        timestamp,
+        slackResult,
+        notionResult,
+        supabaseResult,
         leadData: {
           name: body.name,
           phone: body.phone,
-          timestamp: new Date().toISOString(),
         }
       },
       { status: 200 }
