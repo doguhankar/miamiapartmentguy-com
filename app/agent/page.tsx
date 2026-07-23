@@ -124,25 +124,42 @@ export default function AgentPage() {
 
   // Check agent_allowlist for the signed-in user's email.
   // Returns 'approved' | 'denied' | 'error'.
+  // Includes 10-second timeout to prevent hanging.
   const checkAllowlist = async (email: string): Promise<'approved' | 'denied' | 'error'> => {
     try {
       console.log('[v0] checkAllowlist: checking email:', JSON.stringify(email), 'type:', typeof email)
-      const { data, error } = await supabase
+      console.log('[v0] checkAllowlist: query starting at', new Date().toISOString())
+
+      // Wrap the query in a timeout promise
+      const queryPromise = supabase
         .from('agent_allowlist')
         .select('approved')
         .eq('email', email)
         .eq('approved', true)
         .maybeSingle()
-      console.log('[v0] checkAllowlist: query result data:', JSON.stringify(data), 'error:', error)
+
+      const timeoutPromise = new Promise<{ data: null; error: { message: string } }>((resolve) => {
+        setTimeout(() => {
+          console.log('[v0] checkAllowlist: Query timeout — no response after 10 seconds')
+          resolve({ data: null, error: { message: 'Query timeout' } })
+        }, 10000)
+      })
+
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise])
+
+      console.log('[v0] checkAllowlist: query completed at', new Date().toISOString())
+      console.log('[v0] checkAllowlist: query result data:', JSON.stringify(data), 'error:', error ? JSON.stringify(error) : 'null')
+
       if (error) {
-        console.log('[v0] checkAllowlist: query error, returning "error"')
+        console.log('[v0] checkAllowlist: query error/timeout, returning "error"')
         return 'error'
       }
+
       const result = data ? 'approved' : 'denied'
       console.log('[v0] checkAllowlist: final result:', result, '(data truthy?', !!data, ')')
       return result
     } catch (e) {
-      console.log('[v0] checkAllowlist: exception caught:', e)
+      console.log('[v0] checkAllowlist: exception caught:', e instanceof Error ? e.message : String(e))
       return 'error'
     }
   }
@@ -332,7 +349,7 @@ export default function AgentPage() {
     </svg>
   )
 
-  // ── IDLE: login screen ──────────────────────────────────────────────────────
+  // ── IDLE: login screen ──────────────────���───────────────────────────────────
   if (authStatus === 'idle') {
     return (
       <div style={centeredWrap}>
