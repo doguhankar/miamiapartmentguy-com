@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface LeadData {
   moveDate: string
@@ -213,6 +214,40 @@ async function sendToNotion(
   }
 }
 
+async function sendToSupabase(leadData: LeadData) {
+  try {
+    console.log('[v0] Sending to Supabase...')
+    const supabase = createAdminClient()
+
+    const { data, error } = await supabase.from('leads').insert([
+      {
+        name: leadData.name,
+        phone: leadData.phone,
+        move_in_timing: leadData.moveDate,
+        beds: leadData.apartmentSize,
+        budget: leadData.budget,
+        area: leadData.neighborhoods[0] || null,
+        credit_range: leadData.creditScore,
+        agent_id: 'doguhankar1@gmail.com',
+        stage: 'New Lead',
+        source: 'Homepage Form',
+      },
+    ])
+
+    if (error) {
+      console.error('[v0] ❌ Supabase insert error:', error)
+      return { sent: false, error: error.message }
+    } else {
+      console.log('[v0] ✅ Supabase lead inserted successfully:', data)
+      return { sent: true, error: null }
+    }
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    console.error('[v0] ❌ Supabase error:', errorMsg)
+    return { sent: false, error: errorMsg }
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: LeadData = await request.json()
@@ -239,7 +274,7 @@ export async function POST(request: NextRequest) {
       NOTION_DATABASE_ID_present: !!NOTION_DATABASE_ID,
     })
 
-    // Fire Slack and Notion in parallel without waiting for results
+    // Fire Slack, Notion, and Supabase in parallel without waiting for results
     // This allows the API to return immediately while integrations process in background
     const integrationPromises: Promise<any>[] = []
 
@@ -255,6 +290,9 @@ export async function POST(request: NextRequest) {
           .catch(e => ({ sent: false, error: String(e) }))
       )
     }
+
+    // Always send to Supabase (service-role key is required)
+    integrationPromises.push(sendToSupabase(body).catch(e => ({ sent: false, error: String(e) })))
 
     // Use Promise.allSettled to wait for all integrations (for logging), but don't return immediately
     const integrationResults = await Promise.allSettled(integrationPromises)
