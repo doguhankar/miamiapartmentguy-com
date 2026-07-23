@@ -126,41 +126,58 @@ export default function AgentPage() {
   // Returns 'approved' | 'denied' | 'error'.
   const checkAllowlist = async (email: string): Promise<'approved' | 'denied' | 'error'> => {
     try {
+      console.log('[v0] checkAllowlist: checking email:', JSON.stringify(email), 'type:', typeof email)
       const { data, error } = await supabase
         .from('agent_allowlist')
         .select('approved')
         .eq('email', email)
         .eq('approved', true)
         .maybeSingle()
-      if (error) return 'error'
-      return data ? 'approved' : 'denied'
-    } catch {
+      console.log('[v0] checkAllowlist: query result data:', JSON.stringify(data), 'error:', error)
+      if (error) {
+        console.log('[v0] checkAllowlist: query error, returning "error"')
+        return 'error'
+      }
+      const result = data ? 'approved' : 'denied'
+      console.log('[v0] checkAllowlist: final result:', result, '(data truthy?', !!data, ')')
+      return result
+    } catch (e) {
+      console.log('[v0] checkAllowlist: exception caught:', e)
       return 'error'
     }
   }
 
   useEffect(() => {
     const checkSession = async () => {
+      console.log('[v0] checkSession: starting')
       const { data: { session } } = await supabase.auth.getSession()
+      console.log('[v0] checkSession: got session:', session?.user?.email)
       if (!session?.user) {
+        console.log('[v0] checkSession: no session, setting idle')
         setAuthStatus('idle')
         return
       }
       // Session exists — run allowlist check
       const email = session.user.email ?? ''
+      console.log('[v0] checkSession: session email:', JSON.stringify(email))
       setUser({
         email,
         name: session.user.user_metadata?.full_name || email.split('@')[0] || 'User',
       })
       setAuthStatus('checking')
+      console.log('[v0] checkSession: calling checkAllowlist with email:', JSON.stringify(email))
       const result = await checkAllowlist(email)
+      console.log('[v0] checkSession: checkAllowlist returned:', result)
       if (result === 'approved') {
+        console.log('[v0] checkSession: setting authStatus to approved')
         setAuthStatus('approved')
       } else if (result === 'denied') {
+        console.log('[v0] checkSession: setting authStatus to denied')
         await supabase.auth.signOut()
         setAuthStatus('denied')
         setAllowlistError(null)
       } else {
+        console.log('[v0] checkSession: setting authStatus to denied (error result)')
         setAllowlistError('Error checking authorization. Try again.')
         await supabase.auth.signOut()
         setAuthStatus('denied')
@@ -169,27 +186,35 @@ export default function AgentPage() {
     checkSession()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[v0] onAuthStateChange: event:', event, 'email:', session?.user?.email)
       if (event === 'SIGNED_IN' && session?.user) {
         const email = session.user.email ?? ''
+        console.log('[v0] onAuthStateChange SIGNED_IN: email:', JSON.stringify(email))
         setUser({
           email,
           name: session.user.user_metadata?.full_name || email.split('@')[0] || 'User',
         })
         setAuthStatus('checking')
+        console.log('[v0] onAuthStateChange: calling checkAllowlist')
         const result = await checkAllowlist(email)
+        console.log('[v0] onAuthStateChange: checkAllowlist returned:', result)
         if (result === 'approved') {
+          console.log('[v0] onAuthStateChange: approved, showing dashboard')
           setAuthStatus('approved')
           showToast(`Welcome back, ${session.user.user_metadata?.full_name || 'there'}!`)
         } else if (result === 'denied') {
+          console.log('[v0] onAuthStateChange: denied')
           await supabase.auth.signOut()
           setAuthStatus('denied')
           setAllowlistError(null)
         } else {
+          console.log('[v0] onAuthStateChange: error result')
           setAllowlistError('Error checking authorization. Try again.')
           await supabase.auth.signOut()
           setAuthStatus('denied')
         }
       } else if (event === 'SIGNED_OUT') {
+        console.log('[v0] onAuthStateChange SIGNED_OUT')
         setUser(null)
         setAuthStatus('idle')
       }
