@@ -216,7 +216,6 @@ async function sendToNotion(
 
 async function sendToSupabase(leadData: LeadData) {
   try {
-    console.log('[v0] Supabase: starting lead insert...')
     const supabase = createAdminClient()
 
     const payload = {
@@ -232,34 +231,19 @@ async function sendToSupabase(leadData: LeadData) {
       source: 'Homepage Form',
     }
 
-    console.log('[v0] Supabase: payload to insert =', JSON.stringify(payload))
-
-    const { data, error } = await supabase.from('leads').insert([payload])
-
-    console.log('[v0] Supabase: insert query returned')
-    console.log('[v0] Supabase: data =', JSON.stringify(data))
-    console.log('[v0] Supabase: error =', error ? JSON.stringify(error) : 'null')
+    // .select() ensures the inserted row is returned in data (without it data is always null)
+    const { data, error } = await supabase.from('leads').insert([payload]).select()
 
     if (error) {
-      console.error('[v0] ❌ Supabase insert FAILED')
-      console.error('[v0] Error code:', error.code)
-      console.error('[v0] Error message:', error.message)
-      console.error('[v0] Error details:', error.details)
-      console.error('[v0] Error hint:', error.hint)
-      console.error('[v0] Full error object:', JSON.stringify(error, null, 2))
-      return { sent: false, error: error.message }
-    } else {
-      console.log('[v0] ✅ Supabase lead inserted successfully')
-      console.log('[v0] Inserted row:', JSON.stringify(data))
-      return { sent: true, error: null }
+      console.error('[supabase] insert failed — code:', error.code, '| message:', error.message, '| details:', error.details)
+      return { sent: false, error: { code: error.code, message: error.message, details: error.details, hint: error.hint } }
     }
-  } catch (error) {
-    console.error('[v0] ❌ Supabase: exception thrown')
-    console.error('[v0] Exception type:', error instanceof Error ? 'Error' : typeof error)
-    const errorMsg = error instanceof Error ? error.message : String(error)
-    console.error('[v0] Exception message:', errorMsg)
-    console.error('[v0] Full exception:', error)
-    return { sent: false, error: errorMsg }
+
+    return { sent: true, data: data?.[0] ?? null }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[supabase] exception:', msg)
+    return { sent: false, error: msg }
   }
 }
 
@@ -267,27 +251,9 @@ export async function POST(request: NextRequest) {
   try {
     const body: LeadData = await request.json()
 
-    console.log('[v0] ===== LEAD SUBMISSION START =====')
-    console.log('[v0] Lead data received:', {
-      name: body.name,
-      phone: body.phone,
-      moveDate: body.moveDate,
-      budget: body.budget,
-      neighborhoods: body.neighborhoods.join(', '),
-      apartmentSize: body.apartmentSize,
-      creditScore: body.creditScore,
-      timestamp: new Date().toISOString(),
-    })
-
     const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL
     const NOTION_TOKEN = process.env.NOTION_TOKEN
     const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID
-
-    console.log('[v0] Environment check:', {
-      SLACK_WEBHOOK_URL_present: !!SLACK_WEBHOOK_URL,
-      NOTION_TOKEN_present: !!NOTION_TOKEN,
-      NOTION_DATABASE_ID_present: !!NOTION_DATABASE_ID,
-    })
 
     // Fire Slack, Notion, and Supabase in parallel without waiting for results
     // This allows the API to return immediately while integrations process in background
@@ -311,9 +277,6 @@ export async function POST(request: NextRequest) {
 
     // Use Promise.allSettled to wait for all integrations and capture their results
     const integrationResults = await Promise.allSettled(integrationPromises)
-    
-    console.log('[v0] ===== LEAD SUBMISSION END =====')
-    console.log('[v0] Integration results:', JSON.stringify(integrationResults, null, 2))
 
     // Extract results from Promise.allSettled for each integration
     // Index mapping depends on which integrations were included:
@@ -372,8 +335,6 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('[v0] ===== ERROR PROCESSING LEAD =====')
-    console.error('[v0] Error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json(
       { 
         success: false, 
