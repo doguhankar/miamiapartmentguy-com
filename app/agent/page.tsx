@@ -141,6 +141,7 @@ export default function AgentPage() {
     setUser({ email, name })
 
     try {
+      const t0 = Date.now()
       const { data, error } = await supabase
         .from('agent_allowlist')
         .select('approved')
@@ -148,16 +149,24 @@ export default function AgentPage() {
         .eq('approved', true)
         .maybeSingle()
 
-      if (error || !data) {
+      console.log('[v0] allowlist query done in', Date.now() - t0, 'ms | data:', JSON.stringify(data), '| error:', error ? JSON.stringify(error) : 'null')
+
+      if (error) {
+        console.log('[v0] allowlist: query error — denying')
+        setAllowlistError('Error checking authorization. Try again.')
+        setAuthStatus('denied')
+      } else if (!data) {
+        console.log('[v0] allowlist: no matching row — denying (email not in allowlist or approved=false)')
         setTimeout(() => supabase.auth.signOut(), 0)
-        setAllowlistError(error ? 'Error checking authorization. Try again.' : null)
+        setAllowlistError(null)
         setAuthStatus('denied')
       } else {
+        console.log('[v0] allowlist: approved — showing dashboard')
         setAuthStatus('approved')
         onApproved()
       }
-    } catch {
-      setTimeout(() => supabase.auth.signOut(), 0)
+    } catch (e) {
+      console.log('[v0] allowlist: exception —', e instanceof Error ? e.message : String(e))
       setAllowlistError('Error checking authorization. Try again.')
       setAuthStatus('denied')
     } finally {
@@ -166,28 +175,31 @@ export default function AgentPage() {
   }, [supabase])
 
   useEffect(() => {
-    // onAuthStateChange is the single source of truth for session state.
-    // We do NOT call getSession() separately to avoid double-checking.
+    // onAuthStateChange fires INITIAL_SESSION first (existing session or null),
+    // then SIGNED_IN only for fresh logins — so we must handle INITIAL_SESSION
+    // with a valid session the same way as SIGNED_IN.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
+      console.log('[v0] auth event:', event, '| email:', session?.user?.email ?? 'none')
+
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
         const email = session.user.email ?? ''
         const name = session.user.user_metadata?.full_name || email.split('@')[0] || 'User'
-        // Defer the DB query outside the event callback to keep the auth
-        // queue unblocked — this is the key fix for the deadlock
+        const showWelcome = event === 'SIGNED_IN'
+        // Defer DB query outside the event callback — keeps auth queue unblocked
         setTimeout(() => {
+          console.log('[v0] runAllowlistCheck start | email:', email, '| event:', event)
           runAllowlistCheck(email, name, () => {
-            showToast(`Welcome back, ${name}!`)
+            if (showWelcome) showToast(`Welcome back, ${name}!`)
           })
         }, 0)
+      } else if (event === 'INITIAL_SESSION' && !session?.user) {
+        console.log('[v0] INITIAL_SESSION: no session, showing login')
+        setAuthStatus('idle')
       } else if (event === 'SIGNED_OUT') {
+        console.log('[v0] SIGNED_OUT: resetting to idle')
         checkingRef.current = false
         setUser(null)
         setAuthStatus('idle')
-      } else if (event === 'INITIAL_SESSION') {
-        if (!session?.user) {
-          setAuthStatus('idle')
-        }
-        // If there IS a session, SIGNED_IN will also fire — let that handle it
       }
     })
 
