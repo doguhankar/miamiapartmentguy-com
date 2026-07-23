@@ -19,6 +19,7 @@ interface Lead {
   lastContacted: Date
   area: string
   notes: string
+  quick_note: string
   buildings: string[]
   favorited: string[]
   deal: {
@@ -49,6 +50,7 @@ interface DbLead {
   stage: string | null
   spoke_with: string | null
   source: string | null
+  quick_note: string | null
 }
 
 // Map DB stage value → COLUMNS key
@@ -90,6 +92,7 @@ function dbLeadToLead(row: DbLead): Lead {
     lastContacted,
     area: row.area ?? '',
     notes: row.notes ?? '',
+    quick_note: row.quick_note ?? '',
     buildings: [],
     favorited: [],
     deal: { building: '', unit: '', tour: '', leaseStart: '', leaseTerm: '', marketRent: '', invoiceEst: '' },
@@ -321,6 +324,7 @@ export default function AgentPage() {
     if (updates.move !== undefined) dbUpdates.move_in_timing = updates.move
     if (updates.area !== undefined) dbUpdates.area = updates.area
     if (updates.notes !== undefined) dbUpdates.notes = updates.notes
+    if (updates.quick_note !== undefined) dbUpdates.quick_note = updates.quick_note
 
     const { error } = await supabaseRef.current
       .from('leads')
@@ -777,16 +781,10 @@ export default function AgentPage() {
               ✕
             </button>
 
-            {/* HEADER */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: '20px',
-              paddingBottom: '18px',
-              borderBottom: '1px solid #223252',
-            }}>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            {/* HEADER — Avatar, Name, Quick Note */}
+            <div style={{ marginBottom: '20px', paddingBottom: '18px', borderBottom: '1px solid #223252' }}>
+              {/* Row 1: Avatar + Name (flex-start for close button space) */}
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
                 <div style={{
                   width: '52px',
                   height: '52px',
@@ -803,73 +801,70 @@ export default function AgentPage() {
                 }}>
                   {selectedLead.first.charAt(0)}{selectedLead.last.charAt(0)}
                 </div>
-                <div>
+                <div style={{ flex: 1 }}>
                   <div style={{ fontFamily: '"Archivo", sans-serif', fontWeight: 700, fontSize: '17px', color: '#fff', lineHeight: 1.2 }}>
                     {selectedLead.first} {selectedLead.last}
                   </div>
-                  <div style={{ fontSize: '11.5px', color: '#8C97AE', lineHeight: 1.8, marginTop: '4px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                      <span>{selectedLead.email}</span>
-                      <button onClick={() => copyToClipboard(selectedLead.email)} style={{
-                        width: '22px', height: '22px', flexShrink: 0, borderRadius: '6px', background: '#152238',
-                        border: '1px solid #223252', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer', fontSize: '11px', color: '#5B6780', transition: 'all 0.12s ease',
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = '#19C6C0'; e.currentTarget.style.borderColor = '#19C6C0'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = '#5B6780'; e.currentTarget.style.borderColor = '#223252'; }}
-                      >
-                        ⧉
-                      </button>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                      <input
-                        value={selectedLead.phone}
-                        onChange={(e) => updateLead(selectedLead.id, { phone: e.target.value })}
-                        onBlur={(e) => saveLead(selectedLead.id, { phone: e.target.value })}
-                        placeholder="Add phone"
-                        style={{
-                          flex: 1, background: '#0B1220', border: '1px solid #223252', borderRadius: '6px', padding: '8px 10px',
-                          fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
-                        }}
-                      />
-                      <button onClick={() => copyToClipboard(selectedLead.phone)} style={{
-                        width: '22px', height: '22px', flexShrink: 0, borderRadius: '6px', background: '#152238',
-                        border: '1px solid #223252', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer', fontSize: '11px', color: '#5B6780', transition: 'all 0.12s ease',
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = '#19C6C0'; e.currentTarget.style.borderColor = '#19C6C0'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = '#5B6780'; e.currentTarget.style.borderColor = '#223252'; }}
-                      >
-                        ⧉
-                      </button>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                      <input
-                        value={selectedLead.email}
-                        onChange={(e) => updateLead(selectedLead.id, { email: e.target.value })}
-                        onBlur={(e) => saveLead(selectedLead.id, { email: e.target.value })}
-                        placeholder="Add email"
-                        type="email"
-                        style={{
-                          flex: 1, background: '#0B1220', border: '1px solid #223252', borderRadius: '6px', padding: '8px 10px',
-                          fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
-                        }}
-                      />
-                      <button onClick={() => selectedLead.email && copyToClipboard(selectedLead.email)} style={{
-                        width: '22px', height: '22px', flexShrink: 0, borderRadius: '6px', background: '#152238',
-                        border: '1px solid #223252', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: selectedLead.email ? 'pointer' : 'not-allowed', fontSize: '11px', color: selectedLead.email ? '#5B6780' : '#3A4A5E', transition: 'all 0.12s ease',
-                      }}
-                      onMouseEnter={(e) => { if (selectedLead.email) { e.currentTarget.style.color = '#19C6C0'; e.currentTarget.style.borderColor = '#19C6C0'; } }}
-                      onMouseLeave={(e) => { if (selectedLead.email) { e.currentTarget.style.color = '#5B6780'; e.currentTarget.style.borderColor = '#223252'; } }}
-                      >
-                        ⧉
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px', fontSize: '11px', color: '#5B6780', lineHeight: 1.8 }}>
+
+              {/* Row 2: Quick Note Input (full width below name) */}
+              <textarea
+                value={selectedLead.quick_note}
+                onChange={(e) => updateLead(selectedLead.id, { quick_note: e.target.value })}
+                onBlur={(e) => saveLead(selectedLead.id, { quick_note: e.target.value })}
+                placeholder="Add quick note..."
+                style={{
+                  width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px',
+                  fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none', resize: 'none', height: '56px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            {/* EMAIL SECTION — Moved to its own section below header */}
+            <div style={{ marginBottom: '20px', paddingBottom: '18px', borderBottom: '1px solid #223252' }}>
+              <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '8px' }}>Email</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '13px', color: '#E9EDF6', wordBreak: 'break-all' }}>{selectedLead.email}</span>
+                <button onClick={() => selectedLead.email && copyToClipboard(selectedLead.email)} style={{
+                  width: '22px', height: '22px', flexShrink: 0, borderRadius: '6px', background: '#152238',
+                  border: '1px solid #223252', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: selectedLead.email ? 'pointer' : 'not-allowed', fontSize: '11px', color: selectedLead.email ? '#5B6780' : '#3A4A5E', transition: 'all 0.12s ease',
+                }}
+                onMouseEnter={(e) => { if (selectedLead.email) { e.currentTarget.style.color = '#19C6C0'; e.currentTarget.style.borderColor = '#19C6C0'; } }}
+                onMouseLeave={(e) => { if (selectedLead.email) { e.currentTarget.style.color = '#5B6780'; e.currentTarget.style.borderColor = '#223252'; } }}
+                >
+                  ⧉
+                </button>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                <input
+                  value={selectedLead.phone}
+                  onChange={(e) => updateLead(selectedLead.id, { phone: e.target.value })}
+                  onBlur={(e) => saveLead(selectedLead.id, { phone: e.target.value })}
+                  placeholder="Add phone"
+                  style={{
+                    flex: 1, background: '#0B1220', border: '1px solid #223252', borderRadius: '6px', padding: '8px 10px',
+                    fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
+                  }}
+                />
+                <button onClick={() => copyToClipboard(selectedLead.phone)} style={{
+                  width: '22px', height: '22px', flexShrink: 0, borderRadius: '6px', background: '#152238',
+                  border: '1px solid #223252', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', fontSize: '11px', color: '#5B6780', transition: 'all 0.12s ease',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#19C6C0'; e.currentTarget.style.borderColor = '#19C6C0'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#5B6780'; e.currentTarget.style.borderColor = '#223252'; }}
+                >
+                  ⧉
+                </button>
+              </div>
+            </div>
+
+            {/* CONTACT STATUS — Contacted indicator + Mark contacted */}
+            <div style={{ fontSize: '11px', color: '#5B6780', lineHeight: 1.8, marginBottom: '20px', paddingBottom: '18px', borderBottom: '1px solid #223252' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px' }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                   <div style={{
                     width: '12px',
