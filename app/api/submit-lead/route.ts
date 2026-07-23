@@ -216,34 +216,49 @@ async function sendToNotion(
 
 async function sendToSupabase(leadData: LeadData) {
   try {
-    console.log('[v0] Sending to Supabase...')
+    console.log('[v0] Supabase: starting lead insert...')
     const supabase = createAdminClient()
 
-    const { data, error } = await supabase.from('leads').insert([
-      {
-        name: leadData.name,
-        phone: leadData.phone,
-        move_in_timing: leadData.moveDate,
-        beds: leadData.apartmentSize,
-        budget: leadData.budget,
-        area: leadData.neighborhoods[0] || null,
-        credit_range: leadData.creditScore,
-        agent_id: 'doguhankar1@gmail.com',
-        stage: 'New Lead',
-        source: 'Homepage Form',
-      },
-    ])
+    const payload = {
+      name: leadData.name,
+      phone: leadData.phone,
+      move_in_timing: leadData.moveDate,
+      beds: leadData.apartmentSize,
+      budget: leadData.budget,
+      area: leadData.neighborhoods[0] || null,
+      credit_range: leadData.creditScore,
+      agent_id: 'doguhankar1@gmail.com',
+      stage: 'New Lead',
+      source: 'Homepage Form',
+    }
+
+    console.log('[v0] Supabase: payload to insert =', JSON.stringify(payload))
+
+    const { data, error } = await supabase.from('leads').insert([payload])
+
+    console.log('[v0] Supabase: insert query returned')
+    console.log('[v0] Supabase: data =', JSON.stringify(data))
+    console.log('[v0] Supabase: error =', error ? JSON.stringify(error) : 'null')
 
     if (error) {
-      console.error('[v0] ❌ Supabase insert error:', error)
+      console.error('[v0] ❌ Supabase insert FAILED')
+      console.error('[v0] Error code:', error.code)
+      console.error('[v0] Error message:', error.message)
+      console.error('[v0] Error details:', error.details)
+      console.error('[v0] Error hint:', error.hint)
+      console.error('[v0] Full error object:', JSON.stringify(error, null, 2))
       return { sent: false, error: error.message }
     } else {
-      console.log('[v0] ✅ Supabase lead inserted successfully:', data)
+      console.log('[v0] ✅ Supabase lead inserted successfully')
+      console.log('[v0] Inserted row:', JSON.stringify(data))
       return { sent: true, error: null }
     }
   } catch (error) {
+    console.error('[v0] ❌ Supabase: exception thrown')
+    console.error('[v0] Exception type:', error instanceof Error ? 'Error' : typeof error)
     const errorMsg = error instanceof Error ? error.message : String(error)
-    console.error('[v0] ❌ Supabase error:', errorMsg)
+    console.error('[v0] Exception message:', errorMsg)
+    console.error('[v0] Full exception:', error)
     return { sent: false, error: errorMsg }
   }
 }
