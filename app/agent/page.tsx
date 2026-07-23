@@ -111,10 +111,20 @@ const BUILDINGS = [
   'Yacht Club at Brickell', 'Nine at Mary Brickell', 'SLS Lux Brickell',
 ]
 
+// Returns days since a date, or 0 if the date is invalid (guards against NaN crash)
+function safeGetDays(d: Date): number {
+  const ms = Date.now() - d.getTime()
+  return isNaN(ms) ? 0 : Math.floor(ms / 86400000)
+}
+
 function spokeColor(days: number) {
   if (days < 2) return 'green'
   if (days < 3) return 'yellow'
   return 'red'
+}
+
+function spokeText(days: number) {
+  return days <= 0 ? 'today' : `${days}d ago`
 }
 
 function Toast({ message }: { message: string }) {
@@ -551,8 +561,7 @@ export default function AgentPage() {
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', paddingBottom: '6px', minHeight: '20px' }}>
                     {colLeads.map((lead) => {
-                      const diffMs = Date.now() - lead.lastContacted.getTime()
-                      const days = Math.floor(diffMs / 86400000)
+                      const days = safeGetDays(lead.lastContacted)
                       const color = spokeColor(days)
                       return (
                         <div
@@ -715,10 +724,10 @@ export default function AgentPage() {
                     width: '12px',
                     height: '12px',
                     borderRadius: '50%',
-                    background: spokeColor(Math.floor((Date.now() - selectedLead.lastContacted.getTime()) / 86400000)) === 'green' ? '#2ECC71' : spokeColor(Math.floor((Date.now() - selectedLead.lastContacted.getTime()) / 86400000)) === 'yellow' ? '#F39C12' : '#E74C3C',
+                    background: spokeColor(safeGetDays(selectedLead.lastContacted)) === 'green' ? '#2ECC71' : spokeColor(safeGetDays(selectedLead.lastContacted)) === 'yellow' ? '#F39C12' : '#E74C3C',
                     flexShrink: 0,
                   }} />
-                  <b style={{ color: '#E9EDF6' }}>Contacted {spokeText(Math.floor((Date.now() - selectedLead.lastContacted.getTime()) / 86400000))}</b>
+                  <b style={{ color: '#E9EDF6' }}>Contacted {spokeText(safeGetDays(selectedLead.lastContacted))}</b>
                 </div>
                 <div
                   onClick={() => markContacted(selectedLead.id)}
