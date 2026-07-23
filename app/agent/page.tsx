@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -162,72 +164,70 @@ export default function AgentPage() {
   const [leadUpdates, setLeadUpdates] = useState<Record<string, Partial<Lead>>>({})
   const [allowlistError, setAllowlistError] = useState<string | null>(null)
 
-  // Stable client ref — never recreated on re-render
-  const supabaseRef = useRef(createClient())
-  const supabase = supabaseRef.current
+  // Null until hydrated in useEffect — prevents createClient() from running
+  // during SSR/build prerender where NEXT_PUBLIC env vars are unavailable.
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
 
   // Guard against concurrent allowlist checks (e.g. getSession + SIGNED_IN racing)
   const checkingRef = useRef(false)
 
-  // Runs OUTSIDE any auth event callback to avoid locking the Supabase
-  // internal event queue. signOut() is also deferred via setTimeout for the
-  // same reason — calling it synchronously inside onAuthStateChange deadlocks.
-  const runAllowlistCheck = useCallback(async (
-    email: string,
-    name: string,
-    onApproved: () => void,
-  ) => {
-    if (checkingRef.current) return
-    checkingRef.current = true
-    setAuthStatus('checking')
-    setUser({ email, name })
+  useEffect(() => {
+    // Initialize Supabase client only in the browser — never during SSR/prerender
+    if (!supabaseRef.current) {
+      supabaseRef.current = createClient()
+    }
+    const sb = supabaseRef.current
 
-    try {
-      const t0 = Date.now()
-      const { data, error } = await supabase
-        .from('agent_allowlist')
-        .select('approved')
-        .eq('email', email)
-        .eq('approved', true)
-        .maybeSingle()
+    const fetchLeads = async () => {
+      const { data, error } = await sb
+        .from('leads')
+        .select('*')
+        .order('created_at', { ascending: false })
+      if (!error && data) setLeads((data as DbLead[]).map(dbLeadToLead))
+    }
 
-      console.log('[v0] allowlist query done in', Date.now() - t0, 'ms | data:', JSON.stringify(data), '| error:', error ? JSON.stringify(error) : 'null')
-
-      if (error) {
-        console.log('[v0] allowlist: query error — denying')
+    const runAllowlistCheck = async (
+      email: string,
+      name: string,
+      onApproved: () => void,
+    ) => {
+      if (checkingRef.current) return
+      checkingRef.current = true
+      setAuthStatus('checking')
+      setUser({ email, name })
+      try {
+        const { data, error } = await sb
+          .from('agent_allowlist')
+          .select('approved')
+          .eq('email', email)
+          .eq('approved', true)
+          .maybeSingle()
+        if (error) {
+          setAllowlistError('Error checking authorization. Try again.')
+          setAuthStatus('denied')
+        } else if (!data) {
+          setTimeout(() => sb.auth.signOut(), 0)
+          setAllowlistError(null)
+          setAuthStatus('denied')
+        } else {
+          setAuthStatus('approved')
+          onApproved()
+        }
+      } catch {
         setAllowlistError('Error checking authorization. Try again.')
         setAuthStatus('denied')
-      } else if (!data) {
-        console.log('[v0] allowlist: no matching row — denying (email not in allowlist or approved=false)')
-        setTimeout(() => supabase.auth.signOut(), 0)
-        setAllowlistError(null)
-        setAuthStatus('denied')
-      } else {
-        console.log('[v0] allowlist: approved — showing dashboard')
-        setAuthStatus('approved')
-        onApproved()
+      } finally {
+        checkingRef.current = false
       }
-    } catch (e) {
-      console.log('[v0] allowlist: exception —', e instanceof Error ? e.message : String(e))
-      setAllowlistError('Error checking authorization. Try again.')
-      setAuthStatus('denied')
-    } finally {
-      checkingRef.current = false
     }
-  }, [supabase, fetchLeads])
 
-  useEffect(() => {
     // onAuthStateChange fires INITIAL_SESSION first (existing session or null),
-    // then SIGNED_IN only for fresh logins — so we must handle INITIAL_SESSION
-    // with a valid session the same way as SIGNED_IN.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[v0] auth event:', event, '| email:', session?.user?.email ?? 'none')
-
+    // then SIGNED_IN only for fresh logins — both must run the allowlist check.
+    const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
         const email = session.user.email ?? ''
         const name = session.user.user_metadata?.full_name || email.split('@')[0] || 'User'
         const showWelcome = event === 'SIGNED_IN'
-        // Defer DB query outside the event callback — keeps auth queue unblocked
         setTimeout(() => {
           runAllowlistCheck(email, name, () => {
             if (showWelcome) showToast(`Welcome back, ${name}!`)
@@ -235,10 +235,8 @@ export default function AgentPage() {
           })
         }, 0)
       } else if (event === 'INITIAL_SESSION' && !session?.user) {
-        console.log('[v0] INITIAL_SESSION: no session, showing login')
         setAuthStatus('idle')
       } else if (event === 'SIGNED_OUT') {
-        console.log('[v0] SIGNED_OUT: resetting to idle')
         checkingRef.current = false
         setUser(null)
         setAuthStatus('idle')
@@ -246,19 +244,7 @@ export default function AgentPage() {
     })
 
     return () => subscription?.unsubscribe()
-  }, [runAllowlistCheck, supabase])
-
-  const fetchLeads = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('leads')
-      .select('*')
-      .order('created_at', { ascending: false })
-    if (error) {
-      console.error('[supabase] fetchLeads error:', error.message)
-      return
-    }
-    setLeads((data as DbLead[]).map(dbLeadToLead))
-  }, [supabase])
+  }, [])
 
   const handleGoogleLogin = async () => {
     // REQUIRED OAUTH CONFIGURATION:
@@ -287,7 +273,10 @@ export default function AgentPage() {
       ? window.location.origin + '/agent'
       : 'https://miamiapartmentguy.com/agent'
 
-    const { error } = await supabase.auth.signInWithOAuth({
+    const sb = supabaseRef.current
+    if (!sb) return
+
+    const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: redirectUrl,
@@ -300,7 +289,7 @@ export default function AgentPage() {
   }
 
   const handleLogout = () => {
-    supabase.auth.signOut()
+    supabaseRef.current?.auth.signOut()
   }
 
   const showToast = (msg: string) => {
@@ -431,7 +420,7 @@ export default function AgentPage() {
             </p>
           </div>
           <button
-            onClick={async () => { await supabase.auth.signOut(); window.location.href = '/' }}
+            onClick={async () => { await supabaseRef.current?.auth.signOut(); window.location.href = '/' }}
             style={{ width: '100%', padding: '14px', background: 'rgba(255,77,141,0.1)', border: '1px solid rgba(255,77,141,0.3)', borderRadius: '8px', color: '#FF4D8D', fontWeight: 700, fontSize: '14px', fontFamily: '"Archivo", sans-serif', cursor: 'pointer', transition: 'all 0.12s ease' }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,77,141,0.18)')}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,77,141,0.1)')}
