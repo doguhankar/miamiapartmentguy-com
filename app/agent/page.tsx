@@ -21,6 +21,8 @@ interface Lead {
   notes: string
   quick_note: string
   deal_value: number
+  archive_reason: string
+  archive_notes: string
   buildings: string[]
   favorited: string[]
   deal: {
@@ -53,6 +55,8 @@ interface DbLead {
   source: string | null
   quick_note: string | null
   deal_value: number | null
+  archive_reason: string | null
+  archive_notes: string | null
 }
 
 // Map DB stage value → COLUMNS key
@@ -96,6 +100,8 @@ function dbLeadToLead(row: DbLead): Lead {
     notes: row.notes ?? '',
     quick_note: row.quick_note ?? '',
     deal_value: row.deal_value ?? 0,
+    archive_reason: row.archive_reason ?? '',
+    archive_notes: row.archive_notes ?? '',
     buildings: [],
     favorited: [],
     deal: { building: '', unit: '', tour: '', leaseStart: '', leaseTerm: '', marketRent: '', invoiceEst: '' },
@@ -189,6 +195,9 @@ export default function AgentPage() {
   const [leadUpdates, setLeadUpdates] = useState<Record<string, Partial<Lead>>>({})
   const [allowlistError, setAllowlistError] = useState<string | null>(null)
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null)
+  const [archivePopupOpen, setArchivePopupOpen] = useState(false)
+  const [archiveReason, setArchiveReason] = useState('')
+  const [archiveNotes, setArchiveNotes] = useState('')
 
   // Null until hydrated in useEffect — prevents createClient() from running
   // during SSR/build prerender where NEXT_PUBLIC env vars are unavailable.
@@ -338,6 +347,8 @@ export default function AgentPage() {
     if (updates.notes !== undefined) dbUpdates.notes = updates.notes
     if (updates.quick_note !== undefined) dbUpdates.quick_note = updates.quick_note
     if (updates.deal_value !== undefined) dbUpdates.deal_value = updates.deal_value
+    if (updates.archive_reason !== undefined) dbUpdates.archive_reason = updates.archive_reason
+    if (updates.archive_notes !== undefined) dbUpdates.archive_notes = updates.archive_notes
 
     const { error } = await supabaseRef.current
       .from('leads')
@@ -383,6 +394,36 @@ export default function AgentPage() {
         .update({ spoke_with: now.toISOString() })
         .eq('id', parseInt(leadId))
       if (error) console.error('[supabase] markContacted error:', error.message)
+    }
+  }
+
+  const handleArchiveLead = async () => {
+    if (!selectedLead || !archiveReason) return
+    // Move lead to Archive column and save archive details
+    updateLead(selectedLead.id, {
+      column: 'archive',
+      archive_reason: archiveReason,
+      archive_notes: archiveNotes,
+    })
+    // Persist to Supabase
+    if (supabaseRef.current) {
+      const { error } = await supabaseRef.current
+        .from('leads')
+        .update({
+          stage: 'Archive',
+          archive_reason: archiveReason,
+          archive_notes: archiveNotes,
+        })
+        .eq('id', parseInt(selectedLead.id))
+      if (error) {
+        console.error('[supabase] archive error:', error.message)
+        showToast('Failed to archive lead')
+      } else {
+        showToast('Lead archived')
+        setArchivePopupOpen(false)
+        setArchiveReason('')
+        setArchiveNotes('')
+      }
     }
   }
 
@@ -924,15 +965,35 @@ export default function AgentPage() {
                     <p style={{ fontWeight: 500, fontSize: '15px', margin: 0, color: '#fff' }}>
                       {selectedLead.first} {selectedLead.last}
                     </p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flex: '0 0 auto' }}>
-                      <span style={{
-                        width: '5px',
-                        height: '5px',
-                        borderRadius: '50%',
-                        background: spokeColor(safeGetDays(selectedLead.lastContacted)) === 'green' ? '#4ADE80' : spokeColor(safeGetDays(selectedLead.lastContacted)) === 'yellow' ? '#F39C12' : '#EF4444',
-                        display: 'inline-block',
-                      }} />
-                      <span style={{ fontSize: '11px', color: '#A9B2C3' }}>Contacted {spokeText(safeGetDays(selectedLead.lastContacted))}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '0 0 auto' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <span style={{
+                          width: '5px',
+                          height: '5px',
+                          borderRadius: '50%',
+                          background: spokeColor(safeGetDays(selectedLead.lastContacted)) === 'green' ? '#4ADE80' : spokeColor(safeGetDays(selectedLead.lastContacted)) === 'yellow' ? '#F39C12' : '#EF4444',
+                          display: 'inline-block',
+                        }} />
+                        <span style={{ fontSize: '11px', color: '#A9B2C3' }}>Contacted {spokeText(safeGetDays(selectedLead.lastContacted))}</span>
+                      </div>
+                      <button
+                        onClick={() => setArchivePopupOpen(true)}
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '11px',
+                          fontWeight: 500,
+                          color: '#fff',
+                          background: '#EF4444',
+                          border: 'none',
+                          borderRadius: '5px',
+                          cursor: 'pointer',
+                          transition: 'all 0.12s ease',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = '#DC2626' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = '#EF4444' }}
+                      >
+                        Archive
+                      </button>
                     </div>
                   </div>
                   {/* Quick note input — borderless, italic, muted */}
@@ -961,6 +1022,108 @@ export default function AgentPage() {
                 </div>
               </div>
             </div>
+
+            {/* ARCHIVE POPUP */}
+            {archivePopupOpen && (
+              <div style={{
+                background: '#152238',
+                border: '1px solid #223252',
+                borderRadius: '10px',
+                padding: '16px',
+                marginBottom: '12px',
+                borderTop: '3px solid #EF4444',
+              }}>
+                <p style={{ margin: '0 0 12px', fontSize: '13px', fontWeight: 600, color: '#fff' }}>Why are you archiving this lead?</p>
+                <select
+                  value={archiveReason}
+                  onChange={(e) => setArchiveReason(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    marginBottom: '12px',
+                    background: '#0B1220',
+                    border: '0.5px solid #223252',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    color: '#E9EDF6',
+                    fontFamily: '"Inter", sans-serif',
+                    outline: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="">Select a reason...</option>
+                  <option value="Ghosted / stopped responding">Ghosted / stopped responding</option>
+                  <option value="Went with another agent/competitor">Went with another agent/competitor</option>
+                  <option value="Budget mismatch">Budget mismatch</option>
+                  <option value="Bad credit / income">Bad credit / income</option>
+                  <option value="Not serious / tire-kicker">Not serious / tire-kicker</option>
+                  <option value="Found a place already">Found a place already</option>
+                  <option value="Duplicate/test lead">Duplicate/test lead</option>
+                </select>
+                <textarea
+                  value={archiveNotes}
+                  onChange={(e) => setArchiveNotes(e.target.value)}
+                  placeholder="Any context for later..."
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    marginBottom: '12px',
+                    background: '#0B1220',
+                    border: '0.5px solid #223252',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    color: '#E9EDF6',
+                    fontFamily: '"Inter", sans-serif',
+                    outline: 'none',
+                    resize: 'none',
+                    height: '48px',
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => {
+                      setArchivePopupOpen(false)
+                      setArchiveReason('')
+                      setArchiveNotes('')
+                    }}
+                    style={{
+                      padding: '6px 14px',
+                      fontSize: '12px',
+                      color: '#A9B2C3',
+                      background: 'transparent',
+                      border: '0.5px solid #223252',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                      transition: 'all 0.12s ease',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#5B6780'; e.currentTarget.style.color = '#E9EDF6' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#223252'; e.currentTarget.style.color = '#A9B2C3' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleArchiveLead}
+                    disabled={!archiveReason}
+                    style={{
+                      padding: '6px 14px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      color: archiveReason ? '#fff' : '#6B7488',
+                      background: archiveReason ? '#EF4444' : '#5B6780',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: archiveReason ? 'pointer' : 'not-allowed',
+                      transition: 'all 0.12s ease',
+                      opacity: archiveReason ? 1 : 0.5,
+                    }}
+                    onMouseEnter={(e) => { if (archiveReason) e.currentTarget.style.background = '#DC2626' }}
+                    onMouseLeave={(e) => { if (archiveReason) e.currentTarget.style.background = '#EF4444' }}
+                  >
+                    Archive lead
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* EMAIL & PHONE — Icon + borderless input */}
             <div style={{ borderTop: '0.5px solid #223252', marginTop: '8px', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '0.5px solid #223252' }}>

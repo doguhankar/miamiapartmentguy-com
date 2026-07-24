@@ -8,23 +8,35 @@ export async function GET() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Try inserting a dummy row to a temp table to check if the column exists;
-  // use a safe upsert approach — add column if it's missing by catching error.
-  // Supabase doesn't expose raw SQL DDL via JS client, so we patch via a known lead.
-  // Instead, verify column presence by selecting it:
-  const { error: checkError } = await supabase
+  // Check for required columns by attempting to select them
+  const { error: dealValueError } = await supabase
     .from('leads')
     .select('deal_value')
     .limit(1)
+  
+  const { error: archiveReasonError } = await supabase
+    .from('leads')
+    .select('archive_reason')
+    .limit(1)
+  
+  const { error: archiveNotesError } = await supabase
+    .from('leads')
+    .select('archive_notes')
+    .limit(1)
 
-  if (!checkError) {
-    return NextResponse.json({ ok: true, message: 'deal_value column already exists' })
+  if (!dealValueError && !archiveReasonError && !archiveNotesError) {
+    return NextResponse.json({ ok: true, message: 'All required columns exist' })
   }
 
-  // Column missing — inform user to add it manually via Supabase dashboard
+  // Columns missing — inform user to add them manually via Supabase dashboard
+  const missingCols = []
+  if (dealValueError) missingCols.push('ALTER TABLE leads ADD COLUMN IF NOT EXISTS deal_value numeric;')
+  if (archiveReasonError) missingCols.push('ALTER TABLE leads ADD COLUMN IF NOT EXISTS archive_reason TEXT;')
+  if (archiveNotesError) missingCols.push('ALTER TABLE leads ADD COLUMN IF NOT EXISTS archive_notes TEXT;')
+
   return NextResponse.json({
     ok: false,
-    message: 'deal_value column not found. Run this in your Supabase SQL editor: ALTER TABLE leads ADD COLUMN IF NOT EXISTS deal_value numeric;',
-    sqlToRun: 'ALTER TABLE leads ADD COLUMN IF NOT EXISTS deal_value numeric;'
+    message: 'Some required columns not found. Run these in your Supabase SQL editor:',
+    sqlToRun: missingCols.join('\n')
   }, { status: 400 })
 }
