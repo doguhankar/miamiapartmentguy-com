@@ -349,14 +349,27 @@ export default function AgentPage() {
     if (updates.deal_value !== undefined) dbUpdates.deal_value = updates.deal_value
     if (updates.archive_reason !== undefined) dbUpdates.archive_reason = updates.archive_reason
     if (updates.archive_notes !== undefined) dbUpdates.archive_notes = updates.archive_notes
+    // column → stage mapping (used by archive and any direct stage changes)
+    if (updates.column !== undefined) {
+      const col = COLUMNS.find(c => c.key === updates.column)
+      if (col) dbUpdates.stage = col.stage
+    }
+
+    if (Object.keys(dbUpdates).length === 0) return
+
+    const numericId = parseInt(leadId)
+    if (isNaN(numericId)) {
+      console.error('[v0] saveLead: non-numeric id', leadId)
+      return
+    }
 
     const { error } = await supabaseRef.current
       .from('leads')
       .update(dbUpdates)
-      .eq('id', parseInt(leadId))
+      .eq('id', numericId)
 
     if (error) {
-      console.error('[supabase] saveLead error:', error.message)
+      console.error('[supabase] saveLead error:', error.message, 'updates:', dbUpdates)
       showToast('Failed to save changes')
     }
   }
@@ -399,31 +412,31 @@ export default function AgentPage() {
 
   const handleArchiveLead = async () => {
     if (!selectedLead || !archiveReason) return
-    // Move lead to Archive column and save archive details
-    updateLead(selectedLead.id, {
+
+    const leadId = selectedLead.id
+
+    // 1. Update local state immediately for instant UI feedback
+    updateLead(leadId, {
       column: 'archive',
       archive_reason: archiveReason,
       archive_notes: archiveNotes,
     })
-    // Persist to Supabase
-    if (supabaseRef.current) {
-      const { error } = await supabaseRef.current
-        .from('leads')
-        .update({
-          stage: 'Archive',
-          archive_reason: archiveReason,
-          archive_notes: archiveNotes,
-        })
-        .eq('id', parseInt(selectedLead.id))
-      if (error) {
-        console.error('[supabase] archive error:', error.message)
-        showToast('Failed to archive lead')
-      } else {
-        showToast('Lead archived')
-        setArchivePopupOpen(false)
-        setArchiveReason('')
-        setArchiveNotes('')
-      }
+
+    // 2. Persist via saveLead — same path used by every other field save
+    //    saveLead maps column → stage, so 'archive' → 'Archive' is handled there
+    try {
+      await saveLead(leadId, {
+        column: 'archive',
+        archive_reason: archiveReason,
+        archive_notes: archiveNotes,
+      })
+      showToast('Lead archived')
+      setArchivePopupOpen(false)
+      setArchiveReason('')
+      setArchiveNotes('')
+    } catch (err) {
+      console.error('[v0] handleArchiveLead exception:', err)
+      showToast('Failed to archive lead')
     }
   }
 
