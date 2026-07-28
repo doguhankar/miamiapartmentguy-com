@@ -7,6 +7,7 @@ interface LeadData {
   budget: string
   neighborhoods: string[]
   creditScore: string
+  agent: string
   name: string
   phone: string
 }
@@ -85,14 +86,18 @@ async function sendToSlack(webhookUrl: string, leadData: LeadData) {
               type: 'mrkdwn',
               text: `*Credit Score:*\n${leadData.creditScore}`,
             },
-            {
-              type: 'mrkdwn',
-              text: `*Neighborhoods:*\n${leadData.neighborhoods.join(', ')}`,
-            },
-            {
-              type: 'mrkdwn',
-              text: `*Submitted:*\n${new Date().toISOString()}`,
-            },
+          {
+            type: 'mrkdwn',
+            text: `*Neighborhoods:*\n${leadData.neighborhoods.join(', ')}`,
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Agent:*\n${leadData.agent}`,
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Submitted:*\n${new Date().toISOString()}`,
+          },
           ],
         },
       ],
@@ -176,6 +181,8 @@ async function sendToNotion(
           notionPayload.properties[propName] = { rich_text: [{ text: { content: leadData.moveDate } }] }
         } else if (propName.toLowerCase().includes('budget')) {
           notionPayload.properties[propName] = { rich_text: [{ text: { content: leadData.budget } }] }
+        } else if (propName.toLowerCase().includes('agent')) {
+          notionPayload.properties[propName] = { rich_text: [{ text: { content: leadData.agent } }] }
         }
       }
     }
@@ -229,6 +236,7 @@ async function sendToSupabase(leadData: LeadData) {
       agent_id: 'doguhankar1@gmail.com',
       stage: 'New Lead',
       source: 'Homepage Form',
+      notes: `Selected agent: ${leadData.agent}`,
     }
 
     // .select() ensures the inserted row is returned in data (without it data is always null)

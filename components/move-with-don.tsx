@@ -8,6 +8,7 @@ interface LeadData {
   budget: string
   neighborhoods: string[]
   creditScore: string
+  agent: string
   name: string
   phone: string
 }
@@ -17,7 +18,7 @@ interface MoveWithDonProps {
   onClose: () => void
 }
 
-const TOTAL_STEPS = 6
+const TOTAL_STEPS = 7
 
 const emptyLead = (): LeadData => ({
   moveDate: '',
@@ -25,6 +26,7 @@ const emptyLead = (): LeadData => ({
   budget: '',
   neighborhoods: [],
   creditScore: '',
+  agent: 'don',
   name: '',
   phone: '',
 })
@@ -65,7 +67,8 @@ export function MoveWithDon({ isOpen, onClose }: MoveWithDonProps) {
     if (step === 3) return !!data.budget
     if (step === 4) return !!data.neighborhoods[0]
     if (step === 5) return !!data.creditScore
-    if (step === 6) return !!data.name.trim() && data.phone.trim().length >= 7
+    if (step === 6) return !!data.agent
+    if (step === 7) return !!data.name.trim() && data.phone.trim().length >= 7
     return false
   }
 
@@ -388,6 +391,85 @@ export function MoveWithDon({ isOpen, onClose }: MoveWithDonProps) {
     if (step === 6) {
       return (
         <>
+          <Kicker />
+          <h2 style={headStyle}>Pick your agent</h2>
+          <p style={hintStyle}>Choose someone whose vibe matches yours.</p>
+          <div style={{ marginTop: 4 }}>
+            <label style={{ cursor: 'pointer', display: 'block', marginBottom: 12 }}>
+              <input
+                type="radio"
+                name="agent"
+                value="don"
+                checked={data.agent === 'don'}
+                onChange={() => setData(prev => ({ ...prev, agent: 'don' }))}
+                style={{ display: 'none' }}
+              />
+              <div
+                style={{
+                  background: data.agent === 'don' ? 'rgba(255,77,141,0.12)' : 'rgba(255,77,141,0.08)',
+                  border: `2px solid #FF4D8D`,
+                  borderRadius: 12,
+                  padding: '16px 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  transition: 'all 0.15s',
+                }}
+              >
+                <div
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: '50%',
+                    background: 'rgba(255,77,141,0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 600,
+                    fontSize: 20,
+                    color: '#FF4D8D',
+                    flexShrink: 0,
+                  }}
+                >
+                  D
+                </div>
+                <div>
+                  <p style={{ fontWeight: 600, fontSize: 16, color: '#E6ECF5', margin: 0, marginBottom: 2 }}>
+                    Don Karahan
+                  </p>
+                  <p style={{ fontSize: 13, color: '#8FA0B8', margin: 0, marginBottom: 4 }}>
+                    Blunt. Building expert. Chess player.
+                  </p>
+                  <p style={{ fontSize: 12, color: '#19C6C0', margin: 0 }}>
+                    @MiamiApartmentGuy
+                  </p>
+                </div>
+              </div>
+            </label>
+            <div
+              style={{
+                background: 'rgba(25,198,192,0.08)',
+                border: '2px dashed rgba(25,198,192,0.4)',
+                borderRadius: 12,
+                padding: 20,
+                textAlign: 'center',
+              }}
+            >
+              <p style={{ fontSize: 14, color: '#8FA0B8', margin: '0 0 6px' }}>
+                We&apos;re hiring.
+              </p>
+              <p style={{ fontSize: 15, fontWeight: 600, color: '#E6ECF5', margin: 0 }}>
+                DM Don <span style={{ color: '#19C6C0' }}>@MiamiApartmentGuy</span>
+              </p>
+            </div>
+          </div>
+        </>
+      )
+    }
+
+    if (step === 7) {
+      return (
+        <>
           <div
             style={{
               fontSize: 11,
@@ -430,7 +512,7 @@ export function MoveWithDon({ isOpen, onClose }: MoveWithDonProps) {
   }
 
   const progressPct = done ? 100 : (Math.max(0, Math.min(step, TOTAL_STEPS)) / TOTAL_STEPS) * 100
-  const isContactStep = step === TOTAL_STEPS
+  const isContactStep = step === TOTAL_STEPS + 1
   const nextLabel = step === 0 ? "Let's go" : isContactStep ? 'Send to Don 🚀' : 'Next'
 
   /* ── inline style constants ── */
