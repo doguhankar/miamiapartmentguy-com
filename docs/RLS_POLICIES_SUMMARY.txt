@@ -1,0 +1,314 @@
+================================================================================
+COMPLETE LIST OF RLS POLICIES CREATED
+================================================================================
+
+Project: Miami Apartment Guy (MAG)
+Date: July 28, 2026
+Migration File: supabase/migrations/20260728_enable_rls.sql
+
+================================================================================
+TABLE 1: leads
+================================================================================
+
+Status: RLS ENABLED
+
+POLICY 1: leads_select_own_leads
+  Operation: SELECT
+  Roles: authenticated
+  Condition: agent_id = auth.jwt() ->> 'email'
+  Effect: Agents can only SELECT rows where they own the lead
+  
+POLICY 2: leads_update_own_leads
+  Operation: UPDATE
+  Roles: authenticated
+  USING Condition: agent_id = auth.jwt() ->> 'email'
+  WITH CHECK Condition: agent_id = auth.jwt() ->> 'email'
+  Effect: Agents can only UPDATE rows where they own the lead
+  
+POLICY 3: leads_insert_own_leads
+  Operation: INSERT
+  Roles: authenticated
+  WITH CHECK Condition: agent_id = auth.jwt() ->> 'email'
+  Effect: Agents can only INSERT leads if setting agent_id to their own email
+  
+POLICY 4: (NONE - DELETE NOT ALLOWED)
+  Operation: DELETE
+  Effect: No agent can delete leads (leads are archived instead)
+
+NO PUBLIC/ANON POLICIES: Non-authenticated users cannot access leads at all
+
+================================================================================
+TABLE 2: saved_lists
+================================================================================
+
+Status: RLS ENABLED
+
+POLICY 1: saved_lists_select_public
+  Operation: SELECT
+  Roles: ALL (authenticated and anonymous)
+  Condition: true (always allow)
+  Effect: Anyone can read saved_lists (for public shared links)
+
+NO WRITE POLICIES (INSERT/UPDATE/DELETE): Only service role can modify
+  Effect: Shared lists can only be created/updated by API routes using service role
+
+================================================================================
+TABLE 3: pricing_units
+================================================================================
+
+Status: RLS DISABLED
+Reasoning: Contains non-sensitive scraped pricing data
+Policies: (none)
+
+================================================================================
+TABLE 4: scrape_logs
+================================================================================
+
+Status: RLS DISABLED
+Reasoning: Contains non-sensitive audit trail of scraper executions
+Policies: (none)
+
+================================================================================
+TABLES NOT CHANGED
+================================================================================
+
+- agent_allowlist: No RLS changes (used for access control, not lead data)
+- All other system tables: Unchanged
+
+================================================================================
+HOW TO VERIFY (SUPABASE SQL EDITOR)
+================================================================================
+
+Query 1: Check RLS is Enabled
+  SELECT tablename FROM pg_tables 
+  WHERE schemaname = 'public' 
+  AND rowsecurity = true;
+  
+  Expected Output:
+    tablename
+    -----------
+    leads
+    saved_lists
+
+Query 2: List All Policies
+  SELECT 
+    schemaname, 
+    tablename, 
+    policyname,
+    permissive,
+    cmd
+  FROM pg_policies 
+  WHERE schemaname = 'public' 
+  AND tablename IN ('leads', 'saved_lists')
+  ORDER BY tablename, policyname;
+  
+  Expected Output (4 policies on leads, 1 on saved_lists):
+    schemaname | tablename  | policyname                   | permissive | cmd
+    -----------+------------+------------------------------+------------+-----
+    public     | leads      | leads_insert_own_leads       | t          | INSERT
+    public     | leads      | leads_select_own_leads       | t          | SELECT
+    public     | leads      | leads_update_own_leads       | t          | UPDATE
+    public     | saved_lists| saved_lists_select_public    | t          | SELECT
+
+Query 3: Detailed Policy View (leads table)
+  SELECT 
+    policyname,
+    qual,          -- USING clause
+    with_check     -- WITH CHECK clause
+  FROM pg_policies 
+  WHERE tablename = 'leads'
+  ORDER BY policyname;
+  
+  Expected Output:
+    policyname                    | qual (USING)                           | with_check (WITH CHECK)
+    ------------------------------|----------------------------------------|----------------------------------------
+    leads_insert_own_leads        | NULL                                   | (agent_id = (auth.jwt() ->> 'email'::text))
+    leads_select_own_leads        | (agent_id = (auth.jwt() ->> 'email'::text)) | NULL
+    leads_update_own_leads        | (agent_id = (auth.jwt() ->> 'email'::text)) | (agent_id = (auth.jwt() ->> 'email'::text))
+
+Query 4: Detailed Policy View (saved_lists table)
+  SELECT 
+    policyname,
+    qual
+  FROM pg_policies 
+  WHERE tablename = 'saved_lists'
+  ORDER BY policyname;
+  
+  Expected Output:
+    policyname                  | qual (USING)
+    ----------------------------|----------
+    saved_lists_select_public   | true
+
+================================================================================
+SERVICE ROLE KEY BYPASS CONFIRMATION
+================================================================================
+
+The following API routes use the service role key and bypass all RLS policies:
+
+1. /api/submit-lead (POST)
+   - Uses: createAdminClient()
+   - Effect: Can INSERT leads regardless of RLS policies
+   - Hardcoded: agent_id = 'doguhankar1@gmail.com'
+   - RLS Status: BYPASSED (intentional, service role)
+
+2. /api/admin/bulk-upload (POST)
+   - Uses: createAdminClient()
+   - Effect: Can bulk INSERT leads regardless of RLS policies
+   - Hardcoded: agent_id = 'doguhankar1@gmail.com'
+   - RLS Status: BYPASSED (intentional, service role)
+
+3. /api/migrate (GET)
+   - Uses: createAdminClient() (service role check only)
+   - Effect: Can read schema regardless of RLS policies
+   - RLS Status: BYPASSED (intentional, service role)
+
+4. /api/lists (POST)
+   - Uses: createAdminClient()
+   - Effect: Can INSERT saved_lists regardless of RLS policies
+   - RLS Status: BYPASSED (intentional, service role)
+
+5. /api/lists/[slug] (GET)
+   - Uses: createAdminClient() OR anon client for SELECT
+   - Effect: SELECT uses RLS (anon client + public policy)
+   - RLS Status: ENFORCED (intentional, public read)
+
+All routes using SUPABASE_SERVICE_ROLE_KEY are server-side only and never
+expose the key to client-side code. This is secure by design.
+
+================================================================================
+NO CODE CHANGES REQUIRED
+================================================================================
+
+The following components/routes require NO code modifications:
+
+✅ Agent Portal (app/agent/page.tsx)
+   - Existing SELECT queries work unchanged
+   - RLS filtering is transparent
+   - Result: Agents see only their own leads (same as before for single agent)
+
+✅ Form Submission (/api/submit-lead)
+   - Service role bypass works
+   - Leads still INSERT and appear in agent portal
+   - Result: No change in behavior
+
+✅ Bulk Upload (/api/admin/bulk-upload)
+   - Service role bypass works
+   - Leads still INSERT
+   - Result: No change in behavior
+
+✅ Dossier Edits (app/agent/page.tsx saveLead)
+   - UPDATE queries work unchanged
+   - RLS enforces ownership check
+   - Result: Agents can still edit their leads, but not others' leads
+
+✅ Archive Flow (app/agent/page.tsx handleArchiveLead)
+   - UPDATE queries work unchanged
+   - RLS enforces ownership check
+   - Result: Agents can still archive their leads
+
+✅ Shared Lists (/api/lists, /lists/[slug])
+   - SELECT works for public (open policy)
+   - INSERT/UPDATE/DELETE works for service role only
+   - Result: Shared links work for guests, creation restricted to API
+
+================================================================================
+WHAT HAPPENS WHEN AGENTS QUERY LEADS
+================================================================================
+
+SCENARIO 1: Agent Don logs in and queries leads
+
+   Query: SELECT * FROM leads ORDER BY created_at DESC
+   
+   With RLS Applied:
+   - Supabase intercepts
+   - Extracts: auth.jwt() ->> 'email' = 'doguhankar1@gmail.com'
+   - Adds condition: WHERE agent_id = 'doguhankar1@gmail.com'
+   - Effective query:
+     SELECT * FROM leads 
+     WHERE agent_id = 'doguhankar1@gmail.com'
+     ORDER BY created_at DESC
+   
+   Result: Don sees only his leads ✅
+
+SCENARIO 2: Non-authenticated user tries to read leads
+
+   Query: SELECT * FROM leads
+   
+   With RLS Applied:
+   - Supabase intercepts
+   - Checks: auth.role() = 'authenticated'? NO (user is anon)
+   - Policy condition fails
+   - RLS denies: "Permission denied for relation leads"
+   
+   Result: Query blocked ✅
+
+SCENARIO 3: Form submission inserts lead with service role
+
+   Query: INSERT INTO leads (...) VALUES (...)
+   
+   With RLS Applied:
+   - Supabase sees: auth.role() = 'service_role' (not 'authenticated')
+   - Policy conditions checked: auth.role() = 'authenticated'? NO
+   - RLS policies DO NOT APPLY to service_role
+   - INSERT succeeds
+   
+   Result: Form submissions work unchanged ✅
+
+SCENARIO 4: Agent tries to edit another agent's lead (multi-agent future)
+
+   Query: UPDATE leads SET name = 'hacked' WHERE id = 42
+   
+   With RLS Applied:
+   - Supabase intercepts
+   - Extracts agent email: 'don@example.com'
+   - Adds condition: WHERE id = 42 AND agent_id = 'don@example.com'
+   - Queries database: Any row matching?
+   - Scenario A: Lead 42 owned by Don → Matches → UPDATE succeeds
+   - Scenario B: Lead 42 owned by Jane → Doesn't match → UPDATE fails (0 rows)
+   
+   Result: Multi-tenant isolation automatic ✅
+
+================================================================================
+DEPLOYMENT TIMELINE
+================================================================================
+
+Friday, July 28, 2026 - RLS Documentation Complete
+  ✓ Migration SQL written: supabase/migrations/20260728_enable_rls.sql
+  ✓ Setup guide written: docs/RLS_SETUP.md
+  ✓ Verification checklist written: docs/RLS_VERIFICATION.md
+  ✓ Technical reference written: docs/RLS_TECHNICAL_REFERENCE.md
+  ✓ Summary document written: docs/RLS_SUMMARY.md
+  ✓ Policies list written: docs/RLS_POLICIES_SUMMARY.txt (this file)
+
+Deployment Steps (when ready):
+  1. Open Supabase SQL editor
+  2. Copy migration SQL and run it
+  3. Follow verification checklist
+  4. Commit documentation to git
+  5. Deploy code (no changes required)
+  6. Test agent portal, forms, shared lists
+
+Estimated Time: 15 minutes
+
+================================================================================
+SUPPORT
+================================================================================
+
+If you encounter issues, consult these documents in order:
+
+1. docs/RLS_SUMMARY.md
+   - Executive summary and FAQ
+
+2. docs/RLS_SETUP.md
+   - Full setup guide with troubleshooting
+
+3. docs/RLS_VERIFICATION.md
+   - 10-point verification checklist
+
+4. docs/RLS_TECHNICAL_REFERENCE.md
+   - Deep technical details and edge cases
+
+5. supabase/migrations/20260728_enable_rls.sql
+   - Actual SQL code being applied
+
+================================================================================
