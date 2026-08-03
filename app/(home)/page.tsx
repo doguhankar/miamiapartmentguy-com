@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Topbar from '@/components/topbar'
 
 export default function HomePage() {
   const [activeChip, setActiveChip] = useState('Downtown')
@@ -21,7 +20,6 @@ export default function HomePage() {
 
   return (
     <div style={{ background: '#0B1220', color: '#F6F8F9', fontFamily: "'Space Grotesk', sans-serif" }}>
-      <Topbar />
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
         
