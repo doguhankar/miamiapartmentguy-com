@@ -137,6 +137,97 @@ export default function HomePage() {
         .m2-footer { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 28px 24px 44px; color: #7C86A0; font-size: 12px; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 32px; }
         .m2-footer-text { line-height: 1.6; font-family: 'Archivo', sans-serif; }
 
+        /* ── DESKTOP PAGE (>900px) ──────────────────────────────────────────── */
+        .d2-page { display: none; background: #0A0F1C; color: #F7F8FB; min-height: 100vh; }
+        @media (min-width: 901px) {
+          .d2-page { display: block; }
+          .mobile-page { display: none !important; }
+          .ticker, header, .desktop-proof-bar, #how, #hoods, #why, #reviews, .desktop-final-cta, .desktop-footer { display: none !important; }
+        }
+        .d2-topnav { width: 100%; padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .d2-topnav-inner { max-width: 1160px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .d2-logo { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: -0.02em; color: #F7F8FB; }
+        .d2-logo-dot { color: #FF3D82; }
+        .d2-nav-links { display: flex; gap: 22px; }
+        .d2-nav-link { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 600; color: #7C86A0; text-decoration: none; letter-spacing: 0.02em; }
+        .d2-nav-link:hover { color: #F7F8FB; }
+        .d2-ticker-wrap { width: 100%; background: #FF1F73; overflow: hidden; padding: 6px 0; }
+        .d2-ticker { display: flex; gap: 40px; white-space: nowrap; animation: magTickerScroll 26s linear infinite; width: max-content; }
+        .d2-tick-item { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 600; color: #1a0510; letter-spacing: 0.02em; }
+        .d2-tick-item b { font-weight: 700; }
+        .d2-hero-wrap { overflow: hidden; }
+        .d2-hero { position: relative; padding: 26px 24px 22px; max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: 1fr 380px; gap: 0; align-items: center; }
+        .d2-hero::before { content: ""; position: absolute; top: -10%; left: -5%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(255,61,130,0.18), transparent 65%); z-index: 0; pointer-events: none; }
+        .d2-hero::after { content: ""; position: absolute; bottom: -10%; right: 10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(28,220,212,0.14), transparent 65%); z-index: 0; pointer-events: none; }
+        .d2-hero-left { position: relative; z-index: 2; padding-right: 30px; }
+        .d2-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.05em; color: #FFC24B; font-weight: 600; margin-bottom: 12px; padding: 5px 13px 5px 9px; border: 1px solid rgba(255,194,75,0.3); border-radius: 100px; background: rgba(255,194,75,0.06); }
+        .d2-eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: #1CDCD4; box-shadow: 0 0 10px #1CDCD4; display: inline-block; flex-shrink: 0; }
+        .d2-headline { font-family: 'Space Grotesk', sans-serif; font-size: 38px; font-weight: 800; line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 14px; color: #F7F8FB; }
+        .d2-accent { color: #FF3D82; }
+        .d2-lede { font-family: 'Archivo', sans-serif; font-size: 14.5px; color: #7C86A0; line-height: 1.5; max-width: 460px; margin-bottom: 16px; }
+        .d2-lede b { color: #F7F8FB; }
+        .d2-trust-pills { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        .d2-pill { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; padding: 6px 13px; border-radius: 100px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #F7F8FB; }
+        .d2-pill.gold { color: #FFC24B; border-color: rgba(255,194,75,0.3); }
+        .d2-cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+        .d2-sms-btn { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; background: #FF3D82; color: #1a0510; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14.5px; padding: 13px 22px; border-radius: 100px; box-shadow: 0 8px 30px rgba(255,61,130,0.4); transition: transform 0.15s ease; }
+        .d2-sms-btn:active { transform: scale(0.98); }
+        .d2-map-btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; background: rgba(28,220,212,0.1); border: 1.5px solid #1CDCD4; color: #1CDCD4; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14.5px; padding: 12px 20px; border-radius: 100px; box-shadow: 0 0 20px rgba(28,220,212,0.25); transition: background 0.15s ease; }
+        .d2-map-btn:hover { background: rgba(28,220,212,0.18); }
+        .d2-social-row { display: flex; gap: 10px; align-items: center; }
+        .d2-social-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #7C86A0; margin-right: 4px; }
+        .d2-social-icon { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.15s ease; }
+        .d2-social-icon:hover { transform: translateY(-2px); }
+        .d2-social-icon.wa { color: #25D366; }
+        .d2-social-icon.ig { color: #FF3D82; }
+        .d2-social-icon.tt { color: #F7F8FB; }
+        .d2-social-icon.em { color: #1CDCD4; }
+        .d2-hero-right { position: relative; z-index: 2; }
+        .d2-photo-frame { position: relative; border-radius: 24px; overflow: hidden; aspect-ratio: 3/3.1; transform: rotate(2deg); box-shadow: 0 30px 60px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+        .d2-photo-frame img { width: 100%; height: 100%; object-fit: cover; display: block; object-position: center 12%; }
+        .d2-photo-frame::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(10,15,28,0.9) 100%); }
+        .d2-photo-badge { position: absolute; bottom: 20px; left: 20px; right: 20px; z-index: 3; }
+        .d2-photo-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; color: #F7F8FB; }
+        .d2-photo-role { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #FFC24B; letter-spacing: 0.06em; margin-top: 3px; }
+        .d2-floating-tag { position: absolute; top: -14px; right: -14px; background: #1CDCD4; color: #04201e; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px; padding: 10px 16px; border-radius: 12px; transform: rotate(-6deg); box-shadow: 0 10px 24px rgba(28,220,212,0.35); z-index: 4; }
+        .d2-trust-bar { max-width: 1160px; margin: 6px auto 0; padding: 14px 24px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 14px; border-top: 1px solid rgba(255,255,255,0.07); border-bottom: 1px solid rgba(255,255,255,0.07); }
+        .d2-trust-item { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+        .d2-trust-icon { font-size: 15px; }
+        .d2-trust-strong { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; color: #1CDCD4; }
+        .d2-trust-plain { font-size: 13px; color: #7C86A0; }
+        .d2-trust-sep { color: rgba(255,255,255,0.15); font-size: 14px; }
+        .d2-quote-section { max-width: 1160px; margin: 8px auto 0; padding: 0 24px; }
+        .d2-quote-panel { background: #0F1729; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 22px 26px; position: relative; overflow: hidden; }
+        .d2-quote-title { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 700; color: #F7F8FB; margin-bottom: 14px; }
+        .d2-looking-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #7C86A0; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
+        .d2-hood-chips { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; }
+        .d2-chip { font-family: 'Archivo', sans-serif; font-size: 12.5px; font-weight: 600; padding: 7px 14px; border-radius: 100px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); color: #F7F8FB; cursor: pointer; transition: all 0.15s ease; }
+        .d2-chip.active { background: #FF3D82; border-color: #FF3D82; color: #1a0510; }
+        .d2-form-row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; }
+        .d2-field { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 11px 12px; color: #F7F8FB; font-family: 'Archivo', sans-serif; font-size: 13.5px; outline: none; width: 100%; }
+        .d2-field::placeholder { color: #7C86A0; }
+        .d2-field:focus { border-color: #1CDCD4; }
+        .d2-go-btn { background: #1CDCD4; color: #04201e; border: none; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13.5px; padding: 11px 22px; border-radius: 10px; cursor: pointer; white-space: nowrap; }
+        .d2-reviews-section { max-width: 1160px; margin: 50px auto 0; padding: 0 24px; }
+        .d2-reviews-head { text-align: center; margin-bottom: 20px; }
+        .d2-google-badge { position: relative; display: inline-flex; align-items: center; gap: 9px; background: #0F1729; border: 1px solid rgba(255,194,75,0.35); border-radius: 100px; padding: 11px 20px; text-decoration: none; color: #F7F8FB; margin-bottom: 8px; transition: transform 0.15s ease; }
+        .d2-google-badge::before { content: ""; position: absolute; inset: -3px; border-radius: 100px; background: linear-gradient(135deg, #FFC24B, #FF3D82); opacity: 0.3; filter: blur(9px); z-index: -1; animation: d2BadgePulse 2.4s ease-in-out infinite; }
+        @keyframes d2BadgePulse { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.5; } }
+        .d2-google-badge:hover { transform: translateY(-1px); }
+        .d2-badge-stars { color: #FFC24B; font-size: 13.5px; letter-spacing: 1px; }
+        .d2-badge-text { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; }
+        .d2-tap-hint { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #7C86A0; margin-bottom: 16px; }
+        .d2-reviews-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; color: #F7F8FB; }
+        .d2-reviews-track { display: flex; gap: 16px; overflow: hidden; mask-image: linear-gradient(90deg, transparent, black 4%, black 96%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, black 4%, black 96%, transparent); }
+        .d2-reviews-inner { display: flex; gap: 16px; animation: magReviewScroll 40s linear infinite; width: max-content; }
+        .d2-reviews-inner:hover { animation-play-state: paused; }
+        .d2-review-card { background: #0F1729; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; width: 300px; flex-shrink: 0; }
+        .d2-review-stars { color: #FFC24B; font-size: 13px; letter-spacing: 1px; margin-bottom: 10px; }
+        .d2-review-text { font-size: 13px; color: #F7F8FB; line-height: 1.55; margin-bottom: 12px; opacity: 0.85; }
+        .d2-review-name { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #7C86A0; }
+        .d2-footer { display: flex; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 36px 24px 60px; color: #7C86A0; font-size: 12px; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 32px; }
+        .d2-footer-text { line-height: 1.6; font-family: 'Archivo', sans-serif; }
+
         /* ── MOBILE LAYOUT ≤768px ───────────────────────────────────────── */
         /* Hide all desktop sections; show mobile-page instead */
         @media (max-width: 768px) {
@@ -566,6 +657,185 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── DESKTOP PAGE (>900px) ────────────────────────────────────────── */}
+      <div className="d2-page">
+
+        {/* nav */}
+        <nav className="d2-topnav">
+          <div className="d2-topnav-inner">
+            <span className="d2-logo">MAG<span className="d2-logo-dot">.</span></span>
+            <div className="d2-nav-links">
+              <a href="https://miamiapartmentguy.com/agent" className="d2-nav-link">Agent Login</a>
+            </div>
+          </div>
+        </nav>
+
+        {/* ticker */}
+        <div className="d2-ticker-wrap">
+          <div className="d2-ticker">
+            <span className="d2-tick-item">BRICKELL STUDIO <b>$2,100/mo</b></span>
+            <span className="d2-tick-item">EDGEWATER 1BR <b>$2,650/mo</b></span>
+            <span className="d2-tick-item">WYNWOOD 1BR <b>$2,400/mo</b></span>
+            <span className="d2-tick-item">DOWNTOWN 2BR <b>$3,300/mo</b></span>
+            <span className="d2-tick-item">MIDTOWN 1BR <b>$2,550/mo</b></span>
+            <span className="d2-tick-item">BRICKELL STUDIO <b>$2,100/mo</b></span>
+            <span className="d2-tick-item">EDGEWATER 1BR <b>$2,650/mo</b></span>
+            <span className="d2-tick-item">WYNWOOD 1BR <b>$2,400/mo</b></span>
+            <span className="d2-tick-item">DOWNTOWN 2BR <b>$3,300/mo</b></span>
+            <span className="d2-tick-item">MIDTOWN 1BR <b>$2,550/mo</b></span>
+          </div>
+        </div>
+
+        {/* hero */}
+        <div className="d2-hero-wrap">
+          <div className="d2-hero">
+            <div className="d2-hero-left">
+              <div className="d2-eyebrow">
+                <span className="d2-eyebrow-dot" />
+                MIAMI REAL ESTATE ADVISOR · 305 INTERNATIONAL
+              </div>
+              <h1 className="d2-headline">
+                Miami&apos;s most trusted<br /><span className="d2-accent">apartment locators.</span>
+              </h1>
+              <p className="d2-lede">Smooth, effortless moves in Miami.</p>
+              <div className="d2-trust-pills">
+                <span className="d2-pill gold">⚡ Responds in minutes</span>
+              </div>
+              <div className="d2-cta-row">
+                <a className="d2-sms-btn" href="sms:+14077657306?body=Hi%20Don%2C%20I%27m%20looking%20for%20an%20apartment%20in%20Miami">
+                  📲 Text Don now
+                </a>
+                <a className="d2-map-btn" href="https://miamiapartmentguy.com/map">
+                  🗺️ Browse the Map →
+                </a>
+              </div>
+              <div className="d2-social-row">
+                <span className="d2-social-label">FIND ME</span>
+                <a className="d2-social-icon wa" href="https://wa.me/14077657306" title="WhatsApp">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2zm5.8 14.02c-.24.68-1.4 1.32-1.93 1.4-.5.08-1.12.11-1.8-.11-.42-.13-.95-.31-1.64-.6-2.89-1.25-4.78-4.15-4.93-4.34-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.12 1.01-2.41.27-.29.58-.36.78-.36.2 0 .39 0 .56.01.18.01.42-.07.66.5.24.58.82 2 .89 2.14.07.15.12.32.02.51-.1.19-.15.31-.29.48-.14.17-.3.37-.43.5-.14.14-.29.29-.13.57.16.28.71 1.17 1.53 1.9 1.05.93 1.94 1.22 2.22 1.36.28.14.44.12.61-.07.17-.19.71-.83.9-1.11.19-.28.38-.24.63-.14.26.1 1.65.78 1.93.92.28.14.47.21.54.33.07.12.07.68-.17 1.36z"/></svg>
+                </a>
+                <a className="d2-social-icon ig" href="https://instagram.com/miamiapartmentguy" title="Instagram">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.64.07-4.85.07s-3.58-.01-4.85-.07c-3.26-.15-4.77-1.7-4.92-4.92-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85C2.38 3.92 3.9 2.38 7.15 2.23 8.42 2.17 8.8 2.16 12 2.16zM12 0C8.74 0 8.33.01 7.05.07c-4.35.2-6.78 2.62-6.98 6.98C.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.2 4.36 2.62 6.78 6.98 6.98C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c4.35-.2 6.78-2.62 6.98-6.98.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.2-4.35-2.62-6.78-6.98-6.98C15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 1 0 12 18.16 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 12 8a4 4 0 0 1 0 8zm6.41-10.85a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0z"/></svg>
+                </a>
+                <a className="d2-social-icon tt" href="https://tiktok.com/@themiamiapartmentguy" title="TikTok">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+                </a>
+                <a className="d2-social-icon em" href="mailto:don@miamiapartmentguy.com" title="Email">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>
+                </a>
+              </div>
+            </div>
+
+            <div className="d2-hero-right">
+              <div className="d2-photo-frame">
+                <img
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/DSC05137.JPG-aqGnZwibx0gzkFcqxI5lVtHjEFZVAY.jpeg"
+                  alt="Don Karahan — Miami Apartment Locator"
+                />
+                <div className="d2-photo-badge">
+                  <div className="d2-photo-name">Don Karahan</div>
+                  <div className="d2-photo-role">MIAMI APARTMENT LOCATOR</div>
+                </div>
+              </div>
+              <div className="d2-floating-tag">Free for renters</div>
+            </div>
+          </div>
+        </div>
+
+        {/* trust bar */}
+        <div className="d2-trust-bar">
+          <div className="d2-trust-item">
+            <span className="d2-trust-icon">🏢</span>
+            <span className="d2-trust-strong">10,000+</span>
+            <span className="d2-trust-plain">apartments in South Florida</span>
+          </div>
+          <span className="d2-trust-sep">•</span>
+          <div className="d2-trust-item">
+            <span className="d2-trust-icon">🤝</span>
+            <span className="d2-trust-strong">100% free</span>
+            <span className="d2-trust-plain">locating help</span>
+          </div>
+          <span className="d2-trust-sep">•</span>
+          <div className="d2-trust-item">
+            <span className="d2-trust-icon">✨</span>
+            <span className="d2-trust-strong">Pick your agent</span>
+          </div>
+        </div>
+
+        {/* form panel */}
+        <div className="d2-quote-section">
+          <div className="d2-quote-panel">
+            <div className="d2-quote-title">Your Move Starts Here</div>
+            <div className="d2-looking-label">I&apos;m looking to rent in</div>
+            <div className="d2-hood-chips">
+              {['Downtown', 'Midtown', 'Edgewater', 'Wynwood', 'Just exploring'].map((chip) => (
+                <button
+                  key={chip}
+                  onClick={() => setActiveChip(chip)}
+                  className={`d2-chip${activeChip === chip ? ' active' : ''}`}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+            <div className="d2-form-row">
+              <input className="d2-field" type="text" placeholder="Budget" value={budget} onChange={(e) => setBudget(e.target.value)} />
+              <input className="d2-field" type="text" placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+              <input className="d2-field" type="tel" placeholder="Phone (so I can text you options)" value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <button className="d2-go-btn" onClick={handleLeadSubmit}>Get my matches →</button>
+            </div>
+          </div>
+        </div>
+
+        {/* reviews */}
+        <div className="d2-reviews-section">
+          <div className="d2-reviews-head">
+            <a className="d2-google-badge" href="https://share.google/Cknw6EKycHwFY381b" target="_blank" rel="noopener noreferrer">
+              <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.63h6.48a5.54 5.54 0 0 1-2.4 3.64v3.02h3.88c2.27-2.09 3.57-5.17 3.57-8.84z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.87-3.02c-1.08.72-2.45 1.15-4.06 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.12A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.26a7.2 7.2 0 0 1 0-4.52V6.62H1.27a12 12 0 0 0 0 10.76l4-3.12z"/><path fill="#EA4335" d="M12 4.75c1.76 0 3.34.6 4.58 1.79l3.44-3.44C17.94 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.27 6.62l4 3.12C6.22 6.86 8.87 4.75 12 4.75z"/></svg>
+              <span className="d2-badge-stars">★★★★★</span>
+              <span className="d2-badge-text">5.0 · 16 Google reviews</span>
+            </a>
+            <span className="d2-tap-hint">👆 tap to read on Google</span>
+            <div className="d2-reviews-title">What clients say</div>
+          </div>
+          <div className="d2-reviews-track">
+            <div className="d2-reviews-inner">
+              {[
+                { text: '"I had an amazing experience working with Don. He truly went above and beyond to help us find a great place to live. Consistently responsive, punctual, and on top of every detail."', name: 'Katherine B.' },
+                { text: '"Do\u011fuhan gave me three options within my budget and got me concessions when possible. Found me the perfect place. Couldn\'t be happier."', name: 'Arismendis A.' },
+                { text: '"He didn\'t just find us a perfect apartment — his deep expertise in Fort Lauderdale was critical. He went above and beyond at every turn."', name: 'Cody S.' },
+                { text: '"Super responsive, accommodating and patient — even when our criteria changed 3x. Told us the honest truth about every location."', name: 'Nick N.' },
+                { text: '"Without Do\u011fuhan I would have given up at least ten times. His patience, warmth, and dedication made all the difference. 100% recommend."', name: 'Poca W.' },
+                { text: '"He immediately jumped on a luxury apartment not yet ready to show, FaceTimed us a tour, and we got the spot. Treated us like family."', name: 'Nisa A.' },
+                { text: '"I had an amazing experience working with Don. He truly went above and beyond to help us find a great place to live. Consistently responsive, punctual, and on top of every detail."', name: 'Katherine B.' },
+                { text: '"Do\u011fuhan gave me three options within my budget and got me concessions when possible. Found me the perfect place. Couldn\'t be happier."', name: 'Arismendis A.' },
+                { text: '"He didn\'t just find us a perfect apartment — his deep expertise in Fort Lauderdale was critical. He went above and beyond at every turn."', name: 'Cody S.' },
+              ].map((r, i) => (
+                <div key={i} className="d2-review-card">
+                  <div className="d2-review-stars">★★★★★</div>
+                  <p className="d2-review-text">{r.text}</p>
+                  <div className="d2-review-name">{r.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* footer */}
+        <footer className="d2-footer">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-label="Equal Housing Opportunity">
+            <rect x="1" y="1" width="22" height="22" rx="2" stroke="#7C86A0" strokeWidth="1.4"/>
+            <path d="M12 5L5 10.5V19H9.5V14H14.5V19H19V10.5L12 5Z" fill="#7C86A0"/>
+          </svg>
+          <div className="d2-footer-text">
+            Don Karahan · FL Real Estate License #SL3581300 · Casa Locators / 305 International Realty · Miami-Dade &amp; Broward<br />
+            Equal Housing Opportunity
+          </div>
+        </footer>
+
+      </div>
+      {/* ── END DESKTOP PAGE ─────────────────────────────────────────────── */}
 
       {/* ── MOBILE PAGE (≤768px) ─────────────────────────────────────────── */}
       <div className="mobile-page" style={{ background: '#0A0F1C', minHeight: '100vh', color: '#F7F8FB' }}>
