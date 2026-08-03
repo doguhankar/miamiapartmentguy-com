@@ -1,13 +1,29 @@
 'use client'
 
+import { useState } from 'react'
 import Topbar from '@/components/topbar'
 
 export default function HomePage() {
+  const [activeChip, setActiveChip] = useState('Downtown')
+  const [budget, setBudget] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [phone, setPhone] = useState('')
+
+  const handleLeadSubmit = () => {
+    const formData = {
+      neighborhood: activeChip,
+      budget,
+      fullName,
+      phone,
+    }
+    console.log('[MAG] Lead form submitted:', formData)
+  }
+
   return (
     <div style={{ background: '#0B1220', color: '#F6F8F9', fontFamily: "'Space Grotesk', sans-serif" }}>
       <Topbar />
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Space+Grotesk:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
@@ -29,6 +45,18 @@ export default function HomePage() {
         .ticker b { color: #0B1220; margin: 0 6px; }
         
         @media(prefers-reduced-motion:reduce) { .ticker-track { animation: none; } }
+
+        @keyframes magTickerScroll {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        @keyframes magReviewScroll {
+          from { transform: translateX(0); }
+          to { transform: translateX(-66.66%); }
+        }
+        @media(prefers-reduced-motion:reduce) {
+          [style*="magTickerScroll"], [style*="magReviewScroll"] { animation: none !important; }
+        }
 
         /* ── MOBILE LAYOUT ≤768px ───────────────────────────────────────── */
         /* Hide all desktop sections; show mobile-page instead */
@@ -462,153 +490,236 @@ export default function HomePage() {
       {/* ── MOBILE PAGE (≤768px) ─────────────────────────────────────────── */}
       <div className="mobile-page">
 
+        {/* MOBILE NAV */}
+        <header style={{ width: '100%', padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, fontSize: '15px', letterSpacing: '-0.02em' }}>
+            MAG<span style={{ color: '#FF3D82' }}>.</span>
+          </span>
+          <div style={{ display: 'flex', gap: '14px' }}>
+            <a href="https://miamiapartmentguy.com/agent" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', fontWeight: 600, color: '#7C86A0', textDecoration: 'none', letterSpacing: '0.02em' }}>Agent Login</a>
+          </div>
+        </header>
+
+        {/* PRICE TICKER */}
+        <div style={{ width: '100%', background: '#FF1F73', overflow: 'hidden', padding: '4px 0' }}>
+          <div style={{ display: 'flex', gap: '40px', whiteSpace: 'nowrap', animation: 'magTickerScroll 26s linear infinite', width: 'max-content' }}>
+            {['BRICKELL STUDIO $2,100/mo', 'EDGEWATER 1BR $2,650/mo', 'WYNWOOD 1BR $2,400/mo', 'DOWNTOWN 2BR $3,300/mo', 'MIDTOWN 1BR $2,550/mo',
+              'BRICKELL STUDIO $2,100/mo', 'EDGEWATER 1BR $2,650/mo', 'WYNWOOD 1BR $2,400/mo', 'DOWNTOWN 2BR $3,300/mo', 'MIDTOWN 1BR $2,550/mo'].map((item, i) => {
+              const [label, price] = item.split(' $')
+              return (
+                <span key={i} style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10.5px', fontWeight: 600, color: '#1a0510', letterSpacing: '0.02em' }}>
+                  {label} <b style={{ fontWeight: 700 }}>${price}</b>
+                </span>
+              )
+            })}
+          </div>
+        </div>
+
         {/* HERO */}
-        <div className="m-hero">
-          <div className="m-hero-card">
-            <div className="m-kicker">Every building</div>
-            <h1 className="m-h1">
-              Every deal.<br /><span style={{ color: '#FF4D8D' }}>One</span> <span style={{ color: '#19C6C0' }}>text.</span>
-            </h1>
-            <p className="m-sub">Text your budget. Get real quotes with net pricing same day.</p>
-
-            {/* Chat mockup */}
-            <div className="m-chat">
-              <div className="m-chat-head">
-                <div className="m-avatar">MAG</div>
-                <div>
-                  <strong style={{ fontSize: '12px', color: '#E6ECF5' }}>Don</strong>
-                  <small style={{ display: 'block', fontSize: '10px', color: '#6F7F96' }}>Typically replies in minutes</small>
-                </div>
-              </div>
-              <div className="m-bubble user">1BD in Brickell, ~$2,800, moving August</div>
-              <div className="m-bubble don">Say less. Pulling live pricing now</div>
-              <div className="m-quote">
-                <div className="m-quote-title">Flow Brickell · 1BD</div>
-                <div className="m-qrow"><span>Gross rent</span><b>$2,950/mo</b></div>
-                <div className="m-qrow"><span>Concession</span><b>2 months free</b></div>
-                <div className="m-qrow net"><span>Net effective</span><b>$2,458/mo</b></div>
-              </div>
-              <div className="m-bubble don">Tours open Sat 11am. Want me to lock one?</div>
+        <div style={{ padding: '14px 16px 10px' }}>
+          {/* Photo — small, centered, above text */}
+          <div style={{ maxWidth: '130px', margin: '0 auto 12px' }}>
+            <div style={{ borderRadius: '18px', overflow: 'hidden', aspectRatio: '1/1', boxShadow: '0 30px 60px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <img
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/don-headshot-ELlS4tBqhHqQpd7vBREV7j3YkR3DRv.jpeg"
+                alt="Don Karahan — Miami Apartment Locator"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 12%', display: 'block' }}
+                onError={(e) => {
+                  // Fallback: show initials avatar if photo 404s
+                  const el = e.currentTarget.parentElement!
+                  e.currentTarget.style.display = 'none'
+                  el.style.background = 'linear-gradient(135deg,#FF3D82,#FFC24B)'
+                  el.style.display = 'flex'
+                  el.style.alignItems = 'center'
+                  el.style.justifyContent = 'center'
+                  el.innerHTML = '<span style="font-family:Space Grotesk,sans-serif;font-weight:800;font-size:32px;color:#fff">DK</span>'
+                }}
+              />
             </div>
-
-            <a href="sms:+14077657306?body=Hi%20Don%2C%20I%27m%20looking%20for%20a%20Miami%20apartment" className="m-cta-primary">Text me your budget</a>
-            <a href="/map" className="m-cta-ghost">Browse the map →</a>
-            <div className="m-trust">No fees · No spam · No accounts</div>
           </div>
-        </div>
 
-        {/* STATS */}
-        <div className="m-section" style={{ paddingTop: 8, paddingBottom: 8 }}>
-          <div className="m-stats">
-            <div className="m-stat"><b>108+</b><small>Buildings</small></div>
-            <div className="m-stat"><b>$0</b><small>Cost</small></div>
-            <div className="m-stat"><b>24h</b><small>Quotes</small></div>
-            <div className="m-stat"><b>100%</b><small>Net pricing</small></div>
-          </div>
-        </div>
-
-        {/* HOW IT WORKS */}
-        <div className="m-section">
-          <div className="m-sec-label">How it works</div>
-          <h2 className="m-h2">Three steps. Zero portals.</h2>
-          <div className="m-steps">
-            {[
-              { n: '1', title: 'Text your budget', desc: 'Budget, beds, move date.' },
-              { n: '2', title: 'Get real quotes', desc: 'Live net pricing in minutes.' },
-              { n: '3', title: 'Tour & sign', desc: 'I book tours and chase paperwork.' },
-            ].map((s) => (
-              <div className="m-step" key={s.n}>
-                <div className="m-step-num">{s.n}</div>
-                <div><b>{s.title}</b><p>{s.desc}</p></div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* NEIGHBORHOODS */}
-        <div className="m-section">
-          <div className="m-sec-label">Neighborhoods</div>
-          <h2 className="m-h2">Where do you want to wake up?</h2>
-          <div className="m-hoods">
-            {[
-              { bg: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.27.49%E2%80%AFPM.png-quNNm2yJanE4YvhAq5LXnzZU6Bc1M0.jpeg', name: 'Brickell', price: 'From $2,300', link: '/map?neighborhood=brickell' },
-              { bg: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.34.40%E2%80%AFPM-ZdxO8b0IP4gFzwYPxlmOfFTLS6OGuY.png', name: 'Wynwood', price: 'From $2,200', link: '/map?neighborhood=wynwood' },
-              { bg: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.38.24%E2%80%AFPM.png-C6ysCh1CAGzrOi7ivCOVLJTCWhFokI.jpeg', name: 'Edgewater', price: 'From $2,100', link: '/map?neighborhood=edgewater' },
-              { bg: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.41.20%E2%80%AFPM.png-6rvSsbBMrjH0sS02nFjhvTWWW0Jt1E.jpeg', name: 'Downtown', price: 'From $2,000', link: '/map?neighborhood=downtown' },
-              { bg: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.47.08%E2%80%AFPM-ZtrGk3664gXnLZIQZTlI374n4AcxOt.png', name: 'Midtown', price: 'From $2,250', link: '/map?neighborhood=midtown' },
-              { bg: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202026-07-18%20at%204.47.41%E2%80%AFPM.png-8JILMw3ZIOOoo1Vww651TGRuXyncEB.jpeg', name: 'Coconut Grove', price: 'From $2,400', link: '/map?neighborhood=coconut-grove' },
-            ].map((h) => (
-              <a key={h.name} href={h.link} className="m-hood" style={{ backgroundImage: `url(${h.bg})` }}>
-                <div className="m-hood-overlay" />
-                <div className="m-hood-label"><b>{h.name}</b><small>{h.price}</small></div>
-              </a>
-            ))}
-          </div>
-        </div>
-
-        {/* WHY MAG */}
-        <div className="m-section">
-          <div className="m-sec-label">Why MAG™</div>
-          <h2 className="m-h2">Ads are what they sell.<br />Deals are what I find.</h2>
-          <div className="m-why-card">
-            {[
-              'Live pricing across 108+ buildings',
-              'Net effective rent — the real number',
-              'One human, my number, straight answers',
-              'I negotiate, book tours, chase paperwork',
-            ].map((item) => (
-              <div className="m-check-row" key={item}>
-                <span className="m-ck">✓</span>
-                <span>{item}</span>
-              </div>
-            ))}
-            <p className="m-why-foot">
-              Listing sites promote whoever pays them. I track the whole market and only win when you sign somewhere you love.
+          {/* Text block — centered */}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', letterSpacing: '0.05em', color: '#FFC24B', fontWeight: 600, marginBottom: '8px', padding: '4px 10px 4px 8px', border: '1px solid rgba(255,194,75,0.3)', borderRadius: '100px', background: 'rgba(255,194,75,0.06)' }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#1CDCD4', boxShadow: '0 0 10px #1CDCD4', display: 'inline-block', flexShrink: 0 }} />
+              MIAMI REAL ESTATE ADVISOR · 305 INTERNATIONAL
+            </div>
+            <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '24px', fontWeight: 800, lineHeight: 1.08, letterSpacing: '-0.03em', marginBottom: '6px' }}>
+              Miami&apos;s most trusted<br /><span style={{ color: '#FF3D82' }}>apartment locators.</span>
+            </h1>
+            <p style={{ fontSize: '12.5px', color: '#7C86A0', lineHeight: 1.5, margin: '0 auto 10px' }}>
+              Smooth, effortless moves in Miami.
             </p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', fontWeight: 600, padding: '4px 10px', borderRadius: '100px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,194,75,0.3)', color: '#FFC24B' }}>
+                ⚡ Responds in minutes
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+              <a
+                href="sms:+14077657306?body=Hi%20Don%2C%20I%27m%20looking%20for%20an%20apartment%20in%20Miami"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', textDecoration: 'none', background: '#FF3D82', color: '#1a0510', fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: '14px', padding: '12px 22px', borderRadius: '100px', boxShadow: '0 8px 30px rgba(255,61,130,0.4)' }}
+              >
+                📲 Text Don now
+              </a>
+              <a
+                href="https://miamiapartmentguy.com/map"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textDecoration: 'none', background: 'rgba(28,220,212,0.1)', border: '1.5px solid #1CDCD4', color: '#1CDCD4', fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: '14px', padding: '12px 22px', borderRadius: '100px', boxShadow: '0 0 20px rgba(28,220,212,0.25)' }}
+              >
+                🗺️ Browse the Map →
+              </a>
+            </div>
+            {/* Social row */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px', color: '#7C86A0', marginRight: '4px' }}>FIND ME</span>
+              <a href="https://wa.me/14077657306" style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: '#25D366', fontSize: '17px' }} title="WhatsApp">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2zm5.8 14.02c-.24.68-1.4 1.32-1.93 1.4-.5.08-1.12.11-1.8-.11-.42-.13-.95-.31-1.64-.6-2.89-1.25-4.78-4.15-4.93-4.34-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.12 1.01-2.41.27-.29.58-.36.78-.36.2 0 .39 0 .56.01.18.01.42-.07.66.5.24.58.82 2 .89 2.14.07.15.12.32.02.51-.1.19-.15.31-.29.48-.14.17-.3.37-.43.5-.14.14-.29.29-.13.57.16.28.71 1.17 1.53 1.9 1.05.93 1.94 1.22 2.22 1.36.28.14.44.12.61-.07.17-.19.71-.83.9-1.11.19-.28.38-.24.63-.14.26.1 1.65.78 1.93.92.28.14.47.21.54.33.07.12.07.68-.17 1.36z"/></svg>
+              </a>
+              <a href="https://instagram.com/miamiapartmentguy" style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: '#FF3D82' }} title="Instagram">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.64.07-4.85.07s-3.58-.01-4.85-.07c-3.26-.15-4.77-1.7-4.92-4.92-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85C2.38 3.92 3.9 2.38 7.15 2.23 8.42 2.17 8.8 2.16 12 2.16zM12 0C8.74 0 8.33.01 7.05.07c-4.35.2-6.78 2.62-6.98 6.98C.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.2 4.36 2.62 6.78 6.98 6.98C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c4.35-.2 6.78-2.62 6.98-6.98.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.2-4.35-2.62-6.78-6.98-6.98C15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 1 0 12 18.16 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 12 8a4 4 0 0 1 0 8zm6.41-10.85a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0z"/></svg>
+              </a>
+              <a href="https://tiktok.com/@themiamiapartmentguy" style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: '#F7F8FB' }} title="TikTok">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+              </a>
+              <a href="mailto:don@miamiapartmentguy.com" style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: '#1CDCD4' }} title="Email">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" fill="none"/><path d="M22 6l-10 7L2 6" stroke="currentColor" fill="none"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* TRUST BAR */}
+        <div style={{ margin: '4px 0 0', padding: '10px 16px', display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          {[
+            { icon: '🏢', strong: '10,000+', plain: 'apartments in South Florida' },
+            { icon: '🤝', strong: '100% free', plain: 'locating help' },
+            { icon: '✨', strong: 'Pick your agent', plain: '' },
+          ].map((item) => (
+            <div key={item.strong} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px' }}>
+              <span style={{ fontSize: '15px' }}>{item.icon}</span>
+              <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: '12.5px', color: '#1CDCD4' }}>{item.strong}</span>
+              {item.plain && <span style={{ fontSize: '11px', color: '#7C86A0' }}>{item.plain}</span>}
+            </div>
+          ))}
+        </div>
+
+        {/* QUOTE / LEAD FORM PANEL */}
+        <div style={{ padding: '6px 16px 0' }}>
+          <div style={{ background: '#0F1729', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '16px', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '14.5px', fontWeight: 700, marginBottom: '10px' }}>Your Move Starts Here</div>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: '#7C86A0', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
+              I&apos;m looking to rent in
+            </div>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px' }}>
+              {['Downtown', 'Midtown', 'Edgewater', 'Wynwood', 'Just exploring'].map((chip) => (
+                <button
+                  key={chip}
+                  onClick={() => setActiveChip(chip)}
+                  style={{
+                    fontFamily: "'Archivo', sans-serif",
+                    fontSize: '11.5px',
+                    fontWeight: 600,
+                    padding: '6px 12px',
+                    borderRadius: '100px',
+                    background: activeChip === chip ? '#FF3D82' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${activeChip === chip ? '#FF3D82' : 'rgba(255,255,255,0.12)'}`,
+                    color: activeChip === chip ? '#1a0510' : '#F7F8FB',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <input
+                type="text"
+                placeholder="Budget"
+                value={budget}
+                onChange={(e) => setBudget(e.target.value)}
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '12px', color: '#F7F8FB', fontFamily: "'Archivo', sans-serif", fontSize: '14px', outline: 'none' }}
+              />
+              <input
+                type="text"
+                placeholder="Full name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '12px', color: '#F7F8FB', fontFamily: "'Archivo', sans-serif", fontSize: '14px', outline: 'none' }}
+              />
+              <input
+                type="tel"
+                placeholder="Phone (so I can text you options)"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '12px', color: '#F7F8FB', fontFamily: "'Archivo', sans-serif", fontSize: '14px', outline: 'none' }}
+              />
+              <button
+                onClick={handleLeadSubmit}
+                style={{ background: '#1CDCD4', color: '#04201e', border: 'none', fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: '13.5px', padding: '12px', borderRadius: '10px', cursor: 'pointer' }}
+              >
+                Get my matches →
+              </button>
+            </div>
           </div>
         </div>
 
         {/* REVIEWS */}
-        <div className="m-section">
-          <div className="m-sec-label">Recent wins</div>
-          <h2 className="m-h2">Renters keep the receipts.</h2>
-          <div className="m-reviews">
-            {[
-              { text: '"Texted budget at 9pm, had 5 quotes with net pricing by morning."', name: 'Jessica M.', loc: 'Brickell', init: 'JM', color: '#19C6C0' },
-              { text: '"Relocated from NYC sight unseen. Zero fees, zero stress."', name: 'Carlos R.', loc: 'Edgewater', init: 'CR', color: '#FF4D8D' },
-              { text: '"Sent me a sheet with move-in costs down to the dollar."', name: 'Aisha T.', loc: 'Wynwood', init: 'AT', color: '#FFC24B' },
-            ].map((r) => (
-              <div className="m-review" key={r.name}>
-                <div className="m-stars">★★★★★</div>
-                <p>{r.text}</p>
-                <div className="m-review-by">
-                  <div className="m-review-av" style={{ background: r.color, color: r.color === '#FFC24B' ? '#0B1220' : '#fff' }}>{r.init}</div>
-                  <div><b>{r.name}</b> <small>· {r.loc}</small></div>
+        <div style={{ marginTop: '36px', padding: '0 16px' }}>
+          {/* Google badge */}
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <a
+              href="https://share.google/Cknw6EKycHwFY381b"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: '9px', background: '#0F1729', border: '1px solid rgba(255,194,75,0.35)', borderRadius: '100px', padding: '11px 20px', textDecoration: 'none', color: '#F7F8FB', marginBottom: '6px' }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.63h6.48a5.54 5.54 0 0 1-2.4 3.64v3.02h3.88c2.27-2.09 3.57-5.17 3.57-8.84z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.87-3.02c-1.08.72-2.45 1.15-4.06 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.12A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.26a7.2 7.2 0 0 1 0-4.52V6.62H1.27a12 12 0 0 0 0 10.76l4-3.12z"/><path fill="#EA4335" d="M12 4.75c1.76 0 3.34.6 4.58 1.79l3.44-3.44C17.94 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.27 6.62l4 3.12C6.22 6.86 8.87 4.75 12 4.75z"/></svg>
+              <span style={{ color: '#FFC24B', fontSize: '13.5px', letterSpacing: '1px' }}>★★★★★</span>
+              <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: '14px' }}>5.0 · 16 Google reviews</span>
+            </a>
+            <span style={{ display: 'block', fontFamily: "'JetBrains Mono', monospace", fontSize: '10.5px', color: '#7C86A0', marginBottom: '10px' }}>
+              👆 tap to read on Google
+            </span>
+            <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: '18px' }}>What clients say</div>
+          </div>
+
+          {/* Auto-scrolling reviews track */}
+          <div style={{ overflow: 'hidden', maskImage: 'linear-gradient(90deg, transparent, black 4%, black 96%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, black 4%, black 96%, transparent)' }}>
+            <div style={{ display: 'flex', gap: '16px', animation: 'magReviewScroll 40s linear infinite', width: 'max-content' }}>
+              {[
+                { text: '"I had an amazing experience working with Don. He truly went above and beyond to help us find a great place to live. Consistently responsive, punctual, and on top of every detail."', name: 'Katherine B.' },
+                { text: '"Doğuhan gave me three options within my budget and got me concessions when possible. Found me the perfect place. Couldn\'t be happier."', name: 'Arismendis A.' },
+                { text: '"He didn\'t just find us a perfect apartment — his deep expertise in Fort Lauderdale was critical. He went above and beyond at every turn."', name: 'Cody S.' },
+                { text: '"Super responsive, accommodating and patient — even when our criteria changed 3x. Told us the honest truth about every location."', name: 'Nick N.' },
+                { text: '"Without Doğuhan I would have given up at least ten times. His patience, warmth, and dedication made all the difference. 100% recommend."', name: 'Poca W.' },
+                { text: '"He immediately jumped on a luxury apartment not yet ready to show, FaceTimed us a tour, and we got the spot. Treated us like family."', name: 'Nisa A.' },
+                // Duplicate set for seamless loop
+                { text: '"I had an amazing experience working with Don. He truly went above and beyond to help us find a great place to live. Consistently responsive, punctual, and on top of every detail."', name: 'Katherine B.' },
+                { text: '"Doğuhan gave me three options within my budget and got me concessions when possible. Found me the perfect place. Couldn\'t be happier."', name: 'Arismendis A.' },
+                { text: '"He didn\'t just find us a perfect apartment — his deep expertise in Fort Lauderdale was critical. He went above and beyond at every turn."', name: 'Cody S.' },
+              ].map((r, i) => (
+                <div key={i} style={{ background: '#0F1729', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '16px', width: '240px', flexShrink: 0 }}>
+                  <div style={{ color: '#FFC24B', fontSize: '13px', letterSpacing: '1px', marginBottom: '10px' }}>★★★★★</div>
+                  <p style={{ fontSize: '12px', color: '#F7F8FB', lineHeight: 1.55, marginBottom: '12px', opacity: 0.85 }}>{r.text}</p>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11.5px', color: '#7C86A0' }}>{r.name}</div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* FINAL CTA */}
-        <div className="m-final">
-          <div className="m-sec-label" style={{ textAlign: 'center' }}>Ready when you are</div>
-          <h2 className="m-h2" style={{ fontSize: '24px' }}>Your next place is one text away.</h2>
-          <a href="sms:+14077657306?body=Hi%20Don%2C%20I%27m%20looking%20for%20a%20Miami%20apartment" className="m-cta-primary" style={{ maxWidth: '260px', margin: '0 auto 12px' }}>Text Don now</a>
-          <div className="m-sms-line">(407) 765-7306<small>budget · beds · move date</small></div>
-        </div>
-
-        {/* FOOTER */}
-        <div className="m-footer">
-          <div>
-            <div className="m-foot-logo">MAG<span>™</span></div>
-            <small>Free for renters, paid by buildings.<br />305 International Realty<br />© 2026 Miami Apartment Guy</small>
+        {/* MOBILE FOOTER */}
+        <footer style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexDirection: 'column', textAlign: 'center', padding: '28px 24px 44px', color: '#7C86A0', fontSize: '12px' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" title="Equal Housing Opportunity">
+            <rect x="1" y="1" width="22" height="22" rx="2" stroke="#7C86A0" strokeWidth="1.4"/>
+            <path d="M12 5L5 10.5V19H9.5V14H14.5V19H19V10.5L12 5Z" fill="#7C86A0"/>
+          </svg>
+          <div style={{ lineHeight: 1.6 }}>
+            Don Karahan · FL Real Estate License #SL3581300 · Casa Locators / 305 International Realty · Miami-Dade &amp; Broward<br />
+            Equal Housing Opportunity
           </div>
-          <div className="m-foot-links">
-            <a href="/map">View map</a>
-            <a href="#how">How it works</a>
-          </div>
-        </div>
+        </footer>
 
       </div>
       {/* ── END MOBILE PAGE ─────────────────────────────────────────────── */}
