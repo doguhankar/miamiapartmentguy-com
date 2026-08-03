@@ -198,6 +198,18 @@ export default function AgentPage() {
   const [archivePopupOpen, setArchivePopupOpen] = useState(false)
   const [archiveReason, setArchiveReason] = useState('')
   const [archiveNotes, setArchiveNotes] = useState('')
+  const [showBlankCard, setShowBlankCard] = useState(false)
+  const [blankCardData, setBlankCardData] = useState({
+    name: '',
+    phone: '',
+    beds: '',
+    budget: '',
+    move_in_timing: '',
+    notes: '',
+  })
+  const [blankCardError, setBlankCardError] = useState('')
+  const [blankCardLoading, setBlankCardLoading] = useState(false)
+  const blankCardNameRef = useRef<HTMLInputElement>(null)
 
   // Null until hydrated in useEffect — prevents createClient() from running
   // during SSR/build prerender where NEXT_PUBLIC env vars are unavailable.
@@ -478,6 +490,81 @@ export default function AgentPage() {
   )
 
   // ── IDLE: login screen ──────────────────���───────────────────────────────────
+  const handleSaveBlankCard = async () => {
+    // Validation
+    const trimmedName = blankCardData.name.trim()
+    const trimmedPhone = blankCardData.phone.trim()
+
+    if (!trimmedName) {
+      setBlankCardError('Full name is required')
+      return
+    }
+    if (!trimmedPhone || trimmedPhone.length < 7) {
+      setBlankCardError('Phone must be at least 7 characters')
+      return
+    }
+
+    setBlankCardLoading(true)
+    setBlankCardError('')
+
+    try {
+      if (!supabaseRef.current || !user?.email) {
+        throw new Error('Not authenticated')
+      }
+
+      const newLead = {
+        name: trimmedName,
+        phone: trimmedPhone,
+        beds: blankCardData.beds || null,
+        budget: blankCardData.budget || null,
+        move_in_timing: blankCardData.move_in_timing || null,
+        area: null,
+        credit_range: null,
+        notes: blankCardData.notes || null,
+        agent_id: user.email,
+        stage: 'New Lead',
+        source: 'Manual Entry',
+        quick_note: null,
+        spoke_with: null,
+        deal_value: null,
+        archive_reason: null,
+        archive_notes: null,
+      }
+
+      const { data, error } = await supabaseRef.current
+        .from('leads')
+        .insert([newLead])
+        .select('*')
+        .single()
+
+      if (error) throw error
+
+      // Add to local state
+      const dbLead = data as DbLead
+      const newLeadObj = dbLeadToLead(dbLead)
+      setLeads(prev => [newLeadObj, ...prev])
+
+      // Reset blank card
+      setShowBlankCard(false)
+      setBlankCardData({
+        name: '',
+        phone: '',
+        beds: '',
+        budget: '',
+        move_in_timing: '',
+        notes: '',
+      })
+
+      showToast('Lead created successfully')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create lead'
+      setBlankCardError(message)
+      console.error('[supabase] blank card save failed:', err)
+    } finally {
+      setBlankCardLoading(false)
+    }
+  }
+
   const handleDragStart = (e: React.DragEvent, leadId: string) => {
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('leadId', leadId)
@@ -702,6 +789,34 @@ export default function AgentPage() {
             <h1 style={{ fontFamily: '"Archivo", sans-serif', fontSize: '17px', fontWeight: 700, margin: 0, color: '#E9EDF6' }}>
               Your Pipeline <span style={{ color: '#5B6780', fontSize: '12px', fontWeight: 500, marginLeft: '8px' }}>· {leads.length}</span>
             </h1>
+            <button
+              onClick={() => {
+                setShowBlankCard(!showBlankCard)
+                setBlankCardError('')
+                if (!showBlankCard) {
+                  setTimeout(() => blankCardNameRef.current?.focus(), 0)
+                }
+              }}
+              style={{
+                position: 'sticky',
+                right: '32px',
+                zIndex: 100,
+                background: '#1CDCD4',
+                color: '#04201e',
+                border: 'none',
+                borderRadius: '100px',
+                padding: '10px 18px',
+                fontSize: '13px',
+                fontWeight: 700,
+                fontFamily: '"Archivo", sans-serif',
+                cursor: 'pointer',
+                transition: 'all 0.12s ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)' }}
+            >
+              + Add New Lead
+            </button>
           </div>
 
           <div style={{
@@ -714,6 +829,7 @@ export default function AgentPage() {
           }}>
             {COLUMNS.map((col) => {
               const colLeads = leads.filter(l => l.column === col.key)
+              const isNewLeadColumn = col.key === 'newlead'
               return (
                 <div
                   key={col.key}
@@ -747,6 +863,183 @@ export default function AgentPage() {
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', paddingBottom: '6px', minHeight: '20px' }}>
+                    {/* Blank card for new lead entry */}
+                    {isNewLeadColumn && showBlankCard && (
+                      <div style={{
+                        background: '#152238',
+                        border: '2px dashed #1CDCD4',
+                        borderRadius: '10px',
+                        padding: '11px 12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                      }}>
+                        <input
+                          ref={blankCardNameRef}
+                          type="text"
+                          placeholder="Full name"
+                          value={blankCardData.name}
+                          onChange={(e) => setBlankCardData(prev => ({ ...prev, name: e.target.value }))}
+                          style={{
+                            background: '#0F1729',
+                            border: '1px solid #223252',
+                            borderRadius: '6px',
+                            padding: '7px 8px',
+                            fontSize: '12px',
+                            color: '#E9EDF6',
+                            fontFamily: 'inherit',
+                            outline: 'none',
+                          }}
+                          onFocus={(e) => { e.target.style.borderColor = '#1CDCD4' }}
+                          onBlur={(e) => { e.target.style.borderColor = '#223252' }}
+                        />
+                        <input
+                          type="tel"
+                          placeholder="Phone"
+                          value={blankCardData.phone}
+                          onChange={(e) => setBlankCardData(prev => ({ ...prev, phone: e.target.value }))}
+                          style={{
+                            background: '#0F1729',
+                            border: '1px solid #223252',
+                            borderRadius: '6px',
+                            padding: '7px 8px',
+                            fontSize: '12px',
+                            color: '#E9EDF6',
+                            fontFamily: 'inherit',
+                            outline: 'none',
+                          }}
+                          onFocus={(e) => { e.target.style.borderColor = '#1CDCD4' }}
+                          onBlur={(e) => { e.target.style.borderColor = '#223252' }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Beds (e.g. Studio, 1 Bed)"
+                          value={blankCardData.beds}
+                          onChange={(e) => setBlankCardData(prev => ({ ...prev, beds: e.target.value }))}
+                          style={{
+                            background: '#0F1729',
+                            border: '1px solid #223252',
+                            borderRadius: '6px',
+                            padding: '7px 8px',
+                            fontSize: '12px',
+                            color: '#E9EDF6',
+                            fontFamily: 'inherit',
+                            outline: 'none',
+                          }}
+                          onFocus={(e) => { e.target.style.borderColor = '#1CDCD4' }}
+                          onBlur={(e) => { e.target.style.borderColor = '#223252' }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Budget"
+                          value={blankCardData.budget}
+                          onChange={(e) => setBlankCardData(prev => ({ ...prev, budget: e.target.value }))}
+                          style={{
+                            background: '#0F1729',
+                            border: '1px solid #223252',
+                            borderRadius: '6px',
+                            padding: '7px 8px',
+                            fontSize: '12px',
+                            color: '#E9EDF6',
+                            fontFamily: 'inherit',
+                            outline: 'none',
+                          }}
+                          onFocus={(e) => { e.target.style.borderColor = '#1CDCD4' }}
+                          onBlur={(e) => { e.target.style.borderColor = '#223252' }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Move-in timing (e.g. ASAP)"
+                          value={blankCardData.move_in_timing}
+                          onChange={(e) => setBlankCardData(prev => ({ ...prev, move_in_timing: e.target.value }))}
+                          style={{
+                            background: '#0F1729',
+                            border: '1px solid #223252',
+                            borderRadius: '6px',
+                            padding: '7px 8px',
+                            fontSize: '12px',
+                            color: '#E9EDF6',
+                            fontFamily: 'inherit',
+                            outline: 'none',
+                          }}
+                          onFocus={(e) => { e.target.style.borderColor = '#1CDCD4' }}
+                          onBlur={(e) => { e.target.style.borderColor = '#223252' }}
+                        />
+                        <textarea
+                          placeholder="Notes (optional)"
+                          value={blankCardData.notes}
+                          onChange={(e) => setBlankCardData(prev => ({ ...prev, notes: e.target.value }))}
+                          style={{
+                            background: '#0F1729',
+                            border: '1px solid #223252',
+                            borderRadius: '6px',
+                            padding: '7px 8px',
+                            fontSize: '12px',
+                            color: '#E9EDF6',
+                            fontFamily: 'inherit',
+                            outline: 'none',
+                            resize: 'none',
+                            minHeight: '40px',
+                          }}
+                          onFocus={(e) => { e.target.style.borderColor = '#1CDCD4' }}
+                          onBlur={(e) => { e.target.style.borderColor = '#223252' }}
+                        />
+                        {blankCardError && (
+                          <div style={{
+                            fontSize: '11px',
+                            color: '#FF4D8D',
+                            background: 'rgba(255, 77, 141, 0.1)',
+                            padding: '6px 8px',
+                            borderRadius: '6px',
+                            borderLeft: '2px solid #FF4D8D',
+                          }}>
+                            {blankCardError}
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button
+                            onClick={handleSaveBlankCard}
+                            disabled={blankCardLoading}
+                            style={{
+                              flex: 1,
+                              background: '#1CDCD4',
+                              color: '#04201e',
+                              border: 'none',
+                              borderRadius: '6px',
+                              padding: '7px 8px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              cursor: blankCardLoading ? 'not-allowed' : 'pointer',
+                              opacity: blankCardLoading ? 0.6 : 1,
+                              fontFamily: 'inherit',
+                            }}
+                          >
+                            {blankCardLoading ? 'Saving...' : 'Save Lead'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowBlankCard(false)
+                              setBlankCardData({ name: '', phone: '', beds: '', budget: '', move_in_timing: '', notes: '' })
+                              setBlankCardError('')
+                            }}
+                            style={{
+                              flex: 1,
+                              background: '#223252',
+                              color: '#E9EDF6',
+                              border: '1px solid #223252',
+                              borderRadius: '6px',
+                              padding: '7px 8px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              fontFamily: 'inherit',
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     {colLeads.map((lead) => {
                       const days = safeGetDays(lead.lastContacted)
                       const color = spokeColor(days)
