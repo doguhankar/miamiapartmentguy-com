@@ -210,6 +210,8 @@ export default function AgentPage() {
   const [blankCardError, setBlankCardError] = useState('')
   const [blankCardLoading, setBlankCardLoading] = useState(false)
   const blankCardNameRef = useRef<HTMLInputElement>(null)
+  const [spokeWithLoading, setSpokeWithLoading] = useState(false)
+  const [spokeWithError, setSpokeWithError] = useState('')
 
   // Null until hydrated in useEffect — prevents createClient() from running
   // during SSR/build prerender where NEXT_PUBLIC env vars are unavailable.
@@ -419,6 +421,23 @@ export default function AgentPage() {
         .update({ spoke_with: now.toISOString() })
         .eq('id', parseInt(leadId))
       if (error) console.error('[supabase] markContacted error:', error.message)
+    }
+  }
+
+  const handleSpokeWith = async () => {
+    if (!selectedLead) return
+    setSpokeWithLoading(true)
+    setSpokeWithError('')
+    try {
+      await markContacted(selectedLead.id)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update'
+      setSpokeWithError(message)
+      console.error('[v0] spoke with update failed:', err)
+    } finally {
+      setSpokeWithLoading(false)
+      // Clear error after 2 seconds
+      setTimeout(() => setSpokeWithError(''), 2000)
     }
   }
 
@@ -1277,6 +1296,35 @@ export default function AgentPage() {
                         <span style={{ fontSize: '11px', color: '#A9B2C3' }}>Contacted {spokeText(safeGetDays(selectedLead.lastContacted))}</span>
                       </div>
                       <button
+                        onClick={handleSpokeWith}
+                        disabled={spokeWithLoading}
+                        title="Mark as spoke with today"
+                        style={{
+                          padding: '4px 10px',
+                          fontSize: '11px',
+                          fontWeight: 500,
+                          color: '#1CDCD4',
+                          background: 'transparent',
+                          border: '1px solid #1CDCD4',
+                          borderRadius: '5px',
+                          cursor: spokeWithLoading ? 'not-allowed' : 'pointer',
+                          transition: 'all 0.12s ease',
+                          opacity: spokeWithLoading ? 0.6 : 1,
+                        }}
+                        onMouseEnter={(e) => { 
+                          if (!spokeWithLoading) {
+                            e.currentTarget.style.background = 'rgba(28, 220, 212, 0.1)'
+                            e.currentTarget.style.color = '#1CDCD4'
+                          }
+                        }}
+                        onMouseLeave={(e) => { 
+                          e.currentTarget.style.background = 'transparent'
+                          e.currentTarget.style.color = '#1CDCD4'
+                        }}
+                      >
+                        → Spoke with
+                      </button>
+                      <button
                         onClick={() => setArchivePopupOpen(true)}
                         style={{
                           padding: '4px 10px',
@@ -1296,6 +1344,11 @@ export default function AgentPage() {
                       </button>
                     </div>
                   </div>
+                  {spokeWithError && (
+                    <p style={{ fontSize: '11px', color: '#FF4D8D', margin: '6px 0 0', fontWeight: 500 }}>
+                      {spokeWithError}
+                    </p>
+                  )}
                   {/* Quick note input — borderless, italic, muted */}
                   <input
                     type="text"
