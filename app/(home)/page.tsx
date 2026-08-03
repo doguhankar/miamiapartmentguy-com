@@ -7,15 +7,72 @@ export default function HomePage() {
   const [budget, setBudget] = useState('')
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
+  const [submitLoading, setSubmitLoading] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const [submitSuccess, setSubmitSuccess] = useState(false)
 
-  const handleLeadSubmit = () => {
-    const formData = {
-      neighborhood: activeChip,
-      budget,
-      fullName,
-      phone,
+  const handleLeadSubmit = async () => {
+    // Validation
+    setSubmitError('')
+    const trimmedName = fullName.trim()
+    const trimmedPhone = phone.trim()
+
+    if (!trimmedName) {
+      setSubmitError('Name is required')
+      return
     }
-    console.log('[MAG] Lead form submitted:', formData)
+    if (!trimmedPhone || trimmedPhone.length < 7) {
+      setSubmitError('Phone must be at least 7 characters')
+      return
+    }
+
+    setSubmitLoading(true)
+
+    try {
+      const leadData = {
+        moveDate: 'Not specified',
+        apartmentSize: 'Not specified',
+        budget: budget || 'Not specified',
+        neighborhoods: [activeChip],
+        creditScore: 'Not specified',
+        agent: 'don',
+        name: trimmedName,
+        phone: trimmedPhone,
+      }
+
+      const response = await fetch('/api/submit-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(leadData),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData?.error?.message || `Request failed with status ${response.status}`)
+      }
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Submission failed')
+      }
+
+      // Show success state
+      setSubmitSuccess(true)
+      setBudget('')
+      setFullName('')
+      setPhone('')
+
+      // Reset success state after 3 seconds
+      setTimeout(() => {
+        setSubmitSuccess(false)
+      }, 3000)
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'An error occurred. Please try again.'
+      setSubmitError(errorMsg)
+      console.error('[MAG] Lead submission failed:', err)
+    } finally {
+      setSubmitLoading(false)
+    }
   }
 
   return (
@@ -207,7 +264,9 @@ export default function HomePage() {
         .d2-field { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 11px 12px; color: #F7F8FB; font-family: 'Archivo', sans-serif; font-size: 13.5px; outline: none; width: 100%; }
         .d2-field::placeholder { color: #7C86A0; }
         .d2-field:focus { border-color: #1CDCD4; }
-        .d2-go-btn { background: #1CDCD4; color: #04201e; border: none; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13.5px; padding: 11px 22px; border-radius: 10px; cursor: pointer; white-space: nowrap; }
+        .d2-field:disabled { opacity: 0.6; cursor: not-allowed; }
+        .d2-go-btn { background: #1CDCD4; color: #04201e; border: none; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13.5px; padding: 11px 22px; border-radius: 10px; cursor: pointer; white-space: nowrap; transition: all 0.15s ease; }
+        .d2-go-btn:disabled { opacity: 0.7; cursor: not-allowed; }
         .d2-reviews-section { max-width: 1160px; margin: 50px auto 0; padding: 0 24px; }
         .d2-reviews-head { text-align: center; margin-bottom: 20px; }
         .d2-google-badge { position: relative; display: inline-flex; align-items: center; gap: 9px; background: #0F1729; border: 1px solid rgba(255,194,75,0.35); border-radius: 100px; padding: 11px 20px; text-decoration: none; color: #F7F8FB; margin-bottom: 8px; transition: transform 0.15s ease; }
@@ -780,11 +839,18 @@ export default function HomePage() {
               ))}
             </div>
             <div className="d2-form-row">
-              <input className="d2-field" type="text" placeholder="Budget" value={budget} onChange={(e) => setBudget(e.target.value)} />
-              <input className="d2-field" type="text" placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-              <input className="d2-field" type="tel" placeholder="Phone (so I can text you options)" value={phone} onChange={(e) => setPhone(e.target.value)} />
-              <button className="d2-go-btn" onClick={handleLeadSubmit}>Get my matches →</button>
+              <input className="d2-field" type="text" placeholder="Budget" value={budget} onChange={(e) => setBudget(e.target.value)} disabled={submitLoading || submitSuccess} />
+              <input className="d2-field" type="text" placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} disabled={submitLoading || submitSuccess} />
+              <input className="d2-field" type="tel" placeholder="Phone (so I can text you options)" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={submitLoading || submitSuccess} />
+              <button className="d2-go-btn" onClick={handleLeadSubmit} disabled={submitLoading || submitSuccess} style={{ opacity: submitLoading || submitSuccess ? 0.7 : 1, cursor: submitLoading || submitSuccess ? 'not-allowed' : 'pointer' }}>
+                {submitSuccess ? 'Sent! Don will text you shortly' : submitLoading ? 'Sending...' : 'Get my matches →'}
+              </button>
             </div>
+            {submitError && (
+              <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(255, 61, 130, 0.15)', border: '1px solid rgba(255, 61, 130, 0.3)', borderRadius: '8px', fontSize: '13px', color: '#FF3D82' }}>
+                {submitError}
+              </div>
+            )}
           </div>
         </div>
 
