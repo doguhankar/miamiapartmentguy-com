@@ -508,39 +508,33 @@ export default function AgentPage() {
     setBlankCardError('')
 
     try {
-      if (!supabaseRef.current || !user?.email) {
+      if (!user?.email) {
         throw new Error('Not authenticated')
       }
 
-      const newLead = {
-        name: trimmedName,
-        phone: trimmedPhone,
-        beds: blankCardData.beds || null,
-        budget: blankCardData.budget || null,
-        move_in_timing: blankCardData.move_in_timing || null,
-        area: null,
-        credit_range: null,
-        notes: blankCardData.notes || null,
-        agent_id: user.email,
-        stage: 'New Lead',
-        source: 'Manual Entry',
-        quick_note: null,
-        spoke_with: null,
-        deal_value: null,
-        archive_reason: null,
-        archive_notes: null,
+      const response = await fetch('/api/agent/add-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: trimmedName,
+          phone: trimmedPhone,
+          beds: blankCardData.beds || null,
+          budget: blankCardData.budget || null,
+          move_in_timing: blankCardData.move_in_timing || null,
+          notes: blankCardData.notes || null,
+          agent_id: user.email,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData?.error?.message || `Request failed with status ${response.status}`)
       }
 
-      const { data, error } = await supabaseRef.current
-        .from('leads')
-        .insert([newLead])
-        .select('*')
-        .single()
-
-      if (error) throw error
+      const result = await response.json()
 
       // Add to local state
-      const dbLead = data as DbLead
+      const dbLead = result.data as DbLead
       const newLeadObj = dbLeadToLead(dbLead)
       setLeads(prev => [newLeadObj, ...prev])
 
@@ -559,7 +553,7 @@ export default function AgentPage() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create lead'
       setBlankCardError(message)
-      console.error('[supabase] blank card save failed:', err)
+      console.error('[v0] blank card save failed:', err)
     } finally {
       setBlankCardLoading(false)
     }
@@ -931,7 +925,7 @@ export default function AgentPage() {
                         />
                         <input
                           type="text"
-                          placeholder="Budget"
+                          placeholder="Budget (e.g. $2,500/mo)"
                           value={blankCardData.budget}
                           onChange={(e) => setBlankCardData(prev => ({ ...prev, budget: e.target.value }))}
                           style={{
