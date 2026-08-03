@@ -794,7 +794,7 @@ export default function AgentPage() {
               style={{
                 position: 'sticky',
                 right: '32px',
-                zIndex: 100,
+                zIndex: selectedLead ? 5 : 100,
                 background: '#1CDCD4',
                 color: '#04201e',
                 border: 'none',
