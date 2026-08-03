@@ -34,20 +34,15 @@ export async function POST(req: NextRequest) {
     const newLead = {
       name: data.name.trim(),
       phone: data.phone.trim(),
+      move_in_timing: data.move_in_timing || null,
       beds: data.beds || null,
       budget: data.budget || null,
-      move_in_timing: data.move_in_timing || null,
       area: null,
       credit_range: null,
-      notes: data.notes || null,
       agent_id: data.agent_id,
       stage: 'New Lead',
       source: 'Manual Entry',
-      quick_note: null,
-      spoke_with: null,
-      deal_value: null,
-      archive_reason: null,
-      archive_notes: null,
+      notes: data.notes || null,
     }
 
     const { data: insertedLead, error } = await admin
