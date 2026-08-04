@@ -17,22 +17,25 @@ interface MapFilterCardProps {
   onClearAll: () => void;
   buildingCount?: number;
   onNeighborhoodFlyTo?: (neighborhood: string) => void;
+  searchQuery?: string;
+  onSearchChange?: (q: string) => void;
 }
 
-export function MapFilterCard({ 
-  filters, 
-  onFilterChange, 
-  onClearAll, 
+export function MapFilterCard({
+  filters,
+  onFilterChange,
+  onClearAll,
   buildingCount = 107,
-  onNeighborhoodFlyTo
+  onNeighborhoodFlyTo,
+  searchQuery = '',
+  onSearchChange,
 }: MapFilterCardProps) {
   const [openDropdown, setOpenDropdown] = useState<'neighborhood' | 'bedrooms' | 'price' | 'moveIn' | null>(null);
-  
+
   const neighborhoodOptions = Object.keys(neighborhoodCenters).sort();
-  
+
   const handleNeighborhoodSelect = (neighborhood: string) => {
     if (filters.neighborhood === neighborhood) {
-      // Deselect if clicking the same neighborhood
       onFilterChange({ ...filters, neighborhood: null });
       setOpenDropdown(null);
     } else {
@@ -79,7 +82,11 @@ export function MapFilterCard({
     }
   };
 
-  const hasActiveFilters = filters.neighborhood !== null || filters.bedrooms.length > 0 || filters.price.length > 0 || filters.moveInDate.length > 0;
+  const hasActiveFilters =
+    filters.neighborhood !== null ||
+    filters.bedrooms.length > 0 ||
+    filters.price.length > 0 ||
+    filters.moveInDate.length > 0;
 
   const getSelectedLabel = (type: 'bedrooms' | 'price' | 'moveIn'): string => {
     if (type === 'bedrooms') {
@@ -88,14 +95,7 @@ export function MapFilterCard({
       return `${filters.bedrooms.length} selected`;
     } else if (type === 'price') {
       if (filters.price.length === 0) return 'Price';
-      if (filters.price.length === 1) {
-        // Format price display nicely
-        const priceStr = filters.price[0];
-        if (priceStr === '$0-$2,000') return '$0 - $2,000';
-        if (priceStr === '$2,000-$4,000') return '$2,000 - $4,000';
-        if (priceStr === '$4,000+') return '$4,000+';
-        return priceStr;
-      }
+      if (filters.price.length === 1) return filters.price[0];
       return `${filters.price.length} selected`;
     } else {
       if (filters.moveInDate.length === 0) return 'Move in Date';
@@ -104,216 +104,216 @@ export function MapFilterCard({
     }
   };
 
+  const pillStyle = (active: boolean): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '10px 16px',
+    borderRadius: '999px',
+    background: active ? 'transparent' : '#182236',
+    border: active ? '2px solid #19C6C0' : '1px solid rgba(255,255,255,0.10)',
+    color: active ? '#19C6C0' : '#C8D3E6',
+    fontSize: '13.5px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap' as const,
+    transition: 'all 0.12s ease',
+    fontFamily: 'inherit',
+  });
+
+  const dropdownStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: 'calc(100% + 6px)',
+    left: 0,
+    minWidth: '200px',
+    background: '#0F1B30',
+    border: '1px solid #19C6C0',
+    borderRadius: '10px',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.36)',
+    zIndex: 50,
+    overflow: 'hidden',
+  };
+
+  const dropdownItemStyle = (selected: boolean): React.CSSProperties => ({
+    width: '100%',
+    textAlign: 'left',
+    padding: '9px 14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '13px',
+    color: selected ? '#19C6C0' : '#B8C4D4',
+    background: selected ? 'rgba(25, 198, 192, 0.08)' : 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    transition: 'background 0.1s',
+  });
+
   return (
-    <div className="w-full flex items-center justify-between px-8 py-4 bg-[#0a0e1a] border-b border-[#0F1B30] gap-4">
-      {/* Left side - Filter pills */}
-      <div className="flex items-center gap-3">
-        {/* Neighborhood Dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setOpenDropdown(openDropdown === 'neighborhood' ? null : 'neighborhood')}
-            className="flex items-center justify-between px-5 py-3 rounded-full transition-all"
-            style={{
-              background: filters.neighborhood ? 'transparent' : '#0F1B30',
-              border: filters.neighborhood ? '2px solid #5eead4' : '1px solid rgba(255,255,255,.12)',
-              color: filters.neighborhood ? '#5eead4' : '#F6F8F9',
-              fontSize: '15px'
-            }}
-          >
-            <span className="font-medium truncate">
-              {filters.neighborhood ? `Neighborhood: ${filters.neighborhood}` : 'Neighborhood'}
-            </span>
-            <ChevronDown className={`h-4 w-4 ml-2 transition-transform flex-shrink-0 ${openDropdown === 'neighborhood' ? 'rotate-180' : ''}`} />
-          </button>
-          {openDropdown === 'neighborhood' && (
-            <div className="absolute top-full left-0 mt-2 w-56 rounded-lg shadow-lg z-20" style={{ background: '#0F1B30', border: '1px solid #19C6C0' }}>
-              {neighborhoodOptions.map(option => (
-                <button
-                  key={option}
-                  onClick={() => handleNeighborhoodSelect(option)}
-                  className="w-full text-left px-4 py-2 flex items-center gap-2 text-sm transition-colors"
-                  style={{
-                    color: filters.neighborhood === option ? '#5eead4' : '#B8C4D4',
-                    background: filters.neighborhood === option ? 'rgba(94, 234, 212, 0.1)' : 'transparent',
-                    borderBottom: option !== neighborhoodOptions[neighborhoodOptions.length - 1] ? '1px solid rgba(255,255,255,.05)' : 'none'
-                  }}
-                  onMouseEnter={(e) => { if (filters.neighborhood !== option) e.target.style.background = 'rgba(255,255,255,.05)'; }}
-                  onMouseLeave={(e) => { if (filters.neighborhood !== option) e.target.style.background = 'transparent'; }}
-                >
-                  <input
-                    type="radio"
-                    checked={filters.neighborhood === option}
-                    readOnly
-                    className="rounded-full"
-                    style={{ accentColor: '#5eead4' }}
-                  />
-                  {option}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+    <div style={{
+      width: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      padding: '10px 20px',
+      background: '#0B1220',
+      borderBottom: '1px solid rgba(255,255,255,0.05)',
+    }}>
+      {/* Search — leftmost, pink border */}
+      <input
+        type="text"
+        placeholder="Search buildings..."
+        value={searchQuery}
+        onChange={(e) => onSearchChange?.(e.target.value)}
+        style={{
+          width: '220px',
+          flexShrink: 0,
+          background: '#182236',
+          border: '1px solid #FF4D8D',
+          borderRadius: '999px',
+          padding: '10px 16px',
+          color: '#F0F4FC',
+          fontSize: '13px',
+          outline: 'none',
+          fontFamily: 'inherit',
+          transition: 'box-shadow 0.12s',
+        }}
+        onFocus={(e) => { e.target.style.boxShadow = '0 0 0 2px rgba(255,77,141,0.22)' }}
+        onBlur={(e) => { e.target.style.boxShadow = 'none' }}
+      />
 
-        {/* Bedrooms Dropdown */}
-        <div className="relative">
+      {/* Price */}
+      <div style={{ position: 'relative' }}>
         <button
-          onClick={() => setOpenDropdown(openDropdown === 'bedrooms' ? null : 'bedrooms')}
-          className="flex items-center justify-between px-5 py-3 rounded-full transition-all"
-          style={{
-            background: '#0F1B30',
-            border: '1px solid rgba(255,255,255,.12)',
-            color: '#F6F8F9',
-            fontSize: '15px',
-            ...(openDropdown === 'bedrooms' ? { borderColor: '#19C6C0', color: '#19C6C0' } : {})
-          }}
-        >
-          <span className="font-medium truncate">{getSelectedLabel('bedrooms')}</span>
-          <ChevronDown className={`h-4 w-4 ml-2 transition-transform flex-shrink-0 ${openDropdown === 'bedrooms' ? 'rotate-180' : ''}`} />
-        </button>
-        {openDropdown === 'bedrooms' && (
-          <div className="absolute top-full left-0 mt-2 w-56 rounded-lg shadow-lg z-20" style={{ background: '#0F1B30', border: '1px solid #19C6C0' }}>
-            {bedroomOptions.map(option => (
-              <button
-                key={option}
-                onClick={() => toggleBedroom(option)}
-                className="w-full text-left px-4 py-2 flex items-center gap-2 text-sm transition-colors"
-                style={{
-                  color: (option === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(option)) ? '#19C6C0' : '#B8C4D4',
-                  background: (option === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(option)) ? 'rgba(25, 198, 192, 0.1)' : 'transparent',
-                  borderBottom: option !== bedroomOptions[bedroomOptions.length - 1] ? '1px solid rgba(255,255,255,.05)' : 'none'
-                }}
-                onMouseEnter={(e) => { if (!((option === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(option)))) e.target.style.background = 'rgba(255,255,255,.05)'; }}
-                onMouseLeave={(e) => { if (!((option === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(option)))) e.target.style.background = 'transparent'; }}
-              >
-                <input
-                  type="checkbox"
-                  checked={option === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(option)}
-                  readOnly
-                  className="rounded"
-                  style={{ accentColor: '#19C6C0' }}
-                />
-                {option}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Price Dropdown */}
-      <div className="relative">
-        <button
+          style={pillStyle(filters.price.length > 0)}
           onClick={() => setOpenDropdown(openDropdown === 'price' ? null : 'price')}
-          className="flex items-center justify-between px-5 py-3 rounded-full transition-all"
-          style={{
-            background: '#0F1B30',
-            border: '1px solid rgba(255,255,255,.12)',
-            color: '#F6F8F9',
-            fontSize: '15px',
-            ...(openDropdown === 'price' ? { borderColor: '#19C6C0', color: '#19C6C0' } : {})
-          }}
         >
-          <span className="font-medium truncate">{getSelectedLabel('price')}</span>
-          <ChevronDown className={`h-4 w-4 ml-2 transition-transform flex-shrink-0 ${openDropdown === 'price' ? 'rotate-180' : ''}`} />
+          <span>{getSelectedLabel('price')}</span>
+          <ChevronDown style={{ width: 14, height: 14, transition: 'transform 0.15s', transform: openDropdown === 'price' ? 'rotate(180deg)' : 'none' }} />
         </button>
         {openDropdown === 'price' && (
-          <div className="absolute top-full left-0 mt-2 w-56 rounded-lg shadow-lg z-20" style={{ background: '#0F1B30', border: '1px solid #19C6C0' }}>
-            {priceOptions.map(option => (
+          <div style={dropdownStyle}>
+            {priceOptions.map(opt => (
               <button
-                key={option}
-                onClick={() => togglePrice(option)}
-                className="w-full text-left px-4 py-2 flex items-center gap-2 text-sm transition-colors"
-                style={{
-                  color: (option === 'All prices' ? filters.price.length === 0 : filters.price.includes(option)) ? '#19C6C0' : '#B8C4D4',
-                  background: (option === 'All prices' ? filters.price.length === 0 : filters.price.includes(option)) ? 'rgba(25, 198, 192, 0.1)' : 'transparent',
-                  borderBottom: option !== priceOptions[priceOptions.length - 1] ? '1px solid rgba(255,255,255,.05)' : 'none'
-                }}
-                onMouseEnter={(e) => { if (!((option === 'All prices' ? filters.price.length === 0 : filters.price.includes(option)))) e.target.style.background = 'rgba(255,255,255,.05)'; }}
-                onMouseLeave={(e) => { if (!((option === 'All prices' ? filters.price.length === 0 : filters.price.includes(option)))) e.target.style.background = 'transparent'; }}
+                key={opt}
+                style={dropdownItemStyle(opt === 'All prices' ? filters.price.length === 0 : filters.price.includes(opt))}
+                onClick={() => togglePrice(opt)}
+                onMouseEnter={(e) => { if (!(opt === 'All prices' ? filters.price.length === 0 : filters.price.includes(opt))) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                onMouseLeave={(e) => { if (!(opt === 'All prices' ? filters.price.length === 0 : filters.price.includes(opt))) e.currentTarget.style.background = 'transparent' }}
               >
-                <input
-                  type="checkbox"
-                  checked={option === 'All prices' ? filters.price.length === 0 : filters.price.includes(option)}
-                  readOnly
-                  className="rounded"
-                  style={{ accentColor: '#19C6C0' }}
-                />
-                {option}
+                <input type="checkbox" readOnly style={{ accentColor: '#19C6C0', pointerEvents: 'none' }} checked={opt === 'All prices' ? filters.price.length === 0 : filters.price.includes(opt)} />
+                {opt}
               </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* Move-in Date Dropdown */}
-      <div className="relative">
+      {/* Bedroom Size */}
+      <div style={{ position: 'relative' }}>
         <button
-          onClick={() => setOpenDropdown(openDropdown === 'moveIn' ? null : 'moveIn')}
-          className="flex items-center justify-between px-5 py-3 rounded-full transition-all"
-          style={{
-            background: '#0F1B30',
-            border: '1px solid rgba(255,255,255,.12)',
-            color: '#F6F8F9',
-            fontSize: '15px',
-            ...(openDropdown === 'moveIn' ? { borderColor: '#19C6C0', color: '#19C6C0' } : {})
-          }}
+          style={pillStyle(filters.bedrooms.length > 0)}
+          onClick={() => setOpenDropdown(openDropdown === 'bedrooms' ? null : 'bedrooms')}
         >
-          <span className="font-medium truncate">{getSelectedLabel('moveIn')}</span>
-          <ChevronDown className={`h-4 w-4 ml-2 transition-transform flex-shrink-0 ${openDropdown === 'moveIn' ? 'rotate-180' : ''}`} />
+          <span>{getSelectedLabel('bedrooms')}</span>
+          <ChevronDown style={{ width: 14, height: 14, transition: 'transform 0.15s', transform: openDropdown === 'bedrooms' ? 'rotate(180deg)' : 'none' }} />
+        </button>
+        {openDropdown === 'bedrooms' && (
+          <div style={dropdownStyle}>
+            {bedroomOptions.map(opt => (
+              <button
+                key={opt}
+                style={dropdownItemStyle(opt === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(opt))}
+                onClick={() => toggleBedroom(opt)}
+                onMouseEnter={(e) => { if (!(opt === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(opt))) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                onMouseLeave={(e) => { if (!(opt === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(opt))) e.currentTarget.style.background = 'transparent' }}
+              >
+                <input type="checkbox" readOnly style={{ accentColor: '#19C6C0', pointerEvents: 'none' }} checked={opt === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(opt)} />
+                {opt}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Move in Date */}
+      <div style={{ position: 'relative' }}>
+        <button
+          style={pillStyle(filters.moveInDate.length > 0)}
+          onClick={() => setOpenDropdown(openDropdown === 'moveIn' ? null : 'moveIn')}
+        >
+          <span>{getSelectedLabel('moveIn')}</span>
+          <ChevronDown style={{ width: 14, height: 14, transition: 'transform 0.15s', transform: openDropdown === 'moveIn' ? 'rotate(180deg)' : 'none' }} />
         </button>
         {openDropdown === 'moveIn' && (
-          <div className="absolute top-full left-0 mt-2 w-56 rounded-lg shadow-lg z-20" style={{ background: '#0F1B30', border: '1px solid #19C6C0' }}>
-            {moveInOptions.map(option => (
+          <div style={dropdownStyle}>
+            {moveInOptions.map(opt => (
               <button
-                key={option}
-                onClick={() => toggleMoveIn(option)}
-                className="w-full text-left px-4 py-2 flex items-center gap-2 text-sm transition-colors"
-                style={{
-                  color: (option === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(option)) ? '#19C6C0' : '#B8C4D4',
-                  background: (option === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(option)) ? 'rgba(25, 198, 192, 0.1)' : 'transparent',
-                  borderBottom: option !== moveInOptions[moveInOptions.length - 1] ? '1px solid rgba(255,255,255,.05)' : 'none'
-                }}
-                onMouseEnter={(e) => { if (!((option === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(option)))) e.target.style.background = 'rgba(255,255,255,.05)'; }}
-                onMouseLeave={(e) => { if (!((option === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(option)))) e.target.style.background = 'transparent'; }}
+                key={opt}
+                style={dropdownItemStyle(opt === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(opt))}
+                onClick={() => toggleMoveIn(opt)}
+                onMouseEnter={(e) => { if (!(opt === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(opt))) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                onMouseLeave={(e) => { if (!(opt === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(opt))) e.currentTarget.style.background = 'transparent' }}
               >
-                <input
-                  type="checkbox"
-                  checked={option === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(option)}
-                  readOnly
-                  className="rounded"
-                  style={{ accentColor: '#19C6C0' }}
-                />
-                {option}
+                <input type="checkbox" readOnly style={{ accentColor: '#19C6C0', pointerEvents: 'none' }} checked={opt === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(opt)} />
+                {opt}
               </button>
             ))}
           </div>
         )}
       </div>
 
-        {/* Clear Filters Button */}
-        {hasActiveFilters && (
-          <button
-            onClick={onClearAll}
-            className="px-5 py-3 rounded-full transition-all font-medium flex items-center gap-2"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#7E8CA0',
-              fontSize: '15px'
-            }}
-            onMouseEnter={(e) => { e.target.style.color = '#B8C4D4'; }}
-            onMouseLeave={(e) => { e.target.style.color = '#7E8CA0'; }}
-          >
-            <span>✕</span>
-            Clear filters
-          </button>
+      {/* Neighborhood */}
+      <div style={{ position: 'relative' }}>
+        <button
+          style={pillStyle(!!filters.neighborhood)}
+          onClick={() => setOpenDropdown(openDropdown === 'neighborhood' ? null : 'neighborhood')}
+        >
+          <span>{filters.neighborhood ? `${filters.neighborhood}` : 'Neighborhood'}</span>
+          <ChevronDown style={{ width: 14, height: 14, transition: 'transform 0.15s', transform: openDropdown === 'neighborhood' ? 'rotate(180deg)' : 'none' }} />
+        </button>
+        {openDropdown === 'neighborhood' && (
+          <div style={{ ...dropdownStyle, maxHeight: '280px', overflowY: 'auto' }}>
+            {neighborhoodOptions.map(opt => (
+              <button
+                key={opt}
+                style={dropdownItemStyle(filters.neighborhood === opt)}
+                onClick={() => handleNeighborhoodSelect(opt)}
+                onMouseEnter={(e) => { if (filters.neighborhood !== opt) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                onMouseLeave={(e) => { if (filters.neighborhood !== opt) e.currentTarget.style.background = 'transparent' }}
+              >
+                <input type="radio" readOnly style={{ accentColor: '#19C6C0', pointerEvents: 'none' }} checked={filters.neighborhood === opt} />
+                {opt}
+              </button>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Right side - Building count */}
-      <div className="flex items-center gap-2 ml-auto">
-        <span className="text-lg font-black" style={{ color: '#ec4899' }}>{buildingCount}</span>
-        <span className="text-sm" style={{ color: '#7E8CA0' }}>buildings live</span>
-      </div>
+      {/* Clear */}
+      {hasActiveFilters && (
+        <button
+          onClick={onClearAll}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#5B6780',
+            fontSize: '13px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            padding: '0 6px',
+            fontFamily: 'inherit',
+            transition: 'color 0.12s',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#B8C4D4' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = '#5B6780' }}
+        >
+          ✕ Clear
+        </button>
+      )}
     </div>
   );
 }

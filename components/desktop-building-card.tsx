@@ -16,41 +16,49 @@ interface DesktopBuildingCardProps {
   onViewDetails?: (building: Building) => void
 }
 
-// Amenity color mapping for badges
-const AMENITY_COLORS: Record<string, { bg: string; text: string }> = {
-  pool: { bg: "bg-blue-100", text: "text-blue-700" },
-  gym: { bg: "bg-green-100", text: "text-green-700" },
-  doorman: { bg: "bg-purple-100", text: "text-purple-700" },
-  lounge: { bg: "bg-pink-100", text: "text-pink-700" },
-  rooftop: { bg: "bg-orange-100", text: "text-orange-700" },
-  concierge: { bg: "bg-indigo-100", text: "text-indigo-700" },
-  parking: { bg: "bg-yellow-100", text: "text-yellow-700" },
-  furnished: { bg: "bg-teal-100", text: "text-teal-700" },
-}
+// Derive price tier display from units array and priceMin
+function getPriceTiers(building: Building): Array<{ label: string; price: string }> {
+  const tiers: Array<{ label: string; price: string }> = []
+  const units = building.units ?? []
 
-// Extract amenities from building data - using amenities array if available
-function extractAmenities(building: Building): string[] {
-  if ("amenities" in building && Array.isArray(building.amenities)) {
-    return building.amenities as string[]
+  // Map unit abbreviations to display labels
+  const labelMap: Record<string, string> = {
+    'Studio': 'Studio',
+    'studio': 'Studio',
+    '1B': '1 Bed',
+    '1 Bed': '1 Bed',
+    '1 bed': '1 Bed',
+    '2B': '2 Beds',
+    '2 Bed': '2 Beds',
+    '2 bed': '2 Beds',
+    '3B': '3 Beds',
+    '3+ Bed': '3+ Beds',
   }
-  // Fallback: extract from tagline or return empty
-  const tagline = building.tagline?.toLowerCase() || ""
-  const amenities: string[] = []
-  
-  if (tagline.includes("pool")) amenities.push("pool")
-  if (tagline.includes("gym")) amenities.push("gym")
-  if (tagline.includes("doorman")) amenities.push("doorman")
-  if (tagline.includes("rooftop")) amenities.push("rooftop")
-  
-  return amenities
+
+  // Price step heuristic per tier based on priceMin
+  const base = building.priceMin ?? 2000
+  const steps = [0, Math.round(base * 0.3), Math.round(base * 0.65)]
+
+  const displayUnits = units.slice(0, 3)
+  displayUnits.forEach((unit, i) => {
+    const label = labelMap[unit] ?? unit
+    const price = base + (steps[i] ?? 0)
+    tiers.push({ label, price: `$${price.toLocaleString()}+` })
+  })
+
+  return tiers
 }
 
-// Check if building has deal badges based on concession
-function getDealBadge(building: Building): string | null {
-  const concession = building.concession?.toLowerCase() || ""
-  if (concession.includes("2 months") || concession.includes("8 weeks")) return "🔥 2 months free"
-  if (concession.includes("month free") && building.name === "Maizon") return "💰 Best value"
-  return null
+function hasSpecials(building: Building): boolean {
+  const c = building.concession?.toLowerCase() ?? ""
+  return c.length > 0 && c !== "none"
+}
+
+function truncateAmenities(amenities: string[], maxChars = 56): string {
+  if (!amenities || amenities.length === 0) return ""
+  const joined = amenities.join(", ")
+  if (joined.length <= maxChars) return joined
+  return joined.slice(0, maxChars).replace(/,\s*\w*$/, "") + "…"
 }
 
 export function DesktopBuildingCard({
@@ -64,103 +72,216 @@ export function DesktopBuildingCard({
   onStar,
   onViewDetails,
 }: DesktopBuildingCardProps) {
-  const [isHovered, setIsHovered] = useState(false)
-  const amenities = extractAmenities(building)
-  const dealBadge = getDealBadge(building)
+  const [localStarred, setLocalStarred] = useState(isStarred)
   const { images: supabaseImages } = useSupabaseImages(building.id)
   const thumbnailSrc = supabaseImages[0] ?? building.images?.[0]
 
-  const handleMouseEnter = () => {
-    setIsHovered(true)
-    onHover?.(building)
-  }
+  const priceTiers = getPriceTiers(building)
+  const specials = hasSpecials(building)
+  const amenityText = truncateAmenities(building.amenities ?? [])
 
-  const handleMouseLeave = () => {
-    setIsHovered(false)
-    onHover?.(null)
+  const handleStarClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const next = !localStarred
+    setLocalStarred(next)
+    onStar?.(building)
   }
 
   return (
     <div
-      className={`flex gap-3 rounded-lg overflow-hidden border transition-all duration-200 cursor-pointer p-3 ${
-        isHighlighted || isHovered
-          ? "border-[#FF4D8D] shadow-lg"
-          : "border-[rgba(255,255,255,.12)] hover:border-[#FF4D8D]"
-      }`}
-      style={{ background: '#162032' }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={() => onHover?.(building)}
+      onMouseLeave={() => onHover?.(null)}
       onClick={() => onClick?.(building)}
+      style={{
+        background: '#131C2E',
+        border: isHighlighted ? '1.5px solid #FF4D8D' : '1px solid rgba(255,255,255,0.07)',
+        borderRadius: '14px',
+        padding: '14px',
+        cursor: 'pointer',
+        transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+        boxShadow: isHighlighted ? '0 0 0 3px rgba(255,77,141,0.12)' : 'none',
+        marginBottom: '2px',
+      }}
+      onMouseOver={(e) => {
+        if (!isHighlighted) {
+          e.currentTarget.style.borderColor = 'rgba(255,77,141,0.45)'
+          e.currentTarget.style.boxShadow = '0 2px 16px rgba(0,0,0,0.18)'
+        }
+      }}
+      onMouseOut={(e) => {
+        if (!isHighlighted) {
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'
+          e.currentTarget.style.boxShadow = 'none'
+        }
+      }}
     >
-      {/* Image - Left (96px square) */}
-      <div className="relative flex-shrink-0" style={{ width: '96px', height: '96px' }}>
-        <div className="relative w-full h-full bg-[#1B2A45] rounded-lg overflow-hidden">
-          {thumbnailSrc ? (
-            <>
-              <img
-                src={thumbnailSrc}
-                alt={building.name}
-                className="w-full h-full object-cover"
-              />
-              {/* Neighborhood Badge - Top Left */}
-              <div className="absolute top-1 left-1 z-10 px-2 py-0.5 bg-[#0B1220]/90 text-[#F6F8F9] text-xs rounded" style={{ fontFamily: 'Archivo', fontWeight: 900, textTransform: 'uppercase', fontVariationSettings: "'wdth' 118", letterSpacing: '-0.01em' }}>
-                {building.neighborhood}
-              </div>
-            </>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1B2A45, #0F1B30)' }}>
-              <div style={{ fontSize: '24px' }}>📷</div>
-            </div>
-          )}
+      {/* Top row: name / address / heart */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '10px' }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{
+            fontFamily: '"Archivo", sans-serif',
+            fontWeight: 700,
+            fontSize: '15px',
+            color: '#F0F4FC',
+            letterSpacing: '-0.01em',
+            lineHeight: 1.2,
+            marginBottom: '2px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}>
+            {building.name}
+          </div>
+          <div style={{ fontSize: '11px', color: '#7E8CA0', lineHeight: 1.3 }}>
+            {building.address}
+          </div>
         </div>
+        {/* Heart toggle */}
+        <button
+          onClick={handleStarClick}
+          aria-label={localStarred ? "Remove from saved" : "Save building"}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '2px 0 2px 10px',
+            flexShrink: 0,
+            fontSize: '18px',
+            color: localStarred ? '#FF4D8D' : 'rgba(255,255,255,0.25)',
+            lineHeight: 1,
+            transition: 'color 0.12s ease',
+          }}
+          onMouseEnter={(e) => { if (!localStarred) e.currentTarget.style.color = 'rgba(255,77,141,0.6)' }}
+          onMouseLeave={(e) => { if (!localStarred) e.currentTarget.style.color = 'rgba(255,255,255,0.25)' }}
+        >
+          ♥
+        </button>
       </div>
 
-      {/* Content - Right */}
-      <div className="flex-1 flex flex-col justify-between min-w-0">
-        {/* Top: Building Name + Description */}
-        <div className="min-w-0">
-          <h3 className="text-sm font-black truncate" style={{ fontFamily: 'Archivo', color: '#F6F8F9', textTransform: 'uppercase', fontVariationSettings: "'wdth' 118", letterSpacing: '-0.01em' }}>
-            {building.name}
-          </h3>
-          {building.tagline && (
-            <p className="text-xs line-clamp-1" style={{ color: '#B8C4D4' }}>
-              {building.tagline}
-            </p>
+      {/* Content row: image + details */}
+      <div style={{ display: 'flex', gap: '12px' }}>
+        {/* Image */}
+        <div style={{
+          position: 'relative',
+          width: '170px',
+          height: '130px',
+          flexShrink: 0,
+          borderRadius: '8px',
+          overflow: 'hidden',
+          background: '#182236',
+        }}>
+          {thumbnailSrc ? (
+            <img
+              src={thumbnailSrc}
+              alt={building.name}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          ) : (
+            <div style={{
+              width: '100%', height: '100%',
+              background: 'linear-gradient(135deg, #1B2A45, #0F1B30)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '28px', color: '#2A3B52',
+            }}>
+              &#9679;
+            </div>
           )}
+          {/* Video / tour overlay tag */}
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            background: 'rgba(0,0,0,0.60)',
+            padding: '4px 8px',
+            fontSize: '9px', color: '#fff',
+            display: 'flex', alignItems: 'center', gap: '5px',
+            letterSpacing: '0.04em',
+          }}>
+            <span style={{ fontSize: '8px' }}>&#9654;</span>
+            Videos &bull; Virtual tours
+          </div>
         </div>
 
-        {/* Bottom: Bedroom Chips + Text Don Button (ONE ROW) */}
-        <div className="flex items-center gap-2 pt-2">
-          {/* Bedroom Chips - Left Aligned */}
-          <div className="flex gap-1 flex-wrap">
-            {building.units.slice(0, 2).map((unit) => (
-              <span
-                key={unit}
-                className="text-xs font-semibold px-2 py-0.5 rounded border flex-shrink-0"
-                style={{ borderColor: '#19C6C0', color: '#19C6C0', background: 'transparent' }}
-              >
-                {unit}
-              </span>
-            ))}
+        {/* Details */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            {/* Price tiers */}
+            <div style={{ display: 'flex', gap: '14px', marginBottom: '8px' }}>
+              {priceTiers.map((tier, i) => (
+                <div
+                  key={tier.label}
+                  style={{
+                    paddingRight: i < priceTiers.length - 1 ? '14px' : '0',
+                    borderRight: i < priceTiers.length - 1 ? '0.5px solid #1E2E47' : 'none',
+                  }}
+                >
+                  <div style={{ fontSize: '13px', fontWeight: 500, color: '#19C6C0', lineHeight: 1.2 }}>
+                    {tier.price}
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#7E8CA0', marginTop: '1px' }}>
+                    {tier.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Specials badge */}
+            {specials && (
+              <div style={{
+                display: 'inline-block',
+                background: '#3D2E0A',
+                color: '#FFC24B',
+                fontSize: '10px',
+                fontWeight: 600,
+                padding: '3px 8px',
+                borderRadius: '6px',
+                marginBottom: '7px',
+                letterSpacing: '0.04em',
+              }}>
+                SPECIALS
+              </div>
+            )}
+
+            {/* Amenities */}
+            {amenityText && (
+              <div style={{
+                fontSize: '11px',
+                color: '#7E8CA0',
+                lineHeight: 1.45,
+                marginBottom: specials ? '0' : '7px',
+              }}>
+                {amenityText}
+              </div>
+            )}
           </div>
 
-          {/* Spacer */}
-          <div className="flex-1" />
-
-          {/* Text Don Button - Right Aligned */}
+          {/* Text Don CTA */}
           <a
-            href={`sms:+14077657306?body=Hi%20Don%2C%20I%27m%20interested%20in%20${building.name}`}
+            href={`sms:+14077657306?body=Hi%20Don%2C%20I%27m%20interested%20in%20${encodeURIComponent(building.name)}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex-shrink-0 font-semibold py-1.5 px-2.5 rounded text-xs text-white transition-colors whitespace-nowrap"
-            style={{ background: '#FF4D8D' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#E53A73' }}
+            style={{
+              alignSelf: 'flex-start',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              background: '#FF4D8D',
+              color: '#fff',
+              border: 'none',
+              padding: '8px 14px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              textDecoration: 'none',
+              lineHeight: 1,
+              transition: 'background 0.12s ease',
+              marginTop: '8px',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#E03570' }}
             onMouseLeave={(e) => { e.currentTarget.style.background = '#FF4D8D' }}
           >
-            💬 Text Don
+            Text Don
           </a>
         </div>
       </div>
-
     </div>
   )
 }
