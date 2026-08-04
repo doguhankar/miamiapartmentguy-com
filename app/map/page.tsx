@@ -157,6 +157,33 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
   const map = useRef(null);
   const markersRef = useRef([]);
   const popupsRef = useRef([]);
+  const [pricingData, setPricingData] = useState<Record<string, { units: Array<{ floorPlanType?: string; beds?: string | number; price?: number }> }>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPricing = async () => {
+      const entries = await Promise.all(
+        geocodedBuildings.map(async (building: any) => {
+          try {
+            const response = await fetch(`/api/prices/${building.id}`);
+            if (!response.ok) return null;
+            const data = await response.json();
+            return data?.units?.length ? [building.id, { units: data.units }] as const : null;
+          } catch {
+            return null;
+          }
+        }),
+      );
+
+      if (!cancelled) {
+        setPricingData(Object.fromEntries(entries.filter(Boolean) as Array<readonly [string, { units: Array<{ floorPlanType?: string; beds?: string | number; price?: number }> }]>));
+      }
+    };
+
+    loadPricing();
+    return () => { cancelled = true };
+  }, [geocodedBuildings]);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -219,72 +246,151 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         setBottomSheetSnapPoint(1);
       };
 
-      // Create popup content
+      // Create the target popup card. Keep this DOM-built because Mapbox owns popup placement.
       const popupContent = document.createElement('div');
       popupContent.className = 'popup-content';
-      popupContent.style.padding = '12px';
-      popupContent.style.borderRadius = '8px';
-      popupContent.style.backgroundColor = 'white';
-      popupContent.style.minWidth = '200px';
-      
-      // Add building image if available
-      if (building.images && building.images.length > 0) {
+      popupContent.style.width = '292px';
+      popupContent.style.padding = '0';
+      popupContent.style.overflow = 'hidden';
+      popupContent.style.borderRadius = '14px';
+      popupContent.style.backgroundColor = '#FFFFFF';
+      popupContent.style.boxShadow = '0 12px 30px rgba(15, 23, 42, 0.22)';
+
+      const media = document.createElement('div');
+      media.style.position = 'relative';
+      media.style.height = '160px';
+      media.style.background = '#E8ECF2';
+      media.style.display = 'flex';
+      media.style.alignItems = 'center';
+      media.style.justifyContent = 'center';
+      const imageUrls = Array.isArray(building.image_urls) ? building.image_urls : building.images;
+      const imageUrl = imageUrls?.find((url: unknown) => typeof url === 'string' && url.trim());
+
+      const placeholder = document.createElement('div');
+      placeholder.innerHTML = `<svg width="42" height="42" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 21h18M5 21V5.5L12 3l7 2.5V21M8 8h1M15 8h1M8 12h1M15 12h1M8 16h1M15 16h1" stroke="#94A3B8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      placeholder.style.display = imageUrl ? 'none' : 'flex';
+      placeholder.style.alignItems = 'center';
+      placeholder.style.justifyContent = 'center';
+      media.appendChild(placeholder);
+
+      if (imageUrl) {
         const img = document.createElement('img');
-        img.src = building.images[0];
+        img.src = imageUrl;
+        img.alt = `${building.name} building`;
         img.style.width = '100%';
-        img.style.height = '100px';
+        img.style.height = '100%';
         img.style.objectFit = 'cover';
-        img.style.borderRadius = '4px';
-        img.style.marginBottom = '8px';
-        popupContent.appendChild(img);
+        img.onerror = () => {
+          img.remove();
+          placeholder.style.display = 'flex';
+        };
+        media.appendChild(img);
       }
 
-      // Add building name
-      const name = document.createElement('div');
-      name.style.fontSize = '14px';
-      name.style.fontWeight = '600';
-      name.style.color = '#1f2937';
-      name.style.marginBottom = '4px';
-      name.textContent = building.name;
-      popupContent.appendChild(name);
+      const tourTag = document.createElement('div');
+      tourTag.textContent = 'Videos • Virtual tours';
+      tourTag.style.position = 'absolute';
+      tourTag.style.left = '10px';
+      tourTag.style.bottom = '10px';
+      tourTag.style.padding = '5px 8px';
+      tourTag.style.borderRadius = '5px';
+      tourTag.style.background = 'rgba(15, 23, 42, 0.82)';
+      tourTag.style.color = '#FFFFFF';
+      tourTag.style.fontSize = '10px';
+      tourTag.style.fontWeight = '600';
+      media.appendChild(tourTag);
+      popupContent.appendChild(media);
 
-      // Add neighborhood
-      const neighborhood = document.createElement('div');
-      neighborhood.style.fontSize = '12px';
-      neighborhood.style.color = '#6b7280';
-      neighborhood.style.marginBottom = '8px';
-      neighborhood.textContent = building.neighborhood;
-      popupContent.appendChild(neighborhood);
+      const content = document.createElement('div');
+      content.style.padding = '14px 15px 15px';
 
-      // Add price range
+      const titleRow = document.createElement('div');
+      titleRow.style.display = 'flex';
+      titleRow.style.alignItems = 'flex-start';
+      titleRow.style.justifyContent = 'space-between';
+      titleRow.style.gap = '10px';
+
+      const title = document.createElement('div');
+      title.textContent = building.name;
+      title.style.color = '#172033';
+      title.style.fontSize = '20px';
+      title.style.fontWeight = '750';
+      title.style.lineHeight = '1.15';
+      titleRow.appendChild(title);
+
+      const saveButton = document.createElement('button');
+      saveButton.type = 'button';
+      saveButton.setAttribute('aria-label', `Save ${building.name}`);
+      saveButton.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.8 8.7c0 5.3-8.8 10.3-8.8 10.3S3.2 14 3.2 8.7A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+      saveButton.style.color = '#172033';
+      saveButton.style.background = 'transparent';
+      saveButton.style.border = '0';
+      saveButton.style.padding = '0';
+      saveButton.style.cursor = 'pointer';
+      saveButton.onclick = (event) => {
+        event.stopPropagation();
+        saveButton.style.color = saveButton.style.color === 'rgb(255, 77, 141)' ? '#172033' : '#FF4D8D';
+      };
+      titleRow.appendChild(saveButton);
+      content.appendChild(titleRow);
+
+      const location = document.createElement('div');
+      location.textContent = `${building.neighborhood} • Miami, FL`;
+      location.style.marginTop = '5px';
+      location.style.color = '#7B8799';
+      location.style.fontSize = '13px';
+      content.appendChild(location);
+
+      const liveUnits = pricingData[building.id]?.units?.filter((unit) => typeof unit.price === 'number' && Number.isFinite(unit.price)) || [];
+      const prices = liveUnits.map((unit) => unit.price as number);
+      const lowestPrice = prices.length ? Math.min(...prices) : building.priceMin;
+      const highestPrice = prices.length ? Math.max(...prices) : building.priceMax || building.priceMin;
+      const formatPrice = (value: number) => `$${Math.round(value).toLocaleString()}`;
+
       const price = document.createElement('div');
-      price.style.fontSize = '13px';
-      price.style.fontWeight = '500';
-      price.style.color = '#FF4D8D';
-      price.style.marginBottom = '12px';
-      price.textContent = `$${building.priceMin?.toLocaleString()}/mo`;
-      popupContent.appendChild(price);
+      price.textContent = `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice)}`;
+      price.style.marginTop = '15px';
+      price.style.color = '#172033';
+      price.style.fontSize = '20px';
+      price.style.fontWeight = '750';
+      content.appendChild(price);
 
-      // Add view details button
+      const unitLabels = Array.from(new Set(liveUnits.map((unit) => {
+        const beds = String(unit.beds ?? unit.floorPlanType ?? '').toLowerCase();
+        if (beds.includes('studio') || beds === '0') return 'Studio';
+        const match = beds.match(/[1-5]/);
+        return match ? `${match[0]} Bed${match[0] === '1' ? '' : 's'}` : '';
+      }).filter(Boolean)));
+      const unitOrder = ['Studio', '1 Bed', '2 Beds', '3 Beds', '4 Beds', '5 Beds'];
+      const sortedUnits = unitLabels.sort((a, b) => unitOrder.indexOf(a) - unitOrder.indexOf(b));
+      const unitRange = sortedUnits.length > 1 ? `${sortedUnits[0]} – ${sortedUnits[sortedUnits.length - 1]}` : sortedUnits[0] || building.units.map((unit: string) => unit === '1B' ? '1 Bed' : unit === '2B' ? '2 Beds' : unit === '3B' ? '3 Beds' : unit).join(' – ');
+      const units = document.createElement('div');
+      units.textContent = unitRange;
+      units.style.marginTop = '4px';
+      units.style.color = '#7B8799';
+      units.style.fontSize = '13px';
+      content.appendChild(units);
+
       const button = document.createElement('button');
-      button.textContent = 'View Details';
+      button.textContent = 'View details';
       button.style.width = '100%';
-      button.style.padding = '8px 12px';
+      button.style.marginTop = '15px';
+      button.style.padding = '11px 12px';
       button.style.backgroundColor = '#FF4D8D';
-      button.style.color = 'white';
+      button.style.color = '#FFFFFF';
       button.style.border = 'none';
-      button.style.borderRadius = '4px';
-      button.style.fontSize = '12px';
-      button.style.fontWeight = '500';
+      button.style.borderRadius = '8px';
+      button.style.fontSize = '13px';
+      button.style.fontWeight = '700';
       button.style.cursor = 'pointer';
-      button.style.transition = 'background-color 0.2s';
       button.onmouseover = () => button.style.backgroundColor = '#E53A73';
       button.onmouseout = () => button.style.backgroundColor = '#FF4D8D';
       button.onclick = () => {
         setInfoBuildingFromMap(building);
         popup.remove();
       };
-      popupContent.appendChild(button);
+      content.appendChild(button);
+      popupContent.appendChild(content);
 
       // Create popup
       const popup = new mapboxgl.Popup({
@@ -337,7 +443,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       markersRef.current.push(marker);
       popupsRef.current.push(popup);
     });
-  }, [geocodedBuildings, selectedBuilding]);
+  }, [geocodedBuildings, selectedBuilding, pricingData]);
 
   return <div ref={mapContainer} className="w-full h-full" />;
 };
