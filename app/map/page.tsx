@@ -16,6 +16,7 @@ import { BuildingDetailModal } from '@/components/building-detail-modal';
 import { MapFilterCard, type MapFilterState } from '@/components/map-filter-card';
 import { copyToClipboard, showToast } from '@/lib/toast-utils';
 import { Star } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { buildings as BUILDINGS } from '@/lib/buildings';
 import { neighborhoodCenters } from '@/lib/neighborhood-centers';
 const NEIGHBORHOODS = ['Brickell', 'Downtown', 'Edgewater', 'Midtown', 'Wynwood', 'Miami Design District', 'North Miami', 'North Miami Beach', 'Aventura', 'Hollywood', 'Dania Beach', 'Allapattah', 'Little Havana', 'Doral', 'Coconut Grove', 'Las Olas'];
@@ -158,6 +159,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
   const markersRef = useRef([]);
   const popupsRef = useRef([]);
   const [pricingData, setPricingData] = useState<Record<string, { units: Array<{ floorPlanType?: string; beds?: string | number; price?: number }> }>>({});
+  const [buildingImages, setBuildingImages] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -176,8 +178,21 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         }),
       );
 
+      const supabase = createClient();
+      const { data: imageRows } = await supabase
+        .from('building_images')
+        .select('building_id, image_url, sort_order')
+        .in('building_id', geocodedBuildings.map((building: any) => String(building.id)))
+        .order('sort_order', { ascending: true });
+
       if (!cancelled) {
         setPricingData(Object.fromEntries(entries.filter(Boolean) as Array<readonly [string, { units: Array<{ floorPlanType?: string; beds?: string | number; price?: number }> }]>));
+        setBuildingImages((imageRows ?? []).reduce((images, row) => {
+          const buildingId = String(row.building_id);
+          if (!images[buildingId]) images[buildingId] = [];
+          if (typeof row.image_url === 'string' && row.image_url.trim()) images[buildingId].push(row.image_url);
+          return images;
+        }, {} as Record<string, string[]>));
       }
     };
 
@@ -263,7 +278,9 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       media.style.display = 'flex';
       media.style.alignItems = 'center';
       media.style.justifyContent = 'center';
-      const imageUrls = Array.isArray(building.image_urls) ? building.image_urls : building.images;
+      const imageUrls = buildingImages[String(building.id)]?.length
+        ? buildingImages[String(building.id)]
+        : (Array.isArray(building.image_urls) ? building.image_urls : building.images);
       const imageUrl = imageUrls?.find((url: unknown) => typeof url === 'string' && url.trim());
 
       const placeholder = document.createElement('div');
@@ -348,7 +365,9 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       const formatPrice = (value: number) => `$${Math.round(value).toLocaleString()}`;
 
       const price = document.createElement('div');
-      price.textContent = `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice)}`;
+      price.textContent = lowestPrice === highestPrice
+        ? formatPrice(lowestPrice)
+        : `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice)}`;
       price.style.marginTop = '15px';
       price.style.color = '#172033';
       price.style.fontSize = '20px';
@@ -397,6 +416,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         offset: [0, -15],
         closeButton: false,
         closeOnClick: false,
+        className: 'mag-map-popup',
       }).setDOMContent(popupContent);
 
       // Track hide timeout to delay hiding on mouse leave
@@ -406,9 +426,22 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         if (hideTimeout) clearTimeout(hideTimeout);
         popup.setLngLat([building.lng, building.lat]).addTo(map.current);
         
+        // Remove Mapbox's default content box so only the card shadow is visible.
+        const popupElement = popup.getElement();
+        if (popupElement) {
+          const popupChrome = popupElement.querySelector('.mapboxgl-popup-content') as HTMLElement | null;
+          if (popupChrome) {
+            popupChrome.style.padding = '0';
+            popupChrome.style.background = 'transparent';
+            popupChrome.style.boxShadow = 'none';
+          }
+          const popupTip = popupElement.querySelector('.mapboxgl-popup-tip') as HTMLElement | null;
+          if (popupTip) popupTip.style.display = 'none';
+        }
+
         // Add hover listeners to popup element after it's rendered
         setTimeout(() => {
-          const popupElement = document.querySelector('.mapboxgl-popup');
+          const popupElement = popup.getElement();
           if (popupElement) {
             (popupElement as HTMLElement).onmouseenter = () => {
               if (hideTimeout) clearTimeout(hideTimeout);
@@ -443,7 +476,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       markersRef.current.push(marker);
       popupsRef.current.push(popup);
     });
-  }, [geocodedBuildings, selectedBuilding, pricingData]);
+  }, [geocodedBuildings, selectedBuilding, pricingData, buildingImages]);
 
   return <div ref={mapContainer} className="w-full h-full" />;
 };
