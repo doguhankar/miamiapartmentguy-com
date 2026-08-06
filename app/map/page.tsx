@@ -503,6 +503,7 @@ export default function MiamiApp() {
   const [pinInput, setPinInput] = useState('');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showMoveWithDonModal, setShowMoveWithDonModal] = useState(false);
+  const [mobileBuildingImages, setMobileBuildingImages] = useState<Record<string, string[]>>({});
 
   // Auto-open the intake modal once per browser session
   useEffect(() => {
@@ -510,6 +511,29 @@ export default function MiamiApp() {
       setShowMoveWithDonModal(true);
       sessionStorage.setItem('mwd_shown', '1');
     }
+  }, []);
+
+  // Fetch building images for mobile cards
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = createClient();
+    supabase
+      .from('building_images')
+      .select('building_id, image_url, sort_order')
+      .in('building_id', BUILDINGS.map((b: any) => String(b.id)))
+      .order('sort_order', { ascending: true })
+      .then(({ data: imageRows }) => {
+        if (cancelled) return;
+        setMobileBuildingImages(
+          (imageRows ?? []).reduce((acc, row) => {
+            const id = String(row.building_id);
+            if (!acc[id]) acc[id] = [];
+            if (typeof row.image_url === 'string' && row.image_url.trim()) acc[id].push(row.image_url);
+            return acc;
+          }, {} as Record<string, string[]>)
+        );
+      });
+    return () => { cancelled = true; };
   }, []);
   const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [] });
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
@@ -980,28 +1004,51 @@ export default function MiamiApp() {
           />
         </div>
 
-        {/* Fixed header overlay */}
+        {/* Floating pill search bar — v17 */}
         <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, zIndex: 30,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '10px 14px',
-          background: 'rgba(11,18,32,0.9)',
-          borderBottom: '0.5px solid rgba(255,255,255,0.08)',
+          position: 'absolute', top: 'max(20px, env(safe-area-inset-top))',
+          left: 16, right: 16, zIndex: 30,
+          display: 'flex', alignItems: 'center', gap: 10,
         }}>
-          <Link href="/" style={{ textDecoration: 'none', cursor: 'pointer' }}>
-            <div style={{ fontFamily: 'Archivo', fontWeight: 900, fontSize: '15px', color: '#fff', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
-              MAG<span style={{ color: '#FF4D8D' }}>™</span>
-            </div>
-          </Link>
+          <div style={{
+            flex: 1, display: 'flex', alignItems: 'center', gap: 9,
+            background: '#ffffff', borderRadius: 999,
+            padding: '11px 16px',
+            boxShadow: '0 4px 20px rgba(10,15,28,0.14), 0 1px 2px rgba(10,15,28,0.06)',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A7ADB8" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}>
+              <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              type="text"
+              placeholder="Search a place..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                flex: 1, border: 'none', background: 'transparent',
+                fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif',
+                fontSize: 13.5, color: '#0A0F1C', outline: 'none',
+              }}
+            />
+          </div>
           <button
-            onClick={() => setShowMoveWithDonModal(true)}
+            onClick={() => setShowFilterModal(true)}
             style={{
-              background: '#FF4D8D', color: '#fff', border: 'none',
-              borderRadius: '6px', padding: '7px 12px',
-              fontSize: '11px', fontWeight: 600, cursor: 'pointer',
+              width: 42, height: 42, borderRadius: 999,
+              background: '#0B1220', border: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 16px rgba(10,15,28,0.24)',
+              flexShrink: 0, cursor: 'pointer',
             }}
           >
-            Move with Don
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round">
+              <line x1="4" y1="6" x2="20" y2="6"/>
+              <line x1="4" y1="12" x2="20" y2="12"/>
+              <line x1="4" y1="18" x2="20" y2="18"/>
+              <circle cx="9" cy="6" r="2" fill="#ffffff" stroke="none"/>
+              <circle cx="15" cy="12" r="2" fill="#ffffff" stroke="none"/>
+              <circle cx="9" cy="18" r="2" fill="#ffffff" stroke="none"/>
+            </svg>
           </button>
         </div>
 
@@ -1016,14 +1063,14 @@ export default function MiamiApp() {
           />
         )}
 
-        {/* Bottom Sheet */}
+        {/* Bottom Sheet — v17 */}
         <div
           ref={mobileSheetEl}
           style={{
             position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 50,
-            background: '#111C2E',
-            borderTop: '0.5px solid rgba(255,255,255,0.08)',
-            borderRadius: '20px 20px 0 0',
+            background: '#ffffff',
+            borderRadius: '22px 22px 0 0',
+            boxShadow: '0 -8px 30px rgba(10,15,28,0.16)',
             maxHeight: '75vh',
             display: 'flex',
             flexDirection: 'column',
@@ -1035,106 +1082,117 @@ export default function MiamiApp() {
           onTouchEnd={handleMobileTouchEnd}
         >
           {/* Drag handle */}
-          <div style={{ padding: '12px 0 8px', textAlign: 'center', flexShrink: 0 }}>
-            <div style={{ width: 32, height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 2, margin: '0 auto' }} />
+          <div style={{ padding: '12px 0 4px', display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: 36, height: 4, background: '#E2E4E9', borderRadius: 999 }} />
+          </div>
+
+          {/* Count line */}
+          <div style={{ padding: '4px 18px 10px', fontSize: 12, color: '#6B7280', fontWeight: 500, flexShrink: 0 }}>
+            <b style={{ color: '#0A0F1C', fontWeight: 700 }}>{filteredBuildings.length}</b>{' '}
+            apartment{filteredBuildings.length !== 1 ? 's' : ''}{mapFilters.neighborhood ? ` in ${mapFilters.neighborhood}` : ' in South Florida'}
           </div>
 
           {/* Scrollable content */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '0 14px 14px' }}>
-            {/* Search */}
-            <div style={{ marginBottom: 12 }}>
-              <input
-                type="text"
-                placeholder="Search buildings…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  width: '100%', background: 'transparent',
-                  border: '0.5px solid rgba(255,255,255,0.12)',
-                  borderRadius: 999, padding: '9px 14px',
-                  fontSize: 13, color: '#E6ECF5', outline: 'none',
-                }}
-              />
-            </div>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px max(16px, env(safe-area-inset-bottom))' }}>
 
-            {/* Filter chips */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12, overflowX: 'auto', paddingBottom: 4 }}>
-              {['Neighborhood', 'Beds', 'Price', 'Move in'].map((label) => (
-                <button
-                  key={label}
-                  style={{
-                    flexShrink: 0, background: 'transparent', cursor: 'pointer',
-                    border: '0.5px solid rgba(255,255,255,0.14)',
-                    borderRadius: 999, padding: '5px 10px',
-                    fontSize: 11, color: '#C3CEDD', whiteSpace: 'nowrap',
-                  }}
-                >
-                  {label} ⌄
-                </button>
-              ))}
-            </div>
-
-            {/* Building cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {filteredBuildings.map((building) => (
-                <div
-                  key={building.id}
-                  onClick={() => { setSelectedBuilding(building); setInfoBuilding(building); }}
-                  style={{
-                    display: 'flex', gap: 10, background: '#111C2E',
-                    border: '0.5px solid rgba(255,255,255,0.06)',
-                    borderRadius: 12, padding: 10, cursor: 'pointer',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,77,141,0.3)'; e.currentTarget.style.background = '#16253A'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.background = '#111C2E'; }}
-                >
-                  {/* Thumbnail */}
-                  <div style={{ width: 70, height: 70, borderRadius: 8, background: '#22334F', flexShrink: 0, overflow: 'hidden', position: 'relative' }}>
-                    {building.images?.[0] && (
-                      <img src={building.images[0]} alt={building.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    )}
-                    <div style={{
-                      position: 'absolute', bottom: 4, left: 4,
-                      fontSize: 8, color: '#9FB0C6', background: 'rgba(11,18,32,0.78)',
-                      padding: '2px 5px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: '0.06em',
-                    }}>
-                      {building.neighborhood}
-                    </div>
-                  </div>
-
-                  {/* Body */}
-                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{building.name}</div>
-                    <div style={{ fontSize: 11, color: '#8FA0B8', marginTop: 2, lineHeight: 1.4 }}>{building.tagline}</div>
-                    <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 5, paddingTop: 6 }}>
-                      {building.units?.slice(0, 2).map((u) => (
-                        <span key={u} style={{
-                          fontSize: 9, color: '#C3CEDD',
-                          border: '0.5px solid rgba(255,255,255,0.14)',
-                          borderRadius: 5, padding: '2px 5px',
-                        }}>{u}</span>
-                      ))}
-                      <span style={{ flex: 1 }} />
+            {/* Building cards — v17 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {filteredBuildings.map((building) => {
+                const imageUrl = mobileBuildingImages[String(building.id)]?.[0] ?? building.images?.[0];
+                const imageCount = (mobileBuildingImages[String(building.id)]?.length ?? building.images?.length ?? 0);
+                const hasSpecial = !!(building.concession && building.concession !== 'None' && building.concession !== '');
+                return (
+                  <div
+                    key={building.id}
+                    onClick={() => { setSelectedBuilding(building); setInfoBuilding(building); }}
+                    style={{
+                      background: '#ffffff',
+                      borderRadius: 16,
+                      overflow: 'hidden',
+                      boxShadow: '0 1px 2px rgba(10,15,28,0.04), 0 0 0 1px #ECEDF2',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {/* Image area */}
+                    <div style={{ position: 'relative', width: '100%', height: 176, background: '#F8F8FA' }}>
+                      {imageUrl && (
+                        <img
+                          src={imageUrl}
+                          alt={building.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        />
+                      )}
+                      {/* Neighborhood tag */}
+                      <div style={{
+                        position: 'absolute', top: 10, left: 10,
+                        background: 'rgba(10,15,28,0.75)', color: '#fff',
+                        fontFamily: 'var(--font-archivo), Archivo, sans-serif',
+                        fontSize: 9.5, fontWeight: 700, letterSpacing: '0.06em',
+                        padding: '5px 10px', borderRadius: 6,
+                        backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
+                        textTransform: 'uppercase',
+                      }}>
+                        {building.neighborhood}
+                      </div>
+                      {/* Swipe dots — only when multiple images */}
+                      {imageCount > 1 && (
+                        <div style={{
+                          position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
+                          display: 'flex', gap: 4,
+                          background: 'rgba(10,15,28,0.35)', padding: '5px 8px', borderRadius: 999,
+                        }}>
+                          {Array.from({ length: Math.min(imageCount, 4) }).map((_, i) => (
+                            <div key={i} style={{ width: 4.5, height: 4.5, borderRadius: 999, background: i === 0 ? '#ffffff' : 'rgba(255,255,255,0.45)' }} />
+                          ))}
+                        </div>
+                      )}
+                      {/* Heart button */}
                       <button
-                        onClick={(e) => { e.stopPropagation(); setInfoBuilding(building); }}
+                        onClick={(e) => { e.stopPropagation(); setStarredBuildings(prev => { const n = new Set(prev); n.has(String(building.id)) ? n.delete(String(building.id)) : n.add(String(building.id)); return n; }); }}
                         style={{
-                          fontSize: 10, fontWeight: 600, color: '#fff',
-                          background: '#FF4D8D', borderRadius: 5, padding: '3px 8px',
-                          border: 'none', cursor: 'pointer',
+                          position: 'absolute', top: 8, right: 8,
+                          width: 32, height: 32, borderRadius: 999,
+                          background: 'rgba(255,255,255,0.92)', border: 'none',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 15, cursor: 'pointer',
+                          boxShadow: '0 2px 8px rgba(10,15,28,0.12)',
+                          color: starredBuildings.has(String(building.id)) ? '#FF3D82' : '#FF3D82',
                         }}
                       >
-                        Info
+                        {starredBuildings.has(String(building.id)) ? '♥' : '♡'}
                       </button>
                     </div>
+
+                    {/* Card body */}
+                    <div style={{ padding: '12px 14px 14px' }}>
+                      <div style={{ fontFamily: 'var(--font-archivo), Archivo, sans-serif', fontWeight: 700, fontSize: 15.5, color: '#0A0F1C', marginBottom: 3 }}>
+                        {building.name}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 10 }}>
+                        {building.address}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ fontFamily: 'var(--font-archivo), Archivo, sans-serif', fontSize: 15, fontWeight: 700, color: '#0A0F1C' }}>
+                          ${building.priceMin?.toLocaleString()}+
+                        </div>
+                        {hasSpecial && (
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center',
+                            background: '#FFF6E5', color: '#92660B',
+                            fontSize: 9.5, fontWeight: 700, letterSpacing: '0.02em',
+                            padding: '4px 9px', borderRadius: 6, whiteSpace: 'nowrap',
+                            textTransform: 'uppercase',
+                          }}>
+                            {building.concession}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            {/* Footer hint */}
-            <div style={{ textAlign: 'center', fontSize: 10, color: '#6F7F96', padding: '12px 0 4px', borderTop: '0.5px solid rgba(255,255,255,0.06)', marginTop: 10 }}>
-              Swipe down to close · tap outside to close
-            </div>
           </div>
         </div>
 
