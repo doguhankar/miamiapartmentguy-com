@@ -828,15 +828,12 @@ export default function MiamiApp() {
           hasMatchingUnits = hasMatchingUnits && hasMatchingUnit;
         }
 
-        // Check price filter
+        // Check the modal's live dual-handle price range.
         if (filters.priceRange.length > 0 && hasMatchingUnits) {
-          const hasMatchingPrice = filters.priceRange.some(range => {
-            if (range === 'Under $2.5k') return building.priceMin < 2500;
-            if (range === '$2.5k-$4k') return building.priceMin >= 2500 && building.priceMin < 4000;
-            if (range === '$4k+') return building.priceMin >= 4000;
-            return false;
-          });
-          hasMatchingUnits = hasMatchingUnits && hasMatchingPrice;
+          const range = filters.priceRange[0].match(/(\d[\d,]*)\s*[-–]\s*(\d[\d,]*)/);
+          const min = range ? Number(range[1].replace(/,/g, '')) : 0;
+          const max = range ? Number(range[2].replace(/,/g, '')) : Number.POSITIVE_INFINITY;
+          hasMatchingUnits = hasMatchingUnits && building.priceMin >= min && building.priceMin <= max;
         }
 
         // Move-in date check (all buildings match for now)
@@ -1508,6 +1505,7 @@ export default function MiamiApp() {
         isOpen={showFilterModal}
         onClose={() => setShowFilterModal(false)}
         onApply={handleApplyFilters}
+        initialFilters={activeFilters}
       />
 
 
