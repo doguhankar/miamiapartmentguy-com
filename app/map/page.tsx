@@ -1035,10 +1035,21 @@ export default function MiamiApp() {
       <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
 
       {/* ── MOBILE LAYOUT (< md) ────────────────────────────────────────── */}
-      <div className="md:hidden" style={{ position: 'fixed', inset: 0, overflow: 'hidden', background: '#0B1220' }}>
+      <div
+        className="md:hidden"
+        style={{
+          position: 'fixed', inset: 0, overflow: 'hidden', background: '#0B1220',
+          overscrollBehavior: 'none',
+        }}
+      >
 
-        {/* Full-screen map */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}>
+        {/* Full-screen map — when sheet is expanded, block touches on the visible map strip
+            above the sheet so they cannot trigger iOS rubber-band bounce on the page. */}
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 10,
+          touchAction: mobileSheetState === 'expanded' ? 'none' : 'auto',
+          overscrollBehavior: mobileSheetState === 'expanded' ? 'none' : 'auto',
+        }}>
           <MapComponent
             expandedNeighborhoods={expandedNeighborhoods}
             selectedBuilding={selectedBuilding}
@@ -1255,6 +1266,27 @@ export default function MiamiApp() {
           )}
         </div>
 
+        {mobileSheetState === 'peek' && (
+          <button
+            onClick={() => setMobileSheetState('expanded')}
+            style={{
+              position: 'absolute', bottom: 22, left: '50%', transform: 'translateX(-50%)', zIndex: 60,
+              background: '#0B1220', color: '#fff', border: 'none',
+              display: 'flex', alignItems: 'center', gap: 7,
+              padding: '11px 18px', borderRadius: 999,
+              fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif',
+              fontSize: 12.5, fontWeight: 600,
+              boxShadow: '0 8px 24px rgba(10,15,28,0.35)', cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M18 15l-6-6-6 6" />
+            </svg>
+            View all listings
+          </button>
+        )}
+
         {mobileSheetState === 'expanded' && (
           <button
             onClick={() => setMobileSheetState('peek')}
@@ -1266,6 +1298,7 @@ export default function MiamiApp() {
               fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif',
               fontSize: 12.5, fontWeight: 600,
               boxShadow: '0 8px 24px rgba(10,15,28,0.35)', cursor: 'pointer',
+              whiteSpace: 'nowrap',
             }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
