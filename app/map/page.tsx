@@ -681,6 +681,39 @@ export default function MiamiApp() {
     mobileTouchDidDrag.current = false;
   };
 
+  // Lock body scroll when the sheet is expanded so iOS Safari cannot rubber-band
+  // the underlying page. Restore the saved scroll position on collapse/unmount.
+  const savedScrollY = useRef(0);
+  useEffect(() => {
+    if (mobileSheetState === 'expanded') {
+      savedScrollY.current = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${savedScrollY.current}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.overflow = 'hidden';
+    } else {
+      if (document.body.style.position === 'fixed') {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, savedScrollY.current);
+      }
+    }
+    return () => {
+      if (document.body.style.position === 'fixed') {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, savedScrollY.current);
+      }
+    };
+  }, [mobileSheetState]);
+
   const SNAP_POINTS = {
     0: 'h-5 md:h-0',      // COLLAPSED: 20px (drag handle)
     1: 'h-[400px] md:h-auto',  // DEFAULT: 400px (full card + 40px peek of next)
@@ -1066,18 +1099,6 @@ export default function MiamiApp() {
             </svg>
           </button>
         </div>
-
-        {/* Backdrop — only when expanded, so peek and sliver keep the map bright */}
-        {mobileSheetOpen && mobileSheetState === 'expanded' && (
-          <div
-            onClick={() => setMobileSheetState('peek')}
-            style={{
-              position: 'absolute', inset: 0, zIndex: 20,
-              background: 'rgba(0,0,0,0.3)',
-              pointerEvents: 'none',
-            }}
-          />
-        )}
 
         {/* Bottom Sheet — v17 */}
         <div
