@@ -10,6 +10,9 @@ interface LeadData {
   agent: string
   name: string
   phone: string
+  source?: string
+  brokerage?: string
+  licensed?: string
 }
 
 // Cache for Notion database schema to avoid fetching on every request
@@ -50,7 +53,7 @@ async function sendToSlack(webhookUrl: string, leadData: LeadData) {
   try {
     console.log('[v0] Sending to Slack...')
     const slackMessage = {
-      text: '🏢 New Lead from Move with Don Form',
+      text: leadData.source === 'agent_recruit' ? '🧑‍💼 New Agent Recruitment Lead' : '🏢 New Lead from Move with Don Form',
       blocks: [
         {
           type: 'header',
@@ -90,14 +93,20 @@ async function sendToSlack(webhookUrl: string, leadData: LeadData) {
             type: 'mrkdwn',
             text: `*Neighborhoods:*\n${leadData.neighborhoods.join(', ')}`,
           },
-          {
-            type: 'mrkdwn',
-            text: `*Agent:*\n${leadData.agent}`,
-          },
-          {
-            type: 'mrkdwn',
-            text: `*Submitted:*\n${new Date().toISOString()}`,
-          },
+            {
+              type: 'mrkdwn',
+              text: `*Agent:*
+${leadData.agent}`,
+            },
+            ...(leadData.source === 'agent_recruit'
+              ? [{ type: 'mrkdwn', text: `*Brokerage:*
+${leadData.brokerage || 'Not provided'}` }, { type: 'mrkdwn', text: `*Licensed in Florida:*
+${leadData.licensed || 'Not provided'}` }]
+              : []),
+            {
+              type: 'mrkdwn',
+              text: `*Submitted:*\n${new Date().toISOString()}`,
+            },
           ],
         },
       ],
@@ -235,8 +244,10 @@ async function sendToSupabase(leadData: LeadData) {
       credit_range: leadData.creditScore,
       agent_id: 'doguhankar1@gmail.com',
       stage: 'New Lead',
-      source: 'Homepage Form',
-      notes: `Selected agent: ${leadData.agent}`,
+      source: leadData.source || 'Homepage Form',
+      notes: leadData.source === 'agent_recruit'
+        ? `Brokerage: ${leadData.brokerage || 'Not provided'}; Licensed in Florida: ${leadData.licensed || 'Not provided'}`
+        : `Selected agent: ${leadData.agent}`,
     }
 
     // .select() ensures the inserted row is returned in data (without it data is always null)
