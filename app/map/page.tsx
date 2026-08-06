@@ -1045,7 +1045,7 @@ export default function MiamiApp() {
           <button
             onClick={() => setShowFilterModal(true)}
             style={{
-              width: 42, height: 42, borderRadius: 999,
+              width: 40, height: 40, borderRadius: 999,
               background: '#0B1220', border: 'none',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 4px 16px rgba(10,15,28,0.24)',
@@ -1056,9 +1056,9 @@ export default function MiamiApp() {
               <line x1="4" y1="6" x2="20" y2="6"/>
               <line x1="4" y1="12" x2="20" y2="12"/>
               <line x1="4" y1="18" x2="20" y2="18"/>
-              <circle cx="9" cy="6" r="2" fill="#ffffff" stroke="none"/>
-              <circle cx="15" cy="12" r="2" fill="#ffffff" stroke="none"/>
-              <circle cx="9" cy="18" r="2" fill="#ffffff" stroke="none"/>
+              <circle cx="9" cy="6" r="1.6" fill="#ffffff" stroke="none"/>
+              <circle cx="15" cy="12" r="1.6" fill="#ffffff" stroke="none"/>
+              <circle cx="9" cy="18" r="1.6" fill="#ffffff" stroke="none"/>
             </svg>
           </button>
         </div>
@@ -1082,7 +1082,7 @@ export default function MiamiApp() {
             background: '#ffffff',
             borderRadius: '22px 22px 0 0',
             boxShadow: '0 -8px 30px rgba(10,15,28,0.16)',
-            height: mobileSheetExpanded ? '88vh' : '62vh',
+            height: mobileSheetExpanded ? '88vh' : '372px',
             display: 'flex',
             flexDirection: 'column',
             transform: mobileSheetOpen ? 'translateY(0)' : 'translateY(100%)',
@@ -1101,7 +1101,7 @@ export default function MiamiApp() {
           </div>
 
           {/* Count line */}
-          <div style={{ padding: '4px 18px 10px', fontSize: 12, color: '#6B7280', fontWeight: 500, flexShrink: 0 }}>
+          <div style={{ padding: '6px 18px 12px', fontSize: 12, color: '#6B7280', fontWeight: 500, flexShrink: 0 }}>
             <b style={{ color: '#0A0F1C', fontWeight: 700 }}>{filteredBuildings.length}</b>{' '}
             apartment{filteredBuildings.length !== 1 ? 's' : ''}{mapFilters.neighborhood ? ` in ${mapFilters.neighborhood}` : ' in South Florida'}
           </div>
