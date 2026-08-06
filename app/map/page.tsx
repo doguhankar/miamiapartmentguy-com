@@ -542,9 +542,9 @@ export default function MiamiApp() {
   const [mapInstance, setMapInstance] = useState<any>(null);
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
 
-  // Mobile bottom sheet state
+  // Mobile bottom sheet state: peek is the default view, with sliver and expanded snap points.
+  const [mobileSheetState, setMobileSheetState] = useState<'sliver' | 'peek' | 'expanded'>('peek');
   const [mobileSheetOpen, setMobileSheetOpen] = useState(true);
-  const [mobileSheetExpanded, setMobileSheetExpanded] = useState(false);
   const mobileTouchStartY = useRef(0);
   const mobileTouchCurrentY = useRef(0);
   const mobileSheetEl = useRef<HTMLDivElement>(null);
@@ -639,42 +639,30 @@ export default function MiamiApp() {
     });
   };
 
-  // Mobile bottom sheet touch drag handlers
+  // Mobile bottom sheet touch drag handlers. Each swipe advances one snap point,
+  // so dragging down from expanded passes through peek before reaching the sliver.
   const handleMobileTouchStart = (e: React.TouchEvent) => {
     mobileTouchStartY.current = e.touches[0].clientY;
     mobileTouchCurrentY.current = e.touches[0].clientY;
-    if (mobileSheetEl.current) {
-      mobileSheetEl.current.style.transition = 'none';
-    }
+    if (mobileSheetEl.current) mobileSheetEl.current.style.transition = 'none';
   };
 
   const handleMobileTouchMove = (e: React.TouchEvent) => {
-    const diff = e.touches[0].clientY - mobileTouchStartY.current;
     mobileTouchCurrentY.current = e.touches[0].clientY;
-    if (diff > 0 && mobileSheetEl.current) {
-      mobileSheetEl.current.style.transform = `translateY(${diff}px)`;
-    }
   };
 
   const handleMobileTouchEnd = () => {
     const diff = mobileTouchCurrentY.current - mobileTouchStartY.current;
-    if (mobileSheetEl.current) {
-      mobileSheetEl.current.style.transition = 'transform 0.3s ease';
-      mobileSheetEl.current.style.transform = '';
-    }
-    // Swipe up: expand to show more listings
-    if (diff < -60) {
-      setMobileSheetExpanded(true);
-      return;
-    }
-    // Swipe down: collapse first, then close
-    if (diff > 60) {
-      if (mobileSheetExpanded) {
-        setMobileSheetExpanded(false);
-      } else {
-        setMobileSheetOpen(false);
-      }
-    }
+    if (mobileSheetEl.current) mobileSheetEl.current.style.transition = 'height 280ms ease-out';
+    if (Math.abs(diff) < 40) return;
+
+    const states = ['sliver', 'peek', 'expanded'] as const;
+    const currentIndex = states.indexOf(mobileSheetState);
+    const nextIndex = diff < 0
+      ? Math.min(states.length - 1, currentIndex + 1)
+      : Math.max(0, currentIndex - 1);
+    setMobileSheetState(states[nextIndex]);
+    setMobileSheetOpen(true);
   };
 
   const SNAP_POINTS = {
@@ -1018,7 +1006,7 @@ export default function MiamiApp() {
         {/* Floating pill search bar — v17 */}
         <div style={{
           position: 'absolute', top: 'max(20px, env(safe-area-inset-top))',
-          left: 16, right: 16, zIndex: 30,
+          left: 16, right: 16, zIndex: 50,
           display: 'flex', alignItems: 'center', gap: 10,
         }}>
           <div style={{
@@ -1063,10 +1051,10 @@ export default function MiamiApp() {
           </button>
         </div>
 
-        {/* Backdrop — only when expanded, so the collapsed state keeps the map bright */}
-        {mobileSheetOpen && mobileSheetExpanded && (
+        {/* Backdrop — only when expanded, so peek and sliver keep the map bright */}
+        {mobileSheetOpen && mobileSheetState === 'expanded' && (
           <div
-            onClick={() => setMobileSheetExpanded(false)}
+            onClick={() => setMobileSheetState('peek')}
             style={{
               position: 'absolute', inset: 0, zIndex: 40,
               background: 'rgba(0,0,0,0.3)',
@@ -1077,16 +1065,19 @@ export default function MiamiApp() {
         {/* Bottom Sheet — v17 */}
         <div
           ref={mobileSheetEl}
+          onClick={(e) => {
+            if (mobileSheetState === 'sliver') setMobileSheetState('peek');
+          }}
           style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 50,
+            position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 30,
             background: '#ffffff',
             borderRadius: '22px 22px 0 0',
             boxShadow: '0 -8px 30px rgba(10,15,28,0.16)',
-            height: mobileSheetExpanded ? '88vh' : '372px',
+            height: mobileSheetState === 'sliver' ? '34px' : mobileSheetState === 'peek' ? '336px' : 'calc(100% - 78px)',
             display: 'flex',
             flexDirection: 'column',
             transform: mobileSheetOpen ? 'translateY(0)' : 'translateY(100%)',
-            transition: 'transform 0.3s ease, height 0.3s ease',
+            transition: 'transform 280ms ease-out, height 280ms ease-out',
           }}
           onTouchStart={handleMobileTouchStart}
           onTouchMove={handleMobileTouchMove}
@@ -1094,20 +1085,27 @@ export default function MiamiApp() {
         >
           {/* Drag handle */}
           <div
-            onClick={() => setMobileSheetExpanded((v) => !v)}
-            style={{ padding: '12px 0 4px', display: 'flex', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
+            onClick={() => setMobileSheetState(mobileSheetState === 'sliver' ? 'peek' : mobileSheetState === 'expanded' ? 'peek' : 'expanded')}
+            style={{ padding: '10px 0 4px', display: 'flex', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
           >
-            <div style={{ width: 36, height: 4, background: '#E2E4E9', borderRadius: 999 }} />
+            <div style={{ width: 34, height: 4, background: '#E2E4E9', borderRadius: 999 }} />
           </div>
 
-          {/* Count line */}
-          <div style={{ padding: '6px 18px 12px', fontSize: 12, color: '#6B7280', fontWeight: 500, flexShrink: 0 }}>
-            <b style={{ color: '#0A0F1C', fontWeight: 700 }}>{filteredBuildings.length}</b>{' '}
-            apartment{filteredBuildings.length !== 1 ? 's' : ''}{mapFilters.neighborhood ? ` in ${mapFilters.neighborhood}` : ' in South Florida'}
-          </div>
+          {mobileSheetState === 'sliver' ? (
+            <div style={{ position: 'absolute', bottom: 8, left: 0, right: 0, textAlign: 'center', fontSize: 10, color: '#B6BAC4', fontWeight: 500, letterSpacing: '0.02em', pointerEvents: 'none' }}>
+              ▲ Tap to view listings
+            </div>
+          ) : (
+            <>
+              {/* Count line */}
+              <div style={{ padding: '5px 16px 10px', fontSize: 11.5, color: '#6B7280', fontWeight: 500, flexShrink: 0 }}>
+                <b style={{ color: '#0A0F1C', fontWeight: 700 }}>{filteredBuildings.length}</b>{' '}
+                apartment{filteredBuildings.length !== 1 ? 's' : ''}{mapFilters.neighborhood ? ` in ${mapFilters.neighborhood}` : ' in South Florida'}
+              </div>
 
-          {/* Scrollable content */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px max(16px, env(safe-area-inset-bottom))' }}>
+              {/* Scrollable content */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '0 14px max(16px, env(safe-area-inset-bottom))' }}>
+
 
             {/* Building cards — v17 */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1208,7 +1206,29 @@ export default function MiamiApp() {
             </div>
 
           </div>
+            </>
+          )}
         </div>
+
+        {mobileSheetState === 'expanded' && (
+          <button
+            onClick={() => setMobileSheetState('peek')}
+            style={{
+              position: 'absolute', bottom: 22, left: '50%', transform: 'translateX(-50%)', zIndex: 60,
+              background: '#0B1220', color: '#fff', border: 'none',
+              display: 'flex', alignItems: 'center', gap: 7,
+              padding: '11px 18px', borderRadius: 999,
+              fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif',
+              fontSize: 12.5, fontWeight: 600,
+              boxShadow: '0 8px 24px rgba(10,15,28,0.35)', cursor: 'pointer',
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+            Collapse
+          </button>
+        )}
 
         {/* Show list FAB — visible when sheet is closed */}
         {!mobileSheetOpen && (
