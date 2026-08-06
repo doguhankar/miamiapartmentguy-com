@@ -547,6 +547,7 @@ export default function MiamiApp() {
   const [mobileSheetOpen, setMobileSheetOpen] = useState(true);
   const mobileTouchStartY = useRef(0);
   const mobileTouchCurrentY = useRef(0);
+  const mobileTouchDidDrag = useRef(false);
   const mobileSheetEl = useRef<HTMLDivElement>(null);
   
   const router = useRouter();
@@ -641,21 +642,8 @@ export default function MiamiApp() {
 
   // Mobile bottom sheet touch drag handlers. Each swipe advances one snap point,
   // so dragging down from expanded passes through peek before reaching the sliver.
-  const handleMobileTouchStart = (e: React.TouchEvent) => {
-    mobileTouchStartY.current = e.touches[0].clientY;
-    mobileTouchCurrentY.current = e.touches[0].clientY;
-    if (mobileSheetEl.current) mobileSheetEl.current.style.transition = 'none';
-  };
-
-  const handleMobileTouchMove = (e: React.TouchEvent) => {
-    mobileTouchCurrentY.current = e.touches[0].clientY;
-    // Keep vertical sheet drags from being consumed by the map or page scroller.
-    e.preventDefault();
-  };
-
-  const handleMobileTouchEnd = () => {
+  const finishMobileTouch = () => {
     const diff = mobileTouchCurrentY.current - mobileTouchStartY.current;
-    if (mobileSheetEl.current) mobileSheetEl.current.style.transition = 'height 280ms ease-out';
     if (Math.abs(diff) < 40) return;
 
     const states = ['sliver', 'peek', 'expanded'] as const;
@@ -665,6 +653,32 @@ export default function MiamiApp() {
       : Math.max(0, currentIndex - 1);
     setMobileSheetState(states[nextIndex]);
     setMobileSheetOpen(true);
+  };
+
+  const handleMobileTouchStart = (e: React.TouchEvent) => {
+    mobileTouchStartY.current = e.touches[0].clientY;
+    mobileTouchCurrentY.current = e.touches[0].clientY;
+    mobileTouchDidDrag.current = false;
+  };
+
+  const handleMobileTouchMove = (e: React.TouchEvent) => {
+    mobileTouchCurrentY.current = e.touches[0].clientY;
+    if (Math.abs(mobileTouchCurrentY.current - mobileTouchStartY.current) > 10) {
+      mobileTouchDidDrag.current = true;
+    }
+  };
+
+  const handleMobileTouchEnd = () => {
+    finishMobileTouch();
+    window.setTimeout(() => {
+      mobileTouchDidDrag.current = false;
+    }, 350);
+  };
+
+  const handleMobileTouchCancel = () => {
+    mobileTouchStartY.current = 0;
+    mobileTouchCurrentY.current = 0;
+    mobileTouchDidDrag.current = false;
   };
 
   const SNAP_POINTS = {
@@ -1058,8 +1072,9 @@ export default function MiamiApp() {
           <div
             onClick={() => setMobileSheetState('peek')}
             style={{
-              position: 'absolute', inset: 0, zIndex: 40,
+              position: 'absolute', inset: 0, zIndex: 20,
               background: 'rgba(0,0,0,0.3)',
+              pointerEvents: 'none',
             }}
           />
         )}
@@ -1075,21 +1090,27 @@ export default function MiamiApp() {
             background: '#ffffff',
             borderRadius: '22px 22px 0 0',
             boxShadow: '0 -8px 30px rgba(10,15,28,0.16)',
-            height: mobileSheetState === 'sliver' ? '34px' : mobileSheetState === 'peek' ? '336px' : 'calc(100% - 78px)',
+            height: mobileSheetState === 'sliver' ? '34px' : mobileSheetState === 'peek' ? '336px' : 'calc(100dvh - 78px)',
             display: 'flex',
             flexDirection: 'column',
             transform: mobileSheetOpen ? 'translateY(0)' : 'translateY(100%)',
             transition: 'transform 280ms ease-out, height 280ms ease-out',
-            touchAction: 'none',
           }}
-          onTouchStart={handleMobileTouchStart}
-          onTouchMove={handleMobileTouchMove}
-          onTouchEnd={handleMobileTouchEnd}
         >
-          {/* Drag handle */}
+          {/* Drag handle: the only region that captures sheet gestures; the list remains scrollable on iOS. */}
           <div
-            onClick={() => setMobileSheetState(mobileSheetState === 'sliver' ? 'peek' : mobileSheetState === 'expanded' ? 'peek' : 'expanded')}
-            style={{ padding: '10px 0 4px', display: 'flex', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
+            onClick={() => {
+              if (mobileTouchDidDrag.current) {
+                mobileTouchDidDrag.current = false;
+                return;
+              }
+              setMobileSheetState(mobileSheetState === 'sliver' ? 'peek' : mobileSheetState === 'expanded' ? 'peek' : 'expanded');
+            }}
+            onTouchStart={handleMobileTouchStart}
+            onTouchMove={handleMobileTouchMove}
+            onTouchEnd={handleMobileTouchEnd}
+            onTouchCancel={handleMobileTouchCancel}
+            style={{ padding: '10px 0 4px', display: 'flex', justifyContent: 'center', flexShrink: 0, cursor: 'pointer', touchAction: 'none' }}
           >
             <div style={{ width: 34, height: 4, background: '#E2E4E9', borderRadius: 999 }} />
           </div>
@@ -1107,7 +1128,7 @@ export default function MiamiApp() {
               </div>
 
               {/* Scrollable content */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '0 14px max(16px, env(safe-area-inset-bottom))' }}>
+              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y', overscrollBehaviorY: 'contain', padding: '0 14px max(16px, env(safe-area-inset-bottom))' }}>
 
 
             {/* Building cards — v17 */}
