@@ -1035,21 +1035,26 @@ export default function MiamiApp() {
       <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
 
       {/* ── MOBILE LAYOUT (< md) ────────────────────────────────────────── */}
+      {/* When expanded, inject a global CSS rule that re-enables pan-y scrolling
+          on the list element alone. This is the only reliable way to punch a hole
+          through a touch-action:none ancestor in Safari — inline styles on the
+          child are silently ignored when the parent carries touch-action:none. */}
+      {mobileSheetState === 'expanded' && (
+        <style>{`#mobile-listing-scroll { touch-action: pan-y !important; }`}</style>
+      )}
       <div
         className="md:hidden"
         style={{
           position: 'fixed', inset: 0, overflow: 'hidden', background: '#0B1220',
           overscrollBehavior: 'none',
+          /* Deny-by-default: block every touch on the outer wrapper when expanded.
+             The #mobile-listing-scroll rule above re-enables only the list. */
+          touchAction: mobileSheetState === 'expanded' ? 'none' : 'auto',
         }}
       >
 
-        {/* Full-screen map — when sheet is expanded, block touches on the visible map strip
-            above the sheet so they cannot trigger iOS rubber-band bounce on the page. */}
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 10,
-          touchAction: mobileSheetState === 'expanded' ? 'none' : 'auto',
-          overscrollBehavior: mobileSheetState === 'expanded' ? 'none' : 'auto',
-        }}>
+        {/* Full-screen map */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}>
           <MapComponent
             expandedNeighborhoods={expandedNeighborhoods}
             selectedBuilding={selectedBuilding}
@@ -1160,7 +1165,7 @@ export default function MiamiApp() {
               </div>
 
               {/* Scrollable content */}
-              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y', overscrollBehaviorY: 'contain', padding: '0 14px max(16px, env(safe-area-inset-bottom))' }}>
+              <div id="mobile-listing-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain', padding: '0 14px max(16px, env(safe-area-inset-bottom))' }}>
 
 
             {/* Building cards — v17 */}
