@@ -1102,13 +1102,13 @@ export default function MiamiApp() {
               flexShrink: 0, cursor: 'pointer',
             }}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round">
-              <line x1="4" y1="6" x2="20" y2="6"/>
-              <line x1="4" y1="12" x2="20" y2="12"/>
-              <line x1="4" y1="18" x2="20" y2="18"/>
-              <circle cx="9" cy="6" r="1.6" fill="#ffffff" stroke="none"/>
-              <circle cx="15" cy="12" r="1.6" fill="#ffffff" stroke="none"/>
-              <circle cx="9" cy="18" r="1.6" fill="#ffffff" stroke="none"/>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round">
+              <line x1="5" y1="4" x2="5" y2="20"/>
+              <line x1="12" y1="4" x2="12" y2="20"/>
+              <line x1="19" y1="4" x2="19" y2="20"/>
+              <circle cx="5" cy="8" r="2" fill="#0B1220" stroke="#ffffff" strokeWidth="1.8"/>
+              <circle cx="12" cy="15" r="2" fill="#0B1220" stroke="#ffffff" strokeWidth="1.8"/>
+              <circle cx="19" cy="10" r="2" fill="#0B1220" stroke="#ffffff" strokeWidth="1.8"/>
             </svg>
           </button>
         </div>
