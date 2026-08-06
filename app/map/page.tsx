@@ -649,6 +649,8 @@ export default function MiamiApp() {
 
   const handleMobileTouchMove = (e: React.TouchEvent) => {
     mobileTouchCurrentY.current = e.touches[0].clientY;
+    // Keep vertical sheet drags from being consumed by the map or page scroller.
+    e.preventDefault();
   };
 
   const handleMobileTouchEnd = () => {
@@ -1078,6 +1080,7 @@ export default function MiamiApp() {
             flexDirection: 'column',
             transform: mobileSheetOpen ? 'translateY(0)' : 'translateY(100%)',
             transition: 'transform 280ms ease-out, height 280ms ease-out',
+            touchAction: 'none',
           }}
           onTouchStart={handleMobileTouchStart}
           onTouchMove={handleMobileTouchMove}
