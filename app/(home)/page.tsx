@@ -725,6 +725,7 @@ export default function HomePage() {
           <div className="d2-topnav-inner">
             <span className="d2-logo">MAG<span className="d2-logo-dot">.</span></span>
             <div className="d2-nav-links">
+              <a href="/join-team" className="d2-nav-link">Join the Team</a>
               <a href="https://miamiapartmentguy.com/agent" className="d2-nav-link">Agent Login</a>
             </div>
           </div>
@@ -911,6 +912,7 @@ export default function HomePage() {
           <div className="m2-topnav-inner">
             <span className="m2-logo">MAG<span className="m2-logo-dot">.</span></span>
             <div className="m2-nav-links">
+              <a href="/join-team" className="m2-nav-link">Join the Team</a>
               <a href="https://miamiapartmentguy.com/agent" className="m2-nav-link">Agent Login</a>
             </div>
           </div>
