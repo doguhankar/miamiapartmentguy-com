@@ -544,6 +544,7 @@ export default function MiamiApp() {
 
   // Mobile bottom sheet state
   const [mobileSheetOpen, setMobileSheetOpen] = useState(true);
+  const [mobileSheetExpanded, setMobileSheetExpanded] = useState(false);
   const mobileTouchStartY = useRef(0);
   const mobileTouchCurrentY = useRef(0);
   const mobileSheetEl = useRef<HTMLDivElement>(null);
@@ -661,8 +662,18 @@ export default function MiamiApp() {
       mobileSheetEl.current.style.transition = 'transform 0.3s ease';
       mobileSheetEl.current.style.transform = '';
     }
-    if (diff > 80) {
-      setMobileSheetOpen(false);
+    // Swipe up: expand to show more listings
+    if (diff < -60) {
+      setMobileSheetExpanded(true);
+      return;
+    }
+    // Swipe down: collapse first, then close
+    if (diff > 60) {
+      if (mobileSheetExpanded) {
+        setMobileSheetExpanded(false);
+      } else {
+        setMobileSheetOpen(false);
+      }
     }
   };
 
@@ -1052,10 +1063,10 @@ export default function MiamiApp() {
           </button>
         </div>
 
-        {/* Backdrop */}
-        {mobileSheetOpen && (
+        {/* Backdrop — only when expanded, so the collapsed state keeps the map bright */}
+        {mobileSheetOpen && mobileSheetExpanded && (
           <div
-            onClick={() => setMobileSheetOpen(false)}
+            onClick={() => setMobileSheetExpanded(false)}
             style={{
               position: 'absolute', inset: 0, zIndex: 40,
               background: 'rgba(0,0,0,0.3)',
@@ -1071,18 +1082,21 @@ export default function MiamiApp() {
             background: '#ffffff',
             borderRadius: '22px 22px 0 0',
             boxShadow: '0 -8px 30px rgba(10,15,28,0.16)',
-            maxHeight: '75vh',
+            height: mobileSheetExpanded ? '88vh' : '62vh',
             display: 'flex',
             flexDirection: 'column',
             transform: mobileSheetOpen ? 'translateY(0)' : 'translateY(100%)',
-            transition: 'transform 0.3s ease',
+            transition: 'transform 0.3s ease, height 0.3s ease',
           }}
           onTouchStart={handleMobileTouchStart}
           onTouchMove={handleMobileTouchMove}
           onTouchEnd={handleMobileTouchEnd}
         >
           {/* Drag handle */}
-          <div style={{ padding: '12px 0 4px', display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
+          <div
+            onClick={() => setMobileSheetExpanded((v) => !v)}
+            style={{ padding: '12px 0 4px', display: 'flex', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
+          >
             <div style={{ width: 36, height: 4, background: '#E2E4E9', borderRadius: 999 }} />
           </div>
 
