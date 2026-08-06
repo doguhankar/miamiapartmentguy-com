@@ -52,14 +52,19 @@ async function getNotionSchema(token: string, dbId: string) {
 async function sendToSlack(webhookUrl: string, leadData: LeadData) {
   try {
     console.log('[v0] Sending to Slack...')
-    const slackMessage = {
-      text: leadData.source === 'agent_recruit' ? '🧑‍💼 New Agent Recruitment Lead' : '🏢 New Lead from Move with Don Form',
-      blocks: [
+    const isAgentApplicant = leadData.source === 'agent_recruit'
+    const slackMessage = isAgentApplicant
+      ? {
+          text: `🧑‍💼 New Agent Applicant\nName: ${leadData.name}\nPhone: ${leadData.phone}\nCurrent brokerage: ${leadData.brokerage || 'Not provided'}\nLicensed in Florida: ${leadData.licensed || 'Not provided'}\nSource: agent_recruit`,
+        }
+      : {
+          text: '🏢 New Lead from Move with Don Form',
+          blocks: [
         {
           type: 'header',
           text: {
             type: 'plain_text',
-            text: '🏢 New Lead Submission',
+            text: isAgentApplicant ? '🧑‍💼 New Agent Applicant' : '🏢 New Lead Submission',
           },
         },
         {
@@ -98,10 +103,12 @@ async function sendToSlack(webhookUrl: string, leadData: LeadData) {
               text: `*Agent:*
 ${leadData.agent}`,
             },
-            ...(leadData.source === 'agent_recruit'
-              ? [{ type: 'mrkdwn', text: `*Brokerage:*
-${leadData.brokerage || 'Not provided'}` }, { type: 'mrkdwn', text: `*Licensed in Florida:*
-${leadData.licensed || 'Not provided'}` }]
+            ...(isAgentApplicant
+              ? [
+                  { type: 'mrkdwn', text: `*Brokerage:*\n${leadData.brokerage || 'Not provided'}` },
+                  { type: 'mrkdwn', text: `*Licensed in Florida:*\n${leadData.licensed || 'Not provided'}` },
+                  { type: 'mrkdwn', text: '*Source:*\nagent_recruit' },
+                ]
               : []),
             {
               type: 'mrkdwn',
@@ -110,7 +117,7 @@ ${leadData.licensed || 'Not provided'}` }]
           ],
         },
       ],
-    }
+        }
 
     const slackResponse = await fetch(webhookUrl, {
       method: 'POST',

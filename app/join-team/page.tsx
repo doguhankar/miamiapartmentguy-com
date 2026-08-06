@@ -40,7 +40,7 @@ const faqs = [
 ] as const
 
 export default function JoinTeamPage() {
-  const [licensed, setLicensed] = useState<'Yes' | 'Not yet'>('Yes')
+  const [licensed, setLicensed] = useState<'Yes' | 'No'>('Yes')
   const [form, setForm] = useState({ name: '', phone: '', brokerage: '' })
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
 
@@ -48,7 +48,10 @@ export default function JoinTeamPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!form.name.trim() || !form.phone.trim()) return
+    if (!form.name.trim() || !form.phone.trim() || !form.brokerage.trim()) {
+      setStatus('error')
+      return
+    }
     setStatus('submitting')
     try {
       const response = await fetch('/api/submit-lead', {
@@ -107,7 +110,7 @@ export default function JoinTeamPage() {
 
       <section className={styles.section}><div className={styles.sectionLabel}>Questions</div><div className={styles.faqGrid}>{faqs.map(([question, answer]) => <div className={styles.faqItem} key={question}><div className={styles.faqQ}>{question}</div><div className={styles.faqA}>{answer}</div></div>)}</div></section>
 
-      <section className={styles.closing} id="apply"><div className={styles.closingPanel}><h2>We&apos;re not building a brokerage.<br /><span className={styles.accent}>We&apos;re building a team worth joining.</span></h2><p>One conversation. Bring every question you&apos;ve got — <b>including the uncomfortable ones.</b></p><form className={styles.formWrap} onSubmit={submit}><div className={styles.formGrid}><input required className={styles.field} type="text" placeholder="Your name" aria-label="Your name" value={form.name} onChange={(event) => update('name', event.target.value)} /><input required className={styles.field} type="tel" placeholder="Phone number" aria-label="Phone number" value={form.phone} onChange={(event) => update('phone', event.target.value)} /><input className={`${styles.field} ${styles.full}`} type="text" placeholder="Current brokerage (or 'none')" aria-label="Current brokerage" value={form.brokerage} onChange={(event) => update('brokerage', event.target.value)} /></div><div className={styles.licensedLabel}>Licensed in Florida?</div><div className={styles.toggleRow}>{(['Yes', 'Not yet'] as const).map((choice) => <button type="button" className={`${styles.toggleBtn} ${licensed === choice ? styles.active : ''}`} key={choice} onClick={() => setLicensed(choice)}>{choice}</button>)}</div><button className={styles.submitBtn} type="submit" disabled={status === 'submitting'}>{status === 'submitting' ? 'Sending…' : status === 'success' ? 'We\'ll be in touch →' : 'Let\'s chat →'}</button>{status === 'success' && <p className={styles.formMessage}>Thanks — Don will text you within 24 hours.</p>}{status === 'error' && <p className={styles.formError}>Something went wrong. Please try again.</p>}<div className={styles.formFine}>Don will text you within 24 hours · No spam · No pressure<br />Don Karahan · FL #SL3581300 · 305 International Realty</div></form></div></section>
+      <section className={styles.closing} id="apply"><div className={styles.closingPanel}><h2>We&apos;re not building a brokerage.<br /><span className={styles.accent}>We&apos;re building a team worth joining.</span></h2><p>One conversation. Bring every question you&apos;ve got — <b>including the uncomfortable ones.</b></p><form className={styles.formWrap} onSubmit={submit}><div className={styles.formGrid}><input required className={styles.field} type="text" placeholder="Your name" aria-label="Your name" value={form.name} onChange={(event) => update('name', event.target.value)} /><input required className={styles.field} type="tel" placeholder="Phone number" aria-label="Phone number" value={form.phone} onChange={(event) => update('phone', event.target.value)} /><input className={`${styles.field} ${styles.full}`} type="text" placeholder="Current brokerage (or 'none')" aria-label="Current brokerage" value={form.brokerage} onChange={(event) => update('brokerage', event.target.value)} /></div><div className={styles.licensedLabel}>Licensed in Florida?</div><div className={styles.toggleRow}>{(['Yes', 'No'] as const).map((choice) => <button type="button" className={`${styles.toggleBtn} ${licensed === choice ? styles.active : ''}`} key={choice} onClick={() => setLicensed(choice)}>{choice}</button>)}</div><button className={styles.submitBtn} type="submit" disabled={status === 'submitting'}>{status === 'submitting' ? 'Sending…' : status === 'success' ? 'Got it — Don will text you' : 'Let\'s chat →'}</button>{status === 'success' && <p className={styles.formMessage}>Thanks — Don will text you within 24 hours.</p>}{status === 'error' && <p className={styles.formError}>Please complete your name, phone, and brokerage, then try again.</p>}<div className={styles.formFine}>Don will text you within 24 hours · No spam · No pressure<br />Don Karahan · FL #SL3581300 · 305 International Realty</div></form></div></section>
 
       <footer className={styles.footer}><div className={styles.footerText}>Miami Apartment Guy™ · Don Karahan · FL Real Estate License #SL3581300<br />Casa Locators / 305 International Realty · Miami-Dade &amp; Broward · Equal Housing Opportunity</div></footer>
     </main>
