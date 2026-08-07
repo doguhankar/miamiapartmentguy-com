@@ -1613,10 +1613,6 @@ export default function MiamiApp() {
                   isAgentMode={isAgentMode}
                   isStarred={starredBuildings.has(String(building.id))}
                   onHover={setHighlightedBuilding}
-                  onClick={(b) => {
-                    setSelectedBuilding(b);
-                    setInfoBuilding(b);
-                  }}
                   onStar={(b) => {
                     const newStarred = new Set(starredBuildings);
                     if (newStarred.has(String(b.id))) {

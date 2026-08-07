@@ -12,7 +12,6 @@ interface DesktopBuildingCardProps {
   isStarred?: boolean
   hasSavedBadge?: boolean
   onHover?: (building: Building | null) => void
-  onClick?: (building: Building) => void
   onStar?: (building: Building) => void
 }
 
@@ -91,7 +90,6 @@ export function DesktopBuildingCard({
       href={`/buildings/${building.id}`}
       onMouseEnter={() => onHover?.(building)}
       onMouseLeave={() => onHover?.(null)}
-      onClick={() => onClick?.(building)}
       style={{
         display: 'block',
         color: 'inherit',
@@ -256,33 +254,6 @@ export function DesktopBuildingCard({
             )}
           </div>
 
-          {/* Text Don CTA */}
-          <a
-            href={`sms:+14077657306?body=Hi%20Don%2C%20I%27m%20interested%20in%20${encodeURIComponent(building.name)}`}
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              alignSelf: 'flex-start',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              background: '#FF4D8D',
-              color: '#fff',
-              border: 'none',
-              padding: '8px 14px',
-              borderRadius: '8px',
-              fontSize: '12px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              textDecoration: 'none',
-              lineHeight: 1,
-              transition: 'background 0.12s ease',
-              marginTop: '8px',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#E03570' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = '#FF4D8D' }}
-          >
-            Text Don
-          </a>
         </div>
       </div>
     </Link>
