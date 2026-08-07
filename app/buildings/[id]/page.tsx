@@ -239,9 +239,9 @@ export default function BuildingDetailPage() {
           </div>
 
           {/* DOTS */}
-          <div style={{ position: 'absolute', zIndex: 4, top: 130, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 7, pointerEvents: 'none' }}>
+          <div style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 20px', background: '#fff', flexShrink: 0 }}>
             {allImages.slice(0, 8).map((_, i) => (
-              <button key={i} onClick={() => setImgIdx(i)} aria-label={`View photo ${i + 1}`} style={{ width: i === imgIdx ? 16 : 7, height: 7, borderRadius: 999, background: i === imgIdx ? PINK : 'rgba(255,255,255,0.82)', border: '1px solid rgba(10,15,28,0.18)', cursor: 'pointer', padding: 0, transition: 'all 0.2s', flexShrink: 0, pointerEvents: 'auto' }} />
+              <button key={i} onClick={() => setImgIdx(i)} aria-label={`View photo ${i + 1}`} style={{ width: i === imgIdx ? 16 : 7, height: 7, borderRadius: 999, background: i === imgIdx ? '#FF3D82' : '#D1D5DB', border: 'none', cursor: 'pointer', padding: 0, transition: 'all 0.2s', flexShrink: 0 }} />
             ))}
           </div>
 
