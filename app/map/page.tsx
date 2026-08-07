@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import mapboxgl from 'mapbox-gl';
@@ -18,8 +18,48 @@ import { copyToClipboard, showToast } from '@/lib/toast-utils';
 import { Star } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { buildings as BUILDINGS } from '@/lib/buildings';
-import { neighborhoodCenters } from '@/lib/neighborhood-centers';
-const NEIGHBORHOODS = ['Brickell', 'Downtown', 'Edgewater', 'Midtown', 'Wynwood', 'Miami Design District', 'North Miami', 'North Miami Beach', 'Aventura', 'Hollywood', 'Dania Beach', 'Allapattah', 'Little Havana', 'Doral', 'Coconut Grove', 'Las Olas'];
+
+type AvailableUnit = {
+  floorPlanType?: string;
+  beds?: string | number;
+  price?: number;
+  sqft?: number;
+  square_feet?: number;
+  availableDate?: string | null;
+  available_date?: string | null;
+};
+
+type PricingInventory = Record<string, { units: AvailableUnit[] }>;
+
+const unitMatchesSize = (unit: AvailableUnit, size: string) => {
+  const label = `${unit.floorPlanType ?? ''} ${unit.beds ?? ''}`.toLowerCase();
+  if (size === 'Studio') return label.includes('studio') || /(^|\\D)0(\\D|$)/.test(label);
+  if (size === '1BR') return label.includes('1br') || label.includes('1 bedroom') || /(^|\\D)1(\\D|$)/.test(label);
+  if (size === '2BR') return label.includes('2br') || label.includes('2 bedroom') || /(^|\\D)2(\\D|$)/.test(label);
+  if (size === '3BR') return label.includes('3br') || label.includes('3 bedroom') || /(^|\\D)3(\\D|$)/.test(label);
+  return true;
+};
+
+const unitMatchesBedroomFilter = (unit: AvailableUnit, filter: string) => {
+  const label = `${unit.floorPlanType ?? ''} ${unit.beds ?? ''}`.toLowerCase();
+  if (filter === 'Studio') return label.includes('studio') || /(^|\\D)0(\\D|$)/.test(label);
+  if (filter === '1 Bedroom') return label.includes('1br') || label.includes('1 bedroom') || /(^|\\D)1(\\D|$)/.test(label);
+  if (filter === '2 Bedrooms') return label.includes('2br') || label.includes('2 bedroom') || /(^|\\D)2(\\D|$)/.test(label);
+  if (filter === '3+ Bedrooms') return /(^|\\D)[3-9](\\D|$)/.test(label) || /[3-9]\\s*br/.test(label);
+  return true;
+};
+
+const unitAvailableByDate = (unit: AvailableUnit, requestedDate: string) => {
+  const rawDate = unit.availableDate ?? unit.available_date;
+  if (!rawDate) return true;
+  return rawDate.slice(0, 10) <= requestedDate;
+};
+
+const parseRange = (value: string) => {
+  const match = value.match(/(\\d[\\d,]*)\\s*[-–]\\s*(\\d[\\d,]*)/);
+  return match ? { min: Number(match[1].replace(/,/g, '')), max: Number(match[2].replace(/,/g, '')) } : null;
+};
+
 
 // Ticker Component
 const Ticker = () => (
@@ -153,12 +193,12 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setBottomSheetSnapPoint, setInfoBuilding: setInfoBuildingFromMap, onMapReady }) => {
+const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setBottomSheetSnapPoint, setInfoBuilding: setInfoBuildingFromMap, onMapReady, onPricingDataChange }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
   const popupsRef = useRef([]);
-  const [pricingData, setPricingData] = useState<Record<string, { units: Array<{ floorPlanType?: string; beds?: string | number; price?: number }> }>>({});
+  const [pricingData, setPricingData] = useState<PricingInventory>({});
   const [buildingImages, setBuildingImages] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
@@ -186,7 +226,9 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         .order('sort_order', { ascending: true });
 
       if (!cancelled) {
-        setPricingData(Object.fromEntries(entries.filter(Boolean) as Array<readonly [string, { units: Array<{ floorPlanType?: string; beds?: string | number; price?: number }> }]>));
+        const nextPricingData = Object.fromEntries(entries.filter(Boolean) as Array<readonly [string, { units: AvailableUnit[] }]>);
+        setPricingData(nextPricingData);
+        onPricingDataChange?.(nextPricingData);
         setBuildingImages((imageRows ?? []).reduce((images, row) => {
           const buildingId = String(row.building_id);
           if (!images[buildingId]) images[buildingId] = [];
@@ -609,6 +651,7 @@ export default function MiamiApp() {
     return () => { cancelled = true; };
   }, []);
   const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [] });
+  const [pricingInventory, setPricingInventory] = useState<PricingInventory>({});
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
 
   const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], price: [], moveInDate: [], neighborhood: null });
@@ -848,6 +891,37 @@ export default function MiamiApp() {
     b.neighborhood.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const apartmentCount = useMemo(() => {
+    if (Object.keys(pricingInventory).length === 0) return 0;
+
+    return filteredBuildings.reduce((total, building) => {
+      const units = pricingInventory[String(building.id)]?.units ?? [];
+      return total + units.filter((unit) => {
+        if (activeFilters.unitSize.length > 0 && !activeFilters.unitSize.some((size) => unitMatchesSize(unit, size))) return false;
+
+        if (activeFilters.priceRange.length > 0) {
+          const range = parseRange(activeFilters.priceRange[0]);
+          if (range && (typeof unit.price !== 'number' || unit.price < range.min || unit.price > range.max)) return false;
+        }
+
+        if (activeFilters.moveIn.length > 0 && !unitAvailableByDate(unit, activeFilters.moveIn[0])) return false;
+        if (mapFilters.bedrooms.length > 0 && !mapFilters.bedrooms.some((filter) => unitMatchesBedroomFilter(unit, filter))) return false;
+
+        if (mapFilters.price.length > 0 && typeof unit.price === 'number') {
+          const priceMatch = mapFilters.price.some((filter) =>
+            (filter === '$0-$2,000' && unit.price <= 2000) ||
+            (filter === '$2,000-$4,000' && unit.price >= 2000 && unit.price < 4000) ||
+            (filter === '$4,000+' && unit.price >= 4000)
+          );
+          if (!priceMatch) return false;
+        }
+
+        if (mapFilters.moveInDate.length > 0 && !unitAvailableByDate(unit, mapFilters.moveInDate[0])) return false;
+        return true;
+      }).length;
+    }, 0);
+  }, [activeFilters, filteredBuildings, mapFilters, pricingInventory]);
+
   const getFilteredNeighborhoodBuildings = (neighborhood) => {
     return filteredBuildings.filter(b => b.neighborhood === neighborhood);
   };
@@ -882,6 +956,20 @@ export default function MiamiApp() {
       return;
     }
 
+    if (Object.keys(pricingInventory).length > 0) {
+      const matchingBuildingIds = geocodedBuildings
+        .filter((building) => (pricingInventory[String(building.id)]?.units ?? []).some((unit) => {
+          if (filters.unitSize.length > 0 && !filters.unitSize.some((size) => unitMatchesSize(unit, size))) return false;
+          const range = filters.priceRange.length > 0 ? parseRange(filters.priceRange[0]) : null;
+          if (range && (typeof unit.price !== 'number' || unit.price < range.min || unit.price > range.max)) return false;
+          if (filters.moveIn.length > 0 && !unitAvailableByDate(unit, filters.moveIn[0])) return false;
+          return true;
+        }))
+        .map((building) => building.id);
+      setVisibleBuildingIds(matchingBuildingIds);
+      return;
+    }
+
     const matchingBuildingIds: number[] = [];
 
     for (const building of geocodedBuildings) {
@@ -903,7 +991,7 @@ export default function MiamiApp() {
 
         // Check the modal's live dual-handle price range.
         if (filters.priceRange.length > 0 && hasMatchingUnits) {
-          const range = filters.priceRange[0].match(/(\d[\d,]*)\s*[-–]\s*(\d[\d,]*)/);
+          const range = filters.priceRange[0].match(/(\d[\d,]*)\s*[-��]\s*(\d[\d,]*)/);
           const min = range ? Number(range[1].replace(/,/g, '')) : 0;
           const max = range ? Number(range[2].replace(/,/g, '')) : Number.POSITIVE_INFINITY;
           hasMatchingUnits = hasMatchingUnits && building.priceMin >= min && building.priceMin <= max;
@@ -1134,9 +1222,10 @@ export default function MiamiApp() {
             geocodedBuildings={geocodedBuildings}
             setSelectedBuilding={setSelectedBuilding}
             setBottomSheetSnapPoint={setBottomSheetSnapPoint}
-            setInfoBuilding={setInfoBuilding}
-            onMapReady={handleMapReady}
-          />
+  setInfoBuilding={setInfoBuilding}
+  onMapReady={handleMapReady}
+  onPricingDataChange={setPricingInventory}
+  />
         </div>
 
         {/* Floating pill search bar — v17 */}
@@ -1231,8 +1320,8 @@ export default function MiamiApp() {
             <>
               {/* Count line */}
               <div style={{ padding: '5px 16px 10px', fontSize: 11.5, color: '#6B7280', fontWeight: 500, flexShrink: 0 }}>
-                <b style={{ color: '#0A0F1C', fontWeight: 700 }}>{filteredBuildings.length}</b>{' '}
-                apartment{filteredBuildings.length !== 1 ? 's' : ''}{mapFilters.neighborhood ? ` in ${mapFilters.neighborhood}` : ' in South Florida'}
+  <b style={{ color: '#0A0F1C', fontWeight: 700 }}>{apartmentCount}</b>{' '}
+  apartment{apartmentCount !== 1 ? 's' : ''} are up for grabs
               </div>
 
               {/* Scrollable content */}
@@ -1492,9 +1581,10 @@ export default function MiamiApp() {
             geocodedBuildings={geocodedBuildings}
             setSelectedBuilding={setSelectedBuilding}
             setBottomSheetSnapPoint={setBottomSheetSnapPoint}
-            setInfoBuilding={setInfoBuilding}
-            onMapReady={handleMapReady}
-          />
+  setInfoBuilding={setInfoBuilding}
+  onMapReady={handleMapReady}
+  onPricingDataChange={setPricingInventory}
+  />
         </div>
 
         {/* Cards Panel - 36% of width */}
