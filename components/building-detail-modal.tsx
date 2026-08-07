@@ -22,29 +22,33 @@ type Unit = {
 }
 
 const COLORS = {
-  ink: '#0B1220',
-  muted: '#687487',
-  line: '#E5E9EF',
-  soft: '#F5F7FA',
-  pink: '#F34C86',
-  teal: '#09A8A4',
-  amber: '#F0A51A',
+  navy: '#0B1220',
+  pink: '#FF3D82',
+  muted: '#6B7280',
+  border: '#ECEDF2',
+  panel: '#F8F8FA',
+  text: '#0A0F1C',
+  teal: '#1B8A4A',
+  gold: '#92660B',
 }
 
-function Icon({ name, size = 18 }: { name: 'pin' | 'bed' | 'bath' | 'ruler' | 'calendar' | 'check' | 'chevron' | 'receipt' | 'spark'; size?: number }) {
-  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+type IconName = 'back' | 'heart' | 'chevronLeft' | 'chevronRight' | 'pin' | 'money' | 'home' | 'receipt' | 'chevronDown' | 'star'
+
+function Icon({ name, size = 16, filled = false }: { name: IconName; size?: number; filled?: boolean }) {
+  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: filled ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true }
   const paths = {
+    back: <><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></>,
+    heart: <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.6Z" />,
+    chevronLeft: <path d="m15 18-6-6 6-6" />,
+    chevronRight: <path d="m9 18 6-6-6-6" />,
     pin: <><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></>,
-    bed: <><path d="M3 18v-7h18v7" /><path d="M3 14h18M6 11V8h5a3 3 0 0 1 3 3" /><path d="M3 18v2M21 18v2" /></>,
-    bath: <><path d="M4 12h16" /><path d="M5 12v3a4 4 0 0 0 4 4h6a4 4 0 0 0 4-4v-3" /><path d="M7 12V6a2 2 0 0 1 4-1v1" /><path d="M4 19v2M20 19v2" /></>,
-    ruler: <><path d="m4 19 15-15 2 2L6 21z" /><path d="m8 15 2 2M11 12l2 2M14 9l2 2M17 6l2 2" /></>,
-    calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18" /></>,
-    check: <><circle cx="12" cy="12" r="9" /><path d="m8 12 2.5 2.5L16 9" /></>,
-    chevron: <path d="m7 10 5 5 5-5" />,
-    receipt: <><path d="M5 3h14v18l-3-2-4 2-4-2-3 2z" /><path d="M8 8h8M8 12h8M8 16h4" /></>,
-    spark: <><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" /><path d="m19 16 .8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z" /></>,
+    money: <><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></>,
+    home: <><path d="m3 9 9-7 9 7" /><path d="M5 8v12h14V8" /><path d="M9 20v-6h6v6" /></>,
+    receipt: <><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M7 8h10M7 12h10M7 16h5" /></>,
+    chevronDown: <path d="m6 9 6 6 6-6" />,
+    star: <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z" />,
   }
-  return <svg {...common} aria-hidden="true">{paths[name]}</svg>
+  return <svg {...common}>{paths[name]}</svg>
 }
 
 function money(value?: number | string | null) {
@@ -53,35 +57,38 @@ function money(value?: number | string | null) {
   return Number.isFinite(amount) ? `$${amount.toLocaleString()}` : String(value)
 }
 
-function availability(value?: string | null) {
+function formatAvailability(value?: string | null) {
   if (!value) return 'Contact for availability'
   const date = new Date(`${value}T12:00:00`)
   if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const isToday = date.toDateString() === new Date().toDateString()
+  return isToday ? 'Avail now' : `Avail ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
 }
 
 function unitLabel(unit: Unit) {
   const beds = String(unit.beds ?? '').toLowerCase()
-  if (beds === '0' || beds.includes('studio')) return 'Studio'
-  if (beds.includes('1') || beds === '1b') return '1 Bed'
-  if (beds.includes('2') || beds === '2b') return '2 Bed'
-  if (beds.includes('3') || beds === '3b') return '3 Bed'
-  return String(unit.beds || 'Available home')
+  if (!beds || beds === '0' || beds.includes('studio')) return 'Studio'
+  if (beds.includes('1')) return '1 Bed'
+  if (beds.includes('2')) return '2 Bed'
+  if (beds.includes('3')) return '3 Bed'
+  return String(unit.beds)
 }
 
-function FeeRow({ label, value }: { label: string; value: number | string }) {
-  return <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '11px 0', borderBottom: `1px solid ${COLORS.line}` }}>
-    <span style={{ color: COLORS.muted, fontSize: 13 }}>{label}</span>
-    <span style={{ color: COLORS.ink, fontSize: 13, fontWeight: 700 }}>{money(value)}</span>
-  </div>
+function FeeRow({ label, value, emphasis = false }: { label: string; value: number | string; emphasis?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-t px-4 py-2.5 text-xs" style={{ borderColor: COLORS.border, background: emphasis ? '#FFFFFF' : undefined }}>
+      <span style={{ color: emphasis ? COLORS.pink : COLORS.muted, fontWeight: emphasis ? 800 : 400 }}>{label}</span>
+      <span style={{ color: emphasis ? COLORS.pink : COLORS.text, fontWeight: 800 }}>{money(value)}</span>
+    </div>
+  )
 }
 
 export function BuildingDetailModal({ building, onClose }: BuildingDetailModalProps) {
-  const [expanded, setExpanded] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [units, setUnits] = useState<Unit[]>([])
   const [loadingUnits, setLoadingUnits] = useState(true)
   const [showAllUnits, setShowAllUnits] = useState(false)
+  const [saved, setSaved] = useState(false)
   const { images: supabaseImages } = useSupabaseImages(building.id)
   const images = supabaseImages.length ? supabaseImages : building.images || []
 
@@ -102,72 +109,52 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
       const label = unitLabel(unit)
       groups.set(label, [...(groups.get(label) || []), unit])
     })
-    return Array.from(groups.entries()).map(([label, entries]) => ({ label, entries, price: Math.min(...entries.map((u) => Number(u.price) || Infinity)) }))
+    return Array.from(groups.entries()).map(([label, entries]) => ({ label, entries, price: Math.min(...entries.map((unit) => Number(unit.price) || Infinity)) }))
   }, [units])
 
-  const visibleUnits = showAllUnits ? units : units.slice(0, 5)
-  const deal = building.concession && building.concession.toLowerCase() !== 'tbd' ? building.concession : 'Ask about current specials'
+  const priceGroups = groupedUnits.length ? groupedUnits : building.units.map((label) => ({ label, entries: [], price: building.priceMin }))
+  const visibleUnits = showAllUnits ? units : units.slice(0, 3)
   const allFees = [...(building.moveInFees || []), ...(building.monthlyCharges || [])]
-  const hero = images[currentImageIndex]
+  const deal = building.concession && building.concession.toLowerCase() !== 'tbd' ? building.concession : 'Ask about current specials'
+  const image = images[currentImageIndex]
   const textHref = `sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`
-
   const nextImage = () => setCurrentImageIndex((index) => (index + 1) % Math.max(images.length, 1))
   const prevImage = () => setCurrentImageIndex((index) => (index - 1 + Math.max(images.length, 1)) % Math.max(images.length, 1))
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6" style={{ background: 'rgba(11,18,32,.68)', backdropFilter: 'blur(3px)' }} onClick={onClose}>
-      <div className="relative flex w-full flex-col overflow-hidden bg-white md:max-w-[520px] md:rounded-[24px]" style={{ height: expanded ? '100dvh' : 'min(86dvh, 760px)', maxHeight: '100dvh', color: COLORS.ink }} onClick={(event) => event.stopPropagation()}>
-        <div className="relative shrink-0" style={{ height: expanded ? 202 : 250, background: COLORS.ink }}>
-          {hero ? <img src={hero} alt={`${building.name} exterior`} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-white/60">No photos available</div>}
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(11,18,32,.5), transparent 45%, rgba(11,18,32,.65))' }} />
-          <button aria-label="Close building details" onClick={onClose} className="absolute right-4 top-4 flex size-10 items-center justify-center rounded-full text-white" style={{ background: 'rgba(11,18,32,.78)' }}>
-            <span style={{ fontSize: 24, lineHeight: 1 }}>×</span>
-          </button>
-          {images.length > 1 && <>
-            <button aria-label="Previous photo" onClick={prevImage} className="absolute left-3 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-white" style={{ background: 'rgba(11,18,32,.64)' }}>‹</button>
-            <button aria-label="Next photo" onClick={nextImage} className="absolute right-3 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-white" style={{ background: 'rgba(11,18,32,.64)' }}>›</button>
-          </>}
-          <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
-            <div><div className="font-mono text-[11px] uppercase tracking-[.18em] text-white/75">{building.neighborhood}</div><h2 className="mt-1 text-[28px] font-bold tracking-[-.04em]">{building.name}</h2></div>
-            <span className="rounded-full px-3 py-1.5 text-xs font-bold" style={{ background: COLORS.pink }}>#{currentImageIndex + 1} / {Math.max(images.length, 1)}</span>
+    <div className="fixed inset-0 z-50 bg-white" style={{ color: COLORS.text }} role="dialog" aria-modal="true" aria-label={`${building.name} details`}>
+      <div className="h-full overflow-y-auto" style={{ paddingBottom: '108px', WebkitOverflowScrolling: 'touch' }}>
+        <section className="relative h-[380px] bg-[#F8F8FA]">
+          {image ? <img src={image} alt={`${building.name} exterior`} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-sm" style={{ color: COLORS.muted }}>No photos available</div>}
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(10,15,28,.5), transparent 45%, rgba(10,15,28,.72))' }} />
+          <div className="absolute left-4 right-4 top-4 z-10 flex items-center justify-between">
+            <button aria-label="Back to map" onClick={onClose} className="flex size-9 items-center justify-center rounded-full text-white" style={{ background: 'rgba(10,15,28,.56)', backdropFilter: 'blur(6px)' }}><Icon name="back" size={17} /></button>
+            <button aria-label={saved ? 'Remove from saved buildings' : 'Save building'} onClick={() => setSaved((value) => !value)} className="flex size-9 items-center justify-center rounded-full" style={{ background: 'rgba(10,15,28,.56)', color: saved ? COLORS.pink : '#FFFFFF', backdropFilter: 'blur(6px)' }}><Icon name="heart" size={17} filled={saved} /></button>
           </div>
+          {images.length > 1 && <><button aria-label="Previous photo" onClick={prevImage} className="absolute left-3 top-1/2 z-10 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-white" style={{ background: 'rgba(10,15,28,.42)' }}><Icon name="chevronLeft" size={16} /></button><button aria-label="Next photo" onClick={nextImage} className="absolute right-3 top-1/2 z-10 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-white" style={{ background: 'rgba(10,15,28,.42)' }}><Icon name="chevronRight" size={16} /></button></>}
+          <div className="absolute bottom-4 left-[18px] right-[18px] z-10 flex items-end justify-between text-white"><div><div className="text-[10.5px] font-bold uppercase tracking-[.08em] text-white/85">{building.neighborhood}</div><h1 className="mt-1 text-[26px] font-extrabold tracking-[-.04em] drop-shadow-md">{building.name}</h1></div><span className="rounded-full px-3 py-1.5 text-xs font-bold" style={{ background: COLORS.pink }}>{currentImageIndex + 1} / {Math.max(images.length, 1)}</span></div>
+        </section>
+
+        <div className="flex gap-2 overflow-x-auto px-[18px] py-3.5" style={{ scrollbarWidth: 'none' }}>
+          {images.map((photo, index) => <button key={`${photo}-${index}`} aria-label={`View photo ${index + 1}`} onClick={() => setCurrentImageIndex(index)} className="h-16 w-16 shrink-0 overflow-hidden rounded-xl" style={{ border: index === currentImageIndex ? `2px solid ${COLORS.pink}` : '2px solid transparent' }}><img src={photo} alt="" className="h-full w-full object-cover" /></button>)}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}>
-          <div className="flex gap-2 overflow-x-auto px-4 py-3" style={{ scrollbarWidth: 'none' }}>
-            {images.slice(0, 5).map((image, index) => <button key={image} aria-label={`View photo ${index + 1}`} onClick={() => setCurrentImageIndex(index)} className="h-14 w-16 shrink-0 overflow-hidden rounded-lg" style={{ border: index === currentImageIndex ? `2px solid ${COLORS.pink}` : '2px solid transparent' }}><img src={image} alt="" className="h-full w-full object-cover" /></button>)}
-          </div>
+        <main className="px-5 pb-6">
+          <div className="flex items-start justify-between gap-4 border-b py-3.5" style={{ borderColor: COLORS.border }}><div><div className="mb-1 text-[10.5px] font-bold uppercase tracking-[.06em]" style={{ color: COLORS.muted }}>Starting at</div><div className="font-extrabold tracking-[-.05em]" style={{ fontSize: 30 }}>{money(building.priceMin)}<span className="text-sm font-medium" style={{ color: COLORS.muted }}>/mo</span></div></div><p className="max-w-[150px] text-right text-[12.5px] leading-[1.5]" style={{ color: COLORS.muted }}>{building.tagline || building.address}</p></div>
 
-          <div className="px-4 pb-8">
-            <div className="flex items-start justify-between gap-4 border-b py-3" style={{ borderColor: COLORS.line }}>
-              <div><div className="text-xs font-bold uppercase tracking-[.12em]" style={{ color: COLORS.muted }}>Starting at</div><div className="mt-1 text-[30px] font-bold tracking-[-.05em]">{money(building.priceMin)}<span className="text-sm font-medium" style={{ color: COLORS.muted }}>/mo</span></div></div>
-              <div className="max-w-[180px] text-right text-sm leading-5" style={{ color: COLORS.muted }}>{building.tagline || building.address}</div>
-            </div>
+          <div className="flex flex-wrap gap-2 py-4"><span className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold" style={{ background: '#FFF6E5', color: COLORS.gold }}><Icon name="star" size={13} filled />{deal}</span><span className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold" style={{ background: COLORS.panel, color: COLORS.text }}><Icon name="pin" size={13} />{building.neighborhood}</span></div>
 
-            <div className="mt-3 flex flex-wrap gap-2">
-              <span className="rounded-full px-3 py-1.5 text-xs font-bold" style={{ background: '#FFF3D8', color: '#9A6800' }}><Icon name="spark" size={13} /> <span>{deal}</span></span>
-              <span className="rounded-full px-3 py-1.5 text-xs font-semibold" style={{ background: COLORS.soft, color: COLORS.muted }}><Icon name="pin" size={13} /> {building.neighborhood}</span>
-            </div>
+          <hr style={{ border: 0, borderTop: `1px solid ${COLORS.border}`, margin: '4px 0 22px' }} />
 
-            {expanded && <>
-              <div className="mt-5 grid grid-cols-3 gap-2">
-                {[['Income', building.incomeReq], ['Credit', building.creditReq], ['Guarantor', building.guarantor ? 'Yes' : 'No']].map(([label, value]) => <div key={label} className="rounded-xl p-3" style={{ background: COLORS.soft }}><div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: COLORS.muted }}>{label}</div><div className="mt-1 text-sm font-bold">{value}</div></div>)}
-              </div>
+          <section><h2 className="mb-3.5 flex items-center gap-2 text-sm font-extrabold"><Icon name="money" size={15} />Monthly Pricing</h2><div className="flex gap-2 overflow-x-auto pb-1">{priceGroups.map((group, index) => <div key={group.label} className="min-w-[92px] flex-1 rounded-[14px] px-2.5 py-4 text-center" style={{ background: index === Math.min(1, priceGroups.length - 1) ? COLORS.pink : COLORS.panel, color: index === Math.min(1, priceGroups.length - 1) ? '#FFFFFF' : COLORS.text }}><div className="mb-1.5 text-[10.5px] font-semibold" style={{ color: index === Math.min(1, priceGroups.length - 1) ? 'rgba(255,255,255,.85)' : COLORS.muted }}>{group.label}</div><div className="font-extrabold" style={{ fontSize: 15 }}>{money(group.price)}<span className="text-[9.5px] font-medium">+</span></div></div>)}</div></section>
 
-              <section className="mt-6"><div className="mb-3 flex items-center justify-between"><h3 className="text-lg font-bold">Unit types</h3><span className="text-xs font-semibold" style={{ color: COLORS.muted }}>{units.length || building.units.length} available</span></div><div className="grid grid-cols-2 gap-2">{(groupedUnits.length ? groupedUnits : building.units.map((label) => ({ label, price: building.priceMin, entries: [] }))).map((group) => <div key={group.label} className="rounded-xl border p-3" style={{ borderColor: COLORS.line }}><div className="text-sm font-bold">{group.label}</div><div className="mt-2 text-lg font-bold" style={{ color: COLORS.teal }}>{money(group.price)}<span className="text-xs font-medium" style={{ color: COLORS.muted }}>/mo</span></div><div className="mt-1 text-[11px]" style={{ color: COLORS.muted }}>{group.entries.length || 'Select'} homes</div></div>)}</div></section>
+          <section className="mt-7"><h2 className="mb-3.5 flex items-center gap-2 text-sm font-extrabold"><Icon name="home" size={15} />Available Units <span className="text-[11px] font-medium" style={{ color: COLORS.muted }}>({units.length || building.units.length})</span></h2>{loadingUnits ? <div className="rounded-xl p-4 text-sm" style={{ background: COLORS.panel, color: COLORS.muted }}>Loading live availability…</div> : visibleUnits.length ? <div>{visibleUnits.map((unit, index) => { const status = formatAvailability(unit.availableDate || unit.available_date); const now = status === 'Avail now'; return <div key={unit.id || index} className="mb-2 flex items-center justify-between rounded-xl border px-3.5 py-3" style={{ borderColor: COLORS.border }}><div className="flex flex-col gap-1"><div className="text-[12.5px] font-bold">{unit.unit || unit.unit_number || `Unit ${index + 1}`} · {unitLabel(unit)}</div><div className="text-[10.5px]" style={{ color: COLORS.muted }}>{unit.sqft ? `${unit.sqft} sqft` : 'See floor plan'}{unit.baths ? ` · ${unit.baths} bath` : ''}</div></div><div className="flex flex-col items-end gap-1"><div className="font-extrabold text-[13px]">{money(unit.price)}</div><span className="rounded-full px-2 py-0.5 text-[9px] font-bold" style={{ background: now ? '#E8F8EE' : '#FFF6E5', color: now ? COLORS.teal : COLORS.gold }}>{status}</span></div></div> })}</div> : <div className="rounded-xl p-4 text-sm" style={{ background: COLORS.panel, color: COLORS.muted }}>Contact Don for current availability.</div>}{units.length > 3 && <button onClick={() => setShowAllUnits((value) => !value)} className="flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-dashed p-2.5 text-[11.5px] font-semibold" style={{ borderColor: COLORS.border, color: COLORS.muted }}>{showAllUnits ? 'Show fewer units' : `Show ${units.length - 3} more units`}<Icon name="chevronDown" size={12} /></button>}</section>
 
-              <section className="mt-6"><div className="mb-3 flex items-center justify-between"><h3 className="text-lg font-bold">Available homes</h3>{units.length > 5 && <button onClick={() => setShowAllUnits((value) => !value)} className="text-xs font-bold" style={{ color: COLORS.pink }}>{showAllUnits ? 'Show less' : 'View all'}</button>}</div>{loadingUnits ? <div className="rounded-xl p-4 text-sm" style={{ background: COLORS.soft, color: COLORS.muted }}>Loading live availability…</div> : visibleUnits.length ? <div className="divide-y rounded-xl border" style={{ borderColor: COLORS.line }}>{visibleUnits.map((unit, index) => <div key={unit.id || index} className="flex items-center justify-between gap-3 p-3"><div><div className="text-sm font-bold">{unit.unit || unit.unit_number || unitLabel(unit)}</div><div className="mt-1 flex gap-2 text-xs" style={{ color: COLORS.muted }}><span>{unit.sqft ? `${unit.sqft} sqft` : 'See floor plan'}</span><span>•</span><span>{availability(unit.availableDate || unit.available_date)}</span></div></div><div className="text-right text-sm font-bold">{money(unit.price)}<div className="text-[10px] font-medium" style={{ color: COLORS.muted }}>/mo</div></div></div>)}</div> : <div className="rounded-xl p-4 text-sm" style={{ background: COLORS.soft, color: COLORS.muted }}>Contact Don for current availability.</div>}</section>
-
-              {allFees.length > 0 && <section className="mt-6"><div className="mb-3 flex items-center gap-2"><Icon name="receipt" size={18} /><h3 className="text-lg font-bold">Fees & policies</h3></div><div className="rounded-xl border px-3" style={{ borderColor: COLORS.line }}>{allFees.map((fee, index) => <FeeRow key={`${fee.type}-${index}`} label={fee.type} value={fee.amount} />)}</div></section>}
-
-              <section className="mt-6 rounded-xl p-4" style={{ background: COLORS.soft }}><div className="flex items-center gap-2 text-sm font-bold"><Icon name="check" size={17} /> Why this building</div><div className="mt-3 flex flex-wrap gap-2">{building.amenities.slice(0, 8).map((amenity) => <span key={amenity} className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold" style={{ color: COLORS.muted }}>{amenity}</span>)}</div></section>
-            </>}
-          </div>
-        </div>
-
-        {!expanded && <button onClick={() => setExpanded(true)} className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full px-5 py-3 text-sm font-bold text-white shadow-lg" style={{ background: COLORS.ink }}>View building details <span aria-hidden="true">↑</span></button>}
-        {expanded && <div className="shrink-0 border-t bg-white p-3" style={{ borderColor: COLORS.line, paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}><a href={textHref} onClick={(event) => event.stopPropagation()} className="block rounded-xl py-3.5 text-center text-sm font-bold text-white" style={{ background: COLORS.pink }}>Text Don about {building.name}</a></div>}
+          {allFees.length > 0 && <section className="mt-7 overflow-hidden rounded-[14px]" style={{ background: COLORS.panel }}><div className="flex items-center gap-2 px-4 py-3.5 text-[12.5px] font-bold"><Icon name="receipt" size={15} />Fees &amp; Policies</div><div className="px-4 pb-2 pt-1 text-[9.5px] font-bold uppercase tracking-[.05em]" style={{ color: COLORS.muted }}>Move-In</div>{allFees.slice(0, 3).map((fee, index) => <FeeRow key={`move-${fee.type}-${index}`} label={fee.type} value={fee.amount} emphasis={fee.type.toLowerCase().includes('est')} />)}{allFees.length > 3 && <><div className="px-4 pb-2 pt-3 text-[9.5px] font-bold uppercase tracking-[.05em]" style={{ color: COLORS.muted }}>Monthly &amp; Other</div>{allFees.slice(3).map((fee, index) => <FeeRow key={`other-${fee.type}-${index}`} label={fee.type} value={fee.amount} />)}</>}</section>}
+        </main>
       </div>
+
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[520px] bg-gradient-to-t from-white via-white/95 to-transparent px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-9"><a href={textHref} onClick={(event) => event.stopPropagation()} className="pointer-events-auto block rounded-[14px] py-[15px] text-center text-sm font-bold text-white shadow-[0_8px_24px_rgba(255,61,130,.35)]" style={{ background: COLORS.pink }}>Text Don about this building</a></div>
     </div>
   )
 }
