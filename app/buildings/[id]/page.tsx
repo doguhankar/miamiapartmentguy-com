@@ -105,11 +105,6 @@ const IconPrev = () => (
       <path d="M9 18l6-6-6-6" />
     </svg>
   )
-  const IconBuilding = () => (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 21h18M6 21V4h12v17M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1" />
-    </svg>
-  )
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function BuildingDetailPage() {
@@ -228,10 +223,6 @@ export default function BuildingDetailPage() {
         >
           <IconBack /> Back to map
         </button>
-        <button onClick={() => setSaved(s => !s)} aria-label="Save building" style={{ position: 'absolute', zIndex: 5, top: 16, left: 130, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: saved ? PINK : TEXT, background: 'rgba(255,255,255,0.92)', border: `1px solid ${BORDER}`, borderRadius: 7, boxShadow: '0 2px 8px rgba(10,15,28,0.08)' }}>
-          <IconHeart filled={saved} />
-        </button>
-
         {/* ── LEFT SECTION ── */}
         <div className="building-detail-left" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
@@ -248,9 +239,9 @@ export default function BuildingDetailPage() {
           </div>
 
           {/* DOTS */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 7, padding: '10px 20px', background: '#fff', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+          <div style={{ position: 'absolute', zIndex: 4, top: 130, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 7, pointerEvents: 'none' }}>
             {allImages.slice(0, 8).map((_, i) => (
-              <button key={i} onClick={() => setImgIdx(i)} aria-label={`View photo ${i + 1}`} style={{ width: i === imgIdx ? 16 : 7, height: 7, borderRadius: 999, background: i === imgIdx ? PINK : '#CBD5E1', border: 'none', cursor: 'pointer', padding: 0, transition: 'all 0.2s', flexShrink: 0 }} />
+              <button key={i} onClick={() => setImgIdx(i)} aria-label={`View photo ${i + 1}`} style={{ width: i === imgIdx ? 16 : 7, height: 7, borderRadius: 999, background: i === imgIdx ? PINK : 'rgba(255,255,255,0.82)', border: '1px solid rgba(10,15,28,0.18)', cursor: 'pointer', padding: 0, transition: 'all 0.2s', flexShrink: 0, pointerEvents: 'auto' }} />
             ))}
           </div>
 
@@ -263,11 +254,11 @@ export default function BuildingDetailPage() {
               </div>
               <button onClick={() => setSaved(s => !s)} aria-label="Save building" style={{ width: 34, height: 34, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: saved ? PINK : MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 8, cursor: 'pointer' }}><IconHeart filled={saved} /></button>
             </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginTop: 10 }}><span style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Starting at</span><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 22, color: TEXT }}>{fmt(building.priceMin)}</strong><span style={{ fontSize: 11, color: MUTED }}>/mo</span></div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2, marginTop: 10 }}><span style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Starting at</span><div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 22, color: TEXT }}>{fmt(building.priceMin)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo</span></div></div>
             {building.tagline && <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, marginTop: 8 }}>{building.tagline}</div>}
-            <div style={{ display: 'flex', gap: 7, marginTop: 9, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 7, marginTop: 9, flexWrap: 'wrap', alignItems: 'center' }}>
               {building.concession && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#FFF6E5', color: '#92660B', borderRadius: 999, padding: '5px 11px', fontSize: 11, fontWeight: 600 }}><IconStar /> {building.concession}</span>}
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: PANEL, color: TEXT, borderRadius: 999, padding: '5px 11px', fontSize: 11, fontWeight: 600 }}><IconBuilding /> {building.units.join(' · ')}</span>
+              {building.holdDays && <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>Hold Period: {building.holdDays} days</span>}
             </div>
           </div>
 
