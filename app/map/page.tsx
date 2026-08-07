@@ -272,7 +272,8 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       // Create the target popup card. Keep this DOM-built because Mapbox owns popup placement.
       const popupContent = document.createElement('div');
       popupContent.className = 'popup-content';
-      popupContent.style.width = '292px';
+      popupContent.style.position = 'relative';
+      popupContent.style.width = '250px';
       popupContent.style.padding = '0';
       popupContent.style.overflow = 'hidden';
       popupContent.style.borderRadius = '14px';
@@ -281,7 +282,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
 
       const media = document.createElement('div');
       media.style.position = 'relative';
-      media.style.height = '160px';
+      media.style.height = '136px';
       media.style.background = '#E8ECF2';
       media.style.display = 'flex';
       media.style.alignItems = 'center';
@@ -326,8 +327,35 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       media.appendChild(tourTag);
       popupContent.appendChild(media);
 
+      const closeButton = document.createElement('button');
+      closeButton.type = 'button';
+      closeButton.setAttribute('aria-label', `Close ${building.name} popup`);
+      closeButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+      closeButton.style.position = 'absolute';
+      closeButton.style.top = '8px';
+      closeButton.style.right = '8px';
+      closeButton.style.width = '30px';
+      closeButton.style.height = '30px';
+      closeButton.style.display = 'flex';
+      closeButton.style.alignItems = 'center';
+      closeButton.style.justifyContent = 'center';
+      closeButton.style.padding = '0';
+      closeButton.style.border = '0';
+      closeButton.style.borderRadius = '50%';
+      closeButton.style.background = 'rgba(11, 18, 32, 0.82)';
+      closeButton.style.color = '#FFFFFF';
+      closeButton.style.cursor = 'pointer';
+      closeButton.style.zIndex = '2';
+      closeButton.onclick = (event) => {
+        event.stopPropagation();
+        touchOpened = false;
+        popup.remove();
+        popupsRef.current = popupsRef.current.filter((openPopup) => openPopup !== popup);
+      };
+      popupContent.appendChild(closeButton);
+
       const content = document.createElement('div');
-      content.style.padding = '14px 15px 15px';
+      content.style.padding = '12px 13px 13px';
 
       const titleRow = document.createElement('div');
       titleRow.style.display = 'flex';
@@ -338,7 +366,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       const title = document.createElement('div');
       title.textContent = building.name;
       title.style.color = '#172033';
-      title.style.fontSize = '20px';
+      title.style.fontSize = '17px';
       title.style.fontWeight = '750';
       title.style.lineHeight = '1.15';
       titleRow.appendChild(title);
@@ -376,7 +404,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       price.textContent = lowestPrice === highestPrice
         ? formatPrice(lowestPrice)
         : `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice)}`;
-      price.style.marginTop = '15px';
+      price.style.marginTop = '12px';
       price.style.color = '#172033';
       price.style.fontSize = '20px';
       price.style.fontWeight = '750';
@@ -401,8 +429,8 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       const button = document.createElement('button');
       button.textContent = 'View details';
       button.style.width = '100%';
-      button.style.marginTop = '15px';
-      button.style.padding = '11px 12px';
+      button.style.marginTop = '12px';
+      button.style.padding = '9px 10px';
       button.style.backgroundColor = '#FF4D8D';
       button.style.color = '#FFFFFF';
       button.style.border = 'none';
@@ -435,6 +463,10 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
 
       const showPopup = () => {
         if (hideTimeout) clearTimeout(hideTimeout);
+        popupsRef.current.forEach((openPopup) => {
+          if (openPopup !== popup) openPopup.remove();
+        });
+        popupsRef.current = [popup];
         popup.setLngLat([building.lng, building.lat]).addTo(map.current);
         
         // Remove Mapbox's default content box so only the card shadow is visible.
