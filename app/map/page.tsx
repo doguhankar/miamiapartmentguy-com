@@ -650,7 +650,7 @@ export default function MiamiApp() {
       });
     return () => { cancelled = true; };
   }, []);
-  const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [] });
+  const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [], neighborhoods: [] });
   const [pricingInventory, setPricingInventory] = useState<PricingInventory>({});
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
 
@@ -950,15 +950,17 @@ export default function MiamiApp() {
   const handleApplyFilters = async (filters: FilterState) => {
     setActiveFilters(filters);
     
+    const matchesNeighborhood = (building: any) => filters.neighborhoods.length === 0 || filters.neighborhoods.includes(building.neighborhood);
+
     // If no filters selected, show all buildings
-    if (filters.unitSize.length === 0 && filters.priceRange.length === 0 && filters.moveIn.length === 0) {
+    if (filters.unitSize.length === 0 && filters.priceRange.length === 0 && filters.moveIn.length === 0 && filters.neighborhoods.length === 0) {
       setVisibleBuildingIds(BUILDINGS.map(b => b.id));
       return;
     }
 
     if (Object.keys(pricingInventory).length > 0) {
       const matchingBuildingIds = geocodedBuildings
-        .filter((building) => (pricingInventory[String(building.id)]?.units ?? []).some((unit) => {
+        .filter((building) => matchesNeighborhood(building) && (pricingInventory[String(building.id)]?.units ?? []).some((unit) => {
           if (filters.unitSize.length > 0 && !filters.unitSize.some((size) => unitMatchesSize(unit, size))) return false;
           const range = filters.priceRange.length > 0 ? parseRange(filters.priceRange[0]) : null;
           if (range && (typeof unit.price !== 'number' || unit.price < range.min || unit.price > range.max)) return false;
@@ -974,6 +976,7 @@ export default function MiamiApp() {
 
     for (const building of geocodedBuildings) {
       try {
+        if (!matchesNeighborhood(building)) continue;
         // For now, use building data to match filters (when /api/prices is available, query it)
         let hasMatchingUnits = true;
 

@@ -14,6 +14,7 @@ export interface FilterState {
   unitSize: string[];
   priceRange: string[];
   moveIn: string[];
+  neighborhoods: string[];
 }
 
 const NAVY = '#0B1220';
@@ -57,22 +58,28 @@ export function MapFilterModal({ isOpen, onClose, onApply, initialFilters }: Fil
     return date;
   }, []);
   const maxDate = useMemo(() => addMonths(today, 4), [today]);
-  const [filters, setFilters] = useState<FilterState>(initialFilters ?? { unitSize: [], priceRange: [], moveIn: [] });
+  const [filters, setFilters] = useState<FilterState>(initialFilters ?? { unitSize: [], priceRange: [], moveIn: [], neighborhoods: [] });
+  const [neighborhoodQuery, setNeighborhoodQuery] = useState('');
+  const [isNeighborhoodOpen, setIsNeighborhoodOpen] = useState(false);
   const [priceMin, setPriceMin] = useState(MIN_PRICE);
   const [priceMax, setPriceMax] = useState(MAX_PRICE);
   const [visibleMonth, setVisibleMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
 
   useEffect(() => {
     if (!isOpen) return;
-    const nextFilters = initialFilters ?? { unitSize: [], priceRange: [], moveIn: [] };
+    const nextFilters = initialFilters ?? { unitSize: [], priceRange: [], moveIn: [], neighborhoods: [] };
     const parsed = parsePriceRange(nextFilters.priceRange[0]);
-    setFilters(nextFilters);
+    setFilters({ ...nextFilters, neighborhoods: nextFilters.neighborhoods ?? [] });
+    setNeighborhoodQuery('');
+    setIsNeighborhoodOpen(false);
     setPriceMin(parsed?.min ?? MIN_PRICE);
     setPriceMax(parsed?.max ?? MAX_PRICE);
     const selectedDate = nextFilters.moveIn[0] ? new Date(`${nextFilters.moveIn[0]}T00:00:00`) : today;
     setVisibleMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
   }, [initialFilters, isOpen, today]);
 
+  const neighborhoods = ['Allapattah', 'Brickell', 'Buena Vista', 'Design District', 'Downtown', 'Edgewater', 'Midtown', 'Wynwood'];
+  const filteredNeighborhoods = neighborhoods.filter((neighborhood) => neighborhood.toLowerCase().includes(neighborhoodQuery.toLowerCase()));
   const selectedDate = filters.moveIn[0] ?? '';
   const monthLabel = visibleMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   const firstDay = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1).getDay();
@@ -96,6 +103,17 @@ export function MapFilterModal({ isOpen, onClose, onApply, initialFilters }: Fil
     setFilters((current) => ({ ...current, moveIn: [toDateKey(date)] }));
   };
 
+  const toggleNeighborhood = (neighborhood: string) => {
+    setFilters((current) => ({
+      ...current,
+      neighborhoods: current.neighborhoods.includes(neighborhood)
+        ? current.neighborhoods.filter((item) => item !== neighborhood)
+        : [...current.neighborhoods, neighborhood],
+    }));
+    setNeighborhoodQuery('');
+    setIsNeighborhoodOpen(false);
+  };
+
   const handleApply = () => {
     onApply({
       ...filters,
@@ -107,7 +125,9 @@ export function MapFilterModal({ isOpen, onClose, onApply, initialFilters }: Fil
   };
 
   const handleReset = () => {
-    setFilters({ unitSize: [], priceRange: [], moveIn: [] });
+    setFilters({ unitSize: [], priceRange: [], moveIn: [], neighborhoods: [] });
+    setNeighborhoodQuery('');
+    setIsNeighborhoodOpen(false);
     setPriceMin(MIN_PRICE);
     setPriceMax(MAX_PRICE);
     setVisibleMonth(new Date(today.getFullYear(), today.getMonth(), 1));
@@ -157,11 +177,45 @@ export function MapFilterModal({ isOpen, onClose, onApply, initialFilters }: Fil
           <section style={{ marginBottom: 19 }} aria-labelledby="unit-size-label">
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}><h3 id="unit-size-label" style={{ margin: 0, fontFamily: 'Archivo, var(--font-archivo), sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', color: '#9AA5AC', textTransform: 'uppercase' }}>Unit Size</h3></div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {['Studio', '1BR', '2BR', '3BR'].map((option) => {
+              {['Studio', '1BR', '2BR'].map((option) => {
                 const active = filters.unitSize.includes(option);
                 return <button key={option} type="button" aria-pressed={active} onClick={() => toggleUnitSize(option)} style={{ padding: '9px 16px', borderRadius: 999, background: active ? NAVY : PANEL, border: `1px solid ${active ? NAVY : BORDER}`, color: active ? '#fff' : TEXT, fontFamily: 'Inter, sans-serif', fontSize: 12.5, fontWeight: active ? 700 : 500, cursor: 'pointer' }}>{option}</button>;
               })}
             </div>
+          </section>
+
+          <section style={{ marginBottom: 22 }} aria-labelledby="neighborhood-label">
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+              <h3 id="neighborhood-label" style={{ margin: 0, fontFamily: 'Archivo, var(--font-archivo), sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', color: '#9AA5AC', textTransform: 'uppercase' }}>Neighborhood</h3>
+            </div>
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                value={neighborhoodQuery}
+                placeholder="Search neighborhoods..."
+                aria-label="Search neighborhoods"
+                onFocus={() => setIsNeighborhoodOpen(true)}
+                onChange={(event) => { setNeighborhoodQuery(event.target.value); setIsNeighborhoodOpen(true); }}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', border: `1px solid ${BORDER}`, borderRadius: 10, fontFamily: 'Inter, sans-serif', fontSize: 13, background: PANEL, color: TEXT, outline: 'none' }}
+              />
+              {isNeighborhoodOpen && (
+                <div role="listbox" aria-label="Neighborhood options" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, maxHeight: 190, overflowY: 'auto', zIndex: 10, padding: 8, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: '0 4px 16px rgba(10,15,28,0.12)' }}>
+                  {filteredNeighborhoods.length > 0 ? filteredNeighborhoods.map((neighborhood) => {
+                    const selected = filters.neighborhoods.includes(neighborhood);
+                    return <button key={neighborhood} type="button" role="option" aria-selected={selected} onClick={() => toggleNeighborhood(neighborhood)} style={{ width: '100%', display: 'block', padding: '10px 12px', marginBottom: 4, border: 0, borderRadius: 8, textAlign: 'left', background: selected ? PINK : 'transparent', color: selected ? '#fff' : TEXT, fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: selected ? 600 : 400, cursor: 'pointer' }}>{neighborhood}</button>;
+                  }) : <div style={{ padding: '10px 12px', color: MUTED, fontSize: 13 }}>No neighborhoods found</div>}
+                </div>
+              )}
+            </div>
+            {filters.neighborhoods.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                {filters.neighborhoods.map((neighborhood) => (
+                  <button key={neighborhood} type="button" onClick={() => toggleNeighborhood(neighborhood)} aria-label={`Remove ${neighborhood}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 10px 7px 12px', border: 0, borderRadius: 999, background: NAVY, color: '#fff', fontFamily: 'Inter, sans-serif', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                    {neighborhood}<span aria-hidden="true" style={{ width: 16, height: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: 999, background: 'rgba(255,255,255,0.3)', fontSize: 14, lineHeight: 1 }}>×</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </section>
 
           <section style={{ marginBottom: 24 }} aria-labelledby="price-range-label">
