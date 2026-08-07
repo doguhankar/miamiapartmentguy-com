@@ -255,8 +255,16 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       el.style.cursor = 'pointer';
       el.style.transition = 'all 0.2s';
 
+      let touchInteraction = false;
       el.onclick = (e) => {
         e.stopPropagation();
+        // iOS Safari synthesizes a click after touchend. The touch handler
+        // owns that interaction; avoid changing React state and rebuilding
+        // the Mapbox markers while the popup is being opened.
+        if (touchInteraction) {
+          touchInteraction = false;
+          return;
+        }
         setSelectedBuilding(building);
         setBottomSheetSnapPoint(1);
       };
@@ -419,8 +427,12 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         className: 'mag-map-popup',
       }).setDOMContent(popupContent);
 
-      // Track hide timeout to delay hiding on mouse leave
+      // Track hide timeout and whether this popup was opened by a touch.
+      // Touch taps can synthesize mouseenter/mouseleave on iOS Safari; keep
+      // touch-opened popups independent from the desktop hover lifecycle.
       let hideTimeout: NodeJS.Timeout | null = null;
+      let touchOpened = false;
+      let suppressNextClick = false;
 
       const showPopup = () => {
         if (hideTimeout) clearTimeout(hideTimeout);
@@ -447,17 +459,54 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
               if (hideTimeout) clearTimeout(hideTimeout);
             };
             (popupElement as HTMLElement).onmouseleave = () => {
-              hidePopup();
+              if (!touchOpened) hidePopup();
             };
           }
         }, 0);
       };
 
       const hidePopup = () => {
+        if (touchOpened) return;
         hideTimeout = setTimeout(() => {
           popup.remove();
         }, 200);
       };
+
+      const togglePopupFromTouch = (event: Event) => {
+        event.stopPropagation();
+        const mapEvent = event as Event & { originalEvent?: Event };
+        mapEvent.originalEvent?.stopPropagation();
+        if (touchOpened) {
+          touchOpened = false;
+          popup.remove();
+          return;
+        }
+        touchOpened = true;
+        showPopup();
+      };
+
+      el.addEventListener('touchstart', (event) => {
+        touchInteraction = true;
+        event.stopPropagation();
+        const mapEvent = event as Event & { originalEvent?: Event };
+        mapEvent.originalEvent?.stopPropagation();
+      }, { passive: true });
+      el.addEventListener('touchend', togglePopupFromTouch, { passive: true });
+
+      // Keep the synthesized iOS click from changing React state after touchend.
+      el.addEventListener('click', (event) => {
+        if (touchInteraction) {
+          touchInteraction = false;
+          event.stopPropagation();
+        }
+      });
+
+      el.addEventListener('touchstart', (event) => {
+        event.stopPropagation();
+        const mapEvent = event as Event & { originalEvent?: Event };
+        mapEvent.originalEvent?.stopPropagation();
+      }, { passive: true });
+      el.addEventListener('touchend', togglePopupFromTouch, { passive: true });
 
       // Add hover handlers to marker
       el.onmouseenter = () => {
@@ -465,7 +514,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       };
 
       el.onmouseleave = () => {
-        hidePopup();
+        if (!touchOpened) hidePopup();
       };
 
       // Create marker
@@ -979,7 +1028,12 @@ export default function MiamiApp() {
       el.style.border = '2px solid white';
       el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
       el.style.transition = 'all 0.2s';
-      el.onclick = () => {
+      el.onclick = (event) => {
+        event.stopPropagation();
+        if (suppressNextClick) {
+          suppressNextClick = false;
+          return;
+        }
         setSelectedBuilding(building);
         setBottomSheetSnapPoint(1);
       };
