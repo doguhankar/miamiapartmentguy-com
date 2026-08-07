@@ -198,8 +198,14 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
   const map = useRef(null);
   const markersRef = useRef([]);
   const popupsRef = useRef([]);
+  const markerMetaRef = useRef(new Map());
   const [pricingData, setPricingData] = useState<PricingInventory>({});
   const [buildingImages, setBuildingImages] = useState<Record<string, string[]>>({});
+  const buildingCoordinatesKey = useMemo(
+    () => geocodedBuildings.map((building: any) => `${building.id}:${building.lng}:${building.lat}`).join('|'),
+    [geocodedBuildings],
+  );
+  const markerBuildings = useMemo(() => geocodedBuildings, [buildingCoordinatesKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -275,16 +281,17 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
 
   // Add markers when buildings or selection changes
   useEffect(() => {
-    if (!map.current || !geocodedBuildings.length) return;
+    if (!map.current || !markerBuildings.length) return;
 
     // Remove existing markers and popups
     markersRef.current.forEach((marker) => marker.remove());
     popupsRef.current.forEach((popup) => popup.remove());
     markersRef.current = [];
     popupsRef.current = [];
+    markerMetaRef.current.clear();
 
     // Add new markers
-    geocodedBuildings.forEach((building: any) => {
+    markerBuildings.forEach((building: any) => {
       // Create marker element
       const el = document.createElement('div');
       el.className = 'marker';
@@ -589,8 +596,49 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
 
       markersRef.current.push(marker);
       popupsRef.current.push(popup);
+      markerMetaRef.current.set(String(building.id), { building, el, media, placeholder, price });
     });
-  }, [geocodedBuildings, selectedBuilding, pricingData, buildingImages]);
+  }, [markerBuildings]);
+
+  // Update marker DOM in place as selection, pricing, or images change.
+  useEffect(() => {
+    markerMetaRef.current.forEach(({ building, el, media, placeholder, price }) => {
+      el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
+
+      const liveUnits = pricingData[building.id]?.units?.filter((unit) => typeof unit.price === 'number' && Number.isFinite(unit.price)) || [];
+      const prices = liveUnits.map((unit) => unit.price as number);
+      const lowestPrice = prices.length ? Math.min(...prices) : building.priceMin;
+      const highestPrice = prices.length ? Math.max(...prices) : building.priceMax || building.priceMin;
+      const formatPrice = (value: number) => `$${Math.round(value).toLocaleString()}`;
+      price.textContent = lowestPrice === highestPrice
+        ? formatPrice(lowestPrice)
+        : `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice)}`;
+
+      const imageUrls = buildingImages[String(building.id)]?.length
+        ? buildingImages[String(building.id)]
+        : (Array.isArray(building.image_urls) ? building.image_urls : building.images);
+      const imageUrl = imageUrls?.find((url: unknown) => typeof url === 'string' && url.trim());
+      const currentImage = media.querySelector('img');
+      if (imageUrl) {
+        if (currentImage) {
+          if (currentImage.src !== imageUrl) currentImage.src = imageUrl;
+        } else {
+          const img = document.createElement('img');
+          img.src = imageUrl;
+          img.alt = `${building.name} building`;
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'cover';
+          img.onerror = () => { img.remove(); placeholder.style.display = 'flex'; };
+          placeholder.style.display = 'none';
+          media.appendChild(img);
+        }
+      } else if (currentImage) {
+        currentImage.remove();
+        placeholder.style.display = 'flex';
+      }
+    });
+  }, [selectedBuilding, pricingData, buildingImages]);
 
   return <div ref={mapContainer} className="w-full h-full" />;
 };
