@@ -342,12 +342,6 @@ export default function BuildingDetailPage() {
                 {(building.monthlyCharges ?? []).filter(f => !/(pet fee|parking)/i.test(f.type)).map((f, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', fontSize: 12 }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: 10, marginTop: 8, fontWeight: 800, fontSize: 13, borderRadius: 8, background: CYAN, color: CYAN_DARK }}><span>Total Monthly Fees</span><span>{fmt(totalMonthly)}/mo</span></div>
               </div>
-              <div style={{ background: '#F0FDFA', border: '1px solid #99F6E4', borderRadius: 12, padding: 14 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: CYAN_DARK, textTransform: 'uppercase', marginBottom: 10 }}>True Cost Snapshot</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: MUTED, padding: '5px 0' }}><span>Effective rent</span><strong style={{ color: TEXT }}>{fmt(effectiveRent)}/mo</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: MUTED, padding: '5px 0' }}><span>Monthly fees</span><strong style={{ color: TEXT }}>{fmt(totalMonthly)}/mo</strong></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 800, color: TEXT, borderTop: '1px solid #99F6E4', paddingTop: 9, marginTop: 6 }}><span>True monthly cost</span><span>{fmt(trueMonthly)}/mo</span></div>
-              </div>
             </div>
           </div>
         </div>
