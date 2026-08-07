@@ -3,6 +3,7 @@
 import { Building } from "@/lib/buildings"
 import { useState } from "react"
 import { useSupabaseImages } from "@/hooks/use-supabase-images"
+import Link from "next/link"
 
 interface DesktopBuildingCardProps {
   building: Building
@@ -252,6 +253,32 @@ export function DesktopBuildingCard({
               </div>
             )}
           </div>
+
+          {/* View Details link */}
+          <Link
+            href={`/buildings/${building.id}`}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              alignSelf: 'flex-start',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              background: 'transparent',
+              color: '#263247',
+              border: '1px solid #DCE1E8',
+              padding: '7px 13px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              textDecoration: 'none',
+              lineHeight: 1,
+              marginTop: '8px',
+              transition: 'border-color 0.12s ease',
+            }}
+          >
+            View Details
+          </Link>
 
           {/* Text Don CTA */}
           <a
