@@ -263,6 +263,14 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         zoom: 11,
       });
 
+      // Tune Mapbox's built-in pan inertia without affecting sheet or marker gestures.
+      map.current.dragPan.enable({
+        deceleration: 1200,
+        maxSpeed: 1400,
+        linearity: 0.2,
+        easing: (t: number) => t * (2 - t),
+      });
+
       map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
       
       // Register map instance with parent
