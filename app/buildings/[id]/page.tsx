@@ -463,10 +463,21 @@ export default function BuildingDetailPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: 10, marginTop: 7, fontWeight: 800, fontSize: 13, borderRadius: 8, background: CYAN, color: CYAN_DARK }}>
                 <span>Additional Costs</span><span>{fmt(totalMonthly)}/mo</span>
               </div>
-              <div style={{ fontSize: 11, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>
-                Your true monthly cost: <strong style={{ color: TEXT }}>{fmt(trueMonthly)}/mo</strong> (rent + fees)
               </div>
-            </div>
+
+              {/* True Monthly Cost */}
+              <div style={{ background: CYAN, borderRadius: 12, padding: 15, marginTop: 14, color: CYAN_DARK }}>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 10 }}>True Monthly Cost</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', fontSize: 12 }}>
+                  <span>Effective Rent</span><strong>{fmt(effectiveRent)}/mo</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', fontSize: 12 }}>
+                  <span>Monthly Fees</span><strong>{fmt(totalMonthly)}/mo</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: `1px solid ${CYAN_DARK}33`, paddingTop: 10, marginTop: 6, fontSize: 15, fontWeight: 800 }}>
+                  <span>Total</span><span style={{ fontSize: 20 }}>{fmt(trueMonthly)}/mo</span>
+                </div>
+              </div>
 
           </div>
 
