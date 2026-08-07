@@ -432,7 +432,6 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       // touch-opened popups independent from the desktop hover lifecycle.
       let hideTimeout: NodeJS.Timeout | null = null;
       let touchOpened = false;
-      let suppressNextClick = false;
 
       const showPopup = () => {
         if (hideTimeout) clearTimeout(hideTimeout);
@@ -500,13 +499,6 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
           event.stopPropagation();
         }
       });
-
-      el.addEventListener('touchstart', (event) => {
-        event.stopPropagation();
-        const mapEvent = event as Event & { originalEvent?: Event };
-        mapEvent.originalEvent?.stopPropagation();
-      }, { passive: true });
-      el.addEventListener('touchend', togglePopupFromTouch, { passive: true });
 
       // Add hover handlers to marker
       el.onmouseenter = () => {
@@ -1030,10 +1022,6 @@ export default function MiamiApp() {
       el.style.transition = 'all 0.2s';
       el.onclick = (event) => {
         event.stopPropagation();
-        if (suppressNextClick) {
-          suppressNextClick = false;
-          return;
-        }
         setSelectedBuilding(building);
         setBottomSheetSnapPoint(1);
       };
