@@ -1224,8 +1224,8 @@ export default function MiamiApp() {
             setBottomSheetSnapPoint={setBottomSheetSnapPoint}
   setInfoBuilding={setInfoBuilding}
   onMapReady={handleMapReady}
-  onPricingDataChange={setPricingInventory}
-  />
+            onPricingDataChange={setPricingInventory}
+          />
         </div>
 
         {/* Floating pill search bar — v17 */}
@@ -1498,11 +1498,11 @@ export default function MiamiApp() {
       </div>
 
       {/* Desktop Header - Fixed at Top */}
-      <div className="hidden md:flex items-center justify-between px-8 py-7 bg-[#0B1220] flex-shrink-0" style={{ height: '74px' }}>
+      <div className="hidden md:flex items-center justify-between px-8 py-7 bg-white flex-shrink-0 border-b border-[#E8EBF0]" style={{ height: '74px' }}>
         {/* Wordmark */}
         <Link href="/" style={{ textDecoration: 'none', cursor: 'pointer' }}>
           <div className="flex items-center gap-1">
-            <h1 className="font-black tracking-tighter uppercase text-white" style={{ fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '20px', lineHeight: '1' }}>
+            <h1 className="font-black tracking-tighter uppercase text-[#0A0F1C]" style={{ fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '20px', lineHeight: '1' }}>
               Miami Apartment
             </h1>
             <span className="font-black uppercase" style={{ color: '#FF4D8D', fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '20px', lineHeight: '1' }}>
@@ -1557,7 +1557,7 @@ export default function MiamiApp() {
       </div>
 
       {/* Filter Bar - Full Width */}
-      <div className="hidden md:block w-full bg-[#0B1220] border-b border-[#0B1220] sticky z-50" style={{ top: '74px' }}>
+      <div className="hidden md:block w-full bg-white border-b border-[#E8EBF0] sticky z-50" style={{ top: '74px' }}>
         <MapFilterCard 
           filters={mapFilters}
           onFilterChange={handleFilterChange}
@@ -1583,12 +1583,12 @@ export default function MiamiApp() {
             setBottomSheetSnapPoint={setBottomSheetSnapPoint}
   setInfoBuilding={setInfoBuilding}
   onMapReady={handleMapReady}
-  onPricingDataChange={setPricingInventory}
-  />
+            onPricingDataChange={setPricingInventory}
+          />
         </div>
 
         {/* Cards Panel - 36% of width */}
-        <div className="basis-[36%] bg-[#0B1220] border-l border-[rgba(255,255,255,0.06)] overflow-hidden flex flex-col">
+        <div className="basis-[36%] bg-[#F8F9FB] border-l border-[#E8EBF0] overflow-hidden flex flex-col">
           {/* Save list button — only visible when buildings are starred */}
           {starredBuildings.size > 0 && (
             <div className="px-4 pt-3 pb-0 flex justify-end">

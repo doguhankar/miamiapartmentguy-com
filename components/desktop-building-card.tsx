@@ -93,8 +93,8 @@ export function DesktopBuildingCard({
       onMouseLeave={() => onHover?.(null)}
       onClick={() => onClick?.(building)}
       style={{
-        background: '#131C2E',
-        border: isHighlighted ? '1.5px solid #FF4D8D' : '1px solid rgba(255,255,255,0.07)',
+        background: '#FFFFFF',
+        border: isHighlighted ? '1.5px solid #FF4D8D' : '1px solid #E1E5EB',
         borderRadius: '14px',
         padding: '14px',
         cursor: 'pointer',
@@ -110,7 +110,7 @@ export function DesktopBuildingCard({
       }}
       onMouseOut={(e) => {
         if (!isHighlighted) {
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'
+          e.currentTarget.style.borderColor = '#E1E5EB'
           e.currentTarget.style.boxShadow = 'none'
         }
       }}
@@ -122,7 +122,7 @@ export function DesktopBuildingCard({
             fontFamily: '"Archivo", sans-serif',
             fontWeight: 700,
             fontSize: '15px',
-            color: '#F0F4FC',
+            color: '#0A0F1C',
             letterSpacing: '-0.01em',
             lineHeight: 1.2,
             marginBottom: '2px',
@@ -132,7 +132,7 @@ export function DesktopBuildingCard({
           }}>
             {building.name}
           </div>
-          <div style={{ fontSize: '11px', color: '#7E8CA0', lineHeight: 1.3 }}>
+          <div style={{ fontSize: '11px', color: '#667085', lineHeight: 1.3 }}>
             {building.address}
           </div>
         </div>
@@ -147,7 +147,7 @@ export function DesktopBuildingCard({
             padding: '2px 0 2px 10px',
             flexShrink: 0,
             fontSize: '18px',
-            color: localStarred ? '#FF4D8D' : 'rgba(255,255,255,0.25)',
+            color: localStarred ? '#FF4D8D' : '#98A2B3',
             lineHeight: 1,
             transition: 'color 0.12s ease',
           }}
@@ -163,12 +163,12 @@ export function DesktopBuildingCard({
         {/* Image */}
         <div style={{
           position: 'relative',
-          width: '170px',
-          height: '130px',
+          width: '160px',
+          height: '120px',
           flexShrink: 0,
           borderRadius: '8px',
           overflow: 'hidden',
-          background: '#182236',
+          background: '#F2F4F7',
         }}>
           {thumbnailSrc ? (
             <img
@@ -216,7 +216,7 @@ export function DesktopBuildingCard({
                   <div style={{ fontSize: '13px', fontWeight: 500, color: '#19C6C0', lineHeight: 1.2 }}>
                     {tier.price}
                   </div>
-                  <div style={{ fontSize: '10px', color: '#7E8CA0', marginTop: '1px' }}>
+                  <div style={{ fontSize: '10px', color: '#667085', marginTop: '1px' }}>
                     {tier.label}
                   </div>
                 </div>
@@ -227,8 +227,8 @@ export function DesktopBuildingCard({
             {specials && (
               <div style={{
                 display: 'inline-block',
-                background: '#3D2E0A',
-                color: '#FFC24B',
+                background: '#FFF4D6',
+                color: '#A66B00',
                 fontSize: '10px',
                 fontWeight: 600,
                 padding: '3px 8px',
@@ -244,7 +244,7 @@ export function DesktopBuildingCard({
             {amenityText && (
               <div style={{
                 fontSize: '11px',
-                color: '#7E8CA0',
+                color: '#667085',
                 lineHeight: 1.45,
                 marginBottom: specials ? '0' : '7px',
               }}>
