@@ -1178,7 +1178,7 @@ export default function MiamiApp() {
             transition: 'transform 280ms ease-out, height 280ms ease-out',
           }}
         >
-          {/* Drag handle: the only region that captures sheet gestures; the list remains scrollable on iOS. */}
+          {/* Full sheet header: the handle and count row share the drag gesture area. */}
           <div
             onClick={() => {
               if (mobileTouchDidDrag.current) {
@@ -1191,23 +1191,27 @@ export default function MiamiApp() {
             onTouchMove={handleMobileTouchMove}
             onTouchEnd={handleMobileTouchEnd}
             onTouchCancel={handleMobileTouchCancel}
-            style={{ padding: '10px 0 4px', display: 'flex', justifyContent: 'center', flexShrink: 0, cursor: 'pointer', touchAction: 'none' }}
+            style={{ flexShrink: 0, cursor: 'pointer', touchAction: 'none' }}
           >
-            <div style={{ width: 34, height: 4, background: '#E2E4E9', borderRadius: 999 }} />
+            <div style={{ padding: '10px 0 4px', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ width: 34, height: 4, background: '#E2E4E9', borderRadius: 999 }} />
+            </div>
+
+            {mobileSheetState === 'sliver' ? (
+              <div style={{ padding: '0 16px 8px', textAlign: 'center', fontSize: 10, color: '#B6BAC4', fontWeight: 500, letterSpacing: '0.02em' }}>
+                ▲ Tap to view listings
+              </div>
+            ) : (
+              /* Count line */
+              <div style={{ padding: '5px 16px 10px', fontSize: 11.5, color: '#6B7280', fontWeight: 500 }}>
+                <b style={{ color: '#0A0F1C', fontWeight: 700 }}>{apartmentCount}</b>{' '}
+                apartment{apartmentCount !== 1 ? 's' : ''} are up for grabs
+              </div>
+            )}
           </div>
 
-          {mobileSheetState === 'sliver' ? (
-            <div style={{ position: 'absolute', bottom: 8, left: 0, right: 0, textAlign: 'center', fontSize: 10, color: '#B6BAC4', fontWeight: 500, letterSpacing: '0.02em', pointerEvents: 'none' }}>
-              ▲ Tap to view listings
-            </div>
-          ) : (
+          {mobileSheetState !== 'sliver' && (
             <>
-              {/* Count line */}
-              <div style={{ padding: '5px 16px 10px', fontSize: 11.5, color: '#6B7280', fontWeight: 500, flexShrink: 0 }}>
-  <b style={{ color: '#0A0F1C', fontWeight: 700 }}>{apartmentCount}</b>{' '}
-  apartment{apartmentCount !== 1 ? 's' : ''} are up for grabs
-              </div>
-
               {/* Scrollable content */}
               <div id="mobile-listing-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y', overscrollBehaviorY: 'contain', padding: '0 14px max(16px, env(safe-area-inset-bottom))' }}>
 
