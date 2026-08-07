@@ -128,7 +128,7 @@ export function MapFilterModal({ isOpen, onClose, onApply, initialFilters }: Fil
       onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
       style={{
         position: 'fixed', inset: 0, zIndex: 100,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 20px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
         background: 'rgba(10,15,28,0.55)', backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)',
         boxSizing: 'border-box',
         fontFamily: 'Inter, var(--font-inter), sans-serif', color: TEXT,
@@ -140,7 +140,7 @@ export function MapFilterModal({ isOpen, onClose, onApply, initialFilters }: Fil
         aria-labelledby="filter-modal-title"
         onMouseDown={(event) => event.stopPropagation()}
         style={{
-          width: 'min(340px, 88vw)', maxWidth: '340px', maxHeight: '84dvh', minHeight: 0,
+          width: '300px', maxWidth: '300px', maxHeight: 'min(640px, 72dvh)', minHeight: 0,
           overflow: 'hidden', boxSizing: 'border-box',
           display: 'flex', flexDirection: 'column', background: '#fff', borderRadius: 22,
           boxShadow: '0 24px 60px rgba(10,15,28,0.4)',
@@ -153,8 +153,8 @@ export function MapFilterModal({ isOpen, onClose, onApply, initialFilters }: Fil
           </button>
         </div>
 
-        <div style={{ flex: 1, minHeight: 0, padding: '18px 18px 4px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
-          <section style={{ marginBottom: 24 }} aria-labelledby="unit-size-label">
+        <div style={{ flex: 1, minHeight: 0, padding: '14px 16px 3px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+          <section style={{ marginBottom: 19 }} aria-labelledby="unit-size-label">
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}><h3 id="unit-size-label" style={{ margin: 0, fontFamily: 'Archivo, var(--font-archivo), sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', color: '#9AA5AC', textTransform: 'uppercase' }}>Unit Size</h3></div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {['Studio', '1BR', '2BR', '3BR'].map((option) => {
@@ -183,7 +183,7 @@ export function MapFilterModal({ isOpen, onClose, onApply, initialFilters }: Fil
               <div style={{ fontFamily: 'Archivo, sans-serif', fontSize: 13.5, fontWeight: 700 }}>{monthLabel}</div>
               <button type="button" aria-label="Next month" onClick={() => moveMonth(1)} disabled={visibleMonth >= new Date(maxDate.getFullYear(), maxDate.getMonth(), 1)} style={{ width: 26, height: 26, border: 0, borderRadius: 8, background: PANEL, color: MUTED, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: visibleMonth >= new Date(maxDate.getFullYear(), maxDate.getMonth(), 1) ? 0.4 : 1 }}><ChevronRight size={12} /></button>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3 }}>
               {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => <div key={`${day}-${index}`} style={{ fontSize: 9.5, fontWeight: 700, color: '#C2C6CF', textAlign: 'center', paddingBottom: 4 }}>{day}</div>)}
               {calendarDays.map((date, index) => {
                 if (!date) return <div key={`empty-${index}`} />;
