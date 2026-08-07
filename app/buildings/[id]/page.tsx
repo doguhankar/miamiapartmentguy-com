@@ -465,7 +465,7 @@ export default function BuildingDetailPage() {
                   value={income}
                   onChange={e => setIncome(e.target.value)}
                   placeholder="0"
-                  style={{ flex: 1, padding: '10px 12px', border: `1px solid ${BORDER}`, borderRadius: 10, fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600, color: TEXT, outline: 'none' }}
+                  style={{ flex: 1, padding: '10px 12px', background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600, color: TEXT, outline: 'none' }}
                 />
               </div>
               <div style={{ background: '#fff', borderRadius: 10, padding: '11px 13px', marginTop: 12, borderLeft: `3px solid ${PINK}` }}>
