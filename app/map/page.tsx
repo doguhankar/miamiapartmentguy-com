@@ -653,7 +653,6 @@ export default function MiamiApp() {
 
   // Mobile bottom sheet state: peek is the default view, with sliver and expanded snap points.
   const [mobileSheetState, setMobileSheetState] = useState<'sliver' | 'peek' | 'expanded'>('peek');
-  const [mobileSheetOpen, setMobileSheetOpen] = useState(true);
   const mobileTouchStartY = useRef(0);
   const mobileTouchCurrentY = useRef(0);
   const mobileTouchDidDrag = useRef(false);
@@ -761,7 +760,6 @@ export default function MiamiApp() {
       ? Math.min(states.length - 1, currentIndex + 1)
       : Math.max(0, currentIndex - 1);
     setMobileSheetState(states[nextIndex]);
-    setMobileSheetOpen(true);
   };
 
   const handleMobileTouchStart = (e: React.TouchEvent) => {
@@ -1090,7 +1088,7 @@ export default function MiamiApp() {
     <div className="flex flex-col h-screen bg-[#0B1220]">
       <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
 
-      {/* ── MOBILE LAYOUT (< md) ────────────────────────────────────────── */}
+      {/* ── MOBILE LAYOUT (< md) ──────────────────────���─────────────────── */}
       <div
         className="md:hidden"
         style={{
@@ -1176,7 +1174,7 @@ export default function MiamiApp() {
             height: mobileSheetState === 'sliver' ? '34px' : mobileSheetState === 'peek' ? '336px' : 'calc(100dvh - 78px)',
             display: 'flex',
             flexDirection: 'column',
-            transform: mobileSheetOpen ? 'translateY(0)' : 'translateY(100%)',
+            transform: 'translateY(0)',
             transition: 'transform 280ms ease-out, height 280ms ease-out',
           }}
         >
@@ -1340,7 +1338,7 @@ export default function MiamiApp() {
 
         {mobileSheetState === 'expanded' && (
           <button
-            onClick={() => setMobileSheetState('peek')}
+            onClick={() => setMobileSheetState('sliver')}
             style={{
               position: 'absolute', bottom: 22, left: '50%', transform: 'translateX(-50%)', zIndex: 60,
               background: '#0B1220', color: '#fff', border: 'none',
@@ -1359,10 +1357,10 @@ export default function MiamiApp() {
           </button>
         )}
 
-        {/* Show list FAB — visible when sheet is closed */}
-        {!mobileSheetOpen && (
+        {/* Show list FAB — visible when sheet is collapsed */}
+        {mobileSheetState === 'sliver' && (
           <button
-            onClick={() => setMobileSheetOpen(true)}
+            onClick={() => setMobileSheetState('peek')}
             style={{
               position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
               zIndex: 35, background: '#FF4D8D', color: '#fff',
