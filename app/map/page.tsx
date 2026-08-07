@@ -193,7 +193,7 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setBottomSheetSnapPoint, setInfoBuilding: setInfoBuildingFromMap, onMapReady, onPricingDataChange }) => {
+const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setInfoBuilding: setInfoBuildingFromMap, onMapReady, onPricingDataChange }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
@@ -308,7 +308,6 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
           return;
         }
         setSelectedBuilding(building);
-        setBottomSheetSnapPoint(1);
       };
 
       // Create the target popup card. Keep this DOM-built because Mapbox owns popup placement.
@@ -597,18 +596,12 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
 };
 
 export default function MiamiApp() {
-  const mapContainer = useRef(null);
-  const map = useRef(null);
-  const markersRef = useRef([]);
   const geocodeCache = useRef(new Map());
   const [geocodedBuildings, setGeocodedBuildings] = useState(BUILDINGS);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [highlightedBuilding, setHighlightedBuilding] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell', 'Downtown']);
-  const [bottomSheetSnapPoint, setBottomSheetSnapPoint] = useState(1);
-  const bottomSheetRef = useRef(null);
-  const touchStartY = useRef(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [infoBuilding, setInfoBuilding] = useState(null);
   const [starredBuildings, setStarredBuildings] = useState<Set<string>>(new Set());
@@ -1064,105 +1057,6 @@ export default function MiamiApp() {
     geocodeAddresses();
   }, []);
 
-  useEffect(() => {
-    if (!mapContainer.current) return;
-
-    const script = document.createElement('script');
-    script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js';
-    script.async = true;
-    script.onload = () => {
-      const linkEl = document.createElement('link');
-      linkEl.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
-      linkEl.rel = 'stylesheet';
-      document.head.appendChild(linkEl);
-
-      if (window.mapboxgl && mapContainer.current && !map.current) {
-        window.mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-        
-        map.current = new window.mapboxgl.Map({
-          container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/light-v11',
-          center: [-80.188, 25.76],
-          zoom: 11,
-        });
-
-        map.current.on('load', () => {
-          addPins();
-        });
-
-        map.current.on('style.load', () => {
-          addPins();
-        });
-      }
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, []);
-
-  const handleBottomSheetDrag = (e) => {
-    if (e.type === 'touchstart') {
-      touchStartY.current = e.touches[0].clientY;
-    } else if (e.type === 'touchend' && touchStartY.current) {
-      const touchEndY = e.changedTouches[0].clientY;
-      const diff = touchEndY - touchStartY.current;
-      
-      if (diff > 30) {
-        // Swipe down
-        if (bottomSheetSnapPoint > 0) {
-          setBottomSheetSnapPoint(bottomSheetSnapPoint - 1);
-        }
-      } else if (diff < -30) {
-        // Swipe up
-        if (bottomSheetSnapPoint < 2) {
-          setBottomSheetSnapPoint(bottomSheetSnapPoint + 1);
-        }
-      }
-      touchStartY.current = 0;
-    }
-  };
-
-  const addPins = () => {
-    if (!map.current || !window.mapboxgl) return;
-
-    markersRef.current.forEach(m => m.remove());
-    markersRef.current = [];
-
-    geocodedBuildings.forEach((building) => {
-      const el = document.createElement('div');
-      el.style.width = '16px';
-      el.style.height = '16px';
-      el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
-      el.style.borderRadius = '50%';
-      el.style.cursor = 'pointer';
-      el.style.border = '2px solid white';
-      el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-      el.style.transition = 'all 0.2s';
-      el.onclick = (event) => {
-        event.stopPropagation();
-        setSelectedBuilding(building);
-        setBottomSheetSnapPoint(1);
-      };
-
-      const marker = new (window as any).mapboxgl.Marker(el)
-        .setLngLat([building.lng, building.lat])
-        .addTo(map.current);
-      
-      markersRef.current.push(marker);
-    });
-  };
-
-  useEffect(() => {
-    if (map.current) {
-      addPins();
-    }
-  }, [selectedBuilding, geocodedBuildings]);
-
   const handleSaveList = async () => {
     if (starredBuildings.size === 0) return;
 
@@ -1214,7 +1108,6 @@ export default function MiamiApp() {
             onPinClick={(b) => { setSelectedBuilding(b); setInfoBuilding(b); }}
             geocodedBuildings={geocodedBuildings}
             setSelectedBuilding={setSelectedBuilding}
-            setBottomSheetSnapPoint={setBottomSheetSnapPoint}
   setInfoBuilding={setInfoBuilding}
   onMapReady={handleMapReady}
             onPricingDataChange={setPricingInventory}
@@ -1573,7 +1466,6 @@ export default function MiamiApp() {
             onPinClick={(b) => { setSelectedBuilding(b); setInfoBuilding(b); }}
             geocodedBuildings={geocodedBuildings}
             setSelectedBuilding={setSelectedBuilding}
-            setBottomSheetSnapPoint={setBottomSheetSnapPoint}
   setInfoBuilding={setInfoBuilding}
   onMapReady={handleMapReady}
             onPricingDataChange={setPricingInventory}
