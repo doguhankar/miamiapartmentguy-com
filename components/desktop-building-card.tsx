@@ -14,7 +14,6 @@ interface DesktopBuildingCardProps {
   onHover?: (building: Building | null) => void
   onClick?: (building: Building) => void
   onStar?: (building: Building) => void
-  onViewDetails?: (building: Building) => void
 }
 
 // Derive price tier display from units array and priceMin
@@ -71,7 +70,6 @@ export function DesktopBuildingCard({
   onHover,
   onClick,
   onStar,
-  onViewDetails,
 }: DesktopBuildingCardProps) {
   const [localStarred, setLocalStarred] = useState(isStarred)
   const { images: supabaseImages } = useSupabaseImages(building.id)
@@ -89,11 +87,15 @@ export function DesktopBuildingCard({
   }
 
   return (
-    <div
+    <Link
+      href={`/buildings/${building.id}`}
       onMouseEnter={() => onHover?.(building)}
       onMouseLeave={() => onHover?.(null)}
       onClick={() => onClick?.(building)}
       style={{
+        display: 'block',
+        color: 'inherit',
+        textDecoration: 'none',
         background: '#FFFFFF',
         border: isHighlighted ? '1.5px solid #FF4D8D' : '1px solid #E1E5EB',
         borderRadius: '14px',
@@ -153,7 +155,7 @@ export function DesktopBuildingCard({
             transition: 'color 0.12s ease',
           }}
           onMouseEnter={(e) => { if (!localStarred) e.currentTarget.style.color = 'rgba(255,77,141,0.6)' }}
-          onMouseLeave={(e) => { if (!localStarred) e.currentTarget.style.color = 'rgba(255,255,255,0.25)' }}
+          onMouseLeave={(e) => { if (!localStarred) e.currentTarget.style.color = '#98A2B3' }}
         >
           ♥
         </button>
@@ -254,32 +256,6 @@ export function DesktopBuildingCard({
             )}
           </div>
 
-          {/* View Details link */}
-          <Link
-            href={`/buildings/${building.id}`}
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              alignSelf: 'flex-start',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              background: 'transparent',
-              color: '#263247',
-              border: '1px solid #DCE1E8',
-              padding: '7px 13px',
-              borderRadius: '8px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              textDecoration: 'none',
-              lineHeight: 1,
-              marginTop: '8px',
-              transition: 'border-color 0.12s ease',
-            }}
-          >
-            View Details
-          </Link>
-
           {/* Text Don CTA */}
           <a
             href={`sms:+14077657306?body=Hi%20Don%2C%20I%27m%20interested%20in%20${encodeURIComponent(building.name)}`}
@@ -309,6 +285,6 @@ export function DesktopBuildingCard({
           </a>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }

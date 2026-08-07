@@ -1626,8 +1626,7 @@ export default function MiamiApp() {
                     }
                     setStarredBuildings(newStarred);
                   }}
-                  onViewDetails={setInfoBuilding}
-                />
+                                />
               ))}
             </div>
           </div>
