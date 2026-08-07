@@ -100,11 +100,16 @@ const IconPrev = () => (
     <path d="M15 18l-6-6 6-6" />
   </svg>
 )
-const IconNext = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <path d="M9 18l6-6-6-6" />
-  </svg>
-)
+  const IconNext = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+      <path d="M9 18l6-6-6-6" />
+    </svg>
+  )
+  const IconBuilding = () => (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 21h18M6 21V4h12v17M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1" />
+    </svg>
+  )
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function BuildingDetailPage() {
@@ -213,82 +218,61 @@ export default function BuildingDetailPage() {
   const CYAN_DARK = '#0097A7'
 
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif", background: '#fff', color: TEXT, height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div className="building-detail-page" style={{ fontFamily: "'Inter', sans-serif", background: '#fff', color: TEXT, height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-      {/* ── TOP BAR ── */}
-      <div style={{ background: NAVY, color: '#fff', fontSize: 11, fontWeight: 700, padding: '0 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, height: 46 }}>
+      {/* ── MAIN WRAPPER ── */}
+      <div className="building-detail-shell" style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         <button
           onClick={() => router.push('/map')}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: 600, background: 'none', border: 'none', padding: 0 }}
+          style={{ position: 'absolute', zIndex: 5, top: 16, left: 18, display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', color: TEXT, fontSize: 11, fontWeight: 700, background: 'rgba(255,255,255,0.92)', border: `1px solid ${BORDER}`, borderRadius: 7, padding: '8px 11px', boxShadow: '0 2px 8px rgba(10,15,28,0.08)' }}
         >
           <IconBack /> Back to map
         </button>
-        <button onClick={() => setSaved(s => !s)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center' }}>
+        <button onClick={() => setSaved(s => !s)} aria-label="Save building" style={{ position: 'absolute', zIndex: 5, top: 16, left: 130, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: saved ? PINK : TEXT, background: 'rgba(255,255,255,0.92)', border: `1px solid ${BORDER}`, borderRadius: 7, boxShadow: '0 2px 8px rgba(10,15,28,0.08)' }}>
           <IconHeart filled={saved} />
         </button>
-      </div>
-
-      {/* ── MAIN WRAPPER ── */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
         {/* ── LEFT SECTION ── */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div className="building-detail-left" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
           {/* HERO */}
-          <div style={{ position: 'relative', height: 260, background: '#1a2a3a', flexShrink: 0, overflow: 'hidden' }}>
-            {allImages[imgIdx] && (
-              <Image src={allImages[imgIdx]} alt={building.name} fill style={{ objectFit: 'cover' }} priority />
-            )}
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,15,28,0.75) 0%, transparent 60%)' }} />
-            <div style={{ position: 'absolute', left: 24, bottom: 18 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.8)', marginBottom: 3, textTransform: 'uppercase' }}>{building.neighborhood}</div>
-              <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 28, fontWeight: 800, color: '#fff' }}>{building.name}</div>
-            </div>
-            <div style={{ position: 'absolute', bottom: 18, right: 20, background: PINK, color: '#fff', fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 999 }}>
-              {imgIdx + 1} / {allImages.length}
-            </div>
-            {allImages.length > 1 && <>
-              <button onClick={() => setImgIdx(i => (i - 1 + allImages.length) % allImages.length)} style={{ position: 'absolute', top: '50%', left: 14, transform: 'translateY(-50%)', width: 34, height: 34, borderRadius: 999, background: 'rgba(255,255,255,0.18)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer' }}>
-                <IconPrev />
-              </button>
-              <button onClick={() => setImgIdx(i => (i + 1) % allImages.length)} style={{ position: 'absolute', top: '50%', right: 14, transform: 'translateY(-50%)', width: 34, height: 34, borderRadius: 999, background: 'rgba(255,255,255,0.18)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer' }}>
-                <IconNext />
-              </button>
-            </>}
+          <div style={{ display: 'flex', gap: 5, height: 260, background: '#E5E7EB', flexShrink: 0, overflow: 'hidden' }}>
+            {[0, 1, 2].map((offset) => {
+              const imageIndex = (imgIdx + offset) % Math.max(allImages.length, 1)
+              return (
+                <button key={offset} onClick={() => setImgIdx(imageIndex)} aria-label={`View photo ${imageIndex + 1}`} style={{ position: 'relative', flex: 1, minWidth: 0, border: 'none', padding: 0, cursor: 'pointer', overflow: 'hidden', background: '#D1D5DB' }}>
+                  {allImages[imageIndex] && <Image src={allImages[imageIndex]} alt={`${building.name} photo ${imageIndex + 1}`} fill style={{ objectFit: 'cover' }} priority={offset === 0} />}
+                </button>
+              )
+            })}
           </div>
 
           {/* DOTS */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: 7, padding: '10px 20px', background: '#fff', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
             {allImages.slice(0, 8).map((_, i) => (
-              <button key={i} onClick={() => setImgIdx(i)} style={{ width: 7, height: 7, borderRadius: '50%', background: i === imgIdx ? NAVY : BORDER, border: 'none', cursor: 'pointer', padding: 0, transition: 'background 0.2s', flexShrink: 0 }} />
+              <button key={i} onClick={() => setImgIdx(i)} aria-label={`View photo ${i + 1}`} style={{ width: i === imgIdx ? 16 : 7, height: 7, borderRadius: 999, background: i === imgIdx ? PINK : '#CBD5E1', border: 'none', cursor: 'pointer', padding: 0, transition: 'all 0.2s', flexShrink: 0 }} />
             ))}
           </div>
 
           {/* TOP INFO */}
-          <div style={{ padding: '14px 20px', background: '#fff', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 2 }}>Starting At</div>
-              <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 26, fontWeight: 800, color: TEXT }}>
-                {fmt(building.priceMin)}<span style={{ fontSize: 12, fontWeight: 500, color: MUTED }}>/mo</span>
+          <div style={{ padding: '16px 20px 15px', background: '#fff', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: MUTED, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}><IconPin /> {building.neighborhood}</div>
+                <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 28, lineHeight: 1.05, fontWeight: 800, color: TEXT }}>{building.name}</div>
               </div>
-              <div style={{ display: 'flex', gap: 7, marginTop: 7, flexWrap: 'wrap' }}>
-                {building.concession && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#FFF6E5', color: '#92660B', borderRadius: 999, padding: '5px 11px', fontSize: 11, fontWeight: 600 }}>
-                    <IconStar /> {building.concession}
-                  </span>
-                )}
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: PANEL, color: TEXT, borderRadius: 999, padding: '5px 11px', fontSize: 11, fontWeight: 600 }}>
-                  <IconPin /> {building.neighborhood}
-                </span>
-              </div>
+              <button onClick={() => setSaved(s => !s)} aria-label="Save building" style={{ width: 34, height: 34, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: saved ? PINK : MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 8, cursor: 'pointer' }}><IconHeart filled={saved} /></button>
             </div>
-            {building.tagline && (
-              <div style={{ fontSize: 12, color: MUTED, maxWidth: 210, textAlign: 'right', lineHeight: 1.5 }}>{building.tagline}</div>
-            )}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginTop: 10 }}><span style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Starting at</span><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 22, color: TEXT }}>{fmt(building.priceMin)}</strong><span style={{ fontSize: 11, color: MUTED }}>/mo</span></div>
+            {building.tagline && <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, marginTop: 8 }}>{building.tagline}</div>}
+            <div style={{ display: 'flex', gap: 7, marginTop: 9, flexWrap: 'wrap' }}>
+              {building.concession && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#FFF6E5', color: '#92660B', borderRadius: 999, padding: '5px 11px', fontSize: 11, fontWeight: 600 }}><IconStar /> {building.concession}</span>}
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: PANEL, color: TEXT, borderRadius: 999, padding: '5px 11px', fontSize: 11, fontWeight: 600 }}><IconBuilding /> {building.units.join(' · ')}</span>
+            </div>
           </div>
 
           {/* CONTENT: TWO COLUMNS */}
-          <div style={{ flex: 1, display: 'flex', overflow: 'hidden', borderRight: `1px solid ${BORDER}` }}>
+          <div className="building-detail-content" style={{ flex: 1, display: 'flex', overflow: 'hidden', borderRight: `1px solid ${BORDER}` }}>
 
             {/* LEFT COL: Pricing + Units */}
             <div style={{ flex: 1, overflowY: 'auto', padding: 18, borderRight: `1px solid ${BORDER}` }}>
@@ -353,74 +337,36 @@ export default function BuildingDetailPage() {
               )}
             </div>
 
-            {/* RIGHT COL: Costs + Fees */}
+            {/* RIGHT COL: Building Fees */}
             <div style={{ flex: 1, overflowY: 'auto', padding: 18 }}>
-
-              {/* Move-In Costs */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}>
-                <IconCard /> Move-In Costs
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconCard /> Building Fees</div>
+              <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Initial Fees</div>
+                {(building.moveInFees ?? []).map((f, i, arr) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: 12, borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : 'none' }}><span>{f.type}{f.type.toLowerCase().includes('deposit') ? '*' : ''}</span><strong>{fmt(f.amount)}</strong></div>)}
+                {(building.moveInFees ?? []).some(f => f.type.toLowerCase().includes('deposit')) && <div style={{ fontSize: 10, color: MUTED, marginTop: 6 }}>*Due on move-in or application, not upfront</div>}
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0 0', marginTop: 7, fontWeight: 800, fontSize: 13, borderTop: `2px solid ${BORDER}` }}><span>Total Initial</span><span>{fmt(totalMoveIn)}</span></div>
               </div>
-              <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, marginBottom: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 10 }}>
-                  {activePriceType ?? 'Upfront'} Example
-                </div>
-                {(building.moveInFees ?? []).map((f, i, arr) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: 12, borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
-                    <span style={{ color: TEXT }}>{f.type}{f.type.toLowerCase().includes('deposit') ? '*' : ''}</span>
-                    <span style={{ fontWeight: 700, color: TEXT }}>{fmt(f.amount)}</span>
-                  </div>
-                ))}
-                {(building.moveInFees ?? []).some(f => f.type.toLowerCase().includes('deposit')) && (
-                  <div style={{ fontSize: 10, color: MUTED, margin: '4px 0 6px' }}>*Due on move-in or application, not upfront</div>
-                )}
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0 0', marginTop: 7, fontWeight: 800, fontSize: 13, borderTop: `2px solid ${BORDER}` }}>
-                  <span>Total Upfront</span><span>{fmt(totalMoveIn)}</span>
-                </div>
+              <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Monthly Fees</div>
+                {(building.monthlyCharges ?? []).filter(f => !/(pet fee|parking)/i.test(f.type)).map((f, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', fontSize: 12 }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: 10, marginTop: 8, fontWeight: 800, fontSize: 13, borderRadius: 8, background: CYAN, color: CYAN_DARK }}><span>Total Monthly Fees</span><span>{fmt(totalMonthly)}/mo</span></div>
               </div>
-
-              {/* Effective Rent */}
-              {monthsFree > 0 && (
-                <div style={{ background: '#FFFBF0', borderRadius: 12, padding: 14, marginBottom: 16, borderLeft: `3px solid ${GOLD}` }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: '#92660B', textTransform: 'uppercase', marginBottom: 6 }}>Effective w/ {building.concession}</div>
-                  <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 22, fontWeight: 800, color: TEXT }}>
-                    {fmt(effectiveRent)}<span style={{ fontSize: 12, fontWeight: 500, color: MUTED }}>/mo</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 7, fontSize: 11 }}>
-                    <span style={{ color: MUTED, textDecoration: 'line-through' }}>Listed {fmt(selectedPrice)}</span>
-                    <span style={{ color: '#92660B', fontWeight: 700 }}>Save {fmt(savingsPerMo)}/mo</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Monthly Fees */}
-              <div style={{ background: PANEL, borderRadius: 12, padding: 14 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 800, color: TEXT, marginBottom: 12 }}>
-                  <IconCard /> Monthly Recurring Fees
-                </div>
-                {(building.monthlyCharges ?? []).filter(f => !/(pet fee|parking)/i.test(f.type)).map((f, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', fontSize: 12 }}>
-                    <span style={{ color: TEXT }}>{f.type}</span>
-                    <span style={{ fontWeight: 700, color: TEXT }}>{fmt(f.amount)}</span>
-                  </div>
-                ))}
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: 10, marginTop: 8, fontWeight: 800, fontSize: 13, borderRadius: 8, background: CYAN, color: CYAN_DARK }}>
-                  <span>Total Additional</span><span>{fmt(totalMonthly)}/mo</span>
-                </div>
-                <div style={{ fontSize: 11, color: MUTED, marginTop: 8 }}>
-                  True monthly cost: <strong style={{ color: TEXT }}>{fmt(trueMonthly)}/mo</strong> (rent + fees)
-                </div>
+              <div style={{ background: '#F0FDFA', border: '1px solid #99F6E4', borderRadius: 12, padding: 14 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: CYAN_DARK, textTransform: 'uppercase', marginBottom: 10 }}>True Cost Snapshot</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: MUTED, padding: '5px 0' }}><span>Effective rent</span><strong style={{ color: TEXT }}>{fmt(effectiveRent)}/mo</strong></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: MUTED, padding: '5px 0' }}><span>Monthly fees</span><strong style={{ color: TEXT }}>{fmt(totalMonthly)}/mo</strong></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 800, color: TEXT, borderTop: '1px solid #99F6E4', paddingTop: 9, marginTop: 6 }}><span>True monthly cost</span><span>{fmt(trueMonthly)}/mo</span></div>
               </div>
             </div>
           </div>
         </div>
 
         {/* ── SIDEBAR ── */}
-        <div style={{ width: 350, flexShrink: 0, background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', borderLeft: `1px solid ${BORDER}` }}>
+        <div className="building-detail-sidebar" style={{ width: 350, flexShrink: 0, background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', borderLeft: `1px solid ${BORDER}` }}>
           <div style={{ flex: 1, overflowY: 'auto', padding: '22px 20px 140px' }}>
 
-            <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 20, fontWeight: 800, marginBottom: 3, color: TEXT }}>{building.name}</div>
-            <div style={{ fontSize: 12, color: MUTED, marginBottom: 16 }}>{building.address}</div>
-            {building.tagline && <div style={{ fontSize: 13, color: MUTED, marginBottom: 22, lineHeight: 1.6 }}>{building.tagline}</div>}
+            <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 20, fontWeight: 800, marginBottom: 5, color: TEXT }}>Your Budget Breakdown</div>
+            <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.55, marginBottom: 16 }}>See what you&apos;ll really pay each month, not just the advertised rent.</div>
 
             <hr style={{ border: 'none', borderTop: `1px solid ${BORDER}`, marginBottom: 22 }} />
 
