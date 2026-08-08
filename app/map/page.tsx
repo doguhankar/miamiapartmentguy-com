@@ -193,7 +193,7 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setInfoBuilding: setInfoBuildingFromMap, onMapReady, onPricingDataChange }) => {
+const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setInfoBuilding: setInfoBuildingFromMap, onMapReady, onPricingDataChange, onBuildingsInView }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
@@ -201,7 +201,6 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
   const markerMetaRef = useRef(new Map());
   const [pricingData, setPricingData] = useState<PricingInventory>({});
   const [buildingImages, setBuildingImages] = useState<Record<string, string[]>>({});
-  const [viewportBuildings, setViewportBuildings] = useState<Building[]>([]);
   const buildingCoordinatesKey = useMemo(
     () => geocodedBuildings.map((building: any) => `${building.id}:${building.lng}:${building.lat}`).join('|'),
     [geocodedBuildings],
@@ -274,6 +273,20 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
 
       map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
       
+      const updateBuildingsInView = () => {
+        if (!map.current) return;
+        const bounds = map.current.getBounds();
+        onBuildingsInView?.(geocodedBuildings.filter((building: any) => (
+          building.lat >= bounds.getSouth() &&
+          building.lat <= bounds.getNorth() &&
+          building.lng >= bounds.getWest() &&
+          building.lng <= bounds.getEast()
+        )));
+      };
+
+      map.current.on('load', updateBuildingsInView);
+      map.current.on('moveend', updateBuildingsInView);
+
       // Register map instance with parent
       onMapReady?.(map.current);
     } catch (error) {
@@ -1530,6 +1543,7 @@ export default function MiamiApp() {
   setInfoBuilding={setInfoBuilding}
   onMapReady={handleMapReady}
             onPricingDataChange={setPricingInventory}
+            onBuildingsInView={setViewportBuildings}
           />
         </div>
 
