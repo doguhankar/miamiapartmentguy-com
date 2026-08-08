@@ -17,7 +17,7 @@ import { MapFilterCard, type MapFilterState } from '@/components/map-filter-card
 import { copyToClipboard, showToast } from '@/lib/toast-utils';
 import { Star } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { buildings as BUILDINGS } from '@/lib/buildings';
+import { buildings as BUILDINGS, type Building } from '@/lib/buildings';
 
 type AvailableUnit = {
   floorPlanType?: string;
@@ -201,6 +201,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
   const markerMetaRef = useRef(new Map());
   const [pricingData, setPricingData] = useState<PricingInventory>({});
   const [buildingImages, setBuildingImages] = useState<Record<string, string[]>>({});
+  const [viewportBuildings, setViewportBuildings] = useState<Building[]>([]);
   const buildingCoordinatesKey = useMemo(
     () => geocodedBuildings.map((building: any) => `${building.id}:${building.lng}:${building.lat}`).join('|'),
     [geocodedBuildings],
@@ -668,6 +669,7 @@ export default function MiamiApp() {
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showMoveWithDonModal, setShowMoveWithDonModal] = useState(false);
   const [mobileBuildingImages, setMobileBuildingImages] = useState<Record<string, string[]>>({});
+  const [viewportBuildings, setViewportBuildings] = useState<Building[]>([]);
 
   // Auto-open the intake modal once per browser session
   useEffect(() => {
@@ -1153,19 +1155,20 @@ export default function MiamiApp() {
         }}
       >
 
-        {/* Full-screen map */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}>
-          <MapComponent
-            expandedNeighborhoods={expandedNeighborhoods}
-            selectedBuilding={selectedBuilding}
-            highlightedBuilding={highlightedBuilding}
-            onPinClick={(b) => { setSelectedBuilding(b); setInfoBuilding(b); }}
-            geocodedBuildings={geocodedBuildings}
-            setSelectedBuilding={setSelectedBuilding}
+  {/* Full-screen map */}
+  <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}>
+  <MapComponent
+  expandedNeighborhoods={expandedNeighborhoods}
+  selectedBuilding={selectedBuilding}
+  highlightedBuilding={highlightedBuilding}
+  onPinClick={(b) => { setSelectedBuilding(b); setInfoBuilding(b); }}
+  geocodedBuildings={geocodedBuildings}
+  setSelectedBuilding={setSelectedBuilding}
   setInfoBuilding={setInfoBuilding}
   onMapReady={handleMapReady}
-            onPricingDataChange={setPricingInventory}
-          />
+  onPricingDataChange={setPricingInventory}
+  onBuildingsInView={setViewportBuildings}
+  />
         </div>
 
         {/* Floating pill search bar — v17 */}
@@ -1260,8 +1263,8 @@ export default function MiamiApp() {
             ) : (
               /* Count line */
               <div style={{ padding: '5px 16px 10px', fontSize: 11.5, color: '#6B7280', fontWeight: 500 }}>
-                <b style={{ color: '#0A0F1C', fontWeight: 700 }}>{apartmentCount}</b>{' '}
-                apartment{apartmentCount !== 1 ? 's' : ''} are up for grabs
+  <b style={{ color: '#0A0F1C', fontWeight: 700 }}>{viewportBuildings.length}</b>{' '}
+  in view
               </div>
             )}
           </div>
@@ -1274,7 +1277,7 @@ export default function MiamiApp() {
 
             {/* Building cards — v17 */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {filteredBuildings.map((building) => {
+              {viewportBuildings.map((building) => {
                 const imageUrl = mobileBuildingImages[String(building.id)]?.[0] ?? building.images?.[0];
                 const imageCount = (mobileBuildingImages[String(building.id)]?.length ?? building.images?.length ?? 0);
                 const hasSpecial = !!(building.concession && building.concession !== 'None' && building.concession !== '');
