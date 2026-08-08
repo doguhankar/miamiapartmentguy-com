@@ -32,6 +32,7 @@ export default function ListPage() {
   const [comparisonMode, setComparisonMode] = useState(false);
   const [selectedBuilding, setSelectedBuilding] = useState<typeof buildingsList[0] | null>(null);
   const [highlightedBuilding, setHighlightedBuilding] = useState<typeof buildingsList[0] | null>(null);
+  const [viewportBuildings, setViewportBuildings] = useState<typeof buildingsList>([]);
   const [copied, setCopied] = useState(false);
   const [starredBuildings, setStarredBuildings] = useState<Set<string>>(new Set());
 
@@ -112,6 +113,9 @@ export default function ListPage() {
   
   const displayedBuildings = comparisonMode ? buildingsList : savedBuildings;
   const mapBuildings = comparisonMode ? buildingsList : savedBuildings;
+  // Sidebar/list shows only what's visible on the map; falls back to the full displayed set
+  // until the map fires its first viewport update.
+  const visibleBuildings = viewportBuildings.length > 0 ? viewportBuildings : displayedBuildings;
 
   return (
     <div className="w-full h-screen flex flex-col md:flex-row bg-white">
@@ -194,6 +198,7 @@ export default function ListPage() {
           selectedBuilding={selectedBuilding}
           highlightedBuilding={highlightedBuilding}
           onSelectBuilding={setSelectedBuilding}
+          onBuildingsInView={setViewportBuildings}
         />
       </div>
 
@@ -210,7 +215,7 @@ export default function ListPage() {
         {/* Desktop Cards Grid */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 grid gap-4">
-            {displayedBuildings.map((building) => {
+            {visibleBuildings.map((building) => {
               const isSaved = savedBuildingIds.has(String(building.id));
               return (
                 <DesktopBuildingCard
@@ -248,7 +253,7 @@ export default function ListPage() {
         {/* Mobile Cards List */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-3 space-y-3">
-            {displayedBuildings.map((building) => {
+            {visibleBuildings.map((building) => {
               const isSaved = savedBuildingIds.has(String(building.id));
               const isStarred = starredBuildings.has(String(building.id));
               return (
