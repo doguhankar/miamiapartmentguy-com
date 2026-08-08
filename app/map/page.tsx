@@ -1276,7 +1276,7 @@ export default function MiamiApp() {
             ) : (
               /* Count line */
               <div style={{ padding: '5px 16px 10px', fontSize: 11.5, color: '#6B7280', fontWeight: 500 }}>
-  <b style={{ color: '#0A0F1C', fontWeight: 700 }}>{viewportBuildings.length}</b>{' '}
+  <b style={{ color: '#0A0F1C', fontWeight: 700 }}>{viewportBuildings.length > 0 ? viewportBuildings.length : filteredBuildings.length}</b>{' '}
   in view
               </div>
             )}
@@ -1290,7 +1290,7 @@ export default function MiamiApp() {
 
             {/* Building cards — v17 */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {viewportBuildings.map((building) => {
+              {(viewportBuildings.length > 0 ? viewportBuildings : filteredBuildings).map((building) => {
                 const imageUrl = mobileBuildingImages[String(building.id)]?.[0] ?? building.images?.[0];
                 const imageCount = (mobileBuildingImages[String(building.id)]?.length ?? building.images?.length ?? 0);
                 const hasSpecial = !!(building.concession && building.concession !== 'None' && building.concession !== '');
