@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useEffect, useState } from "react"
+import { useRef, useEffect, useState, useMemo } from "react"
 import { Building } from "@/lib/buildings"
 import { MapPin, Loader2 } from "lucide-react"
 
@@ -9,6 +9,7 @@ interface MapViewProps {
   highlightedBuilding?: Building | null
   onSelectBuilding: (building: Building) => void
   buildings: Building[]
+  onBuildingsInView?: (buildings: Building[]) => void
 }
 
 interface PricingData {
@@ -30,7 +31,7 @@ const NEIGHBORHOOD_PIN_COLORS: Record<string, string> = {
   "Coral Gables": "#0891B2", // cyan-600
 }
 
-export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuilding, buildings }: MapViewProps) {
+export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuilding, buildings, onBuildingsInView }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
   const markers = useRef<any[]>([])
@@ -38,6 +39,11 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
   const [mapboxgl, setMapboxgl] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [pricingData, setPricingData] = useState<Record<string, PricingData>>({})
+  const [bounds, setBounds] = useState<{ south: number; north: number; west: number; east: number } | null>(null)
+  const buildingsInView = useMemo(() => {
+    if (!bounds) return buildings
+    return buildings.filter((building) => building.lat >= bounds.south && building.lat <= bounds.north && building.lng >= bounds.west && building.lng <= bounds.east)
+  }, [buildings, bounds])
 
   // Fetch pricing data for buildings
   useEffect(() => {
@@ -109,9 +115,21 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
 
       // Map stays at initial zoom 11 centered on 25.765, -80.185
       // This shows the entire Miami corridor from Brickell to Wynwood
+      const updateBuildingsInView = () => {
+        const mapBounds = map.current.getBounds()
+        setBounds({
+          south: mapBounds.getSouth(),
+          north: mapBounds.getNorth(),
+          west: mapBounds.getWest(),
+          east: mapBounds.getEast(),
+        })
+      }
+
       map.current.on('load', () => {
         // No fitBounds - keep initial zoom 11 and center position
+        updateBuildingsInView()
       })
+      map.current.on('moveend', updateBuildingsInView)
     } catch {
       setMapError("Failed to initialize map")
     }
@@ -124,7 +142,11 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
     }
   }, [mapboxgl, buildings])
 
-  // Update markers when buildings or selectedBuilding changes
+  useEffect(() => {
+    onBuildingsInView?.(buildingsInView)
+  }, [buildingsInView, onBuildingsInView])
+
+  // Update markers when buildings in the viewport or visual marker state changes
   useEffect(() => {
     if (!map.current) {
       return
@@ -135,7 +157,7 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
     markers.current = []
 
     // Add new markers
-    buildings.forEach((building) => {
+    buildingsInView.forEach((building) => {
       const isSelected = selectedBuilding?.id === building.id
       const isHighlighted = highlightedBuilding?.id === building.id
       const pricing = pricingData[building.id]
@@ -221,7 +243,7 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
         duration: 1000,
       })
     }
-  }, [buildings, selectedBuilding, highlightedBuilding, onSelectBuilding, pricingData])
+  }, [buildingsInView, selectedBuilding, highlightedBuilding, onSelectBuilding, pricingData])
 
   if (loading) {
     return (
