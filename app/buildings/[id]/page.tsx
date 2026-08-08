@@ -477,6 +477,9 @@ export default function BuildingDetailPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: `1px solid ${CYAN_DARK}33`, paddingTop: 10, marginTop: 6, fontSize: 15, fontWeight: 800 }}>
                   <span>Total</span><span style={{ fontSize: 20 }}>{fmt(trueMonthly)}/mo</span>
                 </div>
+                <p style={{ margin: '12px 0 0', fontSize: 11, lineHeight: 1.5, color: '#6B7280' }}>
+                  This calculation is an estimate only based on current building information. We are not liable for any changes to pricing or fees incurred by the building. Please verify all costs directly with the leasing office before applying.
+                </p>
               </div>
 
           </div>
