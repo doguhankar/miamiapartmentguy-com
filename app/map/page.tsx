@@ -12,7 +12,6 @@ import { FlowBrickellCard } from '@/components/flow-brickell-card';
 import { MoveWithDon } from '@/components/move-with-don';
 import { DesktopBuildingCard } from '@/components/desktop-building-card';
 
-import { BuildingDetailModal } from '@/components/building-detail-modal';
 import { MapFilterCard, type MapFilterState } from '@/components/map-filter-card';
 import { copyToClipboard, showToast } from '@/lib/toast-utils';
 import { Star } from 'lucide-react';
@@ -1174,7 +1173,7 @@ export default function MiamiApp() {
   expandedNeighborhoods={expandedNeighborhoods}
   selectedBuilding={selectedBuilding}
   highlightedBuilding={highlightedBuilding}
-  onPinClick={(b) => { setSelectedBuilding(b); setInfoBuilding(b); }}
+  onPinClick={(b) => router.push(`/buildings/${b.id}`)}
   geocodedBuildings={geocodedBuildings}
   setSelectedBuilding={setSelectedBuilding}
   setInfoBuilding={setInfoBuilding}
@@ -1297,7 +1296,7 @@ export default function MiamiApp() {
                 return (
                   <div
                     key={building.id}
-                    onClick={() => { setSelectedBuilding(building); setInfoBuilding(building); }}
+                    onClick={() => router.push(`/buildings/${building.id}`)}
                     style={{
                       background: '#ffffff',
                       borderRadius: 16,
@@ -1591,13 +1590,7 @@ export default function MiamiApp() {
 
       {showModal && <TalkTodonModal building={selectedBuilding} onClose={() => setShowModal(false)} />}
       
-      {/* Info Modal - Quote Drop Stats */}
-      {infoBuilding && (
-        <BuildingDetailModal
-          building={infoBuilding}
-          onClose={() => setInfoBuilding(null)}
-        />
-      )}
+
       {/* PIN Modal for Agent Mode */}
       {showPinModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
