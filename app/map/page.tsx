@@ -1431,7 +1431,7 @@ export default function MiamiApp() {
           </button>
         )}
       </div>
-      {/* ── END MOBILE LAYOUT ─────────────────────────────────────────────── */}
+      {/* ── END MOBILE LAYOUT ─────────────────────────��───────────────────── */}
 
       {/* Desktop Header - Fixed at Top */}
       <div className="hidden md:flex items-center justify-between px-8 py-7 bg-white flex-shrink-0 border-b border-[#E8EBF0]" style={{ height: '74px' }}>
@@ -1549,6 +1549,7 @@ export default function MiamiApp() {
                   isAgentMode={isAgentMode}
                   isStarred={starredBuildings.has(String(building.id))}
                   onHover={setHighlightedBuilding}
+                  onClick={() => router.push(`/buildings/${building.id}`)}
                   onStar={(b) => {
                     const newStarred = new Set(starredBuildings);
                     if (newStarred.has(String(b.id))) {
