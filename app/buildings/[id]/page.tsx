@@ -122,7 +122,7 @@ export default function BuildingDetailPage() {
   const [liveUnits, setLiveUnits] = useState<LiveUnit[]>([])
   const [showAllUnits, setShowAllUnits] = useState(false)
   const [selectedUnit, setSelectedUnit] = useState<LiveUnit | null>(null)
-  const [activePriceType, setActivePriceType] = useState<string | null>(null)
+  const [activePriceType, setActivePriceType] = useState<string | null>('Studio')
 
   const [income, setIncome] = useState<string>('9000')
 
