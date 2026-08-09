@@ -88,6 +88,7 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
   const [units, setUnits] = useState<Unit[]>([])
   const [loadingUnits, setLoadingUnits] = useState(true)
   const [showAllUnits, setShowAllUnits] = useState(false)
+  const [activePriceType, setActivePriceType] = useState<string | null>('Studio')
   const [saved, setSaved] = useState(false)
   const { images: supabaseImages } = useSupabaseImages(building.id)
   const images = supabaseImages.length ? supabaseImages : building.images || []
@@ -97,7 +98,14 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
     setLoadingUnits(true)
     fetch(`/api/prices/${building.id}?t=${Date.now()}`)
       .then((res) => res.ok ? res.json() : { units: [] })
-      .then((data) => { if (active) setUnits(Array.isArray(data?.units) ? data.units : []) })
+      .then((data) => {
+        if (active) {
+          const nextUnits = Array.isArray(data?.units) ? data.units : []
+          setUnits(nextUnits)
+          const first = nextUnits[0]
+          if (first) setActivePriceType((prev) => prev ?? unitLabel(first))
+        }
+      })
       .catch(() => { if (active) setUnits([]) })
       .finally(() => { if (active) setLoadingUnits(false) })
     return () => { active = false }
@@ -112,8 +120,9 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
     return Array.from(groups.entries()).map(([label, entries]) => ({ label, entries, price: Math.min(...entries.map((unit) => Number(unit.price) || Infinity)) }))
   }, [units])
 
-  const priceGroups = groupedUnits.length ? groupedUnits : building.units.map((label) => ({ label, entries: [], price: building.priceMin }))
-  const visibleUnits = showAllUnits ? units : units.slice(0, 3)
+  const priceGroups = groupedUnits.length ? groupedUnits : building.units.map((label) => ({ label: unitLabel({ beds: label }), entries: [], price: building.priceMin }))
+  const filteredUnits = activePriceType ? units.filter((unit) => unitLabel(unit) === activePriceType) : units
+  const visibleUnits = showAllUnits ? filteredUnits : filteredUnits.slice(0, 3)
   const allFees = [...(building.moveInFees || []), ...(building.monthlyCharges || [])]
   const deal = building.concession && building.concession.toLowerCase() !== 'tbd' ? building.concession : 'Ask about current specials'
   const image = images[currentImageIndex]
@@ -146,9 +155,9 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
 
           <hr style={{ border: 0, borderTop: `1px solid ${COLORS.border}`, margin: '4px 0 22px' }} />
 
-          <section><h2 className="mb-3.5 flex items-center gap-2 text-sm font-extrabold"><Icon name="money" size={15} />Monthly Pricing</h2><div className="flex gap-2 overflow-x-auto pb-1">{priceGroups.map((group, index) => <div key={group.label} className="min-w-[92px] flex-1 rounded-[14px] px-2.5 py-4 text-center" style={{ background: index === Math.min(1, priceGroups.length - 1) ? COLORS.pink : COLORS.panel, color: index === Math.min(1, priceGroups.length - 1) ? '#FFFFFF' : COLORS.text }}><div className="mb-1.5 text-[10.5px] font-semibold" style={{ color: index === Math.min(1, priceGroups.length - 1) ? 'rgba(255,255,255,.85)' : COLORS.muted }}>{group.label}</div><div className="font-extrabold" style={{ fontSize: 15 }}>{money(group.price)}<span className="text-[9.5px] font-medium">+</span></div></div>)}</div></section>
+          <section><h2 className="mb-3.5 flex items-center gap-2 text-sm font-extrabold"><Icon name="money" size={15} />Monthly Pricing</h2><div className="flex gap-2 overflow-x-auto pb-1">{priceGroups.map((group) => { const active = activePriceType === group.label; return <button key={group.label} type="button" onClick={() => setActivePriceType(active ? null : group.label)} className="min-w-[92px] flex-1 rounded-[14px] px-2.5 py-4 text-center" style={{ background: active ? COLORS.pink : COLORS.panel, color: active ? '#FFFFFF' : COLORS.text }}><div className="mb-1.5 text-[10.5px] font-semibold" style={{ color: active ? 'rgba(255,255,255,.85)' : COLORS.muted }}>{group.label}</div><div className="font-extrabold" style={{ fontSize: 15 }}>{money(group.price)}<span className="text-[9.5px] font-medium">+</span></div></button> })}</div></section>
 
-          <section className="mt-7"><h2 className="mb-3.5 flex items-center gap-2 text-sm font-extrabold"><Icon name="home" size={15} />Available Units <span className="text-[11px] font-medium" style={{ color: COLORS.muted }}>({units.length || building.units.length})</span></h2>{loadingUnits ? <div className="rounded-xl p-4 text-sm" style={{ background: COLORS.panel, color: COLORS.muted }}>Loading live availability…</div> : visibleUnits.length ? <div>{visibleUnits.map((unit, index) => { const status = formatAvailability(unit.availableDate || unit.available_date); const now = status === 'Avail now'; return <div key={unit.id || index} className="mb-2 flex items-center justify-between rounded-xl border px-3.5 py-3" style={{ borderColor: COLORS.border }}><div className="flex flex-col gap-1"><div className="text-[12.5px] font-bold">{unit.unit || unit.unit_number || `Unit ${index + 1}`} · {unitLabel(unit)}</div><div className="text-[10.5px]" style={{ color: COLORS.muted }}>{unit.sqft ? `${unit.sqft} sqft` : 'See floor plan'}{unit.baths ? ` · ${unit.baths} bath` : ''}</div></div><div className="flex flex-col items-end gap-1"><div className="font-extrabold text-[13px]">{money(unit.price)}</div><span className="rounded-full px-2 py-0.5 text-[9px] font-bold" style={{ background: now ? '#E8F8EE' : '#FFF6E5', color: now ? COLORS.teal : COLORS.gold }}>{status}</span></div></div> })}</div> : <div className="rounded-xl p-4 text-sm" style={{ background: COLORS.panel, color: COLORS.muted }}>Contact Don for current availability.</div>}{units.length > 3 && <button onClick={() => setShowAllUnits((value) => !value)} className="flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-dashed p-2.5 text-[11.5px] font-semibold" style={{ borderColor: COLORS.border, color: COLORS.muted }}>{showAllUnits ? 'Show fewer units' : `Show ${units.length - 3} more units`}<Icon name="chevronDown" size={12} /></button>}</section>
+          <section className="mt-7"><h2 className="mb-3.5 flex items-center gap-2 text-sm font-extrabold"><Icon name="home" size={15} />Available Units <span className="text-[11px] font-medium" style={{ color: COLORS.muted }}>({filteredUnits.length})</span></h2>{loadingUnits ? <div className="rounded-xl p-4 text-sm" style={{ background: COLORS.panel, color: COLORS.muted }}>Loading live availability…</div> : visibleUnits.length ? <div>{visibleUnits.map((unit, index) => { const status = formatAvailability(unit.availableDate || unit.available_date); const now = status === 'Avail now'; return <div key={unit.id || index} className="mb-2 flex items-center justify-between rounded-xl border px-3.5 py-3" style={{ borderColor: COLORS.border }}><div className="flex flex-col gap-1"><div className="text-[12.5px] font-bold">{unit.unit || unit.unit_number || `Unit ${index + 1}`} · {unitLabel(unit)}</div><div className="text-[10.5px]" style={{ color: COLORS.muted }}>{unit.sqft ? `${unit.sqft} sqft` : 'See floor plan'}{unit.baths ? ` · ${unit.baths} bath` : ''}</div></div><div className="flex flex-col items-end gap-1"><div className="font-extrabold text-[13px]">{money(unit.price)}</div><span className="rounded-full px-2 py-0.5 text-[9px] font-bold" style={{ background: now ? '#E8F8EE' : '#FFF6E5', color: now ? COLORS.teal : COLORS.gold }}>{status}</span></div></div> })}</div> : <div className="rounded-xl p-4 text-sm" style={{ background: COLORS.panel, color: COLORS.muted }}>Contact Don for current availability.</div>}{filteredUnits.length > 3 && <button onClick={() => setShowAllUnits((value) => !value)} className="flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-dashed p-2.5 text-[11.5px] font-semibold" style={{ borderColor: COLORS.border, color: COLORS.muted }}>{showAllUnits ? 'Show fewer units' : `Show ${filteredUnits.length - 3} more units`}<Icon name="chevronDown" size={12} /></button>}</section>
 
           {allFees.length > 0 && <section className="mt-7 overflow-hidden rounded-[14px]" style={{ background: COLORS.panel }}><div className="flex items-center gap-2 px-4 py-3.5 text-[12.5px] font-bold"><Icon name="receipt" size={15} />Fees &amp; Policies</div><div className="px-4 pb-2 pt-1 text-[9.5px] font-bold uppercase tracking-[.05em]" style={{ color: COLORS.muted }}>Move-In</div>{allFees.slice(0, 3).map((fee, index) => <FeeRow key={`move-${fee.type}-${index}`} label={fee.type} value={fee.amount} emphasis={fee.type.toLowerCase().includes('est')} />)}{allFees.length > 3 && <><div className="px-4 pb-2 pt-3 text-[9.5px] font-bold uppercase tracking-[.05em]" style={{ color: COLORS.muted }}>Monthly &amp; Other</div>{allFees.slice(3).map((fee, index) => <FeeRow key={`other-${fee.type}-${index}`} label={fee.type} value={fee.amount} />)}</>}</section>}
         </main>
