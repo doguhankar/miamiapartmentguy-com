@@ -232,24 +232,20 @@ export default function BuildingDetailPage() {
         <div className="building-detail-left" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
           {/* HERO */}
-          <div style={{ padding: '58px 12px 0', flexShrink: 0 }}>
-            <div style={{ position: 'relative', width: '100%', height: 240, borderRadius: 16, overflow: 'hidden', background: '#E5E7EB' }}>
+          <div style={{ padding: '58px 16px 0', flexShrink: 0 }}>
+            <div style={{ position: 'relative', width: '100%', height: 280, borderRadius: 16, overflow: 'hidden', background: '#E5E7EB' }}>
               {allImages[imgIdx] && <Image src={allImages[imgIdx]} alt={`${building.name} photo ${imgIdx + 1}`} fill style={{ objectFit: 'cover' }} priority />}
 
-              <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', alignItems: 'center', gap: 6, background: NAVY, color: '#fff', fontSize: 11, fontWeight: 600, borderRadius: 20, padding: '6px 12px' }}>
-                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#19C6C0', flexShrink: 0 }} />
+              <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', alignItems: 'center', gap: 6, background: '#19C6C0', color: '#fff', fontSize: 11, fontWeight: 600, borderRadius: 20, padding: '6px 12px' }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#FFFFFF', flexShrink: 0 }} />
                 Available
               </div>
 
-              <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }}>
-                <button aria-label="Share building" style={{ width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(11,18,32,0.6)', border: 'none', color: '#fff', cursor: 'pointer' }}><IconShare /></button>
-                <button onClick={() => setSaved(s => !s)} aria-label="Save building" style={{ width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(11,18,32,0.6)', border: 'none', color: '#fff', cursor: 'pointer' }}><IconHeart filled={saved} /></button>
-              </div>
 
               {allImages.length > 1 && (
                 <div style={{ position: 'absolute', bottom: 12, left: 0, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
                   {allImages.slice(0, 8).map((_, i) => (
-                    <span key={i} style={{ width: i === imgIdx ? 8 : 6, height: i === imgIdx ? 8 : 6, borderRadius: '50%', background: i === imgIdx ? PINK : 'rgba(255,255,255,0.4)', transition: 'all 0.2s', flexShrink: 0 }} />
+                    <span key={i} style={{ width: i === imgIdx ? 8 : 6, height: i === imgIdx ? 8 : 6, borderRadius: '50%', background: i === imgIdx ? '#FFFFFF' : 'rgba(255,255,255,0.55)', transition: 'all 0.2s', flexShrink: 0 }} />
                   ))}
                 </div>
               )}
@@ -257,9 +253,9 @@ export default function BuildingDetailPage() {
           </div>
 
           {/* THUMBNAILS */}
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '10px 10px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', padding: '12px 16px 0', flexShrink: 0 }}>
             {allImages.map((photo, i) => (
-              <button key={i} onClick={() => setImgIdx(i)} aria-label={`View photo ${i + 1}`} style={{ position: 'relative', width: 60, height: 60, flexShrink: 0, borderRadius: 10, overflow: 'hidden', border: i === imgIdx ? '2px solid #19C6C0' : '2px solid transparent', padding: 0, cursor: 'pointer', background: '#D1D5DB' }}>
+              <button key={i} onClick={() => setImgIdx(i)} aria-label={`View photo ${i + 1}`} style={{ position: 'relative', width: 80, height: 80, flexShrink: 0, borderRadius: 12, overflow: 'hidden', border: i === imgIdx ? '2px solid #19C6C0' : 'none', opacity: i === imgIdx ? 1 : 0.7, padding: 0, cursor: 'pointer', background: '#D1D5DB' }}>
                 <Image src={photo} alt="" fill style={{ objectFit: 'cover' }} />
               </button>
             ))}

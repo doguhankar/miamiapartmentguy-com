@@ -141,32 +141,28 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
   return (
     <div className="fixed inset-0 z-50 bg-white" style={{ color: COLORS.text }} role="dialog" aria-modal="true" aria-label={`${building.name} details`}>
       <div className="h-full overflow-y-auto" style={{ paddingBottom: '108px', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
-        <div className="px-3 pt-3">
-          <div className="relative h-[240px] w-full overflow-hidden rounded-2xl" style={{ background: COLORS.panel }}>
+        <div className="px-4 pt-3">
+          <div className="relative h-[280px] w-full overflow-hidden rounded-2xl" style={{ background: COLORS.panel }}>
             {image ? <img src={image} alt={`${building.name} photo ${currentImageIndex + 1}`} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-sm" style={{ color: COLORS.muted }}>No photos available</div>}
 
-            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold text-white" style={{ background: COLORS.navy }}>
-              <span className="inline-block rounded-full" style={{ width: 7, height: 7, background: '#19C6C0' }} />
+            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold text-white" style={{ background: '#19C6C0' }}>
+              <span className="inline-block rounded-full" style={{ width: 7, height: 7, background: '#FFFFFF' }} />
               Available
             </div>
 
-            <div className="absolute right-3 top-3 flex gap-2">
-              <button aria-label="Share building" className="flex size-8 items-center justify-center rounded-full text-white" style={{ background: 'rgba(11,18,32,.6)' }}><Icon name="share" size={15} /></button>
-              <button aria-label={saved ? 'Remove from saved buildings' : 'Save building'} onClick={() => setSaved((value) => !value)} className="flex size-8 items-center justify-center rounded-full text-white" style={{ background: 'rgba(11,18,32,.6)' }}><Icon name="heart" size={15} filled={saved} /></button>
-            </div>
 
             {images.length > 1 && (
               <div className="absolute bottom-3 left-0 flex w-full items-center justify-center gap-1.5">
                 {images.map((_, index) => (
-                  <span key={index} className="rounded-full" style={{ width: index === currentImageIndex ? 8 : 6, height: index === currentImageIndex ? 8 : 6, background: index === currentImageIndex ? COLORS.pink : 'rgba(255,255,255,.4)' }} />
+                  <span key={index} className="rounded-full" style={{ width: index === currentImageIndex ? 8 : 6, height: index === currentImageIndex ? 8 : 6, background: index === currentImageIndex ? '#FFFFFF' : 'rgba(255,255,255,.55)' }} />
                 ))}
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto px-[10px] py-3" style={{ scrollbarWidth: 'none' }}>
-          {images.map((photo, index) => <button key={`${photo}-${index}`} aria-label={`View photo ${index + 1}`} onClick={() => setCurrentImageIndex(index)} className="h-[60px] w-[60px] shrink-0 overflow-hidden rounded-[10px]" style={{ border: index === currentImageIndex ? '2px solid #19C6C0' : '2px solid transparent' }}><img src={photo} alt="" className="h-full w-full object-cover" /></button>)}
+        <div className="flex gap-2.5 overflow-x-auto px-4 pt-3" style={{ scrollbarWidth: 'none' }}>
+          {images.map((photo, index) => <button key={`${photo}-${index}`} aria-label={`View photo ${index + 1}`} onClick={() => setCurrentImageIndex(index)} className="h-20 w-20 shrink-0 overflow-hidden rounded-xl" style={{ border: index === currentImageIndex ? '2px solid #19C6C0' : 'none', opacity: index === currentImageIndex ? 1 : 0.7 }}><img src={photo} alt="" className="h-full w-full object-cover" /></button>)}
         </div>
 
         <div className="flex items-start justify-between gap-3 px-5 pt-1">
