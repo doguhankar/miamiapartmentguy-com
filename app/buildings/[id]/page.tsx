@@ -232,7 +232,7 @@ export default function BuildingDetailPage() {
         <div className="building-detail-left" style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
           {/* HERO */}
-          <div style={{ boxSizing: 'border-box', width: '100%', padding: '58px 16px 0', flexShrink: 0 }}>
+          <div style={{ boxSizing: 'border-box', width: '100%', padding: '58px 16px 0', flex: '0 0 338px', minHeight: 338 }}>
             <div style={{ boxSizing: 'border-box', position: 'relative', width: '100%', height: 280, minHeight: 280, borderRadius: 16, overflow: 'hidden', background: '#E5E7EB' }}>
               {allImages[imgIdx] && <Image src={allImages[imgIdx]} alt={`${building.name} photo ${imgIdx + 1}`} fill style={{ objectFit: 'cover' }} priority />}
 
@@ -253,7 +253,7 @@ export default function BuildingDetailPage() {
           </div>
 
           {/* THUMBNAILS */}
-          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', padding: '12px 16px 0', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', padding: '12px 16px 0', minHeight: 92, flexShrink: 0 }}>
             {allImages.map((photo, i) => (
               <button key={i} onClick={() => setImgIdx(i)} aria-label={`View photo ${i + 1}`} style={{ position: 'relative', width: 80, height: 80, flexShrink: 0, borderRadius: 12, overflow: 'hidden', border: i === imgIdx ? '2px solid #19C6C0' : 'none', opacity: i === imgIdx ? 1 : 0.7, padding: 0, cursor: 'pointer', background: '#D1D5DB' }}>
                 <Image src={photo} alt="" fill style={{ objectFit: 'cover' }} />
@@ -262,7 +262,7 @@ export default function BuildingDetailPage() {
           </div>
 
           {/* NAME + ADDRESS */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '4px 20px 0', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '16px 20px 0', minHeight: 82, flexShrink: 0 }}>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: MUTED, marginBottom: 5 }}>{building.neighborhood}</div>
               <div style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: TEXT }}>{building.name}</div>
