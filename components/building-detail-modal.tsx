@@ -32,7 +32,7 @@ const COLORS = {
   gold: '#92660B',
 }
 
-type IconName = 'back' | 'heart' | 'chevronLeft' | 'chevronRight' | 'pin' | 'money' | 'home' | 'receipt' | 'chevronDown' | 'star'
+type IconName = 'back' | 'heart' | 'chevronLeft' | 'chevronRight' | 'pin' | 'money' | 'home' | 'receipt' | 'chevronDown' | 'star' | 'share'
 
 function Icon({ name, size = 16, filled = false }: { name: IconName; size?: number; filled?: boolean }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: filled ? 'currentColor' : 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true }
@@ -47,6 +47,14 @@ function Icon({ name, size = 16, filled = false }: { name: IconName; size?: numb
     receipt: <><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M7 8h10M7 12h10M7 16h5" /></>,
     chevronDown: <path d="m6 9 6 6 6-6" />,
     star: <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z" />,
+    share: (
+      <>
+        <circle cx="18" cy="5" r="3" />
+        <circle cx="6" cy="12" r="3" />
+        <circle cx="18" cy="19" r="3" />
+        <path d="M8.6 10.6 15.4 6.4M8.6 13.4l6.8 4.2" />
+      </>
+    ),
   }
   return <svg {...common}>{paths[name]}</svg>
 }
@@ -133,23 +141,47 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
   return (
     <div className="fixed inset-0 z-50 bg-white" style={{ color: COLORS.text }} role="dialog" aria-modal="true" aria-label={`${building.name} details`}>
       <div className="h-full overflow-y-auto" style={{ paddingBottom: '108px', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
-        <section className="relative h-[380px] bg-[#F8F8FA]">
-          {image ? <img src={image} alt={`${building.name} exterior`} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-sm" style={{ color: COLORS.muted }}>No photos available</div>}
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(10,15,28,.5), transparent 45%, rgba(10,15,28,.72))' }} />
-          <div className="absolute left-4 right-4 top-4 z-10 flex items-center justify-between">
-            <button aria-label="Back to map" onClick={onClose} className="flex size-9 items-center justify-center rounded-full text-white" style={{ background: 'rgba(10,15,28,.56)', backdropFilter: 'blur(6px)' }}><Icon name="back" size={17} /></button>
-            <button aria-label={saved ? 'Remove from saved buildings' : 'Save building'} onClick={() => setSaved((value) => !value)} className="flex size-9 items-center justify-center rounded-full" style={{ background: 'rgba(10,15,28,.56)', color: saved ? COLORS.pink : '#FFFFFF', backdropFilter: 'blur(6px)' }}><Icon name="heart" size={17} filled={saved} /></button>
-          </div>
-          {images.length > 1 && <><button aria-label="Previous photo" onClick={prevImage} className="absolute left-3 top-1/2 z-10 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-white" style={{ background: 'rgba(10,15,28,.42)' }}><Icon name="chevronLeft" size={16} /></button><button aria-label="Next photo" onClick={nextImage} className="absolute right-3 top-1/2 z-10 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-white" style={{ background: 'rgba(10,15,28,.42)' }}><Icon name="chevronRight" size={16} /></button></>}
-          <div className="absolute bottom-4 left-[18px] right-[18px] z-10 flex items-end justify-between text-white"><div><div className="text-[10.5px] font-bold uppercase tracking-[.08em] text-white/85">{building.neighborhood}</div><h1 className="mt-1 text-[26px] font-extrabold tracking-[-.04em] drop-shadow-md">{building.name}</h1></div><span className="rounded-full px-3 py-1.5 text-xs font-bold" style={{ background: COLORS.pink }}>{currentImageIndex + 1} / {Math.max(images.length, 1)}</span></div>
-        </section>
+        <div className="px-3 pt-3">
+          <div className="relative h-[240px] w-full overflow-hidden rounded-2xl" style={{ background: COLORS.panel }}>
+            {image ? <img src={image} alt={`${building.name} photo ${currentImageIndex + 1}`} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-sm" style={{ color: COLORS.muted }}>No photos available</div>}
 
-        <div className="flex gap-2 overflow-x-auto px-[18px] py-3.5" style={{ scrollbarWidth: 'none' }}>
-          {images.map((photo, index) => <button key={`${photo}-${index}`} aria-label={`View photo ${index + 1}`} onClick={() => setCurrentImageIndex(index)} className="h-16 w-16 shrink-0 overflow-hidden rounded-xl" style={{ border: index === currentImageIndex ? `2px solid ${COLORS.pink}` : '2px solid transparent' }}><img src={photo} alt="" className="h-full w-full object-cover" /></button>)}
+            <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold text-white" style={{ background: COLORS.navy }}>
+              <span className="inline-block rounded-full" style={{ width: 7, height: 7, background: '#19C6C0' }} />
+              Available
+            </div>
+
+            <div className="absolute right-3 top-3 flex gap-2">
+              <button aria-label="Share building" className="flex size-8 items-center justify-center rounded-full text-white" style={{ background: 'rgba(11,18,32,.6)' }}><Icon name="share" size={15} /></button>
+              <button aria-label={saved ? 'Remove from saved buildings' : 'Save building'} onClick={() => setSaved((value) => !value)} className="flex size-8 items-center justify-center rounded-full text-white" style={{ background: 'rgba(11,18,32,.6)' }}><Icon name="heart" size={15} filled={saved} /></button>
+            </div>
+
+            {images.length > 1 && (
+              <div className="absolute bottom-3 left-0 flex w-full items-center justify-center gap-1.5">
+                {images.map((_, index) => (
+                  <span key={index} className="rounded-full" style={{ width: index === currentImageIndex ? 8 : 6, height: index === currentImageIndex ? 8 : 6, background: index === currentImageIndex ? COLORS.pink : 'rgba(255,255,255,.4)' }} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto px-[10px] py-3" style={{ scrollbarWidth: 'none' }}>
+          {images.map((photo, index) => <button key={`${photo}-${index}`} aria-label={`View photo ${index + 1}`} onClick={() => setCurrentImageIndex(index)} className="h-[60px] w-[60px] shrink-0 overflow-hidden rounded-[10px]" style={{ border: index === currentImageIndex ? '2px solid #19C6C0' : '2px solid transparent' }}><img src={photo} alt="" className="h-full w-full object-cover" /></button>)}
+        </div>
+
+        <div className="flex items-start justify-between gap-3 px-5 pt-1">
+          <div className="min-w-0">
+            <div className="text-[22px] font-medium leading-tight" style={{ color: COLORS.text }}>{building.name}</div>
+            <div className="mt-1 flex items-center gap-1.5 text-[13px]" style={{ color: COLORS.muted }}><Icon name="pin" size={13} />{building.address || building.neighborhood}</div>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <button aria-label="Share building" className="flex size-[34px] items-center justify-center rounded-full border bg-white" style={{ borderColor: COLORS.border, color: COLORS.muted }}><Icon name="share" size={15} /></button>
+            <button aria-label={saved ? 'Remove from saved buildings' : 'Save building'} onClick={() => setSaved((value) => !value)} className="flex size-[34px] items-center justify-center rounded-full border bg-white" style={{ borderColor: COLORS.border, color: saved ? COLORS.pink : COLORS.muted }}><Icon name="heart" size={15} filled={saved} /></button>
+          </div>
         </div>
 
         <main className="px-5 pb-6">
-          <div className="flex items-start justify-between gap-4 border-b py-3.5" style={{ borderColor: COLORS.border }}><div><div className="mb-1 text-[10.5px] font-bold uppercase tracking-[.06em]" style={{ color: COLORS.muted }}>Starting at</div><div className="font-extrabold tracking-[-.05em]" style={{ fontSize: 30 }}>{money(building.priceMin)}<span className="text-sm font-medium" style={{ color: COLORS.muted }}>/mo</span></div></div><p className="max-w-[150px] text-right text-[12.5px] leading-[1.5]" style={{ color: COLORS.muted }}>{building.tagline || building.address}</p></div>
+          <div className="flex items-start justify-between gap-4 border-b py-3.5" style={{ borderColor: COLORS.border }}><div><div className="mb-1 text-[10.5px] font-bold uppercase tracking-[.06em]" style={{ color: COLORS.muted }}>Starting at</div><div className="font-extrabold tracking-[-.05em]" style={{ fontSize: 30 }}>{money(building.priceMin)}<span className="text-sm font-medium" style={{ color: COLORS.muted }}>/mo</span></div></div><p className="max-w-[150px] text-right text-[12.5px] leading-[1.5]" style={{ color: COLORS.muted }}>{building.tagline}</p></div>
 
           <div className="flex flex-wrap gap-2 py-4"><span className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold" style={{ background: '#FFF6E5', color: COLORS.gold }}><Icon name="star" size={13} filled />{deal}</span><span className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold" style={{ background: COLORS.panel, color: COLORS.text }}><Icon name="pin" size={13} />{building.neighborhood}</span></div>
 

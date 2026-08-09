@@ -90,6 +90,11 @@ const IconPin = () => (
     <path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
   </svg>
 )
+const IconShare = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="M8.6 10.6 15.4 6.4M8.6 13.4l6.8 4.2" />
+  </svg>
+)
 const IconCalc = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <path d="M12 2l2.4 7.2H22l-6 4.6 2.3 7.2-6.3-4.6-6.3 4.6 2.3-7.2-6-4.6h7.6z" />
@@ -227,34 +232,54 @@ export default function BuildingDetailPage() {
         <div className="building-detail-left" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
           {/* HERO */}
-          <div style={{ display: 'flex', gap: 5, height: 260, background: '#E5E7EB', flexShrink: 0, overflow: 'hidden' }}>
-            {[0, 1, 2].map((offset) => {
-              const imageIndex = (imgIdx + offset) % Math.max(allImages.length, 1)
-              return (
-                <button key={offset} onClick={() => setImgIdx(imageIndex)} aria-label={`View photo ${imageIndex + 1}`} style={{ position: 'relative', flex: 1, minWidth: 0, border: 'none', padding: 0, cursor: 'pointer', overflow: 'hidden', background: '#D1D5DB' }}>
-                  {allImages[imageIndex] && <Image src={allImages[imageIndex]} alt={`${building.name} photo ${imageIndex + 1}`} fill style={{ objectFit: 'cover' }} priority={offset === 0} />}
-                </button>
-              )
-            })}
+          <div style={{ padding: '12px 12px 0', flexShrink: 0 }}>
+            <div style={{ position: 'relative', width: '100%', height: 240, borderRadius: 16, overflow: 'hidden', background: '#E5E7EB' }}>
+              {allImages[imgIdx] && <Image src={allImages[imgIdx]} alt={`${building.name} photo ${imgIdx + 1}`} fill style={{ objectFit: 'cover' }} priority />}
+
+              <div style={{ position: 'absolute', top: 58, left: 12, display: 'flex', alignItems: 'center', gap: 6, background: NAVY, color: '#fff', fontSize: 11, fontWeight: 600, borderRadius: 20, padding: '6px 12px' }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#19C6C0', flexShrink: 0 }} />
+                Available
+              </div>
+
+              <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }}>
+                <button aria-label="Share building" style={{ width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(11,18,32,0.6)', border: 'none', color: '#fff', cursor: 'pointer' }}><IconShare /></button>
+                <button onClick={() => setSaved(s => !s)} aria-label="Save building" style={{ width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(11,18,32,0.6)', border: 'none', color: '#fff', cursor: 'pointer' }}><IconHeart filled={saved} /></button>
+              </div>
+
+              {allImages.length > 1 && (
+                <div style={{ position: 'absolute', bottom: 12, left: 0, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                  {allImages.slice(0, 8).map((_, i) => (
+                    <span key={i} style={{ width: i === imgIdx ? 8 : 6, height: i === imgIdx ? 8 : 6, borderRadius: '50%', background: i === imgIdx ? PINK : 'rgba(255,255,255,0.4)', transition: 'all 0.2s', flexShrink: 0 }} />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* DOTS */}
-          <div style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 20px', background: '#fff', flexShrink: 0 }}>
-            {allImages.slice(0, 8).map((_, i) => (
-              <button key={i} onClick={() => setImgIdx(i)} aria-label={`View photo ${i + 1}`} style={{ width: i === imgIdx ? 16 : 7, height: 7, borderRadius: 999, background: i === imgIdx ? '#FF3D82' : '#D1D5DB', border: 'none', cursor: 'pointer', padding: 0, transition: 'all 0.2s', flexShrink: 0 }} />
+          {/* THUMBNAILS */}
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '10px 10px', flexShrink: 0 }}>
+            {allImages.map((photo, i) => (
+              <button key={i} onClick={() => setImgIdx(i)} aria-label={`View photo ${i + 1}`} style={{ position: 'relative', width: 60, height: 60, flexShrink: 0, borderRadius: 10, overflow: 'hidden', border: i === imgIdx ? '2px solid #19C6C0' : '2px solid transparent', padding: 0, cursor: 'pointer', background: '#D1D5DB' }}>
+                <Image src={photo} alt="" fill style={{ objectFit: 'cover' }} />
+              </button>
             ))}
           </div>
 
-          {/* TOP INFO */}
-          <div style={{ padding: '16px 20px 15px', background: '#fff', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: MUTED, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}><IconPin /> {building.neighborhood}</div>
-                <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 28, lineHeight: 1.05, fontWeight: 800, color: TEXT }}>{building.name}</div>
-              </div>
-              <button onClick={() => setSaved(s => !s)} aria-label="Save building" style={{ width: 34, height: 34, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: saved ? PINK : MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 8, cursor: 'pointer' }}><IconHeart filled={saved} /></button>
+          {/* NAME + ADDRESS */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '4px 20px 0', flexShrink: 0 }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: TEXT }}>{building.name}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: MUTED, marginTop: 4 }}><IconPin /> {building.address || building.neighborhood}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2, marginTop: 10 }}><span style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Starting at</span><div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 22, color: TEXT }}>{fmt(building.priceMin)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo</span></div></div>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <button aria-label="Share building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconShare /></button>
+              <button onClick={() => setSaved(s => !s)} aria-label="Save building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: saved ? PINK : MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconHeart filled={saved} /></button>
+            </div>
+          </div>
+
+          {/* TOP INFO */}
+          <div style={{ padding: '12px 20px 15px', background: '#fff', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}><span style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Starting at</span><div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 22, color: TEXT }}>{fmt(building.priceMin)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo</span></div></div>
             {building.tagline && <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, marginTop: 8 }}>{building.tagline}</div>}
             <div style={{ display: 'flex', gap: 7, marginTop: 9, flexWrap: 'wrap', alignItems: 'center' }}>
               {building.concession && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#FFF6E5', color: '#92660B', borderRadius: 999, padding: '5px 11px', fontSize: 11, fontWeight: 600 }}><IconStar /> {building.concession}</span>}
