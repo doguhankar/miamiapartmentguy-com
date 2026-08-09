@@ -155,7 +155,20 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
 
           <hr style={{ border: 0, borderTop: `1px solid ${COLORS.border}`, margin: '4px 0 22px' }} />
 
-          <section><h2 className="mb-3.5 flex items-center gap-2 text-sm font-extrabold"><Icon name="money" size={15} />Monthly Pricing</h2><div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>{priceGroups.map((group) => { const active = activePriceType === group.label; return <button key={group.label} type="button" onPointerDown={(e) => { e.stopPropagation(); setActivePriceType(active ? null : group.label) }} className="flex-1 rounded-[14px] px-2.5 py-4 text-center" style={{ background: active ? COLORS.pink : COLORS.panel, color: active ? '#FFFFFF' : COLORS.text, touchAction: 'manipulation', pointerEvents: 'auto', position: 'relative', zIndex: 10, userSelect: 'none' }}><div className="mb-1.5 text-[10.5px] font-semibold" style={{ color: active ? 'rgba(255,255,255,.85)' : COLORS.muted }}>{group.label}</div><div className="font-extrabold" style={{ fontSize: 15 }}>{money(group.price)}<span className="text-[9.5px] font-medium">+</span></div></button> })}</div></section>
+          <section><h2 className="mb-3.5 flex items-center gap-2 text-sm font-extrabold"><Icon name="money" size={15} />Monthly Pricing</h2><button
+            onPointerDown={() => alert('PILL TAPPED')}
+            style={{
+              width: '100%',
+              padding: 20,
+              background: 'red',
+              color: 'white',
+              fontSize: 20,
+              zIndex: 9999,
+              position: 'relative',
+            }}
+          >
+            TAP ME
+          </button></section>
 
           <section className="mt-7"><h2 className="mb-3.5 flex items-center gap-2 text-sm font-extrabold"><Icon name="home" size={15} />Available Units <span className="text-[11px] font-medium" style={{ color: COLORS.muted }}>({filteredUnits.length})</span></h2>{loadingUnits ? <div className="rounded-xl p-4 text-sm" style={{ background: COLORS.panel, color: COLORS.muted }}>Loading live availability…</div> : visibleUnits.length ? <div>{visibleUnits.map((unit, index) => { const status = formatAvailability(unit.availableDate || unit.available_date); const now = status === 'Avail now'; return <div key={unit.id || index} className="mb-2 flex items-center justify-between rounded-xl border px-3.5 py-3" style={{ borderColor: COLORS.border }}><div className="flex flex-col gap-1"><div className="text-[12.5px] font-bold">{unit.unit || unit.unit_number || `Unit ${index + 1}`} · {unitLabel(unit)}</div><div className="text-[10.5px]" style={{ color: COLORS.muted }}>{unit.sqft ? `${unit.sqft} sqft` : 'See floor plan'}{unit.baths ? ` · ${unit.baths} bath` : ''}</div></div><div className="flex flex-col items-end gap-1"><div className="font-extrabold text-[13px]">{money(unit.price)}</div><span className="rounded-full px-2 py-0.5 text-[9px] font-bold" style={{ background: now ? '#E8F8EE' : '#FFF6E5', color: now ? COLORS.teal : COLORS.gold }}>{status}</span></div></div> })}</div> : <div className="rounded-xl p-4 text-sm" style={{ background: COLORS.panel, color: COLORS.muted }}>Contact Don for current availability.</div>}{filteredUnits.length > 3 && <button onClick={() => setShowAllUnits((value) => !value)} className="flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-dashed p-2.5 text-[11.5px] font-semibold" style={{ borderColor: COLORS.border, color: COLORS.muted }}>{showAllUnits ? 'Show fewer units' : `Show ${filteredUnits.length - 3} more units`}<Icon name="chevronDown" size={12} /></button>}</section>
 
