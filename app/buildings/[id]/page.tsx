@@ -548,9 +548,9 @@ export default function BuildingDetailPage() {
           </div>
 
           {showLeasingForm && (
-            <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setShowLeasingForm(false)}>
-              <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, padding: '20px 20px 40px' }} onClick={event => event.stopPropagation()}>
-                <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 24px' }} />
+            <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setShowLeasingForm(false)}>
+              <div style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 480, padding: '28px 24px 36px', maxHeight: '90vh', overflowY: 'auto' }} onClick={event => event.stopPropagation()}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#19C6C0', letterSpacing: '0.08em', marginBottom: 16 }}>CONNECT WITH LEASING TEAM</div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: '#19C6C0', letterSpacing: '0.08em', marginBottom: 16 }}>CONNECT WITH LEASING TEAM</div>
                 <LeasingForm buildingName={building.name} buildingId={buildingId} onClose={() => setShowLeasingForm(false)} />
               </div>
