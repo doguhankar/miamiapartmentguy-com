@@ -87,9 +87,15 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [activePriceType, setActivePriceType] = useState<string | null>('Studio')
   const [units, setUnits] = useState<Unit[]>([])
-  const filteredUnits = activePriceType
-    ? units.filter(u => unitLabel(u) === activePriceType)
-    : units
+  const filteredUnits = (() => {
+    const result = activePriceType
+      ? units.filter(u => unitLabel(u) === activePriceType)
+      : units
+    console.log('activePriceType:', activePriceType)
+    console.log('units total:', units.length)
+    console.log('filteredUnits:', result.length)
+    return result
+  })()
   const [loadingUnits, setLoadingUnits] = useState(true)
   const [showAllUnits, setShowAllUnits] = useState(false)
   const [saved, setSaved] = useState(false)
