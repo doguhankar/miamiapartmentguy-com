@@ -335,7 +335,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
           touchInteraction = false;
           return;
         }
-        setSelectedBuilding(building);
+        onPinClick(building);
       };
 
       // Create the target popup card. Keep this DOM-built because Mapbox owns popup placement.
@@ -1536,7 +1536,7 @@ export default function MiamiApp() {
             expandedNeighborhoods={expandedNeighborhoods} 
             selectedBuilding={selectedBuilding} 
             highlightedBuilding={highlightedBuilding}
-            onPinClick={(b) => { setSelectedBuilding(b); setInfoBuilding(b); }}
+            onPinClick={(b) => router.push(`/buildings/${b.id}`)}
             geocodedBuildings={geocodedBuildings}
             setSelectedBuilding={setSelectedBuilding}
   setInfoBuilding={setInfoBuilding}
