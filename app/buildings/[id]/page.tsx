@@ -136,7 +136,7 @@ export default function BuildingDetailPage() {
           setLiveUnits(data.units)
           const first = data.units[0]
           setSelectedUnit(first)
-          setActivePriceType(bedsKey(first))
+          setActivePriceType(prev => prev ?? bedsKey(first))
         }
       })
       .catch(() => {})
