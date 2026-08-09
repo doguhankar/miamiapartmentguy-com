@@ -236,11 +236,6 @@ export default function BuildingDetailPage() {
             <div style={{ boxSizing: 'border-box', position: 'relative', width: '100%', height: 280, minHeight: 280, borderRadius: 16, overflow: 'hidden', background: '#E5E7EB' }}>
               {allImages[imgIdx] && <Image src={allImages[imgIdx]} alt={`${building.name} photo ${imgIdx + 1}`} fill style={{ objectFit: 'cover' }} priority />}
 
-              <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', alignItems: 'center', gap: 6, background: '#19C6C0', color: '#fff', fontSize: 11, fontWeight: 600, borderRadius: 20, padding: '6px 12px' }}>
-                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#FFFFFF', flexShrink: 0 }} />
-                Available
-              </div>
-
 
               {allImages.length > 1 && (
                 <div style={{ position: 'absolute', bottom: 12, left: 0, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
