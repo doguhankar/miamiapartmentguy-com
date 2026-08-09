@@ -279,7 +279,6 @@ export default function BuildingDetailPage() {
                     <button
                       key={k}
                       onClick={() => {
-                        if (k === 'Studio') alert('clicked')
                         setActivePriceType(active ? null : k)
                       }}
                       style={{ flex: 1, background: active ? PINK : PANEL, border: `2px solid ${active ? PINK : 'transparent'}`, borderRadius: 10, padding: '10px 8px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.15s' }}
