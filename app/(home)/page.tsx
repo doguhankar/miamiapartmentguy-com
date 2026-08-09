@@ -144,7 +144,7 @@ export default function HomePage() {
         .m2-pill.gold { color: #FFC24B; border-color: rgba(255,194,75,0.3); }
         .m2-cta-row { justify-content: center; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
         .m2-sms-btn { display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; background: #FF3D82; color: #1a0510; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; padding: 12px 22px; border-radius: 100px; box-shadow: 0 8px 30px rgba(255,61,130,0.4); width: 100%; }
-        .m2-map-btn { display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; background: rgba(28,220,212,0.1); border: 1.5px solid #1CDCD4; color: #1CDCD4; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; padding: 12px 22px; border-radius: 100px; box-shadow: 0 0 20px rgba(28,220,212,0.25); width: 100%; }
+        .m2-map-btn { display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; background: #19C6C0; border: 1.5px solid #19C6C0; color: #000; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; padding: 12px 22px; border-radius: 100px; box-shadow: 0 0 20px rgba(25,198,192,0.25); width: 100%; }
         .m2-social-row { display: flex; gap: 8px; align-items: center; justify-content: center; }
         .m2-social-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #7C86A0; margin-right: 4px; }
         .m2-social-icon { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.15s ease; }
@@ -229,8 +229,8 @@ export default function HomePage() {
         .d2-cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
         .d2-sms-btn { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; background: #FF3D82; color: #1a0510; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14.5px; padding: 13px 22px; border-radius: 100px; box-shadow: 0 8px 30px rgba(255,61,130,0.4); transition: transform 0.15s ease; }
         .d2-sms-btn:active { transform: scale(0.98); }
-        .d2-map-btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; background: rgba(28,220,212,0.1); border: 1.5px solid #1CDCD4; color: #1CDCD4; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14.5px; padding: 12px 20px; border-radius: 100px; box-shadow: 0 0 20px rgba(28,220,212,0.25); transition: background 0.15s ease; }
-        .d2-map-btn:hover { background: rgba(28,220,212,0.18); }
+        .d2-map-btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; background: #19C6C0; border: 1.5px solid #19C6C0; color: #000; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14.5px; padding: 12px 20px; border-radius: 100px; box-shadow: 0 0 20px rgba(25,198,192,0.25); transition: background 0.15s ease; }
+        .d2-map-btn:hover { background: #19C6C0; }
         .d2-social-row { display: flex; gap: 10px; align-items: center; }
         .d2-social-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #7C86A0; margin-right: 4px; }
         .d2-social-icon { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; text-decoration: none; transition: transform 0.15s ease; }
