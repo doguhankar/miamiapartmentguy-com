@@ -539,15 +539,10 @@ export default function BuildingDetailPage() {
                 </p>
               </div>
 
-              <div style={{ padding: '14px', borderTop: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <button onClick={() => setShowLeasingForm(true)} style={{ width: '100%', border: 'none', borderRadius: 12, padding: '13px 8px', background: '#19C6C0', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Connect with Leasing</button>
-                <a href={`sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`} style={{ width: '100%', border: 'none', borderRadius: 12, padding: '13px 8px', background: '#FF4D8D', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', display: 'block' }}>Text Don</a>
-              </div>
-
           </div>
 
           {/* MOBILE CTA */}
-          <div className="building-detail-mobile-cta" style={{ position: 'sticky', bottom: 0, zIndex: 20, display: 'flex', gap: 10, padding: '10px 20px', background: 'rgba(255,255,255,.94)', borderTop: `1px solid ${BORDER}`, backdropFilter: 'blur(10px)' }}>
+          <div className="building-detail-mobile-cta" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 20, display: 'flex', flexDirection: 'row', gap: 10, padding: '10px 20px', background: 'rgba(255,255,255,.94)', borderTop: `1px solid ${BORDER}`, backdropFilter: 'blur(10px)' }}>
             <button onClick={() => setShowLeasingForm(true)} style={{ flex: 1, border: 'none', borderRadius: 12, padding: '14px 8px', background: '#19C6C0', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Connect with Leasing</button>
             <a href={`sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`} style={{ flex: 1, border: 'none', borderRadius: 12, padding: '14px 8px', background: '#FF4D8D', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Text Don</a>
           </div>
