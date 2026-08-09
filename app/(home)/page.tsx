@@ -94,23 +94,12 @@ export default function HomePage() {
         .btn-ghost { border: 1px solid rgba(255,255,255,.12); color: #F6F8F9; background: transparent; }
         .btn-ghost:hover { border-color: #19C6C0; color: #19C6C0; }
         
-        .ticker { background: #FF4D8D; color: #fff; overflow: hidden; white-space: nowrap; font-weight: 700; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; }
-        .ticker-track { display: inline-block; padding: 9px 0; animation: scroll 32s linear infinite; }
-        @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .ticker b { color: #0B1220; margin: 0 6px; }
-        
-        @media(prefers-reduced-motion:reduce) { .ticker-track { animation: none; } }
-
-        @keyframes magTickerScroll {
-          from { transform: translateX(0); }
-          to { transform: translateX(-50%); }
-        }
         @keyframes magReviewScroll {
           from { transform: translateX(0); }
           to { transform: translateX(-66.66%); }
         }
         @media(prefers-reduced-motion:reduce) {
-          [style*="magTickerScroll"], [style*="magReviewScroll"] { animation: none !important; }
+          [style*="magReviewScroll"] { animation: none !important; }
         }
 
         /* ── MOBILE-PAGE CLASS SYSTEM (mirrors mockup exactly) ─────────── */
@@ -122,10 +111,6 @@ export default function HomePage() {
         .m2-nav-link { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: #7C86A0; text-decoration: none; letter-spacing: 0.02em; }
         .m2-nav-link:hover { color: #F7F8FB; }
 
-        .m2-ticker-wrap { width: 100%; background: #FF1F73; overflow: hidden; padding: 4px 0; }
-        .m2-ticker { display: flex; gap: 40px; white-space: nowrap; animation: magTickerScroll 26s linear infinite; width: max-content; }
-        .m2-tick-item { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 600; color: #1a0510; letter-spacing: 0.02em; }
-        .m2-tick-item b { font-weight: 700; }
 
         .m2-hero { grid-template-columns: 1fr; gap: 12px; padding: 14px 16px 10px; display: grid; }
         .m2-hero-right { order: 1; max-width: 130px; margin: 0 auto; }
@@ -199,7 +184,7 @@ export default function HomePage() {
         @media (min-width: 901px) {
           .d2-page { display: block; }
           .mobile-page { display: none !important; }
-          .ticker, header, .desktop-proof-bar, #how, #hoods, #why, #reviews, .desktop-final-cta, .desktop-footer { display: none !important; }
+          header, .desktop-proof-bar, #how, #hoods, #why, #reviews, .desktop-final-cta, .desktop-footer { display: none !important; }
         }
         .d2-topnav { width: 100%; padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); }
         .d2-topnav-inner { max-width: 1160px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
@@ -208,10 +193,6 @@ export default function HomePage() {
         .d2-nav-links { display: flex; gap: 22px; }
         .d2-nav-link { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 600; color: #7C86A0; text-decoration: none; letter-spacing: 0.02em; }
         .d2-nav-link:hover { color: #F7F8FB; }
-        .d2-ticker-wrap { width: 100%; background: #FF1F73; overflow: hidden; padding: 6px 0; }
-        .d2-ticker { display: flex; gap: 40px; white-space: nowrap; animation: magTickerScroll 26s linear infinite; width: max-content; }
-        .d2-tick-item { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 600; color: #1a0510; letter-spacing: 0.02em; }
-        .d2-tick-item b { font-weight: 700; }
         .d2-hero-wrap { overflow: hidden; }
         .d2-hero { position: relative; padding: 26px 24px 22px; max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: 1fr 380px; gap: 0; align-items: center; }
         .d2-hero::before { content: ""; position: absolute; top: -10%; left: -5%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(255,61,130,0.18), transparent 65%); z-index: 0; pointer-events: none; }
@@ -294,7 +275,6 @@ export default function HomePage() {
 
           /* Hide desktop-only sections */
           header,
-          .ticker,
           .desktop-proof-bar,
           #how, #hoods, #why, #reviews,
           .desktop-final-cta,
@@ -497,15 +477,6 @@ export default function HomePage() {
         .m-foot-links { text-align: right; }
         .m-foot-links a { display: block; font-size: 10px; color: #8FA0B8; text-decoration: none; padding: 3px 0; }
       `}</style>
-
-      {/* TICKER */}
-      <div className="ticker">
-        <div className="ticker-track">
-          <b>LIVE</b> Flow Brickell — 1BD from $2,650 · 2 months free &nbsp;✦&nbsp; <b>LIVE</b> Edgewater — Studios from $2,100 · waived admin &nbsp;✦&nbsp; <b>LIVE</b> Wynwood — 2BD from $3,400 · 6 weeks free &nbsp;✦&nbsp; <b>LIVE</b> Downtown — 1BD from $2,350 · $1,000 off first month &nbsp;✦&nbsp; <b>LIVE</b> Flow Brickell — 1BD from $2,650 · 2 months free &nbsp;✦&nbsp; <b>LIVE</b> Edgewater — Studios from $2,100 · waived admin &nbsp;✦&nbsp; <b>LIVE</b> Wynwood — 2BD from $3,400 · 6 weeks free &nbsp;✦&nbsp; <b>LIVE</b> Downtown — 1BD from $2,350 · $1,000 off first month &nbsp;✦&nbsp;
-        </div>
-      </div>
-
-
 
       {/* HERO */}
       <header style={{ position: 'relative', paddingTop: 'calc(61px + 90px)', paddingBottom: '70px', overflow: 'hidden', background: '#0B1220', marginTop: '0' }}>
@@ -731,22 +702,6 @@ export default function HomePage() {
           </div>
         </nav>
 
-        {/* ticker */}
-        <div className="d2-ticker-wrap">
-          <div className="d2-ticker">
-            <span className="d2-tick-item">BRICKELL STUDIO <b>$2,100/mo</b></span>
-            <span className="d2-tick-item">EDGEWATER 1BR <b>$2,650/mo</b></span>
-            <span className="d2-tick-item">WYNWOOD 1BR <b>$2,400/mo</b></span>
-            <span className="d2-tick-item">DOWNTOWN 2BR <b>$3,300/mo</b></span>
-            <span className="d2-tick-item">MIDTOWN 1BR <b>$2,550/mo</b></span>
-            <span className="d2-tick-item">BRICKELL STUDIO <b>$2,100/mo</b></span>
-            <span className="d2-tick-item">EDGEWATER 1BR <b>$2,650/mo</b></span>
-            <span className="d2-tick-item">WYNWOOD 1BR <b>$2,400/mo</b></span>
-            <span className="d2-tick-item">DOWNTOWN 2BR <b>$3,300/mo</b></span>
-            <span className="d2-tick-item">MIDTOWN 1BR <b>$2,550/mo</b></span>
-          </div>
-        </div>
-
         {/* hero */}
         <div className="d2-hero-wrap">
           <div className="d2-hero">
@@ -917,22 +872,6 @@ export default function HomePage() {
             </div>
           </div>
         </nav>
-
-        {/* 2. PRICE TICKER */}
-        <div className="m2-ticker-wrap">
-          <div className="m2-ticker">
-            <span className="m2-tick-item">BRICKELL STUDIO <b>$2,100/mo</b></span>
-            <span className="m2-tick-item">EDGEWATER 1BR <b>$2,650/mo</b></span>
-            <span className="m2-tick-item">WYNWOOD 1BR <b>$2,400/mo</b></span>
-            <span className="m2-tick-item">DOWNTOWN 2BR <b>$3,300/mo</b></span>
-            <span className="m2-tick-item">MIDTOWN 1BR <b>$2,550/mo</b></span>
-            <span className="m2-tick-item">BRICKELL STUDIO <b>$2,100/mo</b></span>
-            <span className="m2-tick-item">EDGEWATER 1BR <b>$2,650/mo</b></span>
-            <span className="m2-tick-item">WYNWOOD 1BR <b>$2,400/mo</b></span>
-            <span className="m2-tick-item">DOWNTOWN 2BR <b>$3,300/mo</b></span>
-            <span className="m2-tick-item">MIDTOWN 1BR <b>$2,550/mo</b></span>
-          </div>
-        </div>
 
         {/* 3. HERO — photo top (order:1), text bottom (order:2), centered */}
         <div className="m2-hero">
