@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import type { FormEvent } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -111,6 +112,42 @@ const IconPrev = () => (
     </svg>
   )
 
+function LeasingForm({ buildingName, buildingId, onClose }: { buildingName: string; buildingId: string; onClose: () => void }) {
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '' })
+  const [intents, setIntents] = useState<string[]>([])
+  const [consent, setConsent] = useState(false)
+  const [attempted, setAttempted] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+
+  const toggleIntent = (intent: string) => setIntents(current => current.includes(intent) ? current.filter(item => item !== intent) : [...current, intent])
+  const submit = async (event: FormEvent) => {
+    event.preventDefault()
+    setAttempted(true)
+    if (!consent || submitting) return
+    setSubmitting(true)
+    try {
+      const response = await fetch('/api/submit-leasing-lead', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ buildingName, buildingId, ...form, intents }) })
+      if (!response.ok) throw new Error('Submission failed')
+      setSubmitted(true)
+    } catch {
+      setSubmitting(false)
+    }
+  }
+
+  if (submitted) return <div style={{ textAlign: 'center', padding: '28px 8px 12px' }}><div style={{ width: 48, height: 48, margin: '0 auto 14px', borderRadius: '50%', background: '#E8F8EE', color: '#0F9D7A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>✓</div><div style={{ fontSize: 18, fontWeight: 800, color: '#111827' }}>Request sent</div><p style={{ color: '#667085', fontSize: 13 }}>The leasing team will be in touch soon.</p><button onClick={onClose} style={{ marginTop: 12, border: 'none', borderRadius: 10, padding: '11px 22px', background: '#19C6C0', color: '#fff', fontWeight: 700 }}>Done</button></div>
+
+  const field = (key: keyof typeof form, label: string, required = false, type = 'text') => <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#667085' }}>{label}{required ? ' *' : ''}<input required={required} type={type} value={form[key]} onChange={event => setForm(current => ({ ...current, [key]: event.target.value }))} style={{ display: 'block', width: '100%', marginTop: 5, padding: '10px 11px', border: '1px solid #E5E7EB', borderRadius: 9, fontSize: 13, color: '#111827', background: '#fff' }} /></label>
+  return <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>{field('firstName', 'First name', true)}{field('lastName', 'Last name', true)}</div>
+    {field('email', 'Email', true, 'email')}{field('phone', 'Phone')}
+    <div><div style={{ fontSize: 11, fontWeight: 700, color: '#667085', marginBottom: 7 }}>I&apos;m interested in</div><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>{['Schedule a Tour', 'Request more info', 'Confirm Qualifications', 'Custom Message'].map(intent => <label key={intent} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#111827' }}><input type="checkbox" checked={intents.includes(intent)} onChange={() => toggleIntent(intent)} />{intent}</label>)}</div></div>
+    <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 11, lineHeight: 1.4, color: '#667085' }}><input type="checkbox" checked={consent} onChange={event => { setConsent(event.target.checked); setAttempted(false) }} style={{ marginTop: 2 }} /> <span>By submitting this form, you agree to be contacted by the property owner, manager, or a third-party partner.</span></label>
+    {attempted && !consent && <div style={{ color: '#FF4D8D', fontSize: 11 }}>Please agree to our terms to continue.</div>}
+    <button type="submit" disabled={!consent || submitting} style={{ border: 'none', borderRadius: 12, padding: 13, background: consent ? '#19C6C0' : '#D1D5DB', color: '#fff', fontSize: 13, fontWeight: 700, cursor: consent ? 'pointer' : 'not-allowed', pointerEvents: consent ? 'auto' : 'none' }}>{submitting ? 'Sending…' : 'Send request'}</button>
+  </form>
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function BuildingDetailPage() {
   const params = useParams()
@@ -130,6 +167,7 @@ export default function BuildingDetailPage() {
   const [activePriceType, setActivePriceType] = useState<string | null>('Studio')
 
   const [income, setIncome] = useState<string>('9000')
+  const [showLeasingForm, setShowLeasingForm] = useState(false)
 
   // Fetch live units
   useEffect(() => {
@@ -501,17 +539,28 @@ export default function BuildingDetailPage() {
                 </p>
               </div>
 
+              <div style={{ padding: '14px', borderTop: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <button onClick={() => setShowLeasingForm(true)} style={{ width: '100%', border: 'none', borderRadius: 12, padding: '13px 8px', background: '#19C6C0', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Connect with Leasing</button>
+                <a href={`sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`} style={{ width: '100%', border: 'none', borderRadius: 12, padding: '13px 8px', background: '#FF4D8D', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', display: 'block' }}>Text Don</a>
+              </div>
+
           </div>
 
-          {/* STICKY CTA */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(0deg, #fff 75%, rgba(255,255,255,0))', padding: '22px 20px 18px' }}>
-            <a
-              href={`sms:+13059059697?body=Hey Don, I'm interested in ${encodeURIComponent(building.name)} — can you help me get a tour?`}
-              style={{ display: 'block', width: '100%', padding: 14, borderRadius: 12, background: PINK, color: '#fff', fontSize: 14, fontWeight: 700, textAlign: 'center', textDecoration: 'none', boxShadow: '0 8px 24px rgba(255,61,130,0.35)', cursor: 'pointer' }}
-            >
-              Tour with Don
-            </a>
+          {/* MOBILE CTA */}
+          <div className="building-detail-mobile-cta" style={{ position: 'sticky', bottom: 0, zIndex: 20, display: 'flex', gap: 10, padding: '10px 20px', background: 'rgba(255,255,255,.94)', borderTop: `1px solid ${BORDER}`, backdropFilter: 'blur(10px)' }}>
+            <button onClick={() => setShowLeasingForm(true)} style={{ flex: 1, border: 'none', borderRadius: 12, padding: '14px 8px', background: '#19C6C0', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Connect with Leasing</button>
+            <a href={`sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`} style={{ flex: 1, border: 'none', borderRadius: 12, padding: '14px 8px', background: '#FF4D8D', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Text Don</a>
           </div>
+
+          {showLeasingForm && (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setShowLeasingForm(false)}>
+              <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 480, padding: '20px 20px 40px' }} onClick={event => event.stopPropagation()}>
+                <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 24px' }} />
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#19C6C0', letterSpacing: '0.08em', marginBottom: 16 }}>CONNECT WITH LEASING TEAM</div>
+                <LeasingForm buildingName={building.name} buildingId={buildingId} onClose={() => setShowLeasingForm(false)} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
