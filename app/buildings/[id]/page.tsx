@@ -229,11 +229,11 @@ export default function BuildingDetailPage() {
           <IconBack /> Back to map
         </button>
         {/* ── LEFT SECTION ── */}
-        <div className="building-detail-left" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div className="building-detail-left" style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
           {/* HERO */}
-          <div style={{ padding: '58px 16px 0', flexShrink: 0 }}>
-            <div style={{ position: 'relative', width: '100%', height: 280, borderRadius: 16, overflow: 'hidden', background: '#E5E7EB' }}>
+          <div style={{ boxSizing: 'border-box', width: '100%', padding: '58px 16px 0', flexShrink: 0 }}>
+            <div style={{ boxSizing: 'border-box', position: 'relative', width: '100%', height: 280, minHeight: 280, borderRadius: 16, overflow: 'hidden', background: '#E5E7EB' }}>
               {allImages[imgIdx] && <Image src={allImages[imgIdx]} alt={`${building.name} photo ${imgIdx + 1}`} fill style={{ objectFit: 'cover' }} priority />}
 
               <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', alignItems: 'center', gap: 6, background: '#19C6C0', color: '#fff', fontSize: 11, fontWeight: 600, borderRadius: 20, padding: '6px 12px' }}>
@@ -264,6 +264,7 @@ export default function BuildingDetailPage() {
           {/* NAME + ADDRESS */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '4px 20px 0', flexShrink: 0 }}>
             <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: MUTED, marginBottom: 5 }}>{building.neighborhood}</div>
               <div style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: TEXT }}>{building.name}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: MUTED, marginTop: 4 }}><IconPin /> {building.address || building.neighborhood}</div>
             </div>
@@ -284,7 +285,7 @@ export default function BuildingDetailPage() {
           </div>
 
           {/* CONTENT: TWO COLUMNS */}
-          <div className="building-detail-content" style={{ flex: 1, display: 'flex', overflow: 'hidden', borderRight: `1px solid ${BORDER}` }}>
+          <div className="building-detail-content" style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', overflow: 'hidden', borderRight: `1px solid ${BORDER}` }}>
 
             {/* LEFT COL: Pricing + Units */}
             <div style={{ flex: 1, overflowY: 'auto', padding: 18, borderRight: `1px solid ${BORDER}` }}>
