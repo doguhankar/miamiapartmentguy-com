@@ -232,11 +232,11 @@ export default function BuildingDetailPage() {
         <div className="building-detail-left" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
           {/* HERO */}
-          <div style={{ padding: '12px 12px 0', flexShrink: 0 }}>
+          <div style={{ padding: '58px 12px 0', flexShrink: 0 }}>
             <div style={{ position: 'relative', width: '100%', height: 240, borderRadius: 16, overflow: 'hidden', background: '#E5E7EB' }}>
               {allImages[imgIdx] && <Image src={allImages[imgIdx]} alt={`${building.name} photo ${imgIdx + 1}`} fill style={{ objectFit: 'cover' }} priority />}
 
-              <div style={{ position: 'absolute', top: 58, left: 12, display: 'flex', alignItems: 'center', gap: 6, background: NAVY, color: '#fff', fontSize: 11, fontWeight: 600, borderRadius: 20, padding: '6px 12px' }}>
+              <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', alignItems: 'center', gap: 6, background: NAVY, color: '#fff', fontSize: 11, fontWeight: 600, borderRadius: 20, padding: '6px 12px' }}>
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#19C6C0', flexShrink: 0 }} />
                 Available
               </div>
