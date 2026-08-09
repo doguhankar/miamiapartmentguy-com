@@ -85,10 +85,13 @@ function FeeRow({ label, value, emphasis = false }: { label: string; value: numb
 
 export function BuildingDetailModal({ building, onClose }: BuildingDetailModalProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [activePriceType, setActivePriceType] = useState<string | null>('Studio')
   const [units, setUnits] = useState<Unit[]>([])
+  const filteredUnits = activePriceType
+    ? units.filter(u => unitLabel(u) === activePriceType)
+    : units
   const [loadingUnits, setLoadingUnits] = useState(true)
   const [showAllUnits, setShowAllUnits] = useState(false)
-  const [activePriceType, setActivePriceType] = useState<string | null>('Studio')
   const [saved, setSaved] = useState(false)
   const { images: supabaseImages } = useSupabaseImages(building.id)
   const images = supabaseImages.length ? supabaseImages : building.images || []
