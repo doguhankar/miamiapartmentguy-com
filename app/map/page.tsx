@@ -59,24 +59,6 @@ const parseRange = (value: string) => {
   return match ? { min: Number(match[1].replace(/,/g, '')), max: Number(match[2].replace(/,/g, '')) } : null;
 };
 
-
-// Ticker Component
-const Ticker = () => (
-  <div style={{ background: '#FF4D8D', color: '#fff', overflow: 'hidden', whiteSpace: 'nowrap', fontWeight: 700, fontSize: '12.5px', letterSpacing: '.06em', textTransform: 'uppercase', padding: '8px 0' }}>
-    <div style={{ display: 'inline-block', animation: 'scroll 32s linear infinite', paddingRight: '100px' }}>
-      <span style={{ marginRight: '20px' }}><b style={{ color: '#0B1220' }}>LIVE</b> Flow Brickell — 1BD from $2,841 · 2 months free ✦</span>
-      <span style={{ marginRight: '20px' }}><b style={{ color: '#0B1220' }}>LIVE</b> CMPND Downtown — from $1,950 · brand new ✦</span>
-      <span style={{ marginRight: '20px' }}><b style={{ color: '#0B1220' }}>LIVE</b> The Dorsey Wynwood — from $2,100 · 6 weeks free ✦</span>
-      <span style={{ marginRight: '20px' }}><b style={{ color: '#0B1220' }}>LIVE</b> Parkline — from $2,120 · waived admin ✦</span>
-      <span style={{ marginRight: '20px' }}><b style={{ color: '#0B1220' }}>LIVE</b> Flow Brickell — 1BD from $2,841 · 2 months free ✦</span>
-      <span style={{ marginRight: '20px' }}><b style={{ color: '#0B1220' }}>LIVE</b> CMPND Downtown — from $1,950 · brand new ✦</span>
-    </div>
-    <style jsx>{`
-      @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-    `}</style>
-  </div>
-);
-
 const Tooltip = ({ text }) => {
   const [show, setShow] = useState(false);
   return (
@@ -1450,11 +1432,6 @@ export default function MiamiApp() {
         )}
       </div>
       {/* ── END MOBILE LAYOUT ─────────────────────────────────────────────── */}
-
-      {/* Ticker — desktop only */}
-      <div className="hidden md:block">
-        <Ticker />
-      </div>
 
       {/* Desktop Header - Fixed at Top */}
       <div className="hidden md:flex items-center justify-between px-8 py-7 bg-white flex-shrink-0 border-b border-[#E8EBF0]" style={{ height: '74px' }}>
