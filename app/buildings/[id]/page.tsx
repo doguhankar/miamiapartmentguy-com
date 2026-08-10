@@ -266,6 +266,92 @@ export default function BuildingDetailPage() {
   const CYAN = '#E0F7FA'
   const CYAN_DARK = '#0097A7'
 
+  // ── Shared content blocks (reused by both mobile and desktop layouts) ──────
+  const unitsSection = (
+    <>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconHome /> Available Units</div>
+      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
+        {bedroomGroups.length ? bedroomGroups.map(({ key, units }) => {
+          const open = expandedBeds[key] ?? false
+          const prices = units.map((unit) => unit.price).filter((value): value is number => Boolean(value))
+          const plans = floorPlanGroups(units)
+          return <div key={key} style={{ borderBottom: `1px solid ${BORDER}` }}>
+            <button type="button" onClick={() => { setExpandedBeds((current) => ({ ...current, [key]: !open })); setActivePriceType(key) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 14px', border: 0, background: open ? '#FFF7FA' : '#fff', cursor: 'pointer', textAlign: 'left' }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: TEXT }}>{key} <span style={{ color: MUTED, fontSize: 11, fontWeight: 500 }}>· {units.length} available</span></span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: PINK }}>{prices.length ? `${fmt(Math.min(...prices))}+` : 'Contact'} <i className="ti ti-chevron-down" aria-hidden="true" style={{ color: MUTED, fontSize: 16, lineHeight: 1, transition: 'transform 180ms ease', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }} /></span>
+            </button>
+            {open && <div style={{ padding: '0 10px 10px', background: '#fff' }}>{plans.map(({ plan, units: planUnits }) => { const planKey = `${key}-${plan}`; const planOpen = expandedPlans[planKey]; const planPrices = planUnits.map((unit) => unit.price).filter((value): value is number => Boolean(value)); return <div key={planKey} style={{ border: `1px solid ${BORDER}`, borderRadius: 9, marginTop: 8, overflow: 'hidden' }}>
+              <button type="button" onClick={() => setExpandedPlans((current) => ({ ...current, [planKey]: !planOpen }))} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '10px 11px', border: 0, background: PANEL, cursor: 'pointer', textAlign: 'left' }}><span><strong style={{ fontSize: 12 }}>{plan}</strong><span style={{ display: 'block', color: MUTED, fontSize: 10, marginTop: 2 }}>{planUnits[0] && sqft(planUnits[0]) ? `${sqft(planUnits[0])?.toLocaleString()} sqft` : 'Floor plan'} · {planUnits.length} units</span></span><span style={{ fontSize: 11, fontWeight: 800 }}>{planPrices.length ? `${fmt(Math.min(...planPrices))}+` : 'Contact'} {planOpen ? '−' : '+'}</span></button>
+              {planOpen && <div style={{ padding: '6px 10px' }}>{(showAllUnits ? planUnits : planUnits.slice(0, 4)).map((u, i) => { const sel = selectedUnit === u; const { label, now } = formatAvail(avail(u)); return <button type="button" key={i} onClick={() => setSelectedUnit(u)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, border: 0, borderBottom: i < planUnits.length - 1 ? `1px solid ${BORDER}` : 'none', padding: '9px 2px', cursor: 'pointer', background: sel ? '#FFE8F5' : '#fff', textAlign: 'left' }}><span style={{ fontSize: 11, color: TEXT }}>{u.unit ? `Unit ${u.unit}` : `Available unit ${i + 1}`} · {sqft(u) ? `${sqft(u)?.toLocaleString()} sqft` : 'Size n/a'}</span><span style={{ display: 'flex', alignItems: 'center', gap: 7 }}><strong style={{ fontSize: 12 }}>{u.price ? fmt(u.price) : '—'}</strong><span style={{ fontSize: 9, color: now ? SUCCESS : '#92660B' }}>{label}</span></span></button> })}</div>}
+            </div> })}</div>}
+          </div>
+        }) : <div style={{ padding: 14, color: MUTED, fontSize: 12 }}>Pricing is not available yet.</div>}
+      </div>
+    </>
+  )
+
+  const feesSection = (
+    <>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconCard /> Building Fees</div>
+      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px', marginBottom: 14, background: '#fff' }}>
+        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Due at move-in</div>
+        {(building.moveInFees ?? []).map((f, i, arr) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12, borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : 'none' }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0 0', marginTop: 6, fontWeight: 800, fontSize: 13, borderTop: `2px solid ${BORDER}` }}><span>Total Initial</span><span>{fmt(totalMoveIn)}</span></div>
+        <div style={{ height: 16 }} />
+        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Recurring monthly</div>
+        {(building.monthlyCharges ?? []).filter(f => !/(pet fee|parking)/i.test(f.type)).map((f, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12 }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 12px', marginTop: 8, fontWeight: 800, fontSize: 13, borderRadius: 8, background: '#19C6C0', color: '#04342C' }}><span>Total Monthly Fees</span><span>{fmt(totalMonthly)}/mo</span></div>
+      </div>
+      {(building.moveInFees ?? []).some(f => f.type.toLowerCase().includes('deposit')) && <div style={{ fontSize: 10, color: MUTED, margin: '-5px 2px 14px' }}>Deposits are due on move-in or application, not upfront.</div>}
+    </>
+  )
+
+  const sidebarBudgetSection = (
+    <>
+      <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 18, fontWeight: 600, marginBottom: 5, color: '#0B1220' }}>Your Budget Breakdown</div>
+      <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.55, marginBottom: 16 }}>See what you&apos;ll really pay each month.</div>
+
+      <hr style={{ border: 'none', borderTop: `1px solid ${BORDER}`, marginBottom: 18 }} />
+
+      <div style={{ background: '#fff', border: '1px solid #E5E3DC', borderRadius: 12, padding: 16, marginBottom: 14 }}>
+        <label htmlFor="gross-income" style={{ display: 'block', fontSize: 12, color: '#6B7280', marginBottom: 7 }}>Gross monthly income</label>
+        <input id="gross-income" type="number" value={income} onChange={e => setIncome(e.target.value)} placeholder="0" style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #E5E3DC', borderRadius: 8, background: '#F7F7F5', padding: '11px 12px', color: '#0B1220', fontSize: 20, lineHeight: 1.2, fontWeight: 700, outline: 'none' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, marginTop: 14, paddingTop: 14, borderTop: '1px solid #E5E3DC' }}>
+          <div><span style={{ fontSize: 12, color: '#6B7280' }}>Max monthly rent</span><div style={{ fontSize: 20, fontWeight: 600, color: '#FF4D8D', marginTop: 3 }}>{fmt(maxRent)}</div></div>
+          <div style={{ textAlign: 'right' }}><span style={{ fontSize: 12, color: '#6B7280' }}>You qualify for</span><div style={{ fontSize: 20, fontWeight: 600, color: '#0B1220', marginTop: 3 }}>{qualifies.length > 0 ? qualifies.join(', ') : 'Guarantor'}</div></div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, marginBottom: 12, padding: '0 4px' }}>
+        {[
+          { label: 'Income', value: building.incomeReq ? `${building.incomeReq}x income` : 'Income' },
+          { label: 'Credit', value: building.creditReq || '650+ credit' },
+          { label: 'Guarantors', value: building.guarantor ? 'Guarantors ok' : 'No guarantor' },
+        ].map(item => <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: MUTED }}><span aria-hidden="true" style={{ width: 5, height: 5, borderRadius: '50%', background: '#19C6C0', flexShrink: 0 }} />{item.value}</div>)}
+      </div>
+
+      <div style={{ background: '#fff', border: '1px solid #E5E3DC', borderRadius: 12, padding: 16, marginBottom: 14 }}>
+        <div style={{ fontSize: 18, fontWeight: 600, color: '#0B1220', marginBottom: 10 }}>Move-in and monthly costs</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Total upfront</span><span style={{ color: TEXT }}>{fmt(totalMoveIn)}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Monthly fees</span><span style={{ color: TEXT }}>{fmt(totalMonthly)}/mo</span></div>
+      </div>
+
+      <div style={{ background: '#0B1220', borderRadius: 12, padding: 20, marginBottom: 16 }}>
+        {monthsFree > 0 && <p style={{ fontSize: 12, color: '#19C6C0', margin: '0 0 7px' }}>With {monthsFree} month{monthsFree > 1 ? 's' : ''} free on a 12-month lease</p>}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 13 }}><span style={{ fontSize: 14, color: '#7A8296', textDecoration: 'line-through' }}>{fmt(selectedPrice)}</span>{monthsFree > 0 && <span style={{ fontSize: 12, color: '#FFC24B' }}>Save {fmt(savingsPerMo * 12)}/yr</span>}</div>
+        <p style={{ fontSize: 12, color: '#7A8296', margin: '0 0 3px' }}>True monthly cost</p>
+        <p style={{ fontSize: 32, fontWeight: 600, color: '#fff', margin: 0 }}>{fmt(trueMonthly)}<span style={{ fontSize: 15, fontWeight: 400, color: '#7A8296' }}>/mo</span></p>
+      </div>
+    </>
+  )
+
+  const ctaBarSection = (
+    <div className="building-detail-cta" style={{ position: 'sticky', bottom: 0, zIndex: 10, display: 'flex', flexDirection: 'row', gap: 10, padding: '10px 0', background: '#fff', borderTop: `1px solid ${BORDER}` }}>
+      <button onClick={() => setShowLeasingForm(true)} style={{ flex: 1, border: 'none', borderRadius: 12, padding: '14px 8px', background: '#19C6C0', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Connect with Leasing</button>
+      <a href={`sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`} style={{ flex: 1, border: 'none', borderRadius: 12, padding: '14px 8px', background: '#FF4D8D', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Text Don</a>
+    </div>
+  )
+
   return (
     <div className="building-detail-page" style={{ fontFamily: "'Inter', sans-serif", background: '#fff', color: TEXT, height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <style jsx>{`
@@ -291,9 +377,32 @@ export default function BuildingDetailPage() {
             padding-bottom: 100px !important;
           }
         }
+        .detail-mobile-shell {
+          display: flex;
+          flex: 1;
+          min-height: 0;
+        }
+        .detail-desktop-shell {
+          display: none;
+        }
+        @media (min-width: 769px) {
+          .detail-mobile-shell {
+            display: none;
+          }
+          .detail-desktop-shell {
+            display: block;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+          }
+        }
+        .desktop-ke-scroll::-webkit-scrollbar {
+          height: 6px;
+        }
       `}</style>
 
-      {/* ── MAIN WRAPPER ── */}
+      {/* ── MOBILE SHELL (unchanged) ── */}
+      <div className="detail-mobile-shell">
       <div className="building-detail-shell" style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         <button
           onClick={() => router.push('/map')}
@@ -357,41 +466,12 @@ export default function BuildingDetailPage() {
 
             {/* LEFT COL: Pricing + Units */}
             <div style={{ flex: 1, overflowY: 'auto', padding: 18, borderRight: `1px solid ${BORDER}` }}>
-
-              {/* Expandable pricing hierarchy */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconHome /> Available Units</div>
-              <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
-                {bedroomGroups.length ? bedroomGroups.map(({ key, units }) => {
-                  const open = expandedBeds[key] ?? false
-                  const prices = units.map((unit) => unit.price).filter((value): value is number => Boolean(value))
-                  const plans = floorPlanGroups(units)
-                  return <div key={key} style={{ borderBottom: `1px solid ${BORDER}` }}>
-                    <button type="button" onClick={() => { setExpandedBeds((current) => ({ ...current, [key]: !open })); setActivePriceType(key) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 14px', border: 0, background: open ? '#FFF7FA' : '#fff', cursor: 'pointer', textAlign: 'left' }}>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: TEXT }}>{key} <span style={{ color: MUTED, fontSize: 11, fontWeight: 500 }}>· {units.length} available</span></span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: PINK }}>{prices.length ? `${fmt(Math.min(...prices))}+` : 'Contact'} <i className="ti ti-chevron-down" aria-hidden="true" style={{ color: MUTED, fontSize: 16, lineHeight: 1, transition: 'transform 180ms ease', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }} /></span>
-                    </button>
-                    {open && <div style={{ padding: '0 10px 10px', background: '#fff' }}>{plans.map(({ plan, units: planUnits }) => { const planKey = `${key}-${plan}`; const planOpen = expandedPlans[planKey]; const planPrices = planUnits.map((unit) => unit.price).filter((value): value is number => Boolean(value)); return <div key={planKey} style={{ border: `1px solid ${BORDER}`, borderRadius: 9, marginTop: 8, overflow: 'hidden' }}>
-                      <button type="button" onClick={() => setExpandedPlans((current) => ({ ...current, [planKey]: !planOpen }))} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '10px 11px', border: 0, background: PANEL, cursor: 'pointer', textAlign: 'left' }}><span><strong style={{ fontSize: 12 }}>{plan}</strong><span style={{ display: 'block', color: MUTED, fontSize: 10, marginTop: 2 }}>{planUnits[0] && sqft(planUnits[0]) ? `${sqft(planUnits[0])?.toLocaleString()} sqft` : 'Floor plan'} · {planUnits.length} units</span></span><span style={{ fontSize: 11, fontWeight: 800 }}>{planPrices.length ? `${fmt(Math.min(...planPrices))}+` : 'Contact'} {planOpen ? '−' : '+'}</span></button>
-                      {planOpen && <div style={{ padding: '6px 10px' }}>{(showAllUnits ? planUnits : planUnits.slice(0, 4)).map((u, i) => { const sel = selectedUnit === u; const { label, now } = formatAvail(avail(u)); return <button type="button" key={i} onClick={() => setSelectedUnit(u)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, border: 0, borderBottom: i < planUnits.length - 1 ? `1px solid ${BORDER}` : 'none', padding: '9px 2px', cursor: 'pointer', background: sel ? '#FFE8F5' : '#fff', textAlign: 'left' }}><span style={{ fontSize: 11, color: TEXT }}>{u.unit ? `Unit ${u.unit}` : `Available unit ${i + 1}`} · {sqft(u) ? `${sqft(u)?.toLocaleString()} sqft` : 'Size n/a'}</span><span style={{ display: 'flex', alignItems: 'center', gap: 7 }}><strong style={{ fontSize: 12 }}>{u.price ? fmt(u.price) : '—'}</strong><span style={{ fontSize: 9, color: now ? SUCCESS : '#92660B' }}>{label}</span></span></button> })}</div>}
-                    </div> })}</div>}
-                  </div>
-                }) : <div style={{ padding: 14, color: MUTED, fontSize: 12 }}>Pricing is not available yet.</div>}
-              </div>
+              {unitsSection}
             </div>
 
             {/* RIGHT COL: Building Fees */}
             <div style={{ flex: 1, overflowY: 'auto', padding: 18 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconCard /> Building Fees</div>
-  <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px', marginBottom: 14, background: '#fff' }}>
-  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Due at move-in</div>
-  {(building.moveInFees ?? []).map((f, i, arr) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12, borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : 'none' }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
-  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0 0', marginTop: 6, fontWeight: 800, fontSize: 13, borderTop: `2px solid ${BORDER}` }}><span>Total Initial</span><span>{fmt(totalMoveIn)}</span></div>
-  <div style={{ height: 16 }} />
-  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Recurring monthly</div>
-  {(building.monthlyCharges ?? []).filter(f => !/(pet fee|parking)/i.test(f.type)).map((f, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12 }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
-  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 12px', marginTop: 8, fontWeight: 800, fontSize: 13, borderRadius: 8, background: '#19C6C0', color: '#04342C' }}><span>Total Monthly Fees</span><span>{fmt(totalMonthly)}/mo</span></div>
-  </div>
-  {(building.moveInFees ?? []).some(f => f.type.toLowerCase().includes('deposit')) && <div style={{ fontSize: 10, color: MUTED, margin: '-5px 2px 14px' }}>Deposits are due on move-in or application, not upfront.</div>}
+              {feesSection}
             </div>
           </div>
         </div>
@@ -400,63 +480,86 @@ export default function BuildingDetailPage() {
         <div className="building-detail-sidebar" style={{ width: 350, flexShrink: 0, background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', borderLeft: `1px solid ${BORDER}` }}>
           <div className="building-detail-scroll" style={{ flex: 1, overflowY: 'auto', padding: '22px 20px 0' }}>
 
-            <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 18, fontWeight: 600, marginBottom: 5, color: '#0B1220' }}>Your Budget Breakdown</div>
-            <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.55, marginBottom: 16 }}>See what you&apos;ll really pay each month.</div>
-
-            <hr style={{ border: 'none', borderTop: `1px solid ${BORDER}`, marginBottom: 18 }} />
-
-            {/* Income + qualify */}
-            <div style={{ background: '#fff', border: '1px solid #E5E3DC', borderRadius: 12, padding: 16, marginBottom: 14 }}>
-              <label htmlFor="gross-income" style={{ display: 'block', fontSize: 12, color: '#6B7280', marginBottom: 7 }}>Gross monthly income</label>
-              <input id="gross-income" type="number" value={income} onChange={e => setIncome(e.target.value)} placeholder="0" style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #E5E3DC', borderRadius: 8, background: '#F7F7F5', padding: '11px 12px', color: '#0B1220', fontSize: 20, lineHeight: 1.2, fontWeight: 700, outline: 'none' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, marginTop: 14, paddingTop: 14, borderTop: '1px solid #E5E3DC' }}>
-                <div><span style={{ fontSize: 12, color: '#6B7280' }}>Max monthly rent</span><div style={{ fontSize: 20, fontWeight: 600, color: '#FF4D8D', marginTop: 3 }}>{fmt(maxRent)}</div></div>
-                <div style={{ textAlign: 'right' }}><span style={{ fontSize: 12, color: '#6B7280' }}>You qualify for</span><div style={{ fontSize: 20, fontWeight: 600, color: '#0B1220', marginTop: 3 }}>{qualifies.length > 0 ? qualifies.join(', ') : 'Guarantor'}</div></div>
-              </div>
-            </div>
-
-            {/* Requirements */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, marginBottom: 12, padding: '0 4px' }}>
-              {[
-                { label: 'Income', value: building.incomeReq ? `${building.incomeReq}x income` : 'Income' },
-                { label: 'Credit', value: building.creditReq || '650+ credit' },
-                { label: 'Guarantors', value: building.guarantor ? 'Guarantors ok' : 'No guarantor' },
-              ].map(item => <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: MUTED }}><span aria-hidden="true" style={{ width: 5, height: 5, borderRadius: '50%', background: '#19C6C0', flexShrink: 0 }} />{item.value}</div>)}
-            </div>
-
-            {/* Costs summary */}
-            <div style={{ background: '#fff', border: '1px solid #E5E3DC', borderRadius: 12, padding: 16, marginBottom: 14 }}>
-              <div style={{ fontSize: 18, fontWeight: 600, color: '#0B1220', marginBottom: 10 }}>Move-in and monthly costs</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Total upfront</span><span style={{ color: TEXT }}>{fmt(totalMoveIn)}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Monthly fees</span><span style={{ color: TEXT }}>{fmt(totalMonthly)}/mo</span></div>
-            </div>
-
-            {/* True Monthly Cost */}
-            <div style={{ background: '#0B1220', borderRadius: 12, padding: 20, marginBottom: 16 }}>
-              {monthsFree > 0 && <p style={{ fontSize: 12, color: '#19C6C0', margin: '0 0 7px' }}>With {monthsFree} month{monthsFree > 1 ? 's' : ''} free on a 12-month lease</p>}
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 13 }}><span style={{ fontSize: 14, color: '#7A8296', textDecoration: 'line-through' }}>{fmt(selectedPrice)}</span>{monthsFree > 0 && <span style={{ fontSize: 12, color: '#FFC24B' }}>Save {fmt(savingsPerMo * 12)}/yr</span>}</div>
-              <p style={{ fontSize: 12, color: '#7A8296', margin: '0 0 3px' }}>True monthly cost</p>
-              <p style={{ fontSize: 32, fontWeight: 600, color: '#fff', margin: 0 }}>{fmt(trueMonthly)}<span style={{ fontSize: 15, fontWeight: 400, color: '#7A8296' }}>/mo</span></p>
-            </div>
+            {sidebarBudgetSection}
 
             <SimilarBuildings buildingId={buildingId} />
 
-              <div className="building-detail-cta" style={{ position: 'sticky', bottom: 0, zIndex: 10, display: 'flex', flexDirection: 'row', gap: 10, padding: '10px 0', background: '#fff', borderTop: `1px solid ${BORDER}` }}>
-                <button onClick={() => setShowLeasingForm(true)} style={{ flex: 1, border: 'none', borderRadius: 12, padding: '14px 8px', background: '#19C6C0', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Connect with Leasing</button>
-                <a href={`sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`} style={{ flex: 1, border: 'none', borderRadius: 12, padding: '14px 8px', background: '#FF4D8D', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Text Don</a>
-              </div>
+            {ctaBarSection}
 
           </div>
-
-          {showLeasingForm && (
-            <div className="leasing-modal-backdrop" style={{ zIndex: 100, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setShowLeasingForm(false)}>
-              <div style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 480, padding: '28px 24px 36px', maxHeight: '90vh', overflowY: 'auto' }} onClick={event => event.stopPropagation()}>
-                <LeasingForm buildingName={building.name} buildingId={buildingId} onClose={() => setShowLeasingForm(false)} />
-              </div>
-            </div>
-          )}
         </div>
       </div>
+      </div>
+
+      {/* ── DESKTOP SHELL (new layout, >=769px) ── */}
+      <div className="detail-desktop-shell">
+        <div style={{ position: 'relative', padding: '16px 24px' }}>
+          <button
+            onClick={() => router.push('/map')}
+            style={{ position: 'absolute', top: 28, left: 36, zIndex: 10, display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: 'none', borderRadius: 999, padding: '8px 16px', fontSize: 13, fontWeight: 500, color: TEXT, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
+          >
+            <IconBack /> Back to map
+          </button>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, height: 360 }}>
+            <div style={{ position: 'relative', height: '100%', borderRadius: 10, overflow: 'hidden', background: '#E5E7EB' }}>
+              {allImages[0] && <Image src={allImages[0]} alt={`${building.name} photo 1`} fill style={{ objectFit: 'cover' }} priority />}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: 8, height: '100%' }}>
+              {Array.from({ length: 6 }).map((_, i) => {
+                const photo = allImages[i + 1]
+                return (
+                  <div key={i} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', background: '#D1D1D1' }}>
+                    {photo && <Image src={photo} alt={`${building.name} photo ${i + 2}`} fill style={{ objectFit: 'cover' }} />}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding: '12px 24px' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: MUTED, marginBottom: 5 }}>{building.neighborhood}</div>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ minWidth: 0 }}>
+              <h1 style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: TEXT, margin: 0 }}>{building.name}</h1>
+              <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: '#185FA5', marginTop: 4, textDecoration: 'none' }}><IconPin /> {building.address || building.neighborhood}</a>
+              {building.tagline && <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, marginTop: 8, maxWidth: 560 }}>{building.tagline}</div>}
+              <div style={{ display: 'flex', gap: 10, marginTop: 9, flexWrap: 'wrap', alignItems: 'center' }}>
+                <div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 18, color: TEXT }}>{fmt(building.priceMin)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo starting</span></div>
+                {building.concession && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#FFF6E5', color: '#92660B', borderRadius: 999, padding: '5px 11px', fontSize: 11, fontWeight: 600 }}><IconStar /> {building.concession}</span>}
+                {building.holdDays && <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>Hold Period: {building.holdDays} days</span>}
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <button aria-label="Share building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconShare /></button>
+              <button onClick={() => setSaved(s => !s)} aria-label="Save building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: saved ? PINK : MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconHeart filled={saved} /></button>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 320px', gap: 20, padding: '12px 24px 24px', alignItems: 'start' }}>
+          <div style={{ gridColumn: '1 / 3', display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+              <div>{unitsSection}</div>
+              <div>{feesSection}</div>
+            </div>
+            <SimilarBuildings buildingId={buildingId} variant="carousel" />
+          </div>
+
+          <div style={{ gridColumn: '3', display: 'flex', flexDirection: 'column' }}>
+            {sidebarBudgetSection}
+            {ctaBarSection}
+          </div>
+        </div>
+      </div>
+
+      {showLeasingForm && (
+        <div className="leasing-modal-backdrop" style={{ zIndex: 100, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setShowLeasingForm(false)}>
+          <div style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 480, padding: '28px 24px 36px', maxHeight: '90vh', overflowY: 'auto' }} onClick={event => event.stopPropagation()}>
+            <LeasingForm buildingName={building.name} buildingId={buildingId} onClose={() => setShowLeasingForm(false)} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

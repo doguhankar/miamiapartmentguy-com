@@ -17,12 +17,37 @@ interface SimilarBuilding {
 const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then((response) => response.json())
 const money = (value: number) => value ? `$${value.toLocaleString()}` : 'Contact for pricing'
 
-export function SimilarBuildings({ buildingId }: { buildingId: string }) {
+export function SimilarBuildings({ buildingId, variant = 'grid' }: { buildingId: string; variant?: 'grid' | 'carousel' }) {
   const { data } = useSWR<{ buildings: SimilarBuilding[] }>(`/api/buildings/${buildingId}/similar`, fetcher, {
     revalidateOnFocus: false,
   })
   const buildings = data?.buildings ?? []
   if (!buildings.length) return null
+
+  if (variant === 'carousel') {
+    return (
+      <section aria-labelledby="similar-buildings-title-carousel">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 12 }}>
+          <h2 id="similar-buildings-title-carousel" style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0A0F1C' }}>Keep Exploring</h2>
+          <span style={{ fontSize: 11, color: '#9CA3AF' }}>10 nearby options</span>
+        </div>
+        <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4, width: '100%' }}>
+          {buildings.map((item) => (
+            <Link key={item.id} href={`/buildings/${item.id}`} style={{ color: '#0A0F1C', textDecoration: 'none', border: '1px solid #ECEDF2', borderRadius: 10, overflow: 'hidden', background: '#fff', minWidth: 180, flexShrink: 0 }}>
+              <div style={{ position: 'relative', height: 100, background: '#F1F2F4' }}>
+                {item.image ? <Image src={item.image} alt={`${item.name} exterior`} fill sizes="180px" style={{ objectFit: 'cover' }} /> : <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: '#9CA3AF', fontSize: 10 }}>Photo coming soon</div>}
+              </div>
+              <div style={{ padding: 10 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.25 }}>{item.name}</div>
+                <div style={{ marginTop: 3, fontSize: 11, color: '#9CA3AF' }}>{item.neighborhood}</div>
+                <div style={{ marginTop: 4, fontSize: 12, fontWeight: 600, color: '#FF4D8D' }}>{money(item.priceMin)}{item.priceMax ? `–${money(item.priceMax).replace('$', '')}` : ''}<span style={{ color: '#9CA3AF', fontWeight: 400 }}>/mo</span></div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section aria-labelledby="similar-buildings-title" style={{ padding: '24px 20px 30px', background: '#fff', borderTop: '1px solid #ECEDF2' }}>
