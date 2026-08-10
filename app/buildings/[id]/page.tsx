@@ -405,7 +405,7 @@ export default function BuildingDetailPage() {
 
         {/* ── SIDEBAR ── */}
         <div className="building-detail-sidebar" style={{ width: 350, flexShrink: 0, background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', borderLeft: `1px solid ${BORDER}` }}>
-          <div style={{ flex: 1, overflowY: 'auto', padding: '22px 20px 140px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '22px 20px 20px' }}>
 
             <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 20, fontWeight: 800, marginBottom: 5, color: TEXT }}>Your Budget Breakdown</div>
             <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.55, marginBottom: 16 }}>See what you&apos;ll really pay each month, not just the advertised rent.</div>
