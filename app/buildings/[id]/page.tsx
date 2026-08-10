@@ -401,18 +401,18 @@ export default function BuildingDetailPage() {
         <div className="building-detail-sidebar" style={{ width: 350, flexShrink: 0, background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', borderLeft: `1px solid ${BORDER}` }}>
           <div className="building-detail-scroll" style={{ flex: 1, overflowY: 'auto', padding: '22px 20px 0' }}>
 
-            <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 20, fontWeight: 800, marginBottom: 5, color: TEXT }}>Your Budget Breakdown</div>
+            <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 18, fontWeight: 600, marginBottom: 5, color: '#0B1220' }}>Your Budget Breakdown</div>
             <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.55, marginBottom: 16 }}>See what you&apos;ll really pay each month, not just the advertised rent.</div>
 
             <hr style={{ border: 'none', borderTop: `1px solid ${BORDER}`, marginBottom: 18 }} />
 
             {/* Income + qualify */}
-            <div style={{ background: '#F7F7F5', borderRadius: 12, padding: 16, marginBottom: 14 }}>
-              <label htmlFor="gross-income" style={{ display: 'block', fontSize: 12, color: MUTED, marginBottom: 6 }}>Gross monthly income</label>
-              <input id="gross-income" type="number" value={income} onChange={e => setIncome(e.target.value)} placeholder="0" style={{ width: '100%', border: 0, background: 'transparent', padding: 0, color: TEXT, fontSize: 16, fontWeight: 600, outline: 'none' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${BORDER}` }}>
-                <div><span style={{ fontSize: 12, color: MUTED }}>Max monthly rent</span><div style={{ fontSize: 20, fontWeight: 600, color: PINK, marginTop: 2 }}>{fmt(maxRent)}</div></div>
-                <div style={{ textAlign: 'right' }}><span style={{ fontSize: 12, color: MUTED }}>You qualify for</span><div style={{ fontSize: 20, fontWeight: 600, color: TEXT, marginTop: 2 }}>{qualifies.length > 0 ? qualifies.join(', ') : 'Guarantor'}</div></div>
+            <div style={{ background: '#fff', border: '1px solid #E5E3DC', borderRadius: 12, padding: 16, marginBottom: 14 }}>
+              <label htmlFor="gross-income" style={{ display: 'block', fontSize: 12, color: '#6B7280', marginBottom: 7 }}>Gross monthly income</label>
+              <input id="gross-income" type="number" value={income} onChange={e => setIncome(e.target.value)} placeholder="0" style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #E5E3DC', borderRadius: 8, background: '#fff', padding: '11px 12px', color: '#0B1220', fontSize: 20, lineHeight: 1.2, fontWeight: 700, outline: 'none' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, marginTop: 14, paddingTop: 14, borderTop: '1px solid #E5E3DC' }}>
+                <div><span style={{ fontSize: 12, color: '#6B7280' }}>Max monthly rent</span><div style={{ fontSize: 20, fontWeight: 600, color: '#FF4D8D', marginTop: 3 }}>{fmt(maxRent)}</div></div>
+                <div style={{ textAlign: 'right' }}><span style={{ fontSize: 12, color: '#6B7280' }}>You qualify for</span><div style={{ fontSize: 20, fontWeight: 600, color: '#0B1220', marginTop: 3 }}>{qualifies.length > 0 ? qualifies.join(', ') : 'Guarantor'}</div></div>
               </div>
             </div>
 
@@ -426,17 +426,17 @@ export default function BuildingDetailPage() {
             </div>
 
             {/* Costs summary */}
-            <div style={{ background: '#F7F7F5', borderRadius: 12, padding: 16, marginBottom: 14 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 10 }}>Move-in and monthly costs</div>
+            <div style={{ background: '#fff', border: '1px solid #E5E3DC', borderRadius: 12, padding: 16, marginBottom: 14 }}>
+              <div style={{ fontSize: 18, fontWeight: 600, color: '#0B1220', marginBottom: 10 }}>Move-in and monthly costs</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Total upfront</span><span style={{ color: TEXT }}>{fmt(totalMoveIn)}</span></div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Monthly fees</span><span style={{ color: TEXT }}>{fmt(totalMonthly)}/mo</span></div>
             </div>
 
             {/* True Monthly Cost */}
             <div style={{ background: '#0B1220', borderRadius: 12, padding: 20, marginBottom: 16 }}>
-              {monthsFree > 0 && <p style={{ fontSize: 12, color: '#19C6C0', margin: '0 0 6px' }}>With {monthsFree} month{monthsFree > 1 ? 's' : ''} free on a 12-month lease</p>}
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 12 }}><span style={{ fontSize: 14, color: '#7A8296', textDecoration: 'line-through' }}>{fmt(selectedPrice)}</span>{monthsFree > 0 && <span style={{ fontSize: 12, color: '#FFC24B' }}>Save {fmt(savingsPerMo * 12)}/yr</span>}</div>
-              <p style={{ fontSize: 12, color: '#7A8296', margin: '0 0 2px' }}>True monthly cost</p>
+              {monthsFree > 0 && <p style={{ fontSize: 12, color: '#19C6C0', margin: '0 0 7px' }}>With {monthsFree} month{monthsFree > 1 ? 's' : ''} free on a 12-month lease</p>}
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 13 }}><span style={{ fontSize: 14, color: '#7A8296', textDecoration: 'line-through' }}>{fmt(selectedPrice)}</span>{monthsFree > 0 && <span style={{ fontSize: 12, color: '#FFC24B' }}>Save {fmt(savingsPerMo * 12)}/yr</span>}</div>
+              <p style={{ fontSize: 12, color: '#19C6C0', margin: '0 0 3px' }}>True monthly cost</p>
               <p style={{ fontSize: 32, fontWeight: 600, color: '#fff', margin: 0 }}>{fmt(trueMonthly)}<span style={{ fontSize: 15, fontWeight: 400, color: '#7A8296' }}>/mo</span></p>
             </div>
 
