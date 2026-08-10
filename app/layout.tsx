@@ -31,9 +31,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${_archivo.variable} ${_spaceGrotesk.variable} ${_jetBrainsMono.variable}`}>
-      <head>
-        <script src="https://t.contentsquare.net/uxa/6359f7db40f8e.js" defer />
-      </head>
       <body className="font-sans antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
