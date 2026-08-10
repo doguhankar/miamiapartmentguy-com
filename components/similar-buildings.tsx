@@ -28,8 +28,7 @@ export function SimilarBuildings({ buildingId }: { buildingId: string }) {
     <section aria-labelledby="similar-buildings-title" style={{ padding: '24px 20px 30px', background: '#fff', borderTop: '1px solid #ECEDF2' }}>
       <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: 16, marginBottom: 14 }}>
         <div>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6B7280' }}>Keep exploring</div>
-          <h2 id="similar-buildings-title" style={{ margin: '5px 0 0', fontFamily: 'var(--font-archivo)', fontSize: 20, color: '#0A0F1C' }}>Similar apartments</h2>
+          <h2 id="similar-buildings-title" style={{ margin: 0, fontFamily: 'var(--font-archivo)', fontSize: 20, fontWeight: 800, color: '#0A0F1C' }}>Keep Exploring</h2>
         </div>
         <span style={{ fontSize: 11, color: '#6B7280' }}>10 nearby options</span>
       </div>

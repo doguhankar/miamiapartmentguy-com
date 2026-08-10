@@ -338,15 +338,13 @@ export default function BuildingDetailPage() {
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: MUTED, marginBottom: 5 }}>{building.neighborhood}</div>
               <div style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: TEXT }}>{building.name}</div>
-              <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: MUTED, marginTop: 4, textDecoration: 'none' }}><IconPin /> {building.address || building.neighborhood}</a>
+              <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: 'var(--text-accent)', marginTop: 4, textDecoration: 'none' }}><IconPin /> {building.address || building.neighborhood}</a>
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               <button aria-label="Share building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconShare /></button>
               <button onClick={() => setSaved(s => !s)} aria-label="Save building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: saved ? PINK : MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconHeart filled={saved} /></button>
             </div>
           </div>
-
-          <SimilarBuildings buildingId={buildingId} />
 
           {/* TOP INFO */}
           <div style={{ padding: '12px 20px 15px', background: '#fff', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
@@ -365,10 +363,10 @@ export default function BuildingDetailPage() {
             <div style={{ flex: 1, overflowY: 'auto', padding: 18, borderRight: `1px solid ${BORDER}` }}>
 
               {/* Expandable pricing hierarchy */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconDollar /> Monthly Pricing</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconHome /> Available Units</div>
               <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
                 {bedroomGroups.length ? bedroomGroups.map(({ key, units }) => {
-                  const open = expandedBeds[key] ?? key === activePriceType
+                  const open = expandedBeds[key] ?? false
                   const prices = units.map((unit) => unit.price).filter((value): value is number => Boolean(value))
                   const plans = floorPlanGroups(units)
                   return <div key={key} style={{ borderBottom: `1px solid ${BORDER}` }}>
@@ -383,7 +381,6 @@ export default function BuildingDetailPage() {
                   </div>
                 }) : <div style={{ padding: 14, color: MUTED, fontSize: 12 }}>Pricing is not available yet.</div>}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconHome /> Available Units <span style={{ color: MUTED, fontWeight: 500, fontSize: 12 }}>({filteredUnits.length})</span></div>
             </div>
 
             {/* RIGHT COL: Building Fees */}
@@ -539,6 +536,8 @@ export default function BuildingDetailPage() {
                   This calculation is an estimate only based on current building information. We are not liable for any changes to pricing or fees incurred by the building. Please verify all costs directly with the leasing office before applying.
                 </p>
               </div>
+
+              <SimilarBuildings buildingId={buildingId} />
 
               <div className="building-detail-cta" style={{ position: 'sticky', bottom: 0, zIndex: 10, display: 'flex', flexDirection: 'row', gap: 10, padding: '10px 0', background: '#fff', borderTop: `1px solid ${BORDER}` }}>
                 <button onClick={() => setShowLeasingForm(true)} style={{ flex: 1, border: 'none', borderRadius: 12, padding: '14px 8px', background: '#19C6C0', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Connect with Leasing</button>
