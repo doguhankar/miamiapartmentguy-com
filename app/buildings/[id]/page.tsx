@@ -7,6 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { buildings } from '@/lib/buildings'
 import { useSupabaseImages } from '@/hooks/use-supabase-images'
+import { SimilarBuildings } from '@/components/similar-buildings'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface LiveUnit {
@@ -169,6 +170,8 @@ export default function BuildingDetailPage() {
   const [showAllUnits, setShowAllUnits] = useState(false)
   const [selectedUnit, setSelectedUnit] = useState<LiveUnit | null>(null)
   const [activePriceType, setActivePriceType] = useState<string | null>('Studio')
+  const [expandedBeds, setExpandedBeds] = useState<Record<string, boolean>>({})
+  const [expandedPlans, setExpandedPlans] = useState<Record<string, boolean>>({})
 
   const [income, setIncome] = useState<string>('9000')
   const [showLeasingForm, setShowLeasingForm] = useState(false)
@@ -245,6 +248,14 @@ export default function BuildingDetailPage() {
 
   const sqft = (u: LiveUnit) => u.sqft ?? u.square_feet
   const avail = (u: LiveUnit) => u.availableDate ?? u.available_date
+  const bedroomGroups = Array.from(new Set(liveUnits.map(bedsKey))).map((key) => ({
+    key,
+    units: liveUnits.filter((unit) => bedsKey(unit) === key),
+  }))
+  const floorPlanGroups = (units: LiveUnit[]) => Array.from(new Set(units.map((unit) => unit.floorPlanType || unitLabel(unit)))).map((plan) => ({
+    plan,
+    units: units.filter((unit) => (unit.floorPlanType || unitLabel(unit)) === plan),
+  }))
 
   // ── Styling tokens ──────────────────────────────────────────────────────────
   const NAVY = '#0B1220'
@@ -327,13 +338,15 @@ export default function BuildingDetailPage() {
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: MUTED, marginBottom: 5 }}>{building.neighborhood}</div>
               <div style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: TEXT }}>{building.name}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: MUTED, marginTop: 4 }}><IconPin /> {building.address || building.neighborhood}</div>
+              <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: MUTED, marginTop: 4, textDecoration: 'none' }}><IconPin /> {building.address || building.neighborhood}</a>
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               <button aria-label="Share building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconShare /></button>
               <button onClick={() => setSaved(s => !s)} aria-label="Save building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: saved ? PINK : MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconHeart filled={saved} /></button>
             </div>
           </div>
+
+          <SimilarBuildings buildingId={buildingId} />
 
           {/* TOP INFO */}
           <div style={{ padding: '12px 20px 15px', background: '#fff', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
@@ -351,66 +364,26 @@ export default function BuildingDetailPage() {
             {/* LEFT COL: Pricing + Units */}
             <div style={{ flex: 1, overflowY: 'auto', padding: 18, borderRight: `1px solid ${BORDER}` }}>
 
-              {/* Pricing Cards */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}>
-                <IconDollar /> Monthly Pricing
-              </div>
-              <div style={{ display: 'flex', gap: 9, marginBottom: 22 }}>
-                {priceCards.map(k => {
-                  const active = activePriceType === k
-                  return (
-                    <button
-                      key={k}
-                      onClick={() => {
-                        setActivePriceType(active ? null : k)
-                      }}
-                      style={{ flex: 1, background: active ? PINK : PANEL, border: `2px solid ${active ? PINK : 'transparent'}`, borderRadius: 10, padding: '10px 8px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.15s' }}
-                    >
-                      <div style={{ fontSize: 10, color: active ? 'rgba(255,255,255,0.85)' : MUTED, fontWeight: 600, marginBottom: 5 }}>{k}</div>
-                      <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 14, fontWeight: 800, color: active ? '#fff' : TEXT }}>
-                        {fmt(priceByType[k])}<sup style={{ fontSize: 9, fontWeight: 500, color: active ? 'rgba(255,255,255,0.7)' : MUTED }}>+</sup>
-                      </div>
+              {/* Expandable pricing hierarchy */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconDollar /> Monthly Pricing</div>
+              <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
+                {bedroomGroups.length ? bedroomGroups.map(({ key, units }) => {
+                  const open = expandedBeds[key] ?? key === activePriceType
+                  const prices = units.map((unit) => unit.price).filter((value): value is number => Boolean(value))
+                  const plans = floorPlanGroups(units)
+                  return <div key={key} style={{ borderBottom: `1px solid ${BORDER}` }}>
+                    <button type="button" onClick={() => { setExpandedBeds((current) => ({ ...current, [key]: !open })); setActivePriceType(key) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 14px', border: 0, background: open ? '#FFF7FA' : '#fff', cursor: 'pointer', textAlign: 'left' }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: TEXT }}>{key} <span style={{ color: MUTED, fontSize: 11, fontWeight: 500 }}>· {units.length} available</span></span>
+                      <span style={{ fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: PINK }}>{prices.length ? `${fmt(Math.min(...prices))}${prices.length > 1 ? `–${fmt(Math.max(...prices)).replace('$', '')}` : '+'}` : 'Contact'} <span style={{ color: MUTED, fontSize: 16 }}>{open ? '−' : '+'}</span></span>
                     </button>
-                  )
-                })}
-              </div>
-
-              {/* Units */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}>
-                <IconHome /> Available Units <span style={{ color: MUTED, fontWeight: 500, fontSize: 12 }}>({filteredUnits.length})</span>
-              </div>
-
-              {visibleUnits.map((u, i) => {
-                const sel = selectedUnit === u
-                const { label, now } = formatAvail(avail(u))
-                return (
-                  <div
-                    key={i}
-                    onClick={() => setSelectedUnit(u)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: `1px solid ${sel ? PINK : BORDER}`, borderRadius: 10, padding: '11px 13px', marginBottom: 9, cursor: 'pointer', background: sel ? '#FFE8F5' : '#fff', transition: 'all 0.15s' }}
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>
-                        {u.unit ? `Unit ${u.unit} · ` : ''}{unitLabel(u)}
-                      </div>
-                      <div style={{ fontSize: 11, color: MUTED }}>{sqft(u) ? `${sqft(u)?.toLocaleString()} sqft` : ''}</div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-                      <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 14, fontWeight: 800, color: TEXT }}>{u.price ? fmt(u.price) : '—'}</div>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: now ? SUCCESS_BG : '#FFF6E5', color: now ? SUCCESS : '#92660B' }}>{label}</span>
-                    </div>
+                    {open && <div style={{ padding: '0 10px 10px', background: '#fff' }}>{plans.map(({ plan, units: planUnits }) => { const planKey = `${key}-${plan}`; const planOpen = expandedPlans[planKey]; const planPrices = planUnits.map((unit) => unit.price).filter((value): value is number => Boolean(value)); return <div key={planKey} style={{ border: `1px solid ${BORDER}`, borderRadius: 9, marginTop: 8, overflow: 'hidden' }}>
+                      <button type="button" onClick={() => setExpandedPlans((current) => ({ ...current, [planKey]: !planOpen }))} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '10px 11px', border: 0, background: PANEL, cursor: 'pointer', textAlign: 'left' }}><span><strong style={{ fontSize: 12 }}>{plan}</strong><span style={{ display: 'block', color: MUTED, fontSize: 10, marginTop: 2 }}>{planUnits[0] && sqft(planUnits[0]) ? `${sqft(planUnits[0])?.toLocaleString()} sqft` : 'Floor plan'} · {planUnits.length} units</span></span><span style={{ fontSize: 11, fontWeight: 800 }}>{planPrices.length ? `${fmt(Math.min(...planPrices))}+` : 'Contact'} {planOpen ? '−' : '+'}</span></button>
+                      {planOpen && <div style={{ padding: '6px 10px' }}>{(showAllUnits ? planUnits : planUnits.slice(0, 4)).map((u, i) => { const sel = selectedUnit === u; const { label, now } = formatAvail(avail(u)); return <button type="button" key={i} onClick={() => setSelectedUnit(u)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, border: 0, borderBottom: i < planUnits.length - 1 ? `1px solid ${BORDER}` : 'none', padding: '9px 2px', cursor: 'pointer', background: sel ? '#FFE8F5' : '#fff', textAlign: 'left' }}><span style={{ fontSize: 11, color: TEXT }}>{u.unit ? `Unit ${u.unit}` : `Available unit ${i + 1}`} · {sqft(u) ? `${sqft(u)?.toLocaleString()} sqft` : 'Size n/a'}</span><span style={{ display: 'flex', alignItems: 'center', gap: 7 }}><strong style={{ fontSize: 12 }}>{u.price ? fmt(u.price) : '—'}</strong><span style={{ fontSize: 9, color: now ? SUCCESS : '#92660B' }}>{label}</span></span></button> })}</div>}
+                    </div> })}</div>}
                   </div>
-                )
-              })}
-
-              {filteredUnits.length > 4 && (
-                <button
-                  onClick={() => setShowAllUnits(s => !s)}
-                  style={{ width: '100%', padding: '9px', textAlign: 'center', color: MUTED, fontSize: 11, fontWeight: 600, background: 'transparent', border: `1px dashed ${BORDER}`, borderRadius: 8, cursor: 'pointer', marginTop: 6 }}
-                >
-                  {showAllUnits ? 'Show fewer' : `Show ${filteredUnits.length - 4} more units`} {showAllUnits ? '∧' : '∨'}
-                </button>
-              )}
+                }) : <div style={{ padding: 14, color: MUTED, fontSize: 12 }}>Pricing is not available yet.</div>}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconHome /> Available Units <span style={{ color: MUTED, fontWeight: 500, fontSize: 12 }}>({filteredUnits.length})</span></div>
             </div>
 
             {/* RIGHT COL: Building Fees */}
