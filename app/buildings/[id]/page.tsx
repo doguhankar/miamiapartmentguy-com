@@ -140,8 +140,8 @@ function LeasingForm({ buildingName, buildingId, onClose }: { buildingName: stri
   const field = (key: keyof typeof form, label: string, required = false, type = 'text') => <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#667085' }}>{label}{required ? ' *' : ''}<input required={required} type={type} value={form[key]} onChange={event => setForm(current => ({ ...current, [key]: event.target.value }))} style={{ display: 'block', width: '100%', marginTop: 5, padding: '10px 11px', border: '1px solid #E5E7EB', borderRadius: 9, fontSize: 13, color: '#111827', background: '#fff' }} /></label>
   return <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
     <div style={{ textAlign: 'center', marginBottom: 4 }}>
-      <div style={{ fontSize: 22, fontWeight: 800, color: '#111827' }}>Connect with Leasing</div>
-      <div style={{ fontSize: 13, color: '#667085', marginTop: 4 }}>{buildingName}</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: '#111827', textAlign: 'center' }}>Connect with Leasing</div>
+      <div style={{ fontSize: 13, color: '#667085', marginTop: 4, textAlign: 'center' }}>{buildingName}</div>
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>{field('firstName', 'First name', true)}{field('lastName', 'Last name', true)}</div>
     {field('phone', 'Phone', true, 'tel')}{field('email', 'Email', false, 'email')}
