@@ -338,7 +338,7 @@ export default function BuildingDetailPage() {
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: MUTED, marginBottom: 5 }}>{building.neighborhood}</div>
               <div style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: TEXT }}>{building.name}</div>
-              <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: 'var(--text-accent)', marginTop: 4, textDecoration: 'none' }}><IconPin /> {building.address || building.neighborhood}</a>
+              <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: '#185FA5', marginTop: 4, textDecoration: 'none' }}><IconPin /> {building.address || building.neighborhood}</a>
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               <button aria-label="Share building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconShare /></button>
