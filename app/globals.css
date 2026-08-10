@@ -190,4 +190,21 @@
     }
 
   }
+
+  @media (max-width: 768px) {
+    .building-detail-cta {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      width: 100% !important;
+      box-sizing: border-box;
+      padding: 10px 20px !important;
+      z-index: 50 !important;
+    }
+
+    .building-detail-page .building-detail-sidebar > .building-detail-scroll {
+      padding-bottom: 100px !important;
+    }
+  }
 }

@@ -354,7 +354,7 @@ export default function BuildingDetailPage() {
 
   return (
     <div className="building-detail-page" style={{ fontFamily: "'Inter', sans-serif", background: '#fff', color: TEXT, height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <style jsx>{`
+      <style jsx global>{`
         .leasing-modal-backdrop {
           position: fixed !important;
           top: 0 !important;
