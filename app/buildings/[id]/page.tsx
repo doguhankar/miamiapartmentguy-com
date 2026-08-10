@@ -401,7 +401,7 @@ export default function BuildingDetailPage() {
           <div className="building-detail-scroll" style={{ flex: 1, overflowY: 'auto', padding: '22px 20px 0' }}>
 
             <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 18, fontWeight: 600, marginBottom: 5, color: '#0B1220' }}>Your Budget Breakdown</div>
-            <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.55, marginBottom: 16 }}>See what you&apos;ll really pay each month, not just the advertised rent.</div>
+            <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.55, marginBottom: 16 }}>See what you&apos;ll really pay each month.</div>
 
             <hr style={{ border: 'none', borderTop: `1px solid ${BORDER}`, marginBottom: 18 }} />
 
