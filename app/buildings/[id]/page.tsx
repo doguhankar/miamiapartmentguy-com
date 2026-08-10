@@ -257,6 +257,23 @@ export default function BuildingDetailPage() {
 
   return (
     <div className="building-detail-page" style={{ fontFamily: "'Inter', sans-serif", background: '#fff', color: TEXT, height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .building-detail-cta {
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            box-sizing: border-box;
+            padding: 10px 20px !important;
+            z-index: 50 !important;
+          }
+          .building-detail-scroll {
+            padding-bottom: 100px !important;
+          }
+        }
+      `}</style>
 
       {/* ── MAIN WRAPPER ── */}
       <div className="building-detail-shell" style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
@@ -405,7 +422,7 @@ export default function BuildingDetailPage() {
 
         {/* ── SIDEBAR ── */}
         <div className="building-detail-sidebar" style={{ width: 350, flexShrink: 0, background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', borderLeft: `1px solid ${BORDER}` }}>
-          <div style={{ flex: 1, overflowY: 'auto', padding: '22px 20px 0' }}>
+          <div className="building-detail-scroll" style={{ flex: 1, overflowY: 'auto', padding: '22px 20px 0' }}>
 
             <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 20, fontWeight: 800, marginBottom: 5, color: TEXT }}>Your Budget Breakdown</div>
             <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.55, marginBottom: 16 }}>See what you&apos;ll really pay each month, not just the advertised rent.</div>
@@ -539,7 +556,7 @@ export default function BuildingDetailPage() {
                 </p>
               </div>
 
-              <div style={{ position: 'sticky', bottom: 0, zIndex: 10, display: 'flex', flexDirection: 'row', gap: 10, padding: '10px 0', background: '#fff', borderTop: `1px solid ${BORDER}` }}>
+              <div className="building-detail-cta" style={{ position: 'sticky', bottom: 0, zIndex: 10, display: 'flex', flexDirection: 'row', gap: 10, padding: '10px 0', background: '#fff', borderTop: `1px solid ${BORDER}` }}>
                 <button onClick={() => setShowLeasingForm(true)} style={{ flex: 1, border: 'none', borderRadius: 12, padding: '14px 8px', background: '#19C6C0', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Connect with Leasing</button>
                 <a href={`sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`} style={{ flex: 1, border: 'none', borderRadius: 12, padding: '14px 8px', background: '#FF4D8D', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Text Don</a>
               </div>
