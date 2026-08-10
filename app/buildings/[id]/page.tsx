@@ -380,7 +380,16 @@ export default function BuildingDetailPage() {
         .detail-mobile-shell {
           display: flex;
           flex: 1;
+          min-width: 0;
           min-height: 0;
+          width: 100%;
+          overflow: hidden;
+        }
+        @media (max-width: 768px) {
+          .detail-mobile-shell .building-detail-shell {
+            width: 100% !important;
+            min-width: 0 !important;
+          }
         }
         .detail-desktop-shell {
           display: none;
