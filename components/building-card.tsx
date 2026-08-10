@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { MapPin, DollarSign, CreditCard, Gift } from "lucide-react"
 import { Building, neighborhoodColors } from "@/lib/buildings"
+import { CommissionPill } from "@/components/commission-pill"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ImageCarousel } from "@/components/image-carousel"
@@ -26,9 +27,10 @@ export function BuildingCard({ building }: BuildingCardProps) {
           <div className="flex items-start justify-between mb-2">
             <div>
               <h2 className="text-lg font-semibold text-foreground">{building.name}</h2>
-              <Badge className={`${neighborhoodColors[building.neighborhood]} mt-1`}>
-                {building.neighborhood}
-              </Badge>
+              <div className="mt-1 flex items-center gap-2">
+                <Badge className={neighborhoodColors[building.neighborhood]}>{building.neighborhood}</Badge>
+                <CommissionPill buildingName={building.name} />
+              </div>
             </div>
             <span className="text-sm font-bold text-foreground">{building.priceTier}</span>
           </div>

@@ -20,6 +20,7 @@ export interface Building {
   phone?: string
   management?: string
   email?: string
+  commission?: string | null
   fees?: Record<string, number | string>
   moveInFees?: Array<{ type: string; amount: number }>
   monthlyCharges?: Array<{ type: string; amount: number }>

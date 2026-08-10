@@ -4,11 +4,11 @@ import { Building } from "@/lib/buildings"
 import { useState } from "react"
 import { useSupabaseImages } from "@/hooks/use-supabase-images"
 import Link from "next/link"
+import { CommissionPill } from "@/components/commission-pill"
 
 interface DesktopBuildingCardProps {
   building: Building
   isHighlighted?: boolean
-  isAgentMode?: boolean
   isStarred?: boolean
   hasSavedBadge?: boolean
   onHover?: (building: Building | null) => void
@@ -63,7 +63,6 @@ function truncateAmenities(amenities: string[], maxChars = 56): string {
 export function DesktopBuildingCard({
   building,
   isHighlighted = false,
-  isAgentMode = false,
   isStarred = false,
   hasSavedBadge = false,
   onHover,
@@ -136,8 +135,9 @@ export function DesktopBuildingCard({
           <div style={{ fontSize: '11px', color: '#667085', lineHeight: 1.3 }}>
             {building.address}
           </div>
-        </div>
-        {/* Heart toggle */}
+          </div>
+          <CommissionPill buildingName={building.name} />
+          {/* Heart toggle */}
         <button
           onClick={handleStarClick}
           aria-label={localStarred ? "Remove from saved" : "Save building"}

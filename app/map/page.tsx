@@ -657,9 +657,6 @@ export default function MiamiApp() {
   const [infoBuilding, setInfoBuilding] = useState(null);
   const [starredBuildings, setStarredBuildings] = useState<Set<string>>(new Set());
   const [isSavingList, setIsSavingList] = useState(false);
-  const [isAgentMode, setIsAgentMode] = useState(false);
-  const [showPinModal, setShowPinModal] = useState(false);
-  const [pinInput, setPinInput] = useState('');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showMoveWithDonModal, setShowMoveWithDonModal] = useState(false);
   const [mobileBuildingImages, setMobileBuildingImages] = useState<Record<string, string[]>>({});
@@ -977,17 +974,6 @@ export default function MiamiApp() {
   const openSMS = () => {
     const message = encodeURIComponent('Hey, this is Don\'s direct cell! You can text me about any building you\'ve been eyeing. I can help out with virtual tours, pricing, and neighborhood info.');
     window.location.href = `sms:+14077657306?body=${message}`;
-  };
-
-  const handlePinSubmit = () => {
-    if (pinInput === '1234') {
-      setIsAgentMode(true);
-      setShowPinModal(false);
-      setPinInput('');
-    } else {
-      alert('Incorrect PIN');
-      setPinInput('');
-    }
   };
 
   const handleApplyFilters = async (filters: FilterState) => {
@@ -1431,7 +1417,7 @@ export default function MiamiApp() {
           </button>
         )}
       </div>
-      {/* ── END MOBILE LAYOUT ─────────────────────────��───────────────────── */}
+      {/* ── END MOBILE LAYOUT ─────────────────────────���───────────────────── */}
 
       {/* Desktop Header - Fixed at Top */}
       <div className="hidden md:flex items-center justify-between px-8 py-7 bg-white flex-shrink-0 border-b border-[#E8EBF0]" style={{ height: '74px' }}>
@@ -1546,8 +1532,7 @@ export default function MiamiApp() {
                   key={building.id}
                   building={building}
                   isHighlighted={selectedBuilding?.id === building.id}
-                  isAgentMode={isAgentMode}
-                  isStarred={starredBuildings.has(String(building.id))}
+                                  isStarred={starredBuildings.has(String(building.id))}
                   onHover={setHighlightedBuilding}
                   onClick={() => router.push(`/buildings/${building.id}`)}
                   onStar={(b) => {
@@ -1569,26 +1554,6 @@ export default function MiamiApp() {
       {showModal && <TalkTodonModal building={selectedBuilding} onClose={() => setShowModal(false)} />}
       
 
-      {/* PIN Modal for Agent Mode */}
-      {showPinModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0F1B30] rounded-2xl p-6 max-w-sm w-full">
-            <h2 className="text-xl font-bold mb-4 text-center">Enter Agent PIN</h2>
-            <input 
-              type="password" 
-              value={pinInput} 
-              onChange={(e) => setPinInput(e.target.value)} 
-              placeholder="Enter PIN" 
-              className="w-full px-4 py-3 border rounded-lg text-center text-2xl tracking-widest mb-4 focus:outline-none focus:ring-2 focus:ring-[#FF4D8D]"
-              maxLength={4}
-            />
-            <div className="flex gap-3">
-              <button onClick={() => { setShowPinModal(false); setPinInput(''); }} className="flex-1 py-3 rounded-lg border border-[#19C6C0] font-semibold hover:bg-[#0F1B30]">Cancel</button>
-              <button onClick={handlePinSubmit} className="flex-1 py-3 rounded-lg bg-[#FF4D8D] text-white font-semibold hover:bg-[#E53A73]">Unlock</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Map Filter Modal */}
       <MapFilterModal

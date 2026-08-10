@@ -8,6 +8,7 @@ import Image from 'next/image'
 import { buildings } from '@/lib/buildings'
 import { useSupabaseImages } from '@/hooks/use-supabase-images'
 import { SimilarBuildings } from '@/components/similar-buildings'
+import { CommissionPill } from '@/components/commission-pill'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface LiveUnit {
@@ -451,7 +452,7 @@ export default function BuildingDetailPage() {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '16px 20px 0', minHeight: 82, flexShrink: 0 }}>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: MUTED, marginBottom: 5 }}>{building.neighborhood}</div>
-              <div style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: TEXT }}>{building.name}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}><div style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: TEXT }}>{building.name}</div><CommissionPill buildingName={building.name} /></div>
               <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: '#185FA5', marginTop: 4, textDecoration: 'none' }}><IconPin /> {building.address || building.neighborhood}</a>
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
@@ -530,7 +531,7 @@ export default function BuildingDetailPage() {
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: MUTED, marginBottom: 5 }}>{building.neighborhood}</div>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
             <div style={{ minWidth: 0 }}>
-              <h1 style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: TEXT, margin: 0 }}>{building.name}</h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}><h1 style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: TEXT, margin: 0 }}>{building.name}</h1><CommissionPill buildingName={building.name} /></div>
               <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: '#185FA5', marginTop: 4, textDecoration: 'none' }}><IconPin /> {building.address || building.neighborhood}</a>
               {building.tagline && <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, marginTop: 8, maxWidth: 560 }}>{building.tagline}</div>}
               <div style={{ display: 'flex', gap: 10, marginTop: 9, flexWrap: 'wrap', alignItems: 'center' }}>
