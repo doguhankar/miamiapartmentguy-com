@@ -540,8 +540,7 @@ export default function BuildingDetailPage() {
               </div>
 
             <div style={{ position: 'sticky', bottom: 0, background: '#fff', borderTop: `1px solid ${BORDER}`, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button onClick={() => setShowLeasingForm(true)} style={{ width: '100%', border: 'none', borderRadius: 12, padding: '13px 8px', background: '#19C6C0', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Connect with Leasing</button>
-              <a href={`sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`} style={{ width: '100%', border: 'none', borderRadius: 12, padding: '13px 8px', background: '#FF4D8D', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', display: 'block' }}>Text Don</a>
+
             </div>
 
           </div>
