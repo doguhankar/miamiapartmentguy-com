@@ -189,11 +189,5 @@
       padding: 20px 16px 120px !important;
     }
 
-    .building-detail-sidebar > div:last-child {
-      position: sticky !important;
-      bottom: 0 !important;
-      z-index: 10;
-      padding: 16px !important;
-    }
   }
 }
