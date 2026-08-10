@@ -139,12 +139,16 @@ function LeasingForm({ buildingName, buildingId, onClose }: { buildingName: stri
 
   const field = (key: keyof typeof form, label: string, required = false, type = 'text') => <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#667085' }}>{label}{required ? ' *' : ''}<input required={required} type={type} value={form[key]} onChange={event => setForm(current => ({ ...current, [key]: event.target.value }))} style={{ display: 'block', width: '100%', marginTop: 5, padding: '10px 11px', border: '1px solid #E5E7EB', borderRadius: 9, fontSize: 13, color: '#111827', background: '#fff' }} /></label>
   return <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ textAlign: 'center', marginBottom: 4 }}>
+      <div style={{ fontSize: 22, fontWeight: 800, color: '#111827' }}>Connect with Leasing</div>
+      <div style={{ fontSize: 13, color: '#667085', marginTop: 4 }}>{buildingName}</div>
+    </div>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>{field('firstName', 'First name', true)}{field('lastName', 'Last name', true)}</div>
-    {field('email', 'Email', true, 'email')}{field('phone', 'Phone')}
-    <div><div style={{ fontSize: 11, fontWeight: 700, color: '#667085', marginBottom: 7 }}>I&apos;m interested in</div><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>{['Schedule a Tour', 'Request more info', 'Confirm Qualifications', 'Custom Message'].map(intent => <label key={intent} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#111827' }}><input type="checkbox" checked={intents.includes(intent)} onChange={() => toggleIntent(intent)} />{intent}</label>)}</div></div>
-    <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 11, lineHeight: 1.4, color: '#667085' }}><input type="checkbox" checked={consent} onChange={event => { setConsent(event.target.checked); setAttempted(false) }} style={{ marginTop: 2 }} /> <span>By submitting this form, you agree to be contacted by the property owner, manager, or a third-party partner.</span></label>
+    {field('phone', 'Phone', true, 'tel')}{field('email', 'Email', false, 'email')}
+    <div><div style={{ fontSize: 11, fontWeight: 700, color: '#667085', marginBottom: 7 }}>I&apos;m interested in</div><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>{['Schedule a Tour', 'Request more info', 'Confirm Qualifications', 'Custom Message'].map(intent => { const active = intents.includes(intent); return <button key={intent} type="button" onClick={() => toggleIntent(intent)} style={{ borderRadius: 999, border: active ? '1px solid #19C6C0' : '1px solid #E5E7EB', padding: '10px 14px', fontSize: 11, fontWeight: 600, color: active ? '#0F9D7A' : '#111827', background: active ? '#E8F8F7' : '#fff', cursor: 'pointer', textAlign: 'center' }}>{intent}</button> })}</div></div>
+    <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 11, lineHeight: 1.4, color: '#667085' }}><input type="checkbox" checked={consent} onChange={event => { setConsent(event.target.checked); setAttempted(false) }} style={{ marginTop: 2 }} /> <span>By submitting this form, you agree to be contacted by the building&apos;s management, leasing agent, or by Miami Apartment Guy.</span></label>
     {attempted && !consent && <div style={{ color: '#FF4D8D', fontSize: 11 }}>Please agree to our terms to continue.</div>}
-    <button type="submit" disabled={!consent || submitting} style={{ border: 'none', borderRadius: 12, padding: 13, background: consent ? '#19C6C0' : '#D1D5DB', color: '#fff', fontSize: 13, fontWeight: 700, cursor: consent ? 'pointer' : 'not-allowed', pointerEvents: consent ? 'auto' : 'none' }}>{submitting ? 'Sending…' : 'Send request'}</button>
+    <button type="submit" disabled={!consent || submitting} style={{ border: 'none', borderRadius: 999, padding: '16px 13px', background: consent ? '#19C6C0' : '#D1D5DB', color: '#fff', fontSize: 13, fontWeight: 700, cursor: consent ? 'pointer' : 'not-allowed', pointerEvents: consent ? 'auto' : 'none' }}>{submitting ? 'Sending…' : 'Send request'}</button>
   </form>
 }
 
@@ -258,6 +262,13 @@ export default function BuildingDetailPage() {
   return (
     <div className="building-detail-page" style={{ fontFamily: "'Inter', sans-serif", background: '#fff', color: TEXT, height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <style jsx>{`
+        .leasing-modal-backdrop {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+        }
         @media (max-width: 768px) {
           .building-detail-cta {
             position: fixed !important;
@@ -564,10 +575,8 @@ export default function BuildingDetailPage() {
           </div>
 
           {showLeasingForm && (
-            <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setShowLeasingForm(false)}>
+            <div className="leasing-modal-backdrop" style={{ zIndex: 100, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setShowLeasingForm(false)}>
               <div style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 480, padding: '28px 24px 36px', maxHeight: '90vh', overflowY: 'auto' }} onClick={event => event.stopPropagation()}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#19C6C0', letterSpacing: '0.08em', marginBottom: 16 }}>CONNECT WITH LEASING TEAM</div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#19C6C0', letterSpacing: '0.08em', marginBottom: 16 }}>CONNECT WITH LEASING TEAM</div>
                 <LeasingForm buildingName={building.name} buildingId={buildingId} onClose={() => setShowLeasingForm(false)} />
               </div>
             </div>
