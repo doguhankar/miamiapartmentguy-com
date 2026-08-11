@@ -1,14 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { MapPin, DollarSign, CreditCard, Gift } from "lucide-react"
+import { MapPin, DollarSign, CreditCard, Gift, Heart } from "lucide-react"
 import { Building, neighborhoodColors } from "@/lib/buildings"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ImageCarousel } from "@/components/image-carousel"
 import { QualifyModal } from "@/components/qualify-modal"
 import { BuildingDetailModal } from "@/components/building-detail-modal"
-import { SaveHeartButton } from "@/components/save-heart-button"
+import { useSaveList } from "@/components/save-list-provider"
 
 interface BuildingCardProps {
   building: Building
@@ -17,11 +17,13 @@ interface BuildingCardProps {
 export function BuildingCard({ building }: BuildingCardProps) {
   const [showQualifyModal, setShowQualifyModal] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  const { savedIds, toggleSave } = useSaveList()
+  const isSaved = savedIds.includes(building.id)
 
   return (
     <>
       <div className="relative">
-        <div 
+        <div
           className="space-y-4 cursor-pointer p-1 rounded-lg transition-colors hover:bg-gray-50"
           onClick={() => setShowDetailModal(true)}
           role="button"
@@ -130,10 +132,27 @@ export function BuildingCard({ building }: BuildingCardProps) {
             </div>
           </div>
         </div>
-        <SaveHeartButton
-          buildingId={building.id}
-          className="absolute top-2 right-2 z-20"
-        />
+
+        <button
+          style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 50 }}
+          onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+          onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            toggleSave(building.id);
+          }}
+        >
+          <Heart
+            style={{
+              width: '24px',
+              height: '24px',
+              fill: isSaved ? '#ef4444' : 'none',
+              stroke: isSaved ? '#ef4444' : '#6b7280',
+              strokeWidth: 2,
+            }}
+          />
+        </button>
       </div>
 
       {showQualifyModal && (
