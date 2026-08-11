@@ -169,8 +169,8 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
       // Create marker element
       const markerEl = document.createElement("div")
       markerEl.style.position = "relative"
-      markerEl.style.width = isActive ? "8px" : "6px"
-      markerEl.style.height = isActive ? "8px" : "6px"
+      markerEl.style.width = isActive ? "4px" : "3px"
+      markerEl.style.height = isActive ? "4px" : "3px"
       markerEl.style.cursor = "pointer"
       markerEl.style.display = "flex"
       markerEl.style.alignItems = "center"
@@ -186,8 +186,8 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
         markerEl.innerHTML = `
           <div style="
             position: relative;
-            width: ${isActive ? "8px" : "6px"};
-            height: ${isActive ? "8px" : "6px"};
+            width: ${isActive ? "4px" : "3px"};
+            height: ${isActive ? "4px" : "3px"};
             display: flex;
             align-items: center;
             justify-content: center;
