@@ -19,7 +19,14 @@ export function SaveHeartButton({ buildingId }: { buildingId: string }) {
       aria-label={saved ? 'Remove saved building' : 'Save building'}
       aria-pressed={saved}
       onClick={handleClick}
-      onPointerDown={(event) => event.stopPropagation()}
+      onMouseDown={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+      }}
+      onPointerDown={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+      }}
       style={{
         width: 36,
         height: 36,
