@@ -11,6 +11,7 @@ import { MapFilterModal, type FilterState } from '@/components/map-filter-modal'
 import { FlowBrickellCard } from '@/components/flow-brickell-card';
 import { MoveWithDon } from '@/components/move-with-don';
 import { DesktopBuildingCard } from '@/components/desktop-building-card';
+import { AgentModeControl } from '@/components/agent-mode-provider';
 
 import { MapFilterCard, type MapFilterState } from '@/components/map-filter-card';
 import { copyToClipboard, showToast } from '@/lib/toast-utils';
@@ -1458,6 +1459,8 @@ export default function MiamiApp() {
           >
             How it works
           </button>
+
+          <AgentModeControl />
 
           {/* Text Don Button */}
           <button 

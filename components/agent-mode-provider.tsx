@@ -31,14 +31,13 @@ export function AgentModeProvider({ children }: { children: React.ReactNode }) {
   return (
     <AgentModeContext.Provider value={{ isUnlocked, commissionFor: (name) => commissionMap.get(name.trim().toLowerCase()) ?? null }}>
       {children}
-      <AgentModeControl />
     </AgentModeContext.Provider>
   )
 }
 
 export function useAgentMode() { return useContext(AgentModeContext) }
 
-function AgentModeControl() {
+export function AgentModeControl() {
   const [open, setOpen] = useState(false)
   const [pin, setPin] = useState("")
   const [error, setError] = useState(false)
@@ -56,7 +55,7 @@ function AgentModeControl() {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} aria-label="Open Agent Mode" style={{ position: "fixed", top: 16, right: 16, zIndex: 100, border: 0, borderRadius: 999, padding: "9px 14px", background: isUnlocked ? "#19C6C0" : "#0B1220", color: "#fff", fontSize: 12, fontWeight: 700, boxShadow: "0 4px 14px rgba(11,18,32,.18)" }}>
+      <button type="button" onClick={() => setOpen(true)} aria-label="Open Agent Mode" style={{ height: 36, border: 0, borderRadius: 999, padding: "0 16px", background: isUnlocked ? "#19C6C0" : "#0B1220", color: "#fff", fontSize: 14, fontWeight: 600, lineHeight: 1, cursor: "pointer" }}>
         Agent Mode
       </button>
       {open && !isUnlocked && (
