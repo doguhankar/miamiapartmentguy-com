@@ -139,7 +139,15 @@ export function DesktopBuildingCard({
           </div>
           <CommissionPill buildingName={building.name} />
           {/* Heart toggle */}
-        <SaveBuildingButton buildingId={String(building.id)} />
+        <div
+          onClick={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+          }}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <SaveBuildingButton buildingId={String(building.id)} />
+        </div>
       </div>
 
       {/* Content row: image + details */}
