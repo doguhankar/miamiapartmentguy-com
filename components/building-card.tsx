@@ -22,7 +22,7 @@ export function BuildingCard({ building }: BuildingCardProps) {
 
   return (
     <>
-      <div className="relative">
+      <div style={{ position: 'relative' }}>
         <div
           className="space-y-4 cursor-pointer p-1 rounded-lg transition-colors hover:bg-gray-50"
           onClick={() => setShowDetailModal(true)}
@@ -134,7 +134,7 @@ export function BuildingCard({ building }: BuildingCardProps) {
         </div>
 
         <button
-          style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 50 }}
+          style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 50, background: 'white', borderRadius: '50%', padding: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', border: 'none', cursor: 'pointer' }}
           onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
           onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
           onClick={(e) => {
@@ -145,8 +145,8 @@ export function BuildingCard({ building }: BuildingCardProps) {
         >
           <Heart
             style={{
-              width: '24px',
-              height: '24px',
+              width: '20px',
+              height: '20px',
               fill: isSaved ? '#ef4444' : 'none',
               stroke: isSaved ? '#ef4444' : '#6b7280',
               strokeWidth: 2,
