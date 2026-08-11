@@ -9,6 +9,7 @@ import { buildings } from '@/lib/buildings'
 import { useSupabaseImages } from '@/hooks/use-supabase-images'
 import { SimilarBuildings } from '@/components/similar-buildings'
 import { CommissionPill } from '@/components/commission-pill'
+import { SaveBuildingButton } from '@/components/save-building-button'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface LiveUnit {
@@ -457,7 +458,7 @@ export default function BuildingDetailPage() {
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               <button aria-label="Share building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconShare /></button>
-              <button onClick={() => setSaved(s => !s)} aria-label="Save building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: saved ? PINK : MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconHeart filled={saved} /></button>
+              <SaveBuildingButton buildingId={String(building.id)} />
             </div>
           </div>
 
@@ -542,7 +543,7 @@ export default function BuildingDetailPage() {
             </div>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               <button aria-label="Share building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconShare /></button>
-              <button onClick={() => setSaved(s => !s)} aria-label="Save building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: saved ? PINK : MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconHeart filled={saved} /></button>
+              <SaveBuildingButton buildingId={String(building.id)} />
             </div>
           </div>
         </div>

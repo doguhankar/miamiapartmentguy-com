@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Archivo, Space_Grotesk, JetBrains_Mono } from 'next/
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { AgentModeProvider } from '@/components/agent-mode-provider'
+import { SaveListProvider } from '@/components/save-list-provider'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -34,7 +35,7 @@ export default function RootLayout({
     <html lang="en" className={`${_archivo.variable} ${_spaceGrotesk.variable} ${_jetBrainsMono.variable}`}>
       <body className="font-sans antialiased">
         <AgentModeProvider>
-          {children}
+          <SaveListProvider>{children}</SaveListProvider>
         </AgentModeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

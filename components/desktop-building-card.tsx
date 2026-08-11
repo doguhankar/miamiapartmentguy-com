@@ -5,6 +5,7 @@ import { useState } from "react"
 import { useSupabaseImages } from "@/hooks/use-supabase-images"
 import Link from "next/link"
 import { CommissionPill } from "@/components/commission-pill"
+import { SaveBuildingButton } from "@/components/save-building-button"
 
 interface DesktopBuildingCardProps {
   building: Building
@@ -138,25 +139,7 @@ export function DesktopBuildingCard({
           </div>
           <CommissionPill buildingName={building.name} />
           {/* Heart toggle */}
-        <button
-          onClick={handleStarClick}
-          aria-label={localStarred ? "Remove from saved" : "Save building"}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '2px 0 2px 10px',
-            flexShrink: 0,
-            fontSize: '18px',
-            color: localStarred ? '#FF4D8D' : '#98A2B3',
-            lineHeight: 1,
-            transition: 'color 0.12s ease',
-          }}
-          onMouseEnter={(e) => { if (!localStarred) e.currentTarget.style.color = 'rgba(255,77,141,0.6)' }}
-          onMouseLeave={(e) => { if (!localStarred) e.currentTarget.style.color = '#98A2B3' }}
-        >
-          ♥
-        </button>
+        <SaveBuildingButton buildingId={String(building.id)} />
       </div>
 
       {/* Content row: image + details */}

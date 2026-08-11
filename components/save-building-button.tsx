@@ -1,0 +1,9 @@
+'use client'
+
+import { useSaveList } from '@/components/save-list-provider'
+
+export function SaveBuildingButton({ buildingId, label = false }: { buildingId: string; label?: boolean }) {
+  const { savedIds, toggle } = useSaveList()
+  const saved = savedIds.has(String(buildingId))
+  return <button type="button" aria-label={saved ? 'Remove saved building' : 'Save building'} aria-pressed={saved} onClick={(event) => { event.preventDefault(); event.stopPropagation(); toggle(String(buildingId)) }} className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-semibold transition-colors ${saved ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background/90 text-foreground hover:border-primary'}`}><span aria-hidden="true" className="text-base leading-none">{saved ? '♥' : '♡'}</span>{label && (saved ? 'Saved' : 'Save')}</button>
+}

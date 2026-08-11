@@ -4,6 +4,7 @@ import { useState } from "react"
 import { MapPin, DollarSign, CreditCard, Gift } from "lucide-react"
 import { Building, neighborhoodColors } from "@/lib/buildings"
 import { CommissionPill } from "@/components/commission-pill"
+import { SaveBuildingButton } from "@/components/save-building-button"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ImageCarousel } from "@/components/image-carousel"
@@ -32,7 +33,7 @@ export function BuildingCard({ building }: BuildingCardProps) {
                 <CommissionPill buildingName={building.name} />
               </div>
             </div>
-            <span className="text-sm font-bold text-foreground">{building.priceTier}</span>
+            <div className="flex items-center gap-2"><SaveBuildingButton buildingId={String(building.id)} /><span className="text-sm font-bold text-foreground">{building.priceTier}</span></div>
           </div>
           <div className="flex items-start gap-1 text-xs text-muted-foreground">
             <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0" />
