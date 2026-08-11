@@ -1,12 +1,11 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono, Archivo, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
+import { Geist, Geist_Mono, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { AgentModeProvider } from '@/components/agent-mode-provider'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
-const _archivo = Archivo({ subsets: ["latin"], weight: ['400', '500', '600', '700'], variable: '--font-archivo' });
 const _spaceGrotesk = Space_Grotesk({ subsets: ["latin"], weight: ['400', '500', '600', '700'], variable: '--font-space-grotesk' });
 const _jetBrainsMono = JetBrains_Mono({ subsets: ["latin"], weight: ['500', '600'], variable: '--font-jetbrains-mono' });
 
@@ -31,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${_archivo.variable} ${_spaceGrotesk.variable} ${_jetBrainsMono.variable}`}>
+    <html lang="en" className={`${_spaceGrotesk.variable} ${_jetBrainsMono.variable}`}>
       <body className="font-sans antialiased">
         <AgentModeProvider>
           {children}
