@@ -15,7 +15,8 @@ import { AgentModeControl } from '@/components/agent-mode-provider';
 
 import { MapFilterCard, type MapFilterState } from '@/components/map-filter-card';
 import { copyToClipboard, showToast } from '@/lib/toast-utils';
-import { Star } from 'lucide-react';
+import { Heart, Star } from 'lucide-react';
+import { useSaveList } from '@/components/save-list-provider';
 import { createClient } from '@/lib/supabase/client';
 import { buildings as BUILDINGS, type Building } from '@/lib/buildings';
 
@@ -648,6 +649,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
 };
 
 export default function MiamiApp() {
+  const { savedIds, toggleSave } = useSaveList();
   const geocodeCache = useRef(new Map());
   const [geocodedBuildings, setGeocodedBuildings] = useState(BUILDINGS);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
@@ -1309,18 +1311,23 @@ export default function MiamiApp() {
                       )}
                       {/* Heart button */}
                       <button
-                        onClick={(e) => { e.stopPropagation(); setStarredBuildings(prev => { const n = new Set(prev); n.has(String(building.id)) ? n.delete(String(building.id)) : n.add(String(building.id)); return n; }); }}
+                        type="button"
+                        aria-label={savedIds.includes(String(building.id)) ? 'Remove saved building' : 'Save building'}
+                        aria-pressed={savedIds.includes(String(building.id))}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); void toggleSave(String(building.id)); }}
+                        onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
                         style={{
-                          position: 'absolute', top: 8, right: 8,
+                          position: 'absolute', top: 8, right: 8, zIndex: 20,
                           width: 32, height: 32, borderRadius: 999,
-                          background: 'rgba(255,255,255,0.92)', border: 'none',
+                          background: '#FFFFFF', border: 'none',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 15, cursor: 'pointer',
+                          cursor: 'pointer',
                           boxShadow: '0 2px 8px rgba(10,15,28,0.12)',
-                          color: starredBuildings.has(String(building.id)) ? '#FF3D82' : '#FF3D82',
+                          color: savedIds.includes(String(building.id)) ? '#EF4444' : '#6B7280',
                         }}
                       >
-                        {starredBuildings.has(String(building.id)) ? '♥' : '♡'}
+                        <Heart size={16} fill={savedIds.includes(String(building.id)) ? 'currentColor' : 'none'} />
                       </button>
                     </div>
 
