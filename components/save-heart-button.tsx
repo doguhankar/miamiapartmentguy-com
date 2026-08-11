@@ -1,16 +1,17 @@
 'use client'
 
 import type { MouseEvent } from 'react'
+import { Heart } from 'lucide-react'
 import { useSaveList } from '@/components/save-list-provider'
 
-export function SaveHeartButton({ buildingId }: { buildingId: string }) {
-  const { savedIds, toggle } = useSaveList()
-  const saved = savedIds.has(String(buildingId))
+export function SaveHeartButton({ buildingId, className }: { buildingId: string; className?: string }) {
+  const { savedIds, toggleSave } = useSaveList()
+  const saved = savedIds.includes(String(buildingId))
 
   async function handleClick(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault()
     event.stopPropagation()
-    await toggle(String(buildingId))
+    await toggleSave(String(buildingId))
   }
 
   return (
@@ -27,6 +28,7 @@ export function SaveHeartButton({ buildingId }: { buildingId: string }) {
         event.preventDefault()
         event.stopPropagation()
       }}
+      className={className}
       style={{
         width: 36,
         height: 36,
@@ -43,7 +45,7 @@ export function SaveHeartButton({ buildingId }: { buildingId: string }) {
         boxShadow: '0 2px 8px rgba(11,18,32,.12)',
       }}
     >
-      <span aria-hidden="true">{saved ? '♥' : '♡'}</span>
+      <Heart aria-hidden="true" fill={saved ? 'currentColor' : 'none'} strokeWidth={2} size={18} />
     </button>
   )
 }

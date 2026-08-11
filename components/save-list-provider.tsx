@@ -3,20 +3,21 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 type SaveUser = { id: string; firstName: string; shareSlug: string }
-type SaveContext = { user: SaveUser | null; savedIds: Set<string>; beginSave: (buildingId: string) => void; toggle: (buildingId: string) => Promise<void>; share: () => Promise<string | null> }
-const Context = createContext<SaveContext | null>(null)
+type SaveContext = { user: SaveUser | null; savedIds: string[]; beginSave: (buildingId: string) => void; toggleSave: (buildingId: string) => Promise<void>; toggle: (buildingId: string) => Promise<void>; share: () => Promise<string | null> }
+export const SaveListContext = createContext<SaveContext | null>(null)
+const Context = SaveListContext
 const key = 'mag-save-user'
 
 export function SaveListProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SaveUser | null>(null)
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  const [savedIds, setSavedIds] = useState<string[]>([])
   const [pending, setPending] = useState<string | null>(null)
   useEffect(() => {
     const raw = window.localStorage.getItem(key)
     if (!raw) return
     const savedUser = JSON.parse(raw) as SaveUser
     setUser(savedUser)
-    fetch(`/api/saves/${savedUser.id}`).then((r) => r.json()).then((data) => setSavedIds(new Set(data.savedIds ?? []))).catch(() => {})
+    fetch(`/api/saves/${savedUser.id}`).then((r) => r.json()).then((data) => setSavedIds((data.savedIds ?? []).map(String))).catch(() => {})
   }, [])
   const beginSave = (buildingId: string) => setPending(buildingId)
   const createUser = async (input: { firstName: string; lastName: string; phone: string }) => {
@@ -31,12 +32,13 @@ export function SaveListProvider({ children }: { children: React.ReactNode }) {
   const saveFor = async (userId: string, buildingId: string, saved: boolean) => {
     const response = await fetch('/api/saves/toggle', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, buildingId, saved }) })
     const data = await response.json(); if (!response.ok) throw new Error(data.error)
-    setSavedIds(new Set(data.savedIds ?? []))
+    setSavedIds((data.savedIds ?? []).map(String))
   }
-  const toggle = async (buildingId: string) => {
+  const toggleSave = async (buildingId: string) => {
     if (!user) return beginSave(buildingId)
-    await saveFor(user.id, buildingId, !savedIds.has(String(buildingId)))
+    await saveFor(user.id, buildingId, !savedIds.includes(String(buildingId)))
   }
+  const toggle = toggleSave
   const share = async () => {
     if (!user) return null
     const response = await fetch('/api/saves/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id }) })
@@ -45,7 +47,7 @@ export function SaveListProvider({ children }: { children: React.ReactNode }) {
     await navigator.clipboard.writeText(url)
     return url
   }
-  const value = useMemo(() => ({ user, savedIds, beginSave, toggle, share }), [user, savedIds])
+  const value = useMemo(() => ({ user, savedIds, beginSave, toggleSave, toggle, share }), [user, savedIds])
   return <Context.Provider value={value}>{children}<SaveIdentityModal pending={pending} onClose={() => setPending(null)} onSubmit={createUser} /></Context.Provider>
 }
 
