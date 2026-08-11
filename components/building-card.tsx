@@ -4,7 +4,7 @@ import { useState } from "react"
 import { MapPin, DollarSign, CreditCard, Gift } from "lucide-react"
 import { Building, neighborhoodColors } from "@/lib/buildings"
 import { CommissionPill } from "@/components/commission-pill"
-import { SaveBuildingButton } from "@/components/save-building-button"
+import { SaveHeartButton } from "@/components/save-heart-button"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ImageCarousel } from "@/components/image-carousel"
@@ -21,6 +21,7 @@ export function BuildingCard({ building }: BuildingCardProps) {
 
   return (
     <>
+      <div style={{ position: 'relative' }}>
       <div className="space-y-4">
         <ImageCarousel images={building.images} />
 
@@ -113,6 +114,10 @@ export function BuildingCard({ building }: BuildingCardProps) {
             </Button>
           </div>
         </div>
+      </div>
+      <div style={{ position: 'absolute', top: 14, right: 14, zIndex: 2 }}>
+        <SaveHeartButton buildingId={String(building.id)} />
+      </div>
       </div>
 
       {showQualifyModal && (
