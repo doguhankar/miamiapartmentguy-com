@@ -650,6 +650,18 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
 
 export default function MiamiApp() {
   const { savedIds, toggleSave } = useSaveList();
+  const heartButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  useEffect(() => {
+    const stopHeartEvent = (event: Event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const button = event.currentTarget as HTMLButtonElement;
+      void toggleSave(button.dataset.buildingId ?? '');
+    };
+    const buttons = Object.values(heartButtonRefs.current).filter(Boolean) as HTMLButtonElement[];
+    buttons.forEach((button) => button.addEventListener('click', stopHeartEvent, { capture: true }));
+    return () => buttons.forEach((button) => button.removeEventListener('click', stopHeartEvent, { capture: true }));
+  }, [savedIds]);
   const geocodeCache = useRef(new Map());
   const [geocodedBuildings, setGeocodedBuildings] = useState(BUILDINGS);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
@@ -1311,10 +1323,12 @@ export default function MiamiApp() {
                       )}
                       {/* Heart button */}
                       <button
+                        ref={(button) => { heartButtonRefs.current[String(building.id)] = button; }}
+                        data-building-id={String(building.id)}
                         type="button"
                         aria-label={savedIds.includes(String(building.id)) ? 'Remove saved building' : 'Save building'}
                         aria-pressed={savedIds.includes(String(building.id))}
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); void toggleSave(String(building.id)); }}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
                         onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
                         onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
                         style={{
