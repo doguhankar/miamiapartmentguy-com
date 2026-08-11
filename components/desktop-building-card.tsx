@@ -86,6 +86,7 @@ export function DesktopBuildingCard({
   }
 
   return (
+    <div style={{ position: 'relative' }}>
     <Link
       href={`/buildings/${building.id}`}
       onMouseEnter={() => onHover?.(building)}
@@ -138,16 +139,7 @@ export function DesktopBuildingCard({
           </div>
           </div>
           <CommissionPill buildingName={building.name} />
-          {/* Heart toggle */}
-        <div
-          onClick={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-          }}
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          <SaveBuildingButton buildingId={String(building.id)} />
-        </div>
+
       </div>
 
       {/* Content row: image + details */}
@@ -248,5 +240,16 @@ export function DesktopBuildingCard({
         </div>
       </div>
     </Link>
+    <div
+      style={{ position: 'absolute', top: '14px', right: '14px', zIndex: 2 }}
+      onClick={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+      }}
+      onPointerDown={(event) => event.stopPropagation()}
+    >
+      <SaveBuildingButton buildingId={String(building.id)} />
+    </div>
+    </div>
   )
 }
