@@ -1460,8 +1460,6 @@ export default function MiamiApp() {
             How it works
           </button>
 
-          <AgentModeControl />
-
           {/* Text Don Button */}
           <button 
             onClick={() => setShowMoveWithDonModal(true)}

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { neighborhoodCenters } from '@/lib/neighborhood-centers';
+import { AgentModeControl } from '@/components/agent-mode-provider';
 
 export interface MapFilterState {
   bedrooms: string[];
@@ -289,6 +290,10 @@ export function MapFilterCard({
             ))}
           </div>
         )}
+      </div>
+
+      <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
+        <AgentModeControl />
       </div>
 
       {/* Clear */}
