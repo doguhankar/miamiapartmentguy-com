@@ -1225,8 +1225,10 @@ export default function MiamiApp() {
             background: '#ffffff',
             borderRadius: '22px 22px 0 0',
             boxShadow: '0 -8px 30px rgba(10,15,28,0.16)',
-            height: mobileSheetState === 'sliver' ? '34px' : mobileSheetState === 'peek' ? '336px' : 'calc(100dvh - 78px)',
-            display: 'flex',
+          height: mobileSheetState === 'sliver' ? '34px' : mobileSheetState === 'peek' ? '336px' : 'calc(100dvh - 78px)',
+          pointerEvents: 'auto',
+          zIndex: 30,
+          display: 'flex',
             flexDirection: 'column',
             transform: 'translateY(0)',
             transition: 'transform 280ms ease-out, height 280ms ease-out',
@@ -1532,7 +1534,7 @@ export default function MiamiApp() {
         </div>
 
         {/* Cards Panel - 36% of width */}
-        <div className="basis-[36%] bg-[#F8F9FB] border-l border-[#E8EBF0] overflow-hidden flex flex-col">
+        <div className="basis-[36%] bg-[#F8F9FB] border-l border-[#E8EBF0] overflow-hidden flex flex-col" style={{ position: 'relative', zIndex: 20, pointerEvents: 'auto' }}>
           {/* Save list button — only visible when buildings are starred */}
           {starredBuildings.size > 0 && (
             <div className="px-4 pt-3 pb-0 flex justify-end">
