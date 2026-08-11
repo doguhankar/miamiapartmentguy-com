@@ -5,7 +5,7 @@ import { useState } from "react"
 import { useSupabaseImages } from "@/hooks/use-supabase-images"
 import Link from "next/link"
 import { CommissionPill } from "@/components/commission-pill"
-import { SaveBuildingButton } from "@/components/save-building-button"
+import { SaveHeartButton } from "@/components/save-heart-button"
 
 interface DesktopBuildingCardProps {
   building: Building
@@ -248,7 +248,7 @@ export function DesktopBuildingCard({
       }}
       onPointerDown={(event) => event.stopPropagation()}
     >
-      <SaveBuildingButton buildingId={String(building.id)} />
+      <SaveHeartButton buildingId={String(building.id)} />
     </div>
     </div>
   )
