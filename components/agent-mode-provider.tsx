@@ -7,10 +7,13 @@ import { createClient } from "@/lib/supabase/client"
 type CommissionRow = { name: string; commission: string | null }
 type AgentModeContextValue = {
   isUnlocked: boolean
+  hasAccess: boolean
+  toggleAgentMode: () => void
+  unlockAgentMode: () => void
   commissionFor: (name: string) => string | null
 }
 
-const AgentModeContext = createContext<AgentModeContextValue>({ isUnlocked: false, commissionFor: () => null })
+const AgentModeContext = createContext<AgentModeContextValue>({ isUnlocked: false, hasAccess: false, toggleAgentMode: () => {}, unlockAgentMode: () => {}, commissionFor: () => null })
 const storageKey = "mag-agent-mode-unlocked"
 
 function useCommissionRows() {
@@ -23,13 +26,27 @@ function useCommissionRows() {
 }
 
 export function AgentModeProvider({ children }: { children: React.ReactNode }) {
+  const [hasAccess, setHasAccess] = useState(false)
   const [isUnlocked, setIsUnlocked] = useState(false)
-  useEffect(() => setIsUnlocked(window.localStorage.getItem(storageKey) === "1"), [])
+  useEffect(() => {
+    const unlocked = window.localStorage.getItem(storageKey) === "1"
+    setHasAccess(unlocked)
+    setIsUnlocked(unlocked)
+  }, [])
   const { data } = useCommissionRows()
+  const toggleAgentMode = () => {
+    if (!hasAccess) return
+    setIsUnlocked((value) => !value)
+  }
+  const unlockAgentMode = () => {
+    window.localStorage.setItem(storageKey, "1")
+    setHasAccess(true)
+    setIsUnlocked(true)
+  }
   const commissionMap = useMemo(() => new Map((data ?? []).map((row) => [row.name.trim().toLowerCase(), row.commission])), [data])
 
   return (
-    <AgentModeContext.Provider value={{ isUnlocked, commissionFor: (name) => commissionMap.get(name.trim().toLowerCase()) ?? null }}>
+    <AgentModeContext.Provider value={{ isUnlocked, hasAccess, toggleAgentMode, unlockAgentMode, commissionFor: (name) => commissionMap.get(name.trim().toLowerCase()) ?? null }}>
       {children}
     </AgentModeContext.Provider>
   )
@@ -41,13 +58,14 @@ export function AgentModeControl() {
   const [open, setOpen] = useState(false)
   const [pin, setPin] = useState("")
   const [error, setError] = useState(false)
-  const { isUnlocked } = useAgentMode()
+  const { isUnlocked, hasAccess, toggleAgentMode, unlockAgentMode } = useAgentMode()
 
   function submit(event: React.FormEvent) {
     event.preventDefault()
     if (pin === "1738") {
-      window.localStorage.setItem(storageKey, "1")
-      window.location.reload()
+      unlockAgentMode()
+      setOpen(false)
+      setPin("")
       return
     }
     setError(true); setPin("")
@@ -55,7 +73,7 @@ export function AgentModeControl() {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} aria-label="Open Agent Mode" style={{ height: 36, border: 0, borderRadius: 999, padding: "0 16px", background: isUnlocked ? "#19C6C0" : "#0B1220", color: "#fff", fontSize: 14, fontWeight: 600, lineHeight: 1, cursor: "pointer" }}>
+      <button type="button" onClick={() => hasAccess ? toggleAgentMode() : setOpen(true)} aria-label="Toggle Agent Mode" style={{ height: 36, border: 0, borderRadius: 999, padding: "0 16px", background: isUnlocked ? "#19C6C0" : "#0B1220", color: "#fff", fontSize: 14, fontWeight: 600, lineHeight: 1, cursor: "pointer" }}>
         Agent Mode
       </button>
       {open && !isUnlocked && (
