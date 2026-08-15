@@ -72,7 +72,7 @@ export function DesktopBuildingCard({
   return (
     <div className="relative">
       <div
-        className={`rounded-xl overflow-hidden border transition-all duration-200 cursor-pointer group ${
+        className={`rounded-xl overflow-hidden border bg-white transition-all duration-200 cursor-pointer group ${
           isHighlighted || isHovered
             ? "border-blue-500 shadow-lg scale-[1.02]"
             : "border-gray-200 shadow-md hover:shadow-xl"
@@ -115,7 +115,7 @@ export function DesktopBuildingCard({
               Saved
             </div>
           )}
-          <ImageCarousel images={building.images} />
+          <ImageCarousel images={(Array.isArray(building.image_urls) ? building.image_urls : building.images) ?? []} />
         </div>
         <div className="p-4 bg-white">
           <div className="flex items-start justify-between mb-2">
