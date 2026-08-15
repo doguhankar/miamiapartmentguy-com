@@ -6,6 +6,7 @@ import { SaveHeartButton } from "./save-heart-button"
 import { useState } from "react"
 import { Star } from "lucide-react"
 import { useBuildingPrice } from "@/hooks/use-building-price"
+import { CommissionPill } from "@/components/commission-pill"
 
 interface DesktopBuildingCardProps {
   building: Building
@@ -122,8 +123,9 @@ export function DesktopBuildingCard({
               {building.neighborhood}
             </span>
           </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-2">
-            {building.name}
+          <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-2 flex items-center gap-2 flex-wrap">
+            <span>{building.name}</span>
+            {isAgentMode && <CommissionPill buildingName={building.name} />}
           </h3>
           {building.tagline && (
             <p className="text-sm text-gray-600 mb-3 line-clamp-1">
