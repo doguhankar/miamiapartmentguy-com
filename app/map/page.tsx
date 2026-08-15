@@ -12,6 +12,7 @@ import { FlowBrickellCard } from '@/components/flow-brickell-card';
 import { MoveWithDon } from '@/components/move-with-don';
 import { DesktopBuildingCard } from '@/components/desktop-building-card';
 import { AgentModeControl } from '@/components/agent-mode-provider';
+import { CommissionPill } from '@/components/commission-pill';
 
 import { MapFilterCard, type MapFilterState } from '@/components/map-filter-card';
 import { copyToClipboard, showToast } from '@/lib/toast-utils';
@@ -1349,8 +1350,9 @@ export default function MiamiApp() {
 
                     {/* Card body */}
                     <div style={{ padding: '12px 14px 14px' }}>
-                      <div style={{ fontFamily: 'var(--font-archivo), Archivo, sans-serif', fontWeight: 700, fontSize: 15.5, color: '#0A0F1C', marginBottom: 3 }}>
-                        {building.name}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', fontFamily: 'var(--font-archivo), Archivo, sans-serif', fontWeight: 700, fontSize: 15.5, color: '#0A0F1C', marginBottom: 3 }}>
+                        <span>{building.name}</span>
+                        <CommissionPill buildingName={building.name} />
                       </div>
                       <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 10 }}>
                         {building.address}

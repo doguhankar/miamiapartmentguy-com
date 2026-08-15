@@ -69,6 +69,7 @@ export function MapFilterModal({ isOpen, onClose, onApply, initialFilters }: Fil
   const [agentPasscode, setAgentPasscode] = useState('');
   const [agentPasscodeError, setAgentPasscodeError] = useState(false);
   const agentModeSectionRef = useRef<HTMLDivElement>(null);
+  const agentPasscodeInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (agentPasscodeError) {
@@ -151,7 +152,10 @@ export function MapFilterModal({ isOpen, onClose, onApply, initialFilters }: Fil
     }
     setAgentPasscodeError(false);
     setAgentPasscode('');
-    requestAnimationFrame(() => agentModeSectionRef.current?.scrollIntoView({ block: 'end' }));
+    requestAnimationFrame(() => {
+      agentModeSectionRef.current?.scrollIntoView({ block: 'end' });
+      agentPasscodeInputRef.current?.focus();
+    });
   };
 
   const handleAgentPasscodeChange = (value: string) => {
@@ -304,6 +308,7 @@ export function MapFilterModal({ isOpen, onClose, onApply, initialFilters }: Fil
             {!hasAccess && (
               <div style={{ marginTop: 12 }}>
                 <input
+                  ref={agentPasscodeInputRef}
                   key={agentPasscodeError ? 'error' : 'idle'}
                   inputMode="numeric"
                   pattern="[0-9]*"
