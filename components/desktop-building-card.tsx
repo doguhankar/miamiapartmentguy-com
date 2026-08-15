@@ -70,7 +70,7 @@ export function DesktopBuildingCard({
   }
 
   return (
-    <div style={{background:'white', border:'3px solid red', borderRadius:12, padding:14, marginBottom:12}}>
+    <div style={{background:'white', border:'0.5px solid #e5e7eb', borderRadius:12, padding:14, marginBottom:12}}>
       <div style={{display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:8}}>
         <div>
           <div style={{fontWeight:600, fontSize:15, color:'#111', marginBottom:2}}>{building.name} {isAgentMode && <CommissionPill buildingName={building.name} />}</div>
@@ -93,7 +93,6 @@ export function DesktopBuildingCard({
             <span style={{background:'#fef3cd', color:'#92660a', fontSize:10, fontWeight:500, padding:'2px 7px', borderRadius:5, marginBottom:6, display:'inline-block'}}>SPECIALS</span>
             <div style={{fontSize:11, color:'#6b7280', lineHeight:1.4, marginBottom:8}}>{building.amenities.join(', ')}</div>
           </div>
-          <button style={{background:'#FF4D8D', color:'#fff', border:'none', padding:'7px 12px', borderRadius:8, fontSize:12, fontWeight:500, cursor:'pointer'}}>💬 Text Don</button>
         </div>
       </div>
     </div>
