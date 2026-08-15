@@ -70,131 +70,32 @@ export function DesktopBuildingCard({
   }
 
   return (
-    <div className="relative">
-      <div
-        className={`rounded-xl overflow-hidden border bg-white transition-all duration-200 cursor-pointer group ${
-          isHighlighted || isHovered
-            ? "border-blue-500 shadow-lg scale-[1.02]"
-            : "border-gray-200 shadow-md hover:shadow-xl"
-        }`}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onClick={() => {
-          onClick?.(building);
-          onViewDetails?.(building);
-        }}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onClick?.(building);
-            onViewDetails?.(building);
-          }
-        }}
-      >
-        <div className="relative h-56 bg-gray-100 overflow-hidden">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onStar?.(building)
-            }}
-            className="absolute top-2 right-2 z-10 p-2 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md hover:shadow-lg"
-            aria-label={isStarred ? "Remove from list" : "Add to list"}
-          >
-            <Star
-              className={`h-5 w-5 transition-colors ${
-                isStarred
-                  ? "fill-yellow-400 text-yellow-400"
-                  : "text-gray-400 hover:text-yellow-400"
-              }`}
-            />
-          </button>
-          {hasSavedBadge && (
-            <div className="absolute top-2 left-2 z-10 px-2.5 py-1 bg-green-500 text-white text-xs font-semibold rounded">
-              Saved
-            </div>
-          )}
-          <ImageCarousel images={(Array.isArray(building.image_urls) ? building.image_urls : building.images) ?? []} />
+    <div style={{background:'white', border:'0.5px solid #e5e7eb', borderRadius:12, padding:14, marginBottom:12}}>
+      <div style={{display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:8}}>
+        <div>
+          <div style={{fontWeight:600, fontSize:15, color:'#111', marginBottom:2}}>{building.name} {isAgentMode && <CommissionPill buildingName={building.name} />}</div>
+          <div style={{fontSize:11, color:'#9aa5b8'}}>{building.address}</div>
         </div>
-        <div className="p-4 bg-white">
-          <div className="flex items-start justify-between mb-2">
-            <span className="text-xs font-semibold px-2.5 py-1 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-full">
-              {building.neighborhood}
-            </span>
-          </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-2 flex items-center gap-2 flex-wrap">
-            <span>{building.name}</span>
-            {isAgentMode && <CommissionPill buildingName={building.name} />}
-          </h3>
-          {building.tagline && (
-            <p className="text-sm text-gray-600 mb-3 line-clamp-1">
-              {building.tagline}
-            </p>
-          )}
-          <div className="mb-3 pb-3 border-b border-gray-100">
-            <p className="text-2xl font-bold text-blue-600">
-              From ${dynamicPrice.toLocaleString()}
-            </p>
-          </div>
-          {amenities.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-1">
-              {amenities.slice(0, 4).map((amenity) => {
-                const colors = AMENITY_COLORS[amenity.toLowerCase()] || {
-                  bg: "bg-gray-100",
-                  text: "text-gray-700",
-                }
-                return (
-                  <span
-                    key={amenity}
-                    className={`text-xs font-medium px-2 py-1 rounded-full ${colors.bg} ${colors.text}`}
-                  >
-                    {amenity.charAt(0).toUpperCase() + amenity.slice(1)}
-                  </span>
-                )
-              })}
-              {amenities.length > 4 && (
-                <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-700">
-                  +{amenities.length - 4}
-                </span>
-              )}
+        <span style={{color:'#FF4D8D', fontSize:18, cursor:'pointer'}}>♥</span>
+      </div>
+      <div style={{display:'flex', gap:12}}>
+        <div style={{position:'relative', width:150, height:115, flexShrink:0, borderRadius:8, overflow:'hidden'}}>
+          <img src={building.images?.[0]} alt={building.name} style={{width:'100%', height:'100%', objectFit:'cover', display:'block'}} />
+          <div style={{position:'absolute', bottom:0, left:0, right:0, background:'rgba(0,0,0,0.55)', padding:'4px 8px', fontSize:9, color:'#fff'}}>Videos • Virtual tours</div>
+        </div>
+        <div style={{flex:1, display:'flex', flexDirection:'column', justifyContent:'space-between'}}>
+          <div>
+            <div style={{display:'flex', marginBottom:6}}>
+              <div style={{paddingRight:12, marginRight:12, borderRight:'0.5px solid #e5e7eb'}}><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{building.priceMin}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>Studio</div></div>
+              <div style={{paddingRight:12, marginRight:12, borderRight:'0.5px solid #e5e7eb'}}><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{building.priceMin}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>1 Bed</div></div>
+              <div><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{building.priceMin}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>2 Beds</div></div>
             </div>
-          )}
-          <div className="mb-4 flex gap-1 flex-wrap">
-            {building.units.slice(0, 3).map((unit) => (
-              <span
-                key={unit}
-                className="text-xs font-semibold px-2 py-1 bg-gray-50 text-gray-700 rounded border border-gray-200"
-              >
-                {unit}
-              </span>
-            ))}
+            <span style={{background:'#fef3cd', color:'#92660a', fontSize:10, fontWeight:500, padding:'2px 7px', borderRadius:5, marginBottom:6, display:'inline-block'}}>SPECIALS</span>
+            <div style={{fontSize:11, color:'#6b7280', lineHeight:1.4, marginBottom:8}}>{building.amenities.join(', ')}</div>
           </div>
-          <div className="flex gap-2 pt-3 border-t border-gray-100">
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onViewDetails?.(building)
-              }}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors text-sm"
-            >
-              View Details
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-              }}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-lg transition-colors text-sm"
-            >
-              Text Don
-            </button>
-          </div>
+          <button style={{background:'#FF4D8D', color:'#fff', border:'none', padding:'7px 12px', borderRadius:8, fontSize:12, fontWeight:500, cursor:'pointer'}}>💬 Text Don</button>
         </div>
       </div>
-      <SaveHeartButton
-        buildingId={building.id}
-        className="absolute top-2 left-2 z-20"
-      />
     </div>
   )
 }
