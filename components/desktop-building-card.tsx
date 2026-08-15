@@ -70,7 +70,7 @@ export function DesktopBuildingCard({
   }
 
   return (
-    <div style={{background:'white', border:'0.5px solid #e5e7eb', borderRadius:12, padding:14, marginBottom:12}}>
+    <div onClick={() => onClick?.(building)} style={{background:'white', border:'0.5px solid #e5e7eb', borderRadius:12, padding:14, marginBottom:12, cursor:'pointer'}}>
       <div style={{display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:8}}>
         <div>
           <div style={{fontWeight:600, fontSize:15, color:'#111', marginBottom:2}}>{building.name} {isAgentMode && <CommissionPill buildingName={building.name} />}</div>

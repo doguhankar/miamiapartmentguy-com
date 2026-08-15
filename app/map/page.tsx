@@ -1536,7 +1536,7 @@ export default function MiamiApp() {
         </div>
 
         {/* Cards Panel - 36% of width */}
-        <div className="basis-[36%] bg-[#F8F9FB] border-l border-[#E8EBF0] overflow-hidden flex flex-col" style={{ position: 'relative', zIndex: 20, pointerEvents: 'auto' }}>
+        <div className="basis-[36%] bg-[#F8F9FB] border-l border-[#E8EBF0] overflow-hidden flex flex-col" style={{ position: 'relative', zIndex: 20, pointerEvents: 'auto', background: 'white' }}>
           {/* Save list button — only visible when buildings are starred */}
           {starredBuildings.size > 0 && (
             <div className="px-4 pt-3 pb-0 flex justify-end">
