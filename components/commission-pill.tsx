@@ -10,15 +10,20 @@ export function CommissionPill({ buildingName }: { buildingName: string }) {
   if (!isUnlocked || !commission || commission.trim().toUpperCase() === "NO COMMISSION") return null
   return (
     <span
-      style={{ position: "relative", display: "inline-flex" }}
+      style={{ position: "relative", display: "inline-flex", zIndex: 30, pointerEvents: "auto" }}
       onPointerLeave={() => setShowOnTouch(false)}
     >
       <button
         type="button"
         onClick={(event) => {
-          if (event.nativeEvent instanceof PointerEvent && event.nativeEvent.pointerType === "touch") {
-            setShowOnTouch((value) => !value)
-          }
+          event.preventDefault()
+          event.stopPropagation()
+          setShowOnTouch((value) => !value)
+        }}
+        onTouchEnd={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          setShowOnTouch((value) => !value)
         }}
         onPointerEnter={(event) => {
           if (event.pointerType !== "touch") setShowOnTouch(true)
@@ -27,7 +32,7 @@ export function CommissionPill({ buildingName }: { buildingName: string }) {
         onBlur={() => setShowOnTouch(false)}
         aria-label="Show commission"
         aria-expanded={showOnTouch}
-        style={{ border: "1px solid #B7E7E5", borderRadius: 999, background: "#ECFAF9", color: "#087F7B", padding: "4px 9px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}
+        style={{ minWidth: 44, minHeight: 44, border: "1px solid #B7E7E5", borderRadius: 999, background: "#ECFAF9", color: "#087F7B", padding: "4px 9px", fontSize: 10, fontWeight: 700, cursor: "pointer", touchAction: "manipulation", position: "relative", zIndex: 31 }}
       >
         Commission
       </button>
