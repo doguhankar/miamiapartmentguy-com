@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useAgentMode } from '@/components/agent-mode-provider';
 
 interface FilterModalProps {
   isOpen: boolean;
@@ -64,6 +65,16 @@ export function MapFilterModal({ isOpen, onClose, onApply, initialFilters }: Fil
   const [priceMin, setPriceMin] = useState(MIN_PRICE);
   const [priceMax, setPriceMax] = useState(MAX_PRICE);
   const [visibleMonth, setVisibleMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
+  const { isUnlocked, hasAccess, toggleAgentMode, unlockAgentMode } = useAgentMode();
+  const [agentPasscode, setAgentPasscode] = useState('');
+  const [agentPasscodeError, setAgentPasscodeError] = useState(false);
+  const agentModeSectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (agentPasscodeError) {
+      agentModeSectionRef.current?.scrollIntoView({ block: 'end' });
+    }
+  }, [agentPasscodeError]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -131,6 +142,31 @@ export function MapFilterModal({ isOpen, onClose, onApply, initialFilters }: Fil
     setPriceMin(MIN_PRICE);
     setPriceMax(MAX_PRICE);
     setVisibleMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+  };
+
+  const handleAgentModeToggle = () => {
+    if (hasAccess) {
+      toggleAgentMode();
+      return;
+    }
+    setAgentPasscodeError(false);
+    setAgentPasscode('');
+    requestAnimationFrame(() => agentModeSectionRef.current?.scrollIntoView({ block: 'end' }));
+  };
+
+  const handleAgentPasscodeChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    setAgentPasscode(digits);
+    setAgentPasscodeError(false);
+    if (digits.length === 4) {
+      if (digits === '1738') {
+        unlockAgentMode();
+        setAgentPasscode('');
+      } else {
+        setAgentPasscodeError(true);
+        setAgentPasscode('');
+      }
+    }
   };
 
   const moveMonth = (direction: number) => {
@@ -249,6 +285,56 @@ export function MapFilterModal({ isOpen, onClose, onApply, initialFilters }: Fil
               })}
             </div>
             <div style={{ fontSize: 10.5, color: '#9AA5AC', marginTop: 10, textAlign: 'center' }}>You can select a move-in date up to 4 months out</div>
+          </section>
+
+          <section ref={agentModeSectionRef} style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16 }} aria-labelledby="agent-mode-label">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span id="agent-mode-label" style={{ fontFamily: 'Inter, sans-serif', fontSize: 13.5, fontWeight: 600, color: TEXT }}>Agent Mode</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isUnlocked}
+                aria-label="Toggle Agent Mode"
+                onClick={handleAgentModeToggle}
+                style={{ width: 44, height: 26, borderRadius: 999, border: 0, padding: 3, background: isUnlocked ? PINK : '#D5D8DE', display: 'flex', alignItems: 'center', justifyContent: isUnlocked ? 'flex-end' : 'flex-start', cursor: 'pointer', transition: 'background 0.15s ease' }}
+              >
+                <span style={{ width: 20, height: 20, borderRadius: 999, background: '#fff', boxShadow: '0 1px 3px rgba(10,15,28,0.25)', transition: 'transform 0.15s ease' }} />
+              </button>
+            </div>
+            {!hasAccess && (
+              <div style={{ marginTop: 12 }}>
+                <input
+                  key={agentPasscodeError ? 'error' : 'idle'}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={4}
+                  value={agentPasscode}
+                  onChange={(event) => handleAgentPasscodeChange(event.target.value)}
+                  placeholder="Enter 4-digit code"
+                  aria-label="Agent Mode passcode"
+                  autoFocus
+                  style={{
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    padding: '10px 14px',
+                    border: agentPasscodeError ? '1.5px solid #E53E5C' : `1px solid ${BORDER}`,
+                    borderRadius: 10,
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: 16,
+                    letterSpacing: '0.4em',
+                    textAlign: 'center',
+                    background: PANEL,
+                    color: TEXT,
+                    outline: 'none',
+                    animation: agentPasscodeError ? 'agent-passcode-shake 0.32s ease' : 'none',
+                  }}
+                />
+                {agentPasscodeError && (
+                  <p role="alert" style={{ margin: '6px 0 0', fontSize: 11.5, color: '#E53E5C', textAlign: 'center' }}>Incorrect passcode.</p>
+                )}
+                <style>{`@keyframes agent-passcode-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }`}</style>
+              </div>
+            )}
           </section>
         </div>
 
