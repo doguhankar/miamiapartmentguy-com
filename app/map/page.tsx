@@ -11,7 +11,7 @@ import { MapFilterModal, type FilterState } from '@/components/map-filter-modal'
 import { FlowBrickellCard } from '@/components/flow-brickell-card';
 import { MoveWithDon } from '@/components/move-with-don';
 import { DesktopBuildingCard } from '@/components/desktop-building-card';
-import { AgentModeControl } from '@/components/agent-mode-provider';
+import { AgentModeControl, useAgentMode } from '@/components/agent-mode-provider';
 import { CommissionPill } from '@/components/commission-pill';
 
 import { MapFilterCard, type MapFilterState } from '@/components/map-filter-card';
@@ -650,6 +650,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
 };
 
 export default function MiamiApp() {
+  const { hasAccess } = useAgentMode();
   const { savedIds, toggleSave } = useSaveList();
   const heartButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   useEffect(() => {
@@ -1557,6 +1558,7 @@ export default function MiamiApp() {
                 <DesktopBuildingCard
                   key={building.id}
                   building={building}
+                  isAgentMode={hasAccess}
                   isHighlighted={selectedBuilding?.id === building.id}
                                   isStarred={starredBuildings.has(String(building.id))}
                   onHover={setHighlightedBuilding}
