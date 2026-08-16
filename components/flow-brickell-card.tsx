@@ -24,48 +24,9 @@ export function FlowBrickellCard({ onOpenModal }: { onOpenModal: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchPricing = async () => {
-    try {
-      setRefreshing(true);
-      setError(null);
-      
-      // Add cache-busting timestamp to force fresh fetch
-      const timestamp = new Date().getTime();
-      const url = `/api/prices/flow-brickell?t=${timestamp}`;
-      
-      const res = await fetch(url);
-      
-      if (!res.ok) {
-        setError('Error loading pricing. Please try again.');
-        setUnits([]);
-        return;
-      }
-      
-      const data: PricingData = await res.json();
-      const unitList = data.units || [];
-      
-      setUnits(unitList);
-      setError(null);
-      
-      // Find minimum price
-      if (unitList.length > 0) {
-        const prices = unitList.map(u => u.price);
-        const min = Math.min(...prices);
-        setMinPrice(min);
-      } else {
-        setError('No units available');
-      }
-    } catch (err) {
-      setError('Error loading pricing. Please try again.');
-      setUnits([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
   useEffect(() => {
-    fetchPricing();
+    setLoading(false);
+    setRefreshing(false);
   }, []);
 
   return (

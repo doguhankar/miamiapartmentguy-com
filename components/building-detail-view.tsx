@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Heart, Share2, ArrowLeft } from "lucide-react"
 import { Building } from "@/lib/buildings"
 import { ImageCarousel } from "@/components/image-carousel"
@@ -21,32 +21,10 @@ interface Unit {
 
 export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps) {
   const [units, setUnits] = useState<Unit[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedTab, setSelectedTab] = useState("all")
   const [isHearted, setIsHearted] = useState(false)
-
-  useEffect(() => {
-    const fetchUnits = async () => {
-      try {
-        setLoading(true)
-        const res = await fetch(`/api/prices/${building.id}?t=${Date.now()}`)
-        
-        if (res.ok) {
-          const data = await res.json()
-          setUnits(data.units || [])
-        } else {
-          setError("Unable to load unit availability")
-        }
-      } catch (err) {
-        setError("Error loading units")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchUnits()
-  }, [building.id])
 
   // Get minimum price from units
   const minPrice = units.length > 0 ? Math.min(...units.map(u => u.price)) : building.priceMin

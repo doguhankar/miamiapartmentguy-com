@@ -102,22 +102,8 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
   const images = supabaseImages.length ? supabaseImages : building.images || []
 
   useEffect(() => {
-    let active = true
-    setLoadingUnits(true)
-    fetch(`/api/prices/${building.id}?t=${Date.now()}`)
-      .then((res) => res.ok ? res.json() : { units: [] })
-      .then((data) => {
-        if (active) {
-          const nextUnits = Array.isArray(data?.units) ? data.units : []
-          setUnits(nextUnits)
-          const first = nextUnits[0]
-          if (first) setActivePriceType((prev) => prev ?? unitLabel(first))
-        }
-      })
-      .catch(() => { if (active) setUnits([]) })
-      .finally(() => { if (active) setLoadingUnits(false) })
-    return () => { active = false }
-  }, [building.id])
+    setLoadingUnits(false)
+  }, [])
 
   const groupedUnits = useMemo(() => {
     const groups = new Map<string, Unit[]>()

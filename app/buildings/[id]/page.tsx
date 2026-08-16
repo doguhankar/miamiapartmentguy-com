@@ -174,22 +174,6 @@ export default function BuildingDetailPage() {
   const [income, setIncome] = useState<string>('9000')
   const [showLeasingForm, setShowLeasingForm] = useState(false)
 
-  // Fetch live units
-  useEffect(() => {
-    if (!buildingId) return
-    fetch(`/api/prices/${buildingId}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data?.units?.length) {
-          setLiveUnits(data.units)
-          const first = data.units[0]
-          setSelectedUnit(first)
-          setActivePriceType(prev => prev ?? bedsKey(first))
-        }
-      })
-      .catch(() => {})
-  }, [buildingId])
-
   // Auto-select first unit of active price type
   useEffect(() => {
     if (!activePriceType) return

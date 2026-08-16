@@ -195,18 +195,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
     let cancelled = false;
 
     const loadPricing = async () => {
-      const entries = await Promise.all(
-        geocodedBuildings.map(async (building: any) => {
-          try {
-            const response = await fetch(`/api/prices/${building.id}`);
-            if (!response.ok) return null;
-            const data = await response.json();
-            return data?.units?.length ? [building.id, { units: data.units }] as const : null;
-          } catch {
-            return null;
-          }
-        }),
-      );
+      const entries: Array<readonly [string, { units: AvailableUnit[] }] | null> = [];
 
       const supabase = createClient();
       const { data: imageRows } = await supabase

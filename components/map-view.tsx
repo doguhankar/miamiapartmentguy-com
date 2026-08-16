@@ -45,42 +45,6 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
     return buildings.filter((building) => building.lat >= bounds.south && building.lat <= bounds.north && building.lng >= bounds.west && building.lng <= bounds.east)
   }, [buildings, bounds])
 
-  // Fetch pricing data for buildings
-  useEffect(() => {
-    const fetchPricingData = async () => {
-      try {
-        const pricingMap: Record<string, PricingData> = {}
-
-        // Fetch pricing for all buildings using their IDs as API slugs
-        for (const building of buildings) {
-          const slug = building.id
-          try {
-            const url = `/api/prices/${slug}?t=${Date.now()}`
-            const response = await fetch(url)
-            
-            if (response.ok) {
-              const data = await response.json()
-              
-              if (data.units && data.units.length > 0) {
-                const prices = data.units.map((u: any) => u.price)
-                const minPrice = Math.min(...prices)
-                pricingMap[slug] = { buildingId: slug, minPrice, units: data.units }
-              }
-            }
-          } catch (err) {
-            // Silent fail for individual buildings
-          }
-        }
-        
-        setPricingData(pricingMap)
-      } catch (err) {
-        // Silent fail
-      }
-    }
-
-    fetchPricingData()
-  }, [buildings])
-
   useEffect(() => {
     const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
     if (!token) {
