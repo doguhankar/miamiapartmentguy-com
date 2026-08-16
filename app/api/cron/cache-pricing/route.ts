@@ -1,55 +1,44 @@
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js';
 
-type CachedUnit = {
-  price: number | null
-  beds: number | null
-  baths: number | null
-  sqft: number | null
-  available_date: string | null
-}
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-type PricingCache = Record<string, Record<string, CachedUnit>>
-
-declare global {
-  // eslint-disable-next-line no-var
-  var pricingCache: PricingCache | undefined
-}
-
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const supabase = await createClient()
     const { data, error } = await supabase
       .from('pricing_units')
-      .select('building_id, floor_plan_type, price, beds, baths, sqft, available_date')
+      .select('building_id, floor_plan_type, beds, baths, sqft, price, available_date');
 
-    if (error) throw error
+    if (error) throw error;
 
-    const pricingCache: PricingCache = {}
-
-    for (const unit of data ?? []) {
-      const buildingId = String(unit.building_id)
-      const floorPlanType = String(unit.floor_plan_type)
-
-      pricingCache[buildingId] ??= {}
-      pricingCache[buildingId][floorPlanType] = {
-        price: unit.price == null ? null : Number(unit.price),
-        beds: unit.beds == null ? null : Number(unit.beds),
-        baths: unit.baths == null ? null : Number(unit.baths),
-        sqft: unit.sqft == null ? null : Number(unit.sqft),
-        available_date: unit.available_date ?? null,
+    const cache: Record<string, any> = {};
+    
+    data.forEach((row: any) => {
+      if (!cache[row.building_id]) {
+        cache[row.building_id] = {};
       }
-    }
+      cache[row.building_id][row.floor_plan_type] = {
+        price: row.price,
+        beds: row.beds,
+        baths: row.baths,
+        sqft: row.sqft,
+        available_date: row.available_date,
+      };
+    });
 
-    globalThis.pricingCache = pricingCache
+    (globalThis as any).pricingCache = cache;
 
-    return NextResponse.json({
+    return Response.json({
       success: true,
-      buildingsCached: Object.keys(pricingCache).length,
+      buildingsCached: Object.keys(cache).length,
       timestamp: new Date().toISOString(),
-    })
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to cache pricing data'
-    return NextResponse.json({ success: false, error: message }, { status: 500 })
+    });
+  } catch (error: any) {
+    return Response.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }
