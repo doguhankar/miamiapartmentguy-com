@@ -55,14 +55,13 @@ async function sendToSlack(webhookUrl: string, leadData: LeadData) {
   try {
     console.log('[v0] Sending to Slack...')
     const isAgentApplicant = leadData.source === 'agent_recruit'
-    const channelOverride = leadData.slackChannel ? { channel: leadData.slackChannel } : {}
     const slackMessage = isAgentApplicant
       ? {
-          ...channelOverride,
+          channel: leadData.slackChannel,
           text: `🧑‍💼 New Agent Applicant\nName: ${leadData.name}\nPhone: ${leadData.phone}\nCurrent brokerage: ${leadData.brokerage || 'Not provided'}\nLicensed in Florida: ${leadData.licensed || 'Not provided'}\nSource: agent_recruit`,
         }
       : {
-          ...channelOverride,
+          channel: leadData.slackChannel,
           text: '🏢 New Lead from Move with Don Form',
           blocks: [
         {
