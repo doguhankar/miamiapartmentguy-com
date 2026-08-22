@@ -1,13 +1,16 @@
 'use client';
 
+import { Suspense } from 'react';
 import { AgentMapExperience } from '@/components/agent-map-experience';
 
 export default function SebPage() {
   return (
-    <AgentMapExperience
-      agentId="sebastian@miamiapartmentguy.com"
-      source="Seb Landing Page"
-      slackChannel="leads-seb"
-    />
+    <Suspense fallback={null}>
+      <AgentMapExperience
+        agentId="sebastian@miamiapartmentguy.com"
+        source="Seb Landing Page"
+        slackChannel="leads-seb"
+      />
+    </Suspense>
   );
 }
