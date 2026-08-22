@@ -57,11 +57,9 @@ async function sendToSlack(webhookUrl: string, leadData: LeadData) {
     const isAgentApplicant = leadData.source === 'agent_recruit'
     const slackMessage = isAgentApplicant
       ? {
-          channel: leadData.slackChannel,
           text: `🧑‍💼 New Agent Applicant\nName: ${leadData.name}\nPhone: ${leadData.phone}\nCurrent brokerage: ${leadData.brokerage || 'Not provided'}\nLicensed in Florida: ${leadData.licensed || 'Not provided'}\nSource: agent_recruit`,
         }
       : {
-          channel: leadData.slackChannel,
           text: '🏢 New Lead from Move with Don Form',
           blocks: [
         {
@@ -281,7 +279,9 @@ export async function POST(request: NextRequest) {
   try {
     const body: LeadData = await request.json()
 
-    const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL
+    const SLACK_WEBHOOK_URL = body.slackChannel === 'leads-seb'
+      ? process.env.SLACK_WEBHOOK_URL_SEB
+      : process.env.SLACK_WEBHOOK_URL
     const NOTION_TOKEN = process.env.NOTION_TOKEN
     const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID
 
