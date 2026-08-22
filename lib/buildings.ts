@@ -1219,6 +1219,150 @@ export const buildings: Building[] = [
     images: [], amenities: ['Pool', 'Gym', 'Concierge', 'Valet', 'Rooftop'],
     moveInFees: [], monthlyCharges: [],
   },
+
+  // ── NORTH BAY VILLAGE ────────────────────────────────────────────────────
+  {
+    id: "wake-biscayne-bay", name: 'Wake Biscayne Bay', neighborhood: 'North Bay Village',
+    address: '1900 S Treasure Dr, North Bay Village, FL 33141', lat: 25.845769, lng: -80.145688,
+    priceMin: 2200, priceTier: '$$',
+    tagline: 'Bay views, boutique service, quietly elevated',
+    concession: 'Contact for current offers',
+    units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
+    images: [], amenities: ['Pool', 'Gym'],
+    moveInFees: [], monthlyCharges: [],
+  },
+  {
+    id: "moda", name: 'Moda', neighborhood: 'North Bay Village',
+    address: '8000 West Dr, North Bay Village, FL 33141', lat: 25.854125, lng: -80.159922,
+    priceMin: 2400, priceTier: '$$',
+    tagline: 'Resort-style waterfront, sunset-facing',
+    concession: 'Contact for current offers',
+    units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
+    images: [], amenities: ['Pool', 'Gym'],
+    moveInFees: [], monthlyCharges: [],
+  },
+
+  // ── MIAMI BEACH ──────────────────────────────────────────────────────────
+  {
+    id: "avara", name: 'Avara', neighborhood: 'Miami Beach',
+    address: '3900 Alton Rd, Miami Beach, FL 33140', lat: 25.811328, lng: -80.136157,
+    priceMin: 3200, priceTier: '$$$',
+    tagline: 'Full-service luxury, concierge culture',
+    concession: 'Contact for current offers',
+    units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
+    images: [], amenities: ['Pool', 'Gym', 'Concierge'],
+    moveInFees: [], monthlyCharges: [],
+  },
+
+  // ── BRICKELL ─────────────────────────────────────────────────────────────
+  {
+    id: "yacht-club-at-brickell", name: 'Yacht Club at Brickell', neighborhood: 'Brickell',
+    address: '1111 Brickell Bay Dr, Miami, FL 33131', lat: 25.762821, lng: -80.189044,
+    priceMin: 3400, priceTier: '$$$',
+    tagline: "Waterfront skyline living, Brickell's edge",
+    concession: 'Contact for current offers',
+    units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
+    images: [], amenities: ['Pool', 'Gym', 'Concierge'],
+    moveInFees: [], monthlyCharges: [],
+  },
+
+  // ── EDGEWATER ────────────────────────────────────────────────────────────
+  {
+    id: "forma-miami", name: 'Forma Miami', neighborhood: 'Edgewater',
+    address: '2900 Biscayne Blvd, Miami, FL 33137', lat: 25.804317, lng: -80.189589,
+    priceMin: 2800, priceTier: '$$',
+    tagline: 'New build, resort amenities, bay-adjacent',
+    concession: 'Contact for current offers',
+    units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
+    images: [], amenities: ['Pool', 'Gym'],
+    moveInFees: [], monthlyCharges: [],
+  },
+
+  // ── DOWNTOWN (NEW) ───────────────────────────────────────────────────────
+  {
+    id: "art-plaza-tower", name: 'Art Plaza Tower', neighborhood: 'Downtown',
+    address: '58 NE 14th St, Miami, FL 33132', lat: 25.787882, lng: -80.192860,
+    priceMin: 1850, priceTier: '$',
+    tagline: "Downtown grit, unbeatable price point",
+    concession: 'Contact for current offers',
+    units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
+    images: [], amenities: ['Pool', 'Gym'],
+    moveInFees: [], monthlyCharges: [],
+  },
+  {
+    id: "miami-plaza", name: 'Miami Plaza', neighborhood: 'Downtown',
+    address: '1500 NE Miami Pl, Miami, FL 33132', lat: 25.789762, lng: -80.193245,
+    priceMin: 1900, priceTier: '$',
+    tagline: 'Quiet, well-run, downtown convenience',
+    concession: 'Contact for current offers',
+    units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
+    images: [], amenities: ['Pool', 'Gym'],
+    moveInFees: [], monthlyCharges: [],
+  },
+  {
+    id: "downtown-5th", name: 'Downtown 5th', neighborhood: 'Downtown',
+    address: '5 NE 5th St, Miami, FL 33132', lat: 25.779446, lng: -80.192787,
+    priceMin: 2000, priceTier: '$',
+    tagline: "Two pools, Metromover access, city pulse",
+    concession: 'Contact for current offers',
+    units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
+    images: [], amenities: ['Pool', 'Gym'],
+    moveInFees: [], monthlyCharges: [],
+  },
+  {
+    id: "uni-tower", name: 'Uni Tower', neighborhood: 'Downtown',
+    address: '1642 NE 1st Ave, Miami, FL 33132', lat: 25.791498, lng: -80.192463,
+    priceMin: 1950, priceTier: '$',
+    tagline: 'Boutique feel, hands-on management',
+    concession: 'Contact for current offers',
+    units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
+    images: [], amenities: ['Pool', 'Gym'],
+    moveInFees: [], monthlyCharges: [],
+  },
+  {
+    id: "bezel-miami-worldcenter", name: 'Bezel Miami Worldcenter', neighborhood: 'Downtown',
+    address: '650 NE 2nd Ave, Miami, FL 33132', lat: 25.780824, lng: -80.191529,
+    priceMin: 2300, priceTier: '$$',
+    tagline: 'Worldcenter energy, community-driven',
+    concession: 'Contact for current offers',
+    units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
+    images: [], amenities: ['Pool', 'Gym'],
+    moveInFees: [], monthlyCharges: [],
+  },
+  {
+    id: "filling-station", name: 'Filling Station', neighborhood: 'Downtown',
+    address: '1657 N Miami Ave, Miami, FL 33136', lat: 25.791408, lng: -80.194263,
+    priceMin: 1900, priceTier: '$',
+    tagline: 'Live-work lofts, creative community',
+    concession: 'Contact for current offers',
+    units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
+    images: [], amenities: ['Pool', 'Gym'],
+    moveInFees: [], monthlyCharges: [],
+  },
+
+  // ── PINECREST ────────────────────────────────────────────────────────────
+  {
+    id: "crest-at-pinecrest", name: 'Crest at Pinecrest', neighborhood: 'Pinecrest',
+    address: '9600 S Dixie Hwy, Miami, FL 33156', lat: 25.681658, lng: -80.316251,
+    priceMin: 2600, priceTier: '$$',
+    tagline: 'Suburban calm, resort-grade amenities',
+    concession: 'Contact for current offers',
+    units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
+    images: [], amenities: ['Pool', 'Gym'],
+    moveInFees: [], monthlyCharges: [],
+  },
+
+  // ── NORTH MIAMI (NEW) ────────────────────────────────────────────────────
+  {
+    id: "little-river-center-lofts", name: 'Little River Center Lofts', neighborhood: 'North Miami',
+    address: '7920 NE 2nd Ave, Miami, FL 33138', lat: 25.847990, lng: -80.193270,
+    priceMin: 2000, priceTier: '$',
+    tagline: 'Up-and-coming, industrial-loft character',
+    concession: 'Contact for current offers',
+    units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
+    images: [], amenities: ['Pool', 'Gym'],
+    moveInFees: [], monthlyCharges: [],
+  },
 ]
 
 export const neighborhoodColors: Record<string, string> = {
