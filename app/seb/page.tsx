@@ -11,6 +11,7 @@ export default function SebPage() {
         source="Seb Landing Page"
         slackChannel="leads-seb"
         skipAgentSelection
+        agentDisplayName="Seb"
       />
     </Suspense>
   );

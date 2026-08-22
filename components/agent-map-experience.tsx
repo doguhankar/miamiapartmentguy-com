@@ -647,9 +647,11 @@ export interface AgentMapExperienceConfig {
   slackChannel: string;
   /** Whether this route should skip agent selection in the lead form */
   skipAgentSelection?: boolean;
+  /** Display name used in visible agent labels */
+  agentDisplayName?: string;
 }
 
-export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSelection }: AgentMapExperienceConfig) {
+export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSelection, agentDisplayName = 'Don' }: AgentMapExperienceConfig) {
   const { hasAccess } = useAgentMode();
   const { savedIds, toggleSave } = useSaveList();
   const heartButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -1148,6 +1150,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       source={source}
       slackChannel={slackChannel}
       skipAgentSelection={skipAgentSelection}
+      agentDisplayName={agentDisplayName}
     />
 
       {/* ── MOBILE LAYOUT (< md) ──────────────────────���─────────────────── */}
@@ -1507,7 +1510,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
             }}
           >
             <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>💬</span>
-            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Move with Don</span>
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1', height: '100%' }}>Move with {agentDisplayName}</span>
           </button>
         </div>
       </div>

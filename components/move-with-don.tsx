@@ -24,6 +24,8 @@ interface MoveWithDonProps {
   slackChannel?: string
   /** Skip the agent-selection step for routes with a locked agent */
   skipAgentSelection?: boolean
+  /** Display name used in visible flow labels */
+  agentDisplayName?: string
 }
 
 const TOTAL_STEPS = 7
@@ -46,6 +48,7 @@ export function MoveWithDon({
   source = 'Homepage Form',
   slackChannel,
   skipAgentSelection = false,
+  agentDisplayName = 'Don',
 }: MoveWithDonProps) {
   const totalSteps = skipAgentSelection ? TOTAL_STEPS - 1 : TOTAL_STEPS
   const [step, setStep] = useState(0)
@@ -231,7 +234,7 @@ export function MoveWithDon({
               marginBottom: 8,
             }}
           >
-            Move with Don
+            Move with {agentDisplayName}
           </div>
           <h2 style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 6, color: '#E6ECF5' }}>
             Welcome to Miami.
@@ -250,7 +253,7 @@ export function MoveWithDon({
           >
             {[
               { n: 1, text: 'Answer 6 quick questions', sub: '— 30 seconds' },
-              { n: 2, text: 'Don texts you real quotes', sub: '— net pricing, concessions' },
+              { n: 2, text: `${agentDisplayName} texts you real quotes`, sub: '— net pricing, concessions' },
               { n: 3, text: 'Tour, sign, move in', sub: '— free for you, always' },
             ].map(({ n, text, sub }) => (
               <div
@@ -543,7 +546,7 @@ export function MoveWithDon({
         marginBottom: 8,
       }}
     >
-      Move with Don
+      Move with {agentDisplayName}
     </div>
   )
   const headStyle: React.CSSProperties = {
