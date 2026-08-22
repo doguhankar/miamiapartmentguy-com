@@ -22,6 +22,8 @@ interface MoveWithDonProps {
   source?: string
   /** Slack channel that should receive the lead notification for this route */
   slackChannel?: string
+  /** Skip the agent-selection step for routes with a locked agent */
+  skipAgentSelection?: boolean
 }
 
 const TOTAL_STEPS = 7
@@ -43,7 +45,9 @@ export function MoveWithDon({
   agentId = 'doguhankar1@gmail.com',
   source = 'Homepage Form',
   slackChannel,
+  skipAgentSelection = false,
 }: MoveWithDonProps) {
+  const totalSteps = skipAgentSelection ? TOTAL_STEPS - 1 : TOTAL_STEPS
   const [step, setStep] = useState(0)
   const [data, setData] = useState<LeadData>(emptyLead())
   const [submitting, setSubmitting] = useState(false)
@@ -79,25 +83,25 @@ export function MoveWithDon({
     if (step === 3) return !!data.budget
     if (step === 4) return !!data.neighborhoods[0]
     if (step === 5) return !!data.creditScore
-    if (step === 6) return !!data.agent
+    if (step === 6) return skipAgentSelection || !!data.agent
     if (step === 7) return !!data.name.trim() && data.phone.trim().length >= 7
     return false
   }
 
   const next = async () => {
-    if (step < TOTAL_STEPS) {
-      setStep(s => s + 1)
+    if (step < totalSteps) {
+      setStep(s => (skipAgentSelection && s === 5 ? 7 : s + 1))
     } else {
       await submit()
     }
   }
 
   const skip = () => {
-    if (step < TOTAL_STEPS) setStep(s => s + 1)
+    if (step < totalSteps) setStep(s => (skipAgentSelection && s === 5 ? 7 : s + 1))
   }
 
   const back = () => {
-    if (step > 0) setStep(s => s - 1)
+    if (step > 0) setStep(s => (skipAgentSelection && s === 7 ? 5 : s - 1))
   }
 
   const submit = async () => {
@@ -523,8 +527,8 @@ export function MoveWithDon({
     return null
   }
 
-  const progressPct = done ? 100 : (Math.max(0, Math.min(step, TOTAL_STEPS)) / TOTAL_STEPS) * 100
-  const isContactStep = step === TOTAL_STEPS + 1
+  const progressPct = done ? 100 : (Math.max(0, Math.min(step, totalSteps)) / totalSteps) * 100
+  const isContactStep = step === totalSteps + 1
   const nextLabel = step === 0 ? "Let's go" : isContactStep ? 'Send to Don 🚀' : 'Next'
 
   /* ── inline style constants ── */
@@ -624,7 +628,7 @@ export function MoveWithDon({
                 ‹
               </button>
               <span style={{ fontSize: 12, color: '#6F7F96', fontWeight: 500 }}>
-                {step >= 1 && step <= TOTAL_STEPS ? `${step} of ${TOTAL_STEPS}` : ''}
+                {step >= 1 && step <= totalSteps ? `${step} of ${totalSteps}` : ''}
               </span>
               <button
                 onClick={handleClose}

@@ -10,6 +10,7 @@ export default function SebPage() {
         agentId="sebastian@miamiapartmentguy.com"
         source="Seb Landing Page"
         slackChannel="leads-seb"
+        skipAgentSelection
       />
     </Suspense>
   );

@@ -645,9 +645,11 @@ export interface AgentMapExperienceConfig {
   source: string;
   /** Slack channel that should receive lead notifications for this route */
   slackChannel: string;
+  /** Whether this route should skip agent selection in the lead form */
+  skipAgentSelection?: boolean;
 }
 
-export function AgentMapExperience({ agentId, source, slackChannel }: AgentMapExperienceConfig) {
+export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSelection }: AgentMapExperienceConfig) {
   const { hasAccess } = useAgentMode();
   const { savedIds, toggleSave } = useSaveList();
   const heartButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -1145,6 +1147,7 @@ export function AgentMapExperience({ agentId, source, slackChannel }: AgentMapEx
       agentId={agentId}
       source={source}
       slackChannel={slackChannel}
+      skipAgentSelection={skipAgentSelection}
     />
 
       {/* ── MOBILE LAYOUT (< md) ──────────────────────���─────────────────── */}
