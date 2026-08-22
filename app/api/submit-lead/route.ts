@@ -13,6 +13,8 @@ interface LeadData {
   source?: string
   brokerage?: string
   licensed?: string
+  agentId?: string
+  slackChannel?: string
 }
 
 // Cache for Notion database schema to avoid fetching on every request
@@ -53,11 +55,14 @@ async function sendToSlack(webhookUrl: string, leadData: LeadData) {
   try {
     console.log('[v0] Sending to Slack...')
     const isAgentApplicant = leadData.source === 'agent_recruit'
+    const channelOverride = leadData.slackChannel ? { channel: leadData.slackChannel } : {}
     const slackMessage = isAgentApplicant
       ? {
+          ...channelOverride,
           text: `🧑‍💼 New Agent Applicant\nName: ${leadData.name}\nPhone: ${leadData.phone}\nCurrent brokerage: ${leadData.brokerage || 'Not provided'}\nLicensed in Florida: ${leadData.licensed || 'Not provided'}\nSource: agent_recruit`,
         }
       : {
+          ...channelOverride,
           text: '🏢 New Lead from Move with Don Form',
           blocks: [
         {
@@ -249,7 +254,7 @@ async function sendToSupabase(leadData: LeadData) {
       budget: leadData.budget,
       area: leadData.neighborhoods[0] || null,
       credit_range: leadData.creditScore,
-      agent_id: 'doguhankar1@gmail.com',
+      agent_id: leadData.agentId || 'doguhankar1@gmail.com',
       stage: 'New Lead',
       source: leadData.source || 'Homepage Form',
       notes: leadData.source === 'agent_recruit'

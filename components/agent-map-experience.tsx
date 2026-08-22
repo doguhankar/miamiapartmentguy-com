@@ -638,7 +638,16 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
   return <div ref={mapContainer} className="w-full h-full" />;
 };
 
-export default function MiamiApp() {
+export interface AgentMapExperienceConfig {
+  /** agent_id value stored on leads submitted through this route */
+  agentId: string;
+  /** source value stored on leads submitted through this route */
+  source: string;
+  /** Slack channel that should receive lead notifications for this route */
+  slackChannel: string;
+}
+
+export function AgentMapExperience({ agentId, source, slackChannel }: AgentMapExperienceConfig) {
   const { hasAccess } = useAgentMode();
   const { savedIds, toggleSave } = useSaveList();
   const heartButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -1130,7 +1139,13 @@ export default function MiamiApp() {
 
   return (
     <div className="flex flex-col h-screen bg-[#0B1220]">
-      <MoveWithDon isOpen={showMoveWithDonModal} onClose={() => setShowMoveWithDonModal(false)} />
+      <MoveWithDon
+      isOpen={showMoveWithDonModal}
+      onClose={() => setShowMoveWithDonModal(false)}
+      agentId={agentId}
+      source={source}
+      slackChannel={slackChannel}
+    />
 
       {/* ── MOBILE LAYOUT (< md) ──────────────────────���─────────────────── */}
       <div

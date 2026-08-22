@@ -16,6 +16,12 @@ interface LeadData {
 interface MoveWithDonProps {
   isOpen: boolean
   onClose: () => void
+  /** agent_id value stored on the lead for this route (defaults to Don's address) */
+  agentId?: string
+  /** source value stored on the lead for this route (defaults to 'Homepage Form') */
+  source?: string
+  /** Slack channel that should receive the lead notification for this route */
+  slackChannel?: string
 }
 
 const TOTAL_STEPS = 7
@@ -31,7 +37,13 @@ const emptyLead = (): LeadData => ({
   phone: '',
 })
 
-export function MoveWithDon({ isOpen, onClose }: MoveWithDonProps) {
+export function MoveWithDon({
+  isOpen,
+  onClose,
+  agentId = 'doguhankar1@gmail.com',
+  source = 'Homepage Form',
+  slackChannel,
+}: MoveWithDonProps) {
   const [step, setStep] = useState(0)
   const [data, setData] = useState<LeadData>(emptyLead())
   const [submitting, setSubmitting] = useState(false)
@@ -94,7 +106,7 @@ export function MoveWithDon({ isOpen, onClose }: MoveWithDonProps) {
       const res = await fetch('/api/submit-lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, agentId, source, slackChannel }),
       })
       if (res.ok) setDone(true)
     } catch (e) {
