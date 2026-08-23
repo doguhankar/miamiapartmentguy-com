@@ -233,7 +233,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/streets-v12',
         center: [-80.1870, 25.7907],
-        zoom: 11,
+        zoom: 12.5,
       });
 
       // Tune Mapbox's built-in pan inertia without affecting sheet or marker gestures.
