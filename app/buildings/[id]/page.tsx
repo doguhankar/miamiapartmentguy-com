@@ -7,6 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { buildings } from '@/lib/buildings'
 import { useSupabaseImages } from '@/hooks/use-supabase-images'
+import { createClient } from '@/lib/supabase/client'
 import { SimilarBuildings } from '@/components/similar-buildings'
 import { CommissionPill } from '@/components/commission-pill'
 import { SaveBuildingButton } from '@/components/save-building-button'
@@ -16,6 +17,7 @@ interface LiveUnit {
   unit?: string
   floorPlanType?: string
   beds?: string | number
+  baths?: number
   sqft?: number
   square_feet?: number
   price?: number
@@ -173,6 +175,36 @@ export default function BuildingDetailPage() {
 
   const [income, setIncome] = useState<string>('9000')
   const [showLeasingForm, setShowLeasingForm] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadLiveUnits() {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('units')
+        .select('price, beds, baths, sqft, unitnumber, availabilitydate, unittype')
+        .eq('building_id', buildingId)
+
+      if (cancelled) return
+
+      setLiveUnits((data ?? []).map(unit => ({
+        unit: unit.unitnumber ?? undefined,
+        floorPlanType: unit.unittype ?? undefined,
+        price: typeof unit.price === 'number' ? unit.price : undefined,
+        beds: unit.beds ?? undefined,
+        baths: typeof unit.baths === 'number' ? unit.baths : undefined,
+        sqft: typeof unit.sqft === 'number' ? unit.sqft : undefined,
+        availabilityDate: unit.availabilitydate ?? null,
+      })))
+    }
+
+    loadLiveUnits()
+
+    return () => {
+      cancelled = true
+    }
+  }, [buildingId])
 
   // Auto-select first unit of active price type
   useEffect(() => {
