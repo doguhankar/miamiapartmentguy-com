@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-// Flip this to true once Farhan adds and backfills the `floor_plan_code`
-// column on public.units. Until then the column does not exist, so we skip
-// the live query entirely instead of issuing a query that would error.
-const FLOOR_PLAN_CODE_ENABLED = false
+// `floor_plan_code` now exists on public.units (added via migration) and is
+// backfilled for Flow Brickell with placeholder codes: real Studio mapping
+// (S02/S03/S04/S06) plus a {bed-prefix}{last-two-digits} convention for
+// 1BR/2BR/3BR pending Don's real plan-code naming.
+const FLOOR_PLAN_CODE_ENABLED = true
 
 interface FloorPlanUnit {
   unitNumber?: string
