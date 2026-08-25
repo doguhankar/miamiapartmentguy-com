@@ -57,7 +57,10 @@ export function DesktopBuildingCard({
 }: DesktopBuildingCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const amenities = extractAmenities(building)
-  const { price: dynamicPrice } = useBuildingPrice(building.id, building.priceMin)
+  const { studioMin, oneBedMin, twoBedMin } = useBuildingPrice(building.id, building.priceMin)
+  const studioPrice = studioMin ?? building.priceMin
+  const oneBedPrice = oneBedMin ?? building.priceMin
+  const twoBedPrice = twoBedMin ?? building.priceMin
 
   const handleMouseEnter = () => {
     setIsHovered(true)
@@ -86,9 +89,9 @@ export function DesktopBuildingCard({
         <div style={{flex:1, display:'flex', flexDirection:'column', justifyContent:'space-between'}}>
           <div>
             <div style={{display:'flex', marginBottom:6}}>
-              <div style={{paddingRight:12, marginRight:12, borderRight:'0.5px solid #e5e7eb'}}><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{building.priceMin}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>Studio</div></div>
-              <div style={{paddingRight:12, marginRight:12, borderRight:'0.5px solid #e5e7eb'}}><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{building.priceMin}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>1 Bed</div></div>
-              <div><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{building.priceMin}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>2 Beds</div></div>
+              <div style={{paddingRight:12, marginRight:12, borderRight:'0.5px solid #e5e7eb'}}><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{studioPrice}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>Studio</div></div>
+              <div style={{paddingRight:12, marginRight:12, borderRight:'0.5px solid #e5e7eb'}}><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{oneBedPrice}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>1 Bed</div></div>
+              <div><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{twoBedPrice}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>2 Beds</div></div>
             </div>
             <span style={{background:'#fef3cd', color:'#92660a', fontSize:10, fontWeight:500, padding:'2px 7px', borderRadius:5, marginBottom:6, display:'inline-block'}}>SPECIALS</span>
             <div style={{fontSize:11, color:'#6b7280', lineHeight:1.4, marginBottom:8}}>{building.amenities.join(', ')}</div>
