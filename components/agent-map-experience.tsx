@@ -198,6 +198,31 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       const entries: Array<readonly [string, { units: AvailableUnit[] }] | null> = [];
 
       const supabase = createClient();
+      const buildingIds = geocodedBuildings.map((building: any) => String(building.id));
+      const { data: unitRows } = await supabase
+        .from('units')
+        .select('building_id, price, beds, baths, sqft, availabilitydate, unittype')
+        .in('building_id', buildingIds)
+        .not('building_id', 'is', null);
+
+      (unitRows ?? []).forEach((row) => {
+        if (!row.building_id) return;
+        const existing = entries.find((entry): entry is readonly [string, { units: AvailableUnit[] }] => entry?.[0] === row.building_id);
+        const unit: AvailableUnit = {
+          floorPlanType: row.unittype ?? undefined,
+          beds: row.beds ?? undefined,
+          price: typeof row.price === 'number' ? row.price : undefined,
+          sqft: typeof row.sqft === 'number' ? row.sqft : undefined,
+          availableDate: row.availabilitydate ?? null,
+        };
+
+        if (existing) {
+          existing[1].units.push(unit);
+        } else {
+          entries.push([String(row.building_id), { units: [unit] }]);
+        }
+      });
+
       const { data: imageRows } = await supabase
         .from('building_images')
         .select('building_id, image_url, sort_order')
