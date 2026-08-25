@@ -8,6 +8,7 @@ import Image from 'next/image'
 import { buildings } from '@/lib/buildings'
 import { useSupabaseImages } from '@/hooks/use-supabase-images'
 import { createClient } from '@/lib/supabase/client'
+import { AvailableUnitsRedesign } from '@/components/available-units-redesign'
 import { SimilarBuildings } from '@/components/similar-buildings'
 import { CommissionPill } from '@/components/commission-pill'
 import { SaveBuildingButton } from '@/components/save-building-button'
@@ -262,22 +263,6 @@ export default function BuildingDetailPage() {
 
   const sqft = (u: LiveUnit) => u.sqft ?? u.square_feet
   const avail = (u: LiveUnit) => u.availableDate ?? u.available_date
-  const bedroomGroups = Array.from(new Set(liveUnits.map(bedsKey))).map((key) => ({
-    key,
-    units: liveUnits.filter((unit) => bedsKey(unit) === key),
-  }))
-  const floorPlanKey = (unit: LiveUnit) => {
-    if (typeof unit.beds === 'number') {
-      if (unit.beds === 0) return 'Studio'
-      return `${unit.beds} Bed`
-    }
-    if (unit.floorPlanType) return unitLabel(unit)
-    return 'Studio'
-  }
-  const floorPlanGroups = (units: LiveUnit[]) => Array.from(new Set(units.map(floorPlanKey))).map((plan) => ({
-    plan,
-    units: units.filter((unit) => floorPlanKey(unit) === plan),
-  }))
   const realMin = liveUnits.length
     ? Math.min(...liveUnits.map((u) => u.price).filter((value): value is number => Boolean(value)))
     : building.priceMin
@@ -299,23 +284,7 @@ export default function BuildingDetailPage() {
   const unitsSection = (
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconHome /> Available Units</div>
-      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
-        {bedroomGroups.length ? bedroomGroups.map(({ key, units }) => {
-          const open = expandedBeds[key] ?? false
-          const prices = units.map((unit) => unit.price).filter((value): value is number => Boolean(value))
-          const plans = floorPlanGroups(units)
-          return <div key={key} style={{ borderBottom: `1px solid ${BORDER}` }}>
-            <button type="button" onClick={() => { setExpandedBeds((current) => ({ ...current, [key]: !open })); setActivePriceType(key) }} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 14px', border: 0, background: open ? '#FFF7FA' : '#fff', cursor: 'pointer', textAlign: 'left' }}>
-              <span style={{ fontSize: 13, fontWeight: 800, color: TEXT }}>{key} <span style={{ color: MUTED, fontSize: 11, fontWeight: 500 }}>· {units.length} available</span></span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: PINK }}>{prices.length ? `${fmt(Math.min(...prices))}+` : 'Contact'} <i className="ti ti-chevron-down" aria-hidden="true" style={{ color: MUTED, fontSize: 16, lineHeight: 1, transition: 'transform 180ms ease', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }} /></span>
-            </button>
-            {open && <div style={{ padding: '0 10px 10px', background: '#fff' }}>{plans.map(({ plan, units: planUnits }) => { const planKey = `${key}-${plan}`; const planOpen = expandedPlans[planKey]; const planPrices = planUnits.map((unit) => unit.price).filter((value): value is number => Boolean(value)); return <div key={planKey} style={{ border: `1px solid ${BORDER}`, borderRadius: 9, marginTop: 8, overflow: 'hidden' }}>
-              <button type="button" onClick={() => setExpandedPlans((current) => ({ ...current, [planKey]: !planOpen }))} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '10px 11px', border: 0, background: PANEL, cursor: 'pointer', textAlign: 'left' }}><span><strong style={{ fontSize: 12 }}>{plan}</strong><span style={{ display: 'block', color: MUTED, fontSize: 10, marginTop: 2 }}>{planUnits[0] && sqft(planUnits[0]) ? `${sqft(planUnits[0])?.toLocaleString()} sqft` : 'Floor plan'} · {planUnits.length} units</span></span><span style={{ fontSize: 11, fontWeight: 800 }}>{planPrices.length ? `${fmt(Math.min(...planPrices))}+` : 'Contact'} {planOpen ? '−' : '+'}</span></button>
-              {planOpen && <div style={{ padding: '6px 10px' }}>{(showAllUnits ? planUnits : planUnits.slice(0, 4)).map((u, i) => { const sel = selectedUnit === u; const { label, now } = formatAvail(avail(u)); return <button type="button" key={i} onClick={() => setSelectedUnit(u)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, border: 0, borderBottom: i < planUnits.length - 1 ? `1px solid ${BORDER}` : 'none', padding: '9px 2px', cursor: 'pointer', background: sel ? '#FFE8F5' : '#fff', textAlign: 'left' }}><span style={{ fontSize: 11, color: TEXT }}>{u.unit ? `Unit ${u.unit}` : `Available unit ${i + 1}`} · {sqft(u) ? `${sqft(u)?.toLocaleString()} sqft` : 'Size n/a'}</span><span style={{ display: 'flex', alignItems: 'center', gap: 7 }}><strong style={{ fontSize: 12 }}>{u.price ? fmt(u.price) : '—'}</strong><span style={{ fontSize: 9, color: now ? SUCCESS : '#92660B' }}>{label}</span></span></button> })}</div>}
-            </div> })}</div>}
-          </div>
-        }) : <div style={{ padding: 14, color: MUTED, fontSize: 12 }}>Pricing is not available yet.</div>}
-      </div>
+      <AvailableUnitsRedesign buildingId={buildingId} />
     </>
   )
 
