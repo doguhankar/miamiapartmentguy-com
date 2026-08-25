@@ -46,12 +46,12 @@ function unitLabel(u: LiveUnit) {
 }
 
 function bedsKey(u: LiveUnit): string {
-  const lbl = unitLabel(u)
-  if (lbl === 'Studio') return 'Studio'
-  if (lbl === '1 Bed') return '1BR'
-  if (lbl === '2 Bed') return '2BR'
-  if (lbl === '3 Bed') return '3BR'
-  return lbl
+  if (typeof u.beds === 'number') {
+    if (u.beds === 0) return 'Studio'
+    return `${u.beds}BR`
+  }
+  if (u.floorPlanType) return unitLabel(u)
+  return 'Studio'
 }
 
 function parseMonthsFree(concession?: string): number {
@@ -270,6 +270,9 @@ export default function BuildingDetailPage() {
     plan,
     units: units.filter((unit) => (unit.floorPlanType || unitLabel(unit)) === plan),
   }))
+  const realMin = liveUnits.length
+    ? Math.min(...liveUnits.map((u) => u.price).filter((value): value is number => Boolean(value)))
+    : building.priceMin
 
   // ── Styling tokens ──────────────────────────────────────────────────────────
   const NAVY = '#0B1220'
@@ -552,7 +555,7 @@ export default function BuildingDetailPage() {
               <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: '#185FA5', marginTop: 4, textDecoration: 'none' }}><IconPin /> {building.address || building.neighborhood}</a>
               {building.tagline && <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, marginTop: 8, maxWidth: 560 }}>{building.tagline}</div>}
               <div style={{ display: 'flex', gap: 10, marginTop: 9, flexWrap: 'wrap', alignItems: 'center' }}>
-                <div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 18, color: TEXT }}>{fmt(building.priceMin)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo starting</span></div>
+                <div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 18, color: TEXT }}>{fmt(realMin)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo starting</span></div>
                 {building.concession && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#FFF6E5', color: '#92660B', borderRadius: 999, padding: '5px 11px', fontSize: 11, fontWeight: 600 }}><IconStar /> {building.concession}</span>}
                 {building.holdDays && <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>Hold Period: {building.holdDays} days</span>}
               </div>
