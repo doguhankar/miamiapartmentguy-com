@@ -266,9 +266,17 @@ export default function BuildingDetailPage() {
     key,
     units: liveUnits.filter((unit) => bedsKey(unit) === key),
   }))
-  const floorPlanGroups = (units: LiveUnit[]) => Array.from(new Set(units.map((unit) => unit.floorPlanType || unitLabel(unit)))).map((plan) => ({
+  const floorPlanKey = (unit: LiveUnit) => {
+    if (typeof unit.beds === 'number') {
+      if (unit.beds === 0) return 'Studio'
+      return `${unit.beds} Bed`
+    }
+    if (unit.floorPlanType) return unitLabel(unit)
+    return 'Studio'
+  }
+  const floorPlanGroups = (units: LiveUnit[]) => Array.from(new Set(units.map(floorPlanKey))).map((plan) => ({
     plan,
-    units: units.filter((unit) => (unit.floorPlanType || unitLabel(unit)) === plan),
+    units: units.filter((unit) => floorPlanKey(unit) === plan),
   }))
   const realMin = liveUnits.length
     ? Math.min(...liveUnits.map((u) => u.price).filter((value): value is number => Boolean(value)))
