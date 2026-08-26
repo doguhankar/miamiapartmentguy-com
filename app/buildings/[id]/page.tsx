@@ -306,7 +306,7 @@ export default function BuildingDetailPage() {
         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 7, margin: 0, padding: '16px 18px', fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT, border: 'none', background: '#ffffff', cursor: 'pointer', textAlign: 'left', outline: 'none', boxShadow: 'none' }}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}><IconCard /> Building Fees</span>
-        <i aria-hidden="true" className="ti ti-chevron-down" style={{ color: MUTED, fontSize: 16, transition: 'transform 180ms ease', transform: feesOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+        <i aria-hidden="true" className="fees-chevron" style={{ display: 'block', width: 8, height: 8, flexShrink: 0, borderRight: `2px solid ${MUTED}`, borderBottom: `2px solid ${MUTED}`, transition: 'transform 180ms ease', transform: feesOpen ? 'rotate(225deg)' : 'rotate(45deg)' }} />
       </button>
       {feesOpen && (
         <div style={{ padding: '0 18px 2px', background: '#ffffff' }}>

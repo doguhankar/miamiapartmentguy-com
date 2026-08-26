@@ -156,17 +156,17 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
           filteredGroups.map((group) => {
             const prices = group.units.map((u) => u.price).filter((v): v is number => typeof v === 'number')
             return (
-              <div key={group.code} style={{ background: '#ffffff', border: `1px solid ${CARD_BORDER}`, borderRadius: 12, overflow: 'hidden', padding: '14px 16px' }}>
+              <div key={group.code} style={{ background: '#f2f0ea', border: `1px solid ${CARD_BORDER}`, borderRadius: 12, overflow: 'hidden', padding: '14px 16px' }}>
                 <div style={{ width: '100%', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 500, fontSize: 13, color: TEXT }}>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: '#0A0F1C' }}>
                       {group.bedType} · Plan {group.code}
                     </div>
-                    <div style={{ fontSize: 11, color: MUTED, margin: '2px 0 6px' }}>
+                    <div style={{ fontSize: 11, color: '#6b6b68', margin: '2px 0 6px' }}>
                       {group.sqft ? `${group.sqft.toLocaleString()} sqft · ` : ''}
                       {group.units.length} available
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: TEAL_DARK }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: TEAL_DARK }}>
                       {prices.length ? `${fmt(Math.min(...prices))}+` : 'Contact'}
                     </div>
                   </div>
