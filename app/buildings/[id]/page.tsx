@@ -61,6 +61,14 @@ function parseMonthsFree(concession?: string): number {
   return m ? Number(m[1]) : 0
 }
 
+// Formats a raw numeric string as "$9,000" for display while the underlying
+// state stays a plain numeric string used for calculations.
+function formatIncomeDisplay(raw: string): string {
+  const digits = raw.replace(/[^\d]/g, '')
+  if (!digits) return ''
+  return '$' + Number(digits).toLocaleString()
+}
+
 // ─── Icons ───────────────────────────────────────────────────────────────────
 const IconBack = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -176,6 +184,7 @@ export default function BuildingDetailPage() {
 
   const [income, setIncome] = useState<string>('9000')
   const [showLeasingForm, setShowLeasingForm] = useState(false)
+  const [feesOpen, setFeesOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -290,17 +299,28 @@ export default function BuildingDetailPage() {
 
   const feesSection = (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconCard /> Building Fees</div>
-      <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px', marginBottom: 14, background: '#fff' }}>
-        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Due at move-in</div>
-        {(building.moveInFees ?? []).map((f, i, arr) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12, borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : 'none' }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0 0', marginTop: 6, fontWeight: 800, fontSize: 13, borderTop: `2px solid ${BORDER}` }}><span>Total Initial</span><span>{fmt(totalMoveIn)}</span></div>
-        <div style={{ height: 16 }} />
-        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Recurring monthly</div>
-        {(building.monthlyCharges ?? []).filter(f => !/(pet fee|parking)/i.test(f.type)).map((f, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12 }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 12px', marginTop: 8, fontWeight: 800, fontSize: 13, borderRadius: 8, background: '#19C6C0', color: '#04342C' }}><span>Total Monthly Fees</span><span>{fmt(totalMonthly)}/mo</span></div>
-      </div>
-      {(building.moveInFees ?? []).some(f => f.type.toLowerCase().includes('deposit')) && <div style={{ fontSize: 10, color: MUTED, margin: '-5px 2px 14px' }}>Deposits are due on move-in or application, not upfront.</div>}
+      <button
+        type="button"
+        onClick={() => setFeesOpen((current) => !current)}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 7, marginBottom: feesOpen ? 12 : 0, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+      >
+        <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}><IconCard /> Building Fees</span>
+        <i aria-hidden="true" className="ti ti-chevron-down" style={{ color: MUTED, fontSize: 16, transition: 'transform 180ms ease', transform: feesOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+      </button>
+      {feesOpen && (
+        <>
+          <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px', marginBottom: 14, background: '#fff' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Due at move-in</div>
+            {(building.moveInFees ?? []).map((f, i, arr) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12, borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : 'none' }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0 0', marginTop: 6, fontWeight: 800, fontSize: 13, borderTop: `2px solid ${BORDER}` }}><span>Total Initial</span><span>{fmt(totalMoveIn)}</span></div>
+            <div style={{ height: 16 }} />
+            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Recurring monthly</div>
+            {(building.monthlyCharges ?? []).filter(f => !/(pet fee|parking)/i.test(f.type)).map((f, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12 }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 12px', marginTop: 8, fontWeight: 800, fontSize: 13, borderRadius: 8, background: '#19C6C0', color: '#04342C' }}><span>Total Monthly Fees</span><span>{fmt(totalMonthly)}/mo</span></div>
+          </div>
+          {(building.moveInFees ?? []).some(f => f.type.toLowerCase().includes('deposit')) && <div style={{ fontSize: 10, color: MUTED, margin: '-5px 2px 14px' }}>Deposits are due on move-in or application, not upfront.</div>}
+        </>
+      )}
     </>
   )
 
@@ -343,17 +363,6 @@ export default function BuildingDetailPage() {
     </>
   )
 
-  // Simplified, full-width summary used only in the desktop layout's bottom
-  // section. Reads from the same income/maxRent state as the header pills —
-  // no separate input, no duplicate CTA buttons.
-  const moveInCostsSection = (
-    <div style={{ background: '#fff', border: '1px solid #E5E3DC', borderRadius: 12, padding: 16 }}>
-      <div style={{ fontSize: 18, fontWeight: 600, color: '#0B1220', marginBottom: 10 }}>Move-in and monthly costs</div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Total upfront</span><span style={{ color: TEXT }}>{fmt(totalMoveIn)}</span></div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Monthly fees</span><span style={{ color: TEXT }}>{fmt(totalMonthly)}/mo</span></div>
-    </div>
-  )
-
   const ctaBarSection = (
     <div className="building-detail-cta" style={{ position: 'sticky', bottom: 0, zIndex: 10, display: 'flex', flexDirection: 'row', gap: 10, padding: '10px 0', background: '#fff', borderTop: `1px solid ${BORDER}` }}>
       <button onClick={() => setShowLeasingForm(true)} style={{ flex: 1, border: 'none', borderRadius: 12, padding: '14px 8px', background: '#19C6C0', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Connect with Leasing</button>
@@ -362,7 +371,7 @@ export default function BuildingDetailPage() {
   )
 
   return (
-    <div className="building-detail-page" style={{ fontFamily: "'Inter', sans-serif", background: '#fff', color: TEXT, height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div className="building-detail-page" style={{ fontFamily: "'Inter', sans-serif", background: '#f2f1ed', color: TEXT, height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <style jsx global>{`
         .leasing-modal-backdrop {
           position: fixed !important;
@@ -545,18 +554,14 @@ export default function BuildingDetailPage() {
                   <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: '#185FA5', marginTop: 4, textDecoration: 'none' }}><IconPin /> {building.address || building.neighborhood}</a>
                   {building.tagline && <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, marginTop: 8, maxWidth: 560 }}>{building.tagline}</div>}
                   <div style={{ display: 'flex', gap: 10, marginTop: 9, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 18, color: TEXT }}>{fmt(realMin)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo starting</span></div>
+                    <div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 24, fontWeight: 600, color: TEXT }}>{fmt(realMin)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo starting</span></div>
                     {building.concession && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#FFF6E5', color: '#92660B', borderRadius: 999, padding: '5px 11px', fontSize: 11, fontWeight: 600 }}><IconStar /> {building.concession}</span>}
-                    {building.holdDays && <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>Hold Period: {building.holdDays} days</span>}
                   </div>
+                  {building.holdDays && <div style={{ fontSize: 11, color: MUTED, fontWeight: 600, marginTop: 10 }}>Hold Period: {building.holdDays} days</div>}
                   <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
                     <button onClick={() => setShowLeasingForm(true)} style={{ border: 'none', borderRadius: 999, padding: '9px 20px', background: '#19C6C0', color: '#04342C', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Connect with Leasing</button>
                     <a href={`sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`} style={{ border: 'none', borderRadius: 999, padding: '9px 20px', background: '#FF4D8D', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Text Don</a>
                   </div>
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                  <button aria-label="Share building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconShare /></button>
-                  <SaveBuildingButton buildingId={String(building.id)} />
                 </div>
               </div>
             </div>
@@ -565,10 +570,11 @@ export default function BuildingDetailPage() {
               <div style={{ background: '#fff', border: `0.5px solid ${BORDER}`, borderRadius: 12, padding: 16, textAlign: 'center' }}>
                 <div style={{ fontSize: 12, color: MUTED, marginBottom: 8 }}>What&apos;s your income?</div>
                 <input
-                  type="number"
-                  value={income}
-                  onChange={e => setIncome(e.target.value)}
-                  placeholder="0"
+                  type="text"
+                  inputMode="numeric"
+                  value={formatIncomeDisplay(income)}
+                  onChange={e => setIncome(e.target.value.replace(/[^\d]/g, ''))}
+                  placeholder="$0"
                   style={{ width: '100%', fontSize: 20, fontWeight: 600, border: 'none', background: 'transparent', color: TEXT, outline: 'none', textAlign: 'center' }}
                 />
                 <div style={{ fontSize: 11, color: MUTED, lineHeight: 1.3, marginTop: 8 }}>Add your monthly income, we&apos;ll tell you how much you can qualify for at this building.</div>
@@ -585,7 +591,6 @@ export default function BuildingDetailPage() {
             <div>{unitsSection}</div>
             <div>{feesSection}</div>
             <SimilarBuildings buildingId={buildingId} variant="carousel" />
-            {moveInCostsSection}
           </div>
         </div>
       </div>

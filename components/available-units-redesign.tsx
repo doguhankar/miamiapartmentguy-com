@@ -23,7 +23,7 @@ interface FloorPlanGroup {
   units: FloorPlanUnit[]
 }
 
-const TABS = ['All', 'Studio', '1BR', '2BR', '3BR']
+const TABS = ['Studio', '1BR', '2BR', '3BR']
 const TEAL = '#19C6C0'
 const TEAL_DARK = '#0F6E56'
 const TEAL_TEXT = '#04342C'
@@ -56,7 +56,7 @@ function bedTypeLabel(beds: number | null | undefined): string {
 export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
   const [groups, setGroups] = useState<FloorPlanGroup[]>([])
   const [loading, setLoading] = useState(FLOOR_PLAN_CODE_ENABLED)
-  const [activeTab, setActiveTab] = useState('All')
+  const [activeTab, setActiveTab] = useState<string>('')
   const [openCard, setOpenCard] = useState<string | null>(null)
 
   useEffect(() => {
@@ -101,7 +101,9 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
         }
       })
 
-      setGroups(Array.from(byCode.values()))
+      const loadedGroups = Array.from(byCode.values())
+      setGroups(loadedGroups)
+      setActiveTab((current) => current || TABS.find((tab) => loadedGroups.some((g) => g.bedType === tab)) || '')
       setLoading(false)
     }
 
@@ -112,8 +114,8 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
     }
   }, [buildingId])
 
-  const availableTabs = TABS.filter((tab) => tab === 'All' || groups.some((g) => g.bedType === tab))
-  const filteredGroups = activeTab === 'All' ? groups : groups.filter((g) => g.bedType === activeTab)
+  const availableTabs = TABS.filter((tab) => groups.some((g) => g.bedType === tab))
+  const filteredGroups = groups.filter((g) => g.bedType === activeTab)
 
   return (
     <div style={{ marginBottom: 20 }}>
