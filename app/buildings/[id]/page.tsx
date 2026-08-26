@@ -334,7 +334,7 @@ export default function BuildingDetailPage() {
 
       <div style={{ background: '#fff', border: '1px solid #E5E3DC', borderRadius: 12, padding: 16, marginBottom: 14 }}>
         <label htmlFor="gross-income" style={{ display: 'block', fontSize: 12, color: '#6B7280', marginBottom: 7 }}>Gross monthly income</label>
-        <input id="gross-income" type="number" value={income} onChange={e => setIncome(e.target.value)} placeholder="0" style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #E5E3DC', borderRadius: 8, background: '#F7F7F5', padding: '11px 12px', color: '#0B1220', fontSize: 20, lineHeight: 1.2, fontWeight: 700, outline: 'none' }} />
+        <input id="gross-income" type="number" value={income} onChange={e => setIncome(e.target.value)} placeholder="0" style={{ width: '100%', boxSizing: 'border-box', border: '1px dashed rgba(25, 198, 192, 0.55)', borderRadius: 8, background: '#F7F7F5', padding: '11px 12px', color: '#0B1220', fontSize: 20, lineHeight: 1.2, fontWeight: 700, outline: 'none', boxShadow: '0 0 0 2px rgba(25, 198, 192, 0.08)' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, marginTop: 14, paddingTop: 14, borderTop: '1px solid #E5E3DC' }}>
           <div><span style={{ fontSize: 12, color: '#6B7280' }}>Max monthly rent</span><div style={{ fontSize: 20, fontWeight: 600, color: '#FF4D8D', marginTop: 3 }}>{fmt(maxRent)}</div></div>
           <div style={{ textAlign: 'right' }}><span style={{ fontSize: 12, color: '#6B7280' }}>You qualify for</span><div style={{ fontSize: 20, fontWeight: 600, color: '#0B1220', marginTop: 3 }}>{qualifies.length > 0 ? qualifies.join(', ') : 'Guarantor'}</div></div>
@@ -584,7 +584,7 @@ export default function BuildingDetailPage() {
                   value={formatIncomeDisplay(income)}
                   onChange={e => setIncome(e.target.value.replace(/[^\d]/g, ''))}
                   placeholder="$0"
-                  style={{ width: '100%', fontSize: 20, fontWeight: 600, border: 'none', background: 'transparent', color: TEXT, outline: 'none', textAlign: 'center' }}
+                  style={{ width: '100%', boxSizing: 'border-box', fontSize: 20, fontWeight: 600, border: '1px dashed rgba(25, 198, 192, 0.55)', borderRadius: 8, background: '#F7F7F5', color: TEXT, outline: 'none', boxShadow: '0 0 0 2px rgba(25, 198, 192, 0.08)', textAlign: 'center', padding: '8px 10px' }}
                 />
                 <div style={{ fontSize: 11, color: MUTED, lineHeight: 1.3, marginTop: 8 }}>Add your monthly income, we&apos;ll tell you how much you can qualify for at this building.</div>
               </div>
