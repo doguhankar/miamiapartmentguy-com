@@ -298,19 +298,19 @@ export default function BuildingDetailPage() {
   )
 
   const feesSection = (
-    <>
+    <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, background: '#ffffff', overflow: 'hidden' }}>
       <button
         type="button"
         className="fees-toggle-btn"
         onClick={() => setFeesOpen((current) => !current)}
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 7, marginBottom: feesOpen ? 12 : 0, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', textAlign: 'left', outline: 'none' }}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 7, margin: 0, padding: '16px 18px', fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT, border: 'none', background: '#ffffff', cursor: 'pointer', textAlign: 'left', outline: 'none', boxShadow: 'none' }}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}><IconCard /> Building Fees</span>
         <i aria-hidden="true" className="ti ti-chevron-down" style={{ color: MUTED, fontSize: 16, transition: 'transform 180ms ease', transform: feesOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
       </button>
       {feesOpen && (
-        <>
-          <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px', marginBottom: 14, background: '#fff' }}>
+        <div style={{ padding: '0 18px 2px', background: '#ffffff' }}>
+          <div style={{ borderTop: `1px solid ${BORDER}`, padding: '16px 0 0', marginBottom: 14, background: '#ffffff' }}>
             <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Due at move-in</div>
             {(building.moveInFees ?? []).map((f, i, arr) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12, borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : 'none' }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0 0', marginTop: 6, fontWeight: 800, fontSize: 13, borderTop: `2px solid ${BORDER}` }}><span>Total Initial</span><span>{fmt(totalMoveIn)}</span></div>
@@ -320,9 +320,9 @@ export default function BuildingDetailPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 12px', marginTop: 8, fontWeight: 800, fontSize: 13, borderRadius: 8, background: '#19C6C0', color: '#04342C' }}><span>Total Monthly Fees</span><span>{fmt(totalMonthly)}/mo</span></div>
           </div>
           {(building.moveInFees ?? []).some(f => f.type.toLowerCase().includes('deposit')) && <div style={{ fontSize: 10, color: MUTED, margin: '-5px 2px 14px' }}>Deposits are due on move-in or application, not upfront.</div>}
-        </>
+        </div>
       )}
-    </>
+    </div>
   )
 
   const sidebarBudgetSection = (
@@ -380,8 +380,7 @@ export default function BuildingDetailPage() {
         .fees-toggle-btn:focus,
         .fees-toggle-btn:focus-visible {
           outline: none;
-          box-shadow: 0 0 0 2px #e5e3dc;
-          border-radius: 4px;
+          box-shadow: none;
         }
         .leasing-modal-backdrop {
           position: fixed !important;
