@@ -301,8 +301,9 @@ export default function BuildingDetailPage() {
     <>
       <button
         type="button"
+        className="fees-toggle-btn"
         onClick={() => setFeesOpen((current) => !current)}
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 7, marginBottom: feesOpen ? 12 : 0, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 7, marginBottom: feesOpen ? 12 : 0, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', textAlign: 'left', outline: 'none' }}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}><IconCard /> Building Fees</span>
         <i aria-hidden="true" className="ti ti-chevron-down" style={{ color: MUTED, fontSize: 16, transition: 'transform 180ms ease', transform: feesOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
@@ -373,6 +374,15 @@ export default function BuildingDetailPage() {
   return (
     <div className="building-detail-page" style={{ fontFamily: "'Inter', sans-serif", background: '#f2f1ed', color: TEXT, height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <style jsx global>{`
+        .fees-toggle-btn {
+          outline: none;
+        }
+        .fees-toggle-btn:focus,
+        .fees-toggle-btn:focus-visible {
+          outline: none;
+          box-shadow: 0 0 0 2px #e5e3dc;
+          border-radius: 4px;
+        }
         .leasing-modal-backdrop {
           position: fixed !important;
           top: 0 !important;
