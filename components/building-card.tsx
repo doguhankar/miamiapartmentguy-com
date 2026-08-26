@@ -9,7 +9,10 @@ import { ImageCarousel } from "@/components/image-carousel"
 import { QualifyModal } from "@/components/qualify-modal"
 import { BuildingDetailModal } from "@/components/building-detail-modal"
 import { useSaveList } from "@/components/save-list-provider"
+<<<<<<< HEAD
 import { CommissionPill } from "@/components/commission-pill"
+=======
+>>>>>>> 03fc5097df0c4aa2a1dea6ee2c391c3d9ed2e818
 
 interface BuildingCardProps {
   building: Building
@@ -41,12 +44,16 @@ export function BuildingCard({ building }: BuildingCardProps) {
           <div>
             <div className="flex items-start justify-between mb-2">
               <div>
+<<<<<<< HEAD
                 <h2 className="text-lg font-semibold text-foreground flex items-center gap-2 flex-wrap">
                   <span>{building.name}</span>
                   <span onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
                     <CommissionPill buildingName={building.name} />
                   </span>
                 </h2>
+=======
+                <h2 className="text-lg font-semibold text-foreground">{building.name}</h2>
+>>>>>>> 03fc5097df0c4aa2a1dea6ee2c391c3d9ed2e818
                 <Badge className={`${neighborhoodColors[building.neighborhood]} mt-1`}>
                   {building.neighborhood}
                 </Badge>

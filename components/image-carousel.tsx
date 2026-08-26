@@ -31,6 +31,7 @@ export function ImageCarousel({ images: fallbackImages, buildingId }: ImageCarou
         decoding="async"
         width={400}
         height={256}
+        sizes="(max-width: 768px) 100vw, 400px"
       />
 
       {images.length > 1 && (

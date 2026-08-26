@@ -18,8 +18,12 @@ interface PricingData {
   units?: Array<{ price: number }>
 }
 
+<<<<<<< HEAD
 // Miami center to fit core buildings: Brickell Hammock (25.71) through Downtown/Edgewater/Midtown/Wynwood to Rt 195 (~25.82)
 const MIAMI_CENTER = { lat: 25.765, lng: -80.185 }
+=======
+const MIAMI_CENTER = { lat: 25.7617, lng: -80.1918 }
+>>>>>>> 03fc5097df0c4aa2a1dea6ee2c391c3d9ed2e818
 
 // Neighborhood colors for map pins
 const NEIGHBORHOOD_PIN_COLORS: Record<string, string> = {
@@ -72,11 +76,16 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/streets-v12",
         center: [MIAMI_CENTER.lng, MIAMI_CENTER.lat],
+<<<<<<< HEAD
         zoom: 11, // Zoom 11 fits all core Miami neighborhoods: Brickell, Downtown, Edgewater, Midtown, Wynwood
+=======
+        zoom: 13.5,
+>>>>>>> 03fc5097df0c4aa2a1dea6ee2c391c3d9ed2e818
       })
 
       map.current.addControl(new mapboxgl.default.NavigationControl(), "bottom-right")
 
+<<<<<<< HEAD
       // Map stays at initial zoom 11 centered on 25.765, -80.185
       // This shows the entire Miami corridor from Brickell to Wynwood
       const updateBuildingsInView = () => {
@@ -92,6 +101,13 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
       map.current.on('load', () => {
         // No fitBounds - keep initial zoom 11 and center position
         updateBuildingsInView()
+=======
+      // Keep map at tight zoom on downtown/Brickell, don't fitBounds to all scattered buildings
+      // Buildings spread from Brickell (25.75-25.77) to Edgewater/Wynwood (25.79-26.0)
+      // Zoom 13-14 keeps focus on core downtown/Brickell clusters, not outer neighborhoods
+      map.current.on('load', () => {
+        // Map stays at zoom 13.5 centered on Miami, initial view tight on downtown core
+>>>>>>> 03fc5097df0c4aa2a1dea6ee2c391c3d9ed2e818
       })
       map.current.on('moveend', updateBuildingsInView)
     } catch {
@@ -104,7 +120,7 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
         map.current = null
       }
     }
-  }, [mapboxgl, buildings])
+  }, [mapboxgl])
 
   useEffect(() => {
     onBuildingsInView?.(buildingsInView)
@@ -119,7 +135,7 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
     // Clear existing markers
     markers.current.forEach((m) => m.remove())
     markers.current = []
-
+    
     // Add new markers
     buildingsInView.forEach((building) => {
       const isSelected = selectedBuilding?.id === building.id
@@ -130,16 +146,24 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
       let pinColor = NEIGHBORHOOD_PIN_COLORS[building.neighborhood] || "#6B7280"
       const isActive = isSelected || isHighlighted
       
-      // Create marker element
+      // Create marker element as a simple colored div circle
       const markerEl = document.createElement("div")
+<<<<<<< HEAD
       markerEl.style.position = "relative"
       markerEl.style.width = isActive ? "4px" : "3px"
       markerEl.style.height = isActive ? "4px" : "3px"
+=======
+      const size = isActive ? 24 : 18
+      markerEl.style.width = size + "px"
+      markerEl.style.height = size + "px"
+      markerEl.style.backgroundColor = pinColor
+      markerEl.style.borderRadius = "50%"
+      markerEl.style.border = "2px solid #ffffff"
+      markerEl.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.4)"
+>>>>>>> 03fc5097df0c4aa2a1dea6ee2c391c3d9ed2e818
       markerEl.style.cursor = "pointer"
-      markerEl.style.display = "flex"
-      markerEl.style.alignItems = "center"
-      markerEl.style.justifyContent = "center"
       markerEl.style.transition = "all 0.2s ease"
+<<<<<<< HEAD
 
       const priceText = pricing?.minPrice 
         ? `$${(pricing.minPrice / 1000).toFixed(1)}k`
@@ -177,26 +201,32 @@ export function MapView({ selectedBuilding, highlightedBuilding, onSelectBuildin
           </svg>
         `
       }
+=======
+      markerEl.style.transform = isActive ? "scale(1.2)" : "scale(1)"
+      markerEl.style.position = "relative"
+      markerEl.style.display = "block"
+>>>>>>> 03fc5097df0c4aa2a1dea6ee2c391c3d9ed2e818
 
       markerEl.addEventListener("click", () => onSelectBuilding(building))
       markerEl.addEventListener("mouseenter", () => {
-        const badge = markerEl.querySelector(".price-badge")
-        if (badge) {
-          badge.style.transform = `scale(${isActive ? 1.25 : 1.1})`
-        }
+        markerEl.style.transform = `scale(${isActive ? 1.3 : 1.2})`
       })
       markerEl.addEventListener("mouseleave", () => {
-        const badge = markerEl.querySelector(".price-badge")
-        if (badge) {
-          badge.style.transform = `scale(${isActive ? 1.15 : 1})`
-        }
+        markerEl.style.transform = `scale(${isActive ? 1.2 : 1})`
       })
 
-      const marker = new mapboxgl.default.Marker({ element: markerEl })
-        .setLngLat([building.lng, building.lat])
-        .addTo(map.current)
+      try {
+        const marker = new mapboxgl.default.Marker({ 
+          element: markerEl,
+          anchor: 'center' 
+        })
+          .setLngLat([building.lng, building.lat])
+          .addTo(map.current)
 
-      markers.current.push(marker)
+        markers.current.push(marker)
+      } catch (err) {
+        // Silent fail - marker creation issue
+      }
     })
 
     // Fly to selected building
