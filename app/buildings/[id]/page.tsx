@@ -343,6 +343,17 @@ export default function BuildingDetailPage() {
     </>
   )
 
+  // Simplified, full-width summary used only in the desktop layout's bottom
+  // section. Reads from the same income/maxRent state as the header pills —
+  // no separate input, no duplicate CTA buttons.
+  const moveInCostsSection = (
+    <div style={{ background: '#fff', border: '1px solid #E5E3DC', borderRadius: 12, padding: 16 }}>
+      <div style={{ fontSize: 18, fontWeight: 600, color: '#0B1220', marginBottom: 10 }}>Move-in and monthly costs</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Total upfront</span><span style={{ color: TEXT }}>{fmt(totalMoveIn)}</span></div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Monthly fees</span><span style={{ color: TEXT }}>{fmt(totalMonthly)}/mo</span></div>
+    </div>
+  )
+
   const ctaBarSection = (
     <div className="building-detail-cta" style={{ position: 'sticky', bottom: 0, zIndex: 10, display: 'flex', flexDirection: 'row', gap: 10, padding: '10px 0', background: '#fff', borderTop: `1px solid ${BORDER}` }}>
       <button onClick={() => setShowLeasingForm(true)} style={{ flex: 1, border: 'none', borderRadius: 12, padding: '14px 8px', background: '#19C6C0', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Connect with Leasing</button>
@@ -571,15 +582,10 @@ export default function BuildingDetailPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20, padding: '12px 24px 24px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-              <div>{unitsSection}</div>
-              <div>{feesSection}</div>
-            </div>
+            <div>{unitsSection}</div>
+            <div>{feesSection}</div>
             <SimilarBuildings buildingId={buildingId} variant="carousel" />
-            <div style={{ maxWidth: 480, width: '100%' }}>
-              {sidebarBudgetSection}
-              {ctaBarSection}
-            </div>
+            {moveInCostsSection}
           </div>
         </div>
       </div>
