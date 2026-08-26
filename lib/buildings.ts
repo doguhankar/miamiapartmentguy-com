@@ -53,7 +53,7 @@ export const buildings: Building[] = [
     priceMin: 2500, priceTier: '$$',
     tagline: 'Affordable high rise, quiet, Brickell vibes without the price tag',
     concession: '50% off first 60 days',
-    units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [30, 60],
+    units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [60],
     images: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m10-eFibmVGaoLcW7F9yCC8Q0iDbnok5RQ.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m2-zljnlgeiWfRh7efeAOWUdv7n9CBRg8.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m1-N8n1gv8rO34iHYqY2A9ThD4bCBBCzS.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m3-P1DrJebzT4LXbuhgUfyEK4QfQbQaCP.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m4-5yw1QrHhTa6B3CsxKYhub7Jcd4t4bf.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m5-xn4hF7DSM3eovfOZ6Ye7TTXYVGzAoH.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m6-ha2rtnFYwLSD7UvP42a2mzkpntezAl.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m7-rrZzGBE3l6dBWHjRyvcwyOQILIa1Ia.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m8-4HBSHHVaB1e40ghxXO2pKUCZdfKyC9.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m9-TlKdeoYwon7uWYwzuhrVghOXxeGl6i.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m11-vjN4FXlPNBGbWxQE9r7L0htW8DKWG5.webp'],
     amenities: ['Pool', 'Gym', 'Parking'],
     moveInFees: [{ type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }, { type: 'Deposit', amount: 300 }],
