@@ -57,7 +57,6 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
   const [groups, setGroups] = useState<FloorPlanGroup[]>([])
   const [loading, setLoading] = useState(FLOOR_PLAN_CODE_ENABLED)
   const [activeTab, setActiveTab] = useState<string>('')
-  const [openCard, setOpenCard] = useState<string | null>(null)
 
   useEffect(() => {
     if (!FLOOR_PLAN_CODE_ENABLED) {
@@ -129,7 +128,6 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
                 type="button"
                 onClick={() => {
                   setActiveTab(tab)
-                  setOpenCard(null)
                 }}
                 style={{
                   padding: '6px 14px',
@@ -149,22 +147,17 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
         {loading ? (
           <div style={{ padding: 14, color: MUTED, fontSize: 12 }}>Loading floor plans…</div>
         ) : filteredGroups.length === 0 ? (
           <div style={{ padding: 14, color: MUTED, fontSize: 12 }}>Floor plan data not available yet.</div>
         ) : (
           filteredGroups.map((group) => {
-            const isOpen = openCard === group.code
             const prices = group.units.map((u) => u.price).filter((v): v is number => typeof v === 'number')
             return (
-              <div key={group.code} style={{ background: CARD_BG, border: `0.5px solid ${CARD_BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
-                <button
-                  type="button"
-                  onClick={() => setOpenCard(isOpen ? null : group.code)}
-                  style={{ width: '100%', display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px 14px', border: 0, background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
-                >
+              <div key={group.code} style={{ background: '#ffffff', border: `1px solid ${CARD_BORDER}`, borderRadius: 12, overflow: 'hidden', padding: '14px 16px' }}>
+                <div style={{ width: '100%', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 500, fontSize: 13, color: TEXT }}>
                       {group.bedType} · Plan {group.code}
@@ -177,32 +170,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
                       {prices.length ? `${fmt(Math.min(...prices))}+` : 'Contact'}
                     </div>
                   </div>
-                  <i
-                    className="ti ti-chevron-down"
-                    aria-hidden="true"
-                    style={{ color: TAB_BORDER, fontSize: 16, marginTop: 2, transition: 'transform 180ms ease', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                  />
-                </button>
-
-                {isOpen && (
-                  <div style={{ borderTop: `0.5px solid ${CARD_BORDER}` }}>
-                    {group.units.map((unit, idx) => {
-                      const { label, now } = formatAvail(unit.availabilityDate)
-                      return (
-                        <div
-                          key={idx}
-                          style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 14px', fontSize: 12, borderTop: idx === 0 ? 'none' : `0.5px solid ${CARD_BORDER}` }}
-                        >
-                          <span style={{ color: MUTED }}>{unit.unitNumber ? `Unit ${unit.unitNumber}` : 'Unit —'}</span>
-                          <span style={{ fontWeight: 500, color: TEXT }}>
-                            {unit.price ? fmt(unit.price) : '—'}
-                            <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 400, color: now ? AVAIL_NOW : AVAIL_LATER }}>{label}</span>
-                          </span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
+                </div>
               </div>
             )
           })

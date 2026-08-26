@@ -291,10 +291,10 @@ export default function BuildingDetailPage() {
 
   // ── Shared content blocks (reused by both mobile and desktop layouts) ──────
   const unitsSection = (
-    <>
+    <div style={{ border: '1.5px solid #1a1a1a', borderRadius: 20, background: '#ffffff', padding: 28 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconHome /> Available Units</div>
       <AvailableUnitsRedesign buildingId={buildingId} />
-    </>
+    </div>
   )
 
   const feesSection = (
