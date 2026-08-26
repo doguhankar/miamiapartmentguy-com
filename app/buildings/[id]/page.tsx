@@ -500,62 +500,86 @@ export default function BuildingDetailPage() {
 
       {/* ── DESKTOP SHELL (new layout, >=769px) ── */}
       <div className="detail-desktop-shell">
-        <div style={{ position: 'relative', padding: '16px 24px' }}>
-          <button
-            onClick={() => router.push('/map')}
-            style={{ position: 'absolute', top: 28, left: 36, zIndex: 10, display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: 'none', borderRadius: 999, padding: '8px 16px', fontSize: 13, fontWeight: 500, color: TEXT, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
-          >
-            <IconBack /> Back to map
-          </button>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, height: 360 }}>
-            <div style={{ position: 'relative', height: '100%', borderRadius: 10, overflow: 'hidden', background: '#E5E7EB' }}>
-              {allImages[0] && <Image src={allImages[0]} alt={`${building.name} photo 1`} fill style={{ objectFit: 'cover' }} priority />}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: 8, height: '100%' }}>
-              {Array.from({ length: 6 }).map((_, i) => {
-                const photo = allImages[i + 1]
-                return (
-                  <div key={i} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', background: '#D1D1D1' }}>
-                    {photo && <Image src={photo} alt={`${building.name} photo ${i + 2}`} fill style={{ objectFit: 'cover' }} />}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-
-        <div style={{ padding: '12px 24px' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: MUTED, marginBottom: 5 }}>{building.neighborhood}</div>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}><h1 style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: TEXT, margin: 0 }}>{building.name}</h1><CommissionPill buildingName={building.name} /></div>
-              <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: '#185FA5', marginTop: 4, textDecoration: 'none' }}><IconPin /> {building.address || building.neighborhood}</a>
-              {building.tagline && <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, marginTop: 8, maxWidth: 560 }}>{building.tagline}</div>}
-              <div style={{ display: 'flex', gap: 10, marginTop: 9, flexWrap: 'wrap', alignItems: 'center' }}>
-                <div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 18, color: TEXT }}>{fmt(realMin)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo starting</span></div>
-                {building.concession && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#FFF6E5', color: '#92660B', borderRadius: 999, padding: '5px 11px', fontSize: 11, fontWeight: 600 }}><IconStar /> {building.concession}</span>}
-                {building.holdDays && <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>Hold Period: {building.holdDays} days</span>}
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ position: 'relative', padding: '16px 24px' }}>
+            <button
+              onClick={() => router.push('/map')}
+              style={{ position: 'absolute', top: 28, left: 36, zIndex: 10, display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: 'none', borderRadius: 999, padding: '8px 16px', fontSize: 13, fontWeight: 500, color: TEXT, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
+            >
+              <IconBack /> Back to map
+            </button>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, height: 360 }}>
+              <div style={{ position: 'relative', height: '100%', borderRadius: 10, overflow: 'hidden', background: '#E5E7EB' }}>
+                {allImages[0] && <Image src={allImages[0]} alt={`${building.name} photo 1`} fill style={{ objectFit: 'cover' }} priority />}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: 8, height: '100%' }}>
+                {Array.from({ length: 6 }).map((_, i) => {
+                  const photo = allImages[i + 1]
+                  return (
+                    <div key={i} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', background: '#D1D1D1' }}>
+                      {photo && <Image src={photo} alt={`${building.name} photo ${i + 2}`} fill style={{ objectFit: 'cover' }} />}
+                    </div>
+                  )
+                })}
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-              <button aria-label="Share building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconShare /></button>
-              <SaveBuildingButton buildingId={String(building.id)} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 32, padding: '12px 24px', alignItems: 'center' }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: MUTED, marginBottom: 5 }}>{building.neighborhood}</div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}><h1 style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: TEXT, margin: 0 }}>{building.name}</h1><CommissionPill buildingName={building.name} /></div>
+                  <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: '#185FA5', marginTop: 4, textDecoration: 'none' }}><IconPin /> {building.address || building.neighborhood}</a>
+                  {building.tagline && <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, marginTop: 8, maxWidth: 560 }}>{building.tagline}</div>}
+                  <div style={{ display: 'flex', gap: 10, marginTop: 9, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 18, color: TEXT }}>{fmt(realMin)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo starting</span></div>
+                    {building.concession && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#FFF6E5', color: '#92660B', borderRadius: 999, padding: '5px 11px', fontSize: 11, fontWeight: 600 }}><IconStar /> {building.concession}</span>}
+                    {building.holdDays && <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>Hold Period: {building.holdDays} days</span>}
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+                    <button onClick={() => setShowLeasingForm(true)} style={{ border: 'none', borderRadius: 999, padding: '9px 20px', background: '#19C6C0', color: '#04342C', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Connect with Leasing</button>
+                    <a href={`sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`} style={{ border: 'none', borderRadius: 999, padding: '9px 20px', background: '#FF4D8D', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Text Don</a>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <button aria-label="Share building" style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, background: '#fff', border: `1px solid ${BORDER}`, borderRadius: '50%', cursor: 'pointer' }}><IconShare /></button>
+                  <SaveBuildingButton buildingId={String(building.id)} />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ background: '#fff', border: `0.5px solid ${BORDER}`, borderRadius: 12, padding: 16, textAlign: 'center' }}>
+                <div style={{ fontSize: 12, color: MUTED, marginBottom: 8 }}>What&apos;s your income?</div>
+                <input
+                  type="number"
+                  value={income}
+                  onChange={e => setIncome(e.target.value)}
+                  placeholder="0"
+                  style={{ width: '100%', fontSize: 20, fontWeight: 600, border: 'none', background: 'transparent', color: TEXT, outline: 'none', textAlign: 'center' }}
+                />
+                <div style={{ fontSize: 11, color: MUTED, lineHeight: 1.3, marginTop: 8 }}>Add your monthly income, we&apos;ll tell you how much you can qualify for at this building.</div>
+              </div>
+              <div style={{ background: '#fff', border: `0.5px solid ${BORDER}`, borderRadius: 12, padding: 16, textAlign: 'center' }}>
+                <div style={{ fontSize: 12, color: MUTED, marginBottom: 8 }}>You qualify for</div>
+                <div style={{ fontSize: 20, fontWeight: 600, color: TEXT, marginBottom: 12 }}>Max Rent: {fmt(maxRent)}/mo</div>
+                <div style={{ fontSize: 11, color: MUTED, lineHeight: 1.3 }}>Subject to verification &amp; building approval.</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 320px', gap: 20, padding: '12px 24px 24px', alignItems: 'start' }}>
-          <div style={{ gridColumn: '1 / 3', display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, padding: '12px 24px 24px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
               <div>{unitsSection}</div>
               <div>{feesSection}</div>
             </div>
             <SimilarBuildings buildingId={buildingId} variant="carousel" />
-          </div>
-
-          <div style={{ gridColumn: '3', display: 'flex', flexDirection: 'column' }}>
-            {sidebarBudgetSection}
-            {ctaBarSection}
+            <div style={{ maxWidth: 480, width: '100%' }}>
+              {sidebarBudgetSection}
+              {ctaBarSection}
+            </div>
           </div>
         </div>
       </div>
