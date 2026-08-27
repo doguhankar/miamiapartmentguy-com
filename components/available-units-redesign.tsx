@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ChevronDown, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 // `floor_plan_code` now exists on public.units (added via migration) and is
@@ -59,6 +60,8 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
   const [groups, setGroups] = useState<FloorPlanGroup[]>([])
   const [loading, setLoading] = useState(FLOOR_PLAN_CODE_ENABLED)
   const [activeTab, setActiveTab] = useState<string>('')
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
   useEffect(() => {
     if (!FLOOR_PLAN_CODE_ENABLED) {
@@ -122,6 +125,18 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
 
   return (
     <div style={{ marginBottom: 20 }}>
+      <button
+        type="button"
+        onClick={() => setIsExpanded((expanded) => !expanded)}
+        aria-expanded={isExpanded}
+        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', background: 'transparent', border: 0, borderBottom: `1px solid ${CARD_BORDER}`, color: TEXT, cursor: 'pointer', textAlign: 'left' }}
+      >
+        <span style={{ fontSize: 16, fontWeight: 700 }}>Available Units</span>
+        <ChevronDown aria-hidden="true" style={{ transform: isExpanded ? 'rotate(180deg)' : undefined, transition: 'transform 180ms ease' }} />
+      </button>
+
+      {isExpanded && (
+        <div style={{ paddingTop: 14 }}>
       {groups.length > 0 && (
         <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
           {availableTabs.map((tab) => {
@@ -162,15 +177,22 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
             return (
               <div key={group.code} style={{ background: '#f2f0ea', border: `1px solid ${CARD_BORDER}`, borderRadius: 12, overflow: 'hidden', padding: '14px 16px' }}>
                 <div style={{ width: '100%', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <img
-                    src={group.floorPlanImage || '/placeholder.svg'}
-                    alt={`${group.bedType} floor plan`}
-                    onError={(event) => { event.currentTarget.src = '/placeholder.svg' }}
-                    style={{ width: 76, height: 58, flexShrink: 0, objectFit: 'cover', borderRadius: 8, border: `1px solid ${CARD_BORDER}`, background: '#ffffff' }}
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setSelectedImage(group.floorPlanImage || '/placeholder.svg')}
+                    aria-label={`View larger ${group.code} floor plan`}
+                    style={{ padding: 0, border: 0, background: 'transparent', cursor: 'zoom-in', flexShrink: 0 }}
+                  >
+                    <img
+                      src={group.floorPlanImage || '/placeholder.svg'}
+                      alt={`${group.bedType} floor plan`}
+                      onError={(event) => { event.currentTarget.src = '/placeholder.svg' }}
+                      style={{ width: 76, height: 58, display: 'block', objectFit: 'cover', borderRadius: 8, border: `1px solid ${CARD_BORDER}`, background: '#ffffff' }}
+                    />
+                  </button>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 600, fontSize: 13, color: '#0A0F1C' }}>
-                      {group.bedType} · Plan {group.code}
+                      Plan {group.code}
                     </div>
                     <div style={{ fontSize: 11, color: '#6b6b68', margin: '2px 0 6px' }}>
                       {group.sqft ? `${group.sqft.toLocaleString()} sqft · ` : ''}
@@ -186,6 +208,30 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
           })
         )}
       </div>
+        </div>
+      )}
+
+      {selectedImage && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Floor plan preview"
+          onClick={() => setSelectedImage(null)}
+          style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(0, 0, 0, 0.72)' }}
+        >
+          <div onClick={(event) => event.stopPropagation()} style={{ position: 'relative', maxWidth: 'min(720px, 100%)', maxHeight: '90vh', background: '#fff', borderRadius: 12, padding: 12 }}>
+            <button type="button" onClick={() => setSelectedImage(null)} aria-label="Close floor plan preview" style={{ position: 'absolute', top: 8, right: 8, zIndex: 1, display: 'grid', placeItems: 'center', width: 32, height: 32, border: 0, borderRadius: '50%', background: 'rgba(0, 0, 0, 0.65)', color: '#fff', cursor: 'pointer' }}>
+              <X aria-hidden="true" />
+            </button>
+            <img
+              src={selectedImage}
+              alt="Larger floor plan preview"
+              onError={(event) => { event.currentTarget.src = '/placeholder.svg' }}
+              style={{ display: 'block', maxWidth: '100%', maxHeight: 'calc(90vh - 24px)', objectFit: 'contain' }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
