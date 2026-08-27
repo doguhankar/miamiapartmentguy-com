@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Heart, Share2, ArrowLeft } from "lucide-react"
 import { Building } from "@/lib/buildings"
+import { ImageCarousel } from "@/components/image-carousel"
 
 interface BuildingDetailViewProps {
   building: Building
@@ -20,32 +21,10 @@ interface Unit {
 
 export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps) {
   const [units, setUnits] = useState<Unit[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedTab, setSelectedTab] = useState("all")
   const [isHearted, setIsHearted] = useState(false)
-
-  useEffect(() => {
-    const fetchUnits = async () => {
-      try {
-        setLoading(true)
-        const res = await fetch(`/api/prices/${building.id}?t=${Date.now()}`)
-        
-        if (res.ok) {
-          const data = await res.json()
-          setUnits(data.units || [])
-        } else {
-          setError("Unable to load unit availability")
-        }
-      } catch (err) {
-        setError("Error loading units")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchUnits()
-  }, [building.id])
 
   // Get minimum price from units
   const minPrice = units.length > 0 ? Math.min(...units.map(u => u.price)) : building.priceMin
@@ -110,18 +89,9 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", backgroundColor: "#fff" }}>
-      {/* Photo strip - 3-panel grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", height: "220px", gap: "2px", marginBottom: 0, position: "relative" }}>
-        {building.images.slice(0, 3).map((img, idx) => (
-          <div key={idx} style={{ background: "#888", position: "relative", overflow: "hidden" }}>
-            <img src={img} alt={`${building.name} ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" decoding="async" width={400} height={220} />
-            {idx === 2 && (
-              <span style={{ position: "absolute", bottom: "8px", right: "8px", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "6px" }}>
-                View all photos
-              </span>
-            )}
-          </div>
-        ))}
+      {/* Photo carousel */}
+      <div style={{ position: "relative", height: "220px" }}>
+        <ImageCarousel images={building.images} />
         {/* Back button overlay */}
         <button
           onClick={onBack}
@@ -219,36 +189,35 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
         <hr style={{ border: "none", borderTop: "1px solid #eee", margin: "16px 0" }} />
 
         {/* Move-In Fees */}
-        {(building.moveInFees || building.fees) && (
+        {building.moveInFees && building.moveInFees.length > 0 && (
           <>
             <p style={{ fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
               Move-in fees
             </p>
-            {(building.moveInFees || building.fees) &&
-              Object.entries(building.moveInFees || building.fees || {}).map(([label, val], idx) => (
-                <div key={idx}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "8px 0", borderBottom: "1px solid #f0f0f0" }}>
-                    <span style={{ color: "#555" }}>{label}</span>
-                    <span style={{ fontWeight: 500 }}>{typeof val === "number" ? `$${val}` : val}</span>
-                  </div>
+            {building.moveInFees.map((fee, idx) => (
+              <div key={idx}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "8px 0", borderBottom: "1px solid #f0f0f0" }}>
+                  <span style={{ color: "#555" }}>{fee.type}</span>
+                  <span style={{ fontWeight: 500 }}>{`$${fee.amount.toLocaleString()}`}</span>
                 </div>
-              ))}
+              </div>
+            ))}
           </>
         )}
 
         <hr style={{ border: "none", borderTop: "1px solid #eee", margin: "16px 0" }} />
 
         {/* Monthly Charges */}
-        {building.monthlyCharges && (
+        {building.monthlyCharges && building.monthlyCharges.length > 0 && (
           <>
             <p style={{ fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
               Monthly charges
             </p>
-            {Object.entries(building.monthlyCharges).map(([label, val], idx) => (
+            {building.monthlyCharges.map((charge, idx) => (
               <div key={idx}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "8px 0", borderBottom: "1px solid #f0f0f0" }}>
-                  <span style={{ color: "#555" }}>{label}</span>
-                  <span style={{ fontWeight: 500 }}>{typeof val === "number" ? `$${val}/mo` : val}</span>
+                  <span style={{ color: "#555" }}>{charge.type}</span>
+                  <span style={{ fontWeight: 500 }}>{charge.amount === 0 ? "Included" : `$${charge.amount.toLocaleString()}/mo`}</span>
                 </div>
               </div>
             ))}
@@ -339,6 +308,9 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
               fontWeight: 500,
               border: "none",
               cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             Text Don about {building.name}
@@ -357,6 +329,9 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
               fontWeight: 500,
               border: "1px solid #eee",
               cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             Call Don

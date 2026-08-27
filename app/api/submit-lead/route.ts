@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface LeadData {
   moveDate: string
@@ -6,8 +7,14 @@ interface LeadData {
   budget: string
   neighborhoods: string[]
   creditScore: string
+  agent: string
   name: string
   phone: string
+  source?: string
+  brokerage?: string
+  licensed?: string
+  agentId?: string
+  slackChannel?: string
 }
 
 // Cache for Notion database schema to avoid fetching on every request
@@ -47,14 +54,19 @@ async function getNotionSchema(token: string, dbId: string) {
 async function sendToSlack(webhookUrl: string, leadData: LeadData) {
   try {
     console.log('[v0] Sending to Slack...')
-    const slackMessage = {
-      text: '🏢 New Lead from Move with Don Form',
-      blocks: [
+    const isAgentApplicant = leadData.source === 'agent_recruit'
+    const slackMessage = isAgentApplicant
+      ? {
+          text: `🧑‍💼 New Agent Applicant\nName: ${leadData.name}\nPhone: ${leadData.phone}\nCurrent brokerage: ${leadData.brokerage || 'Not provided'}\nLicensed in Florida: ${leadData.licensed || 'Not provided'}\nSource: agent_recruit`,
+        }
+      : {
+          text: '🏢 New Lead from Move with Don Form',
+          blocks: [
         {
           type: 'header',
           text: {
             type: 'plain_text',
-            text: '🏢 New Lead Submission',
+            text: isAgentApplicant ? '🧑‍💼 New Agent Applicant' : '🏢 New Lead Submission',
           },
         },
         {
@@ -84,10 +96,22 @@ async function sendToSlack(webhookUrl: string, leadData: LeadData) {
               type: 'mrkdwn',
               text: `*Credit Score:*\n${leadData.creditScore}`,
             },
+          {
+            type: 'mrkdwn',
+            text: `*Neighborhoods:*\n${leadData.neighborhoods.join(', ')}`,
+          },
             {
               type: 'mrkdwn',
-              text: `*Neighborhoods:*\n${leadData.neighborhoods.join(', ')}`,
+              text: `*Agent:*
+${leadData.agent}`,
             },
+            ...(isAgentApplicant
+              ? [
+                  { type: 'mrkdwn', text: `*Brokerage:*\n${leadData.brokerage || 'Not provided'}` },
+                  { type: 'mrkdwn', text: `*Licensed in Florida:*\n${leadData.licensed || 'Not provided'}` },
+                  { type: 'mrkdwn', text: '*Source:*\nagent_recruit' },
+                ]
+              : []),
             {
               type: 'mrkdwn',
               text: `*Submitted:*\n${new Date().toISOString()}`,
@@ -95,7 +119,7 @@ async function sendToSlack(webhookUrl: string, leadData: LeadData) {
           ],
         },
       ],
-    }
+        }
 
     const slackResponse = await fetch(webhookUrl, {
       method: 'POST',
@@ -175,6 +199,8 @@ async function sendToNotion(
           notionPayload.properties[propName] = { rich_text: [{ text: { content: leadData.moveDate } }] }
         } else if (propName.toLowerCase().includes('budget')) {
           notionPayload.properties[propName] = { rich_text: [{ text: { content: leadData.budget } }] }
+        } else if (propName.toLowerCase().includes('agent')) {
+          notionPayload.properties[propName] = { rich_text: [{ text: { content: leadData.agent } }] }
         }
       }
     }
@@ -213,33 +239,53 @@ async function sendToNotion(
   }
 }
 
+async function sendToSupabase(leadData: LeadData) {
+  try {
+    const supabase = createAdminClient()
+
+    const payload = {
+      name: leadData.name,
+      phone: leadData.phone,
+      move_in_timing: leadData.moveDate,
+      beds: leadData.apartmentSize,
+      budget: leadData.budget,
+      area: leadData.neighborhoods[0] || null,
+      credit_range: leadData.creditScore,
+      agent_id: leadData.agentId || 'doguhankar1@gmail.com',
+      stage: 'New Lead',
+      source: leadData.source || 'Homepage Form',
+      notes: leadData.source === 'agent_recruit'
+        ? `Brokerage: ${leadData.brokerage || 'Not provided'}; Licensed in Florida: ${leadData.licensed || 'Not provided'}`
+        : `Selected agent: ${leadData.agent}`,
+    }
+
+    // .select() ensures the inserted row is returned in data (without it data is always null)
+    const { data, error } = await supabase.from('leads').insert([payload]).select()
+
+    if (error) {
+      console.error('[supabase] insert failed — code:', error.code, '| message:', error.message, '| details:', error.details)
+      return { sent: false, error: { code: error.code, message: error.message, details: error.details, hint: error.hint } }
+    }
+
+    return { sent: true, data: data?.[0] ?? null }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[supabase] exception:', msg)
+    return { sent: false, error: msg }
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: LeadData = await request.json()
 
-    console.log('[v0] ===== LEAD SUBMISSION START =====')
-    console.log('[v0] Lead data received:', {
-      name: body.name,
-      phone: body.phone,
-      moveDate: body.moveDate,
-      budget: body.budget,
-      neighborhoods: body.neighborhoods.join(', '),
-      apartmentSize: body.apartmentSize,
-      creditScore: body.creditScore,
-      timestamp: new Date().toISOString(),
-    })
-
-    const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL
+    const SLACK_WEBHOOK_URL = body.slackChannel === 'leads-seb'
+      ? process.env.SLACK_WEBHOOK_URL_SEB
+      : process.env.SLACK_WEBHOOK_URL
     const NOTION_TOKEN = process.env.NOTION_TOKEN
     const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID
 
-    console.log('[v0] Environment check:', {
-      SLACK_WEBHOOK_URL_present: !!SLACK_WEBHOOK_URL,
-      NOTION_TOKEN_present: !!NOTION_TOKEN,
-      NOTION_DATABASE_ID_present: !!NOTION_DATABASE_ID,
-    })
-
-    // Fire Slack and Notion in parallel without waiting for results
+    // Fire Slack, Notion, and Supabase in parallel without waiting for results
     // This allows the API to return immediately while integrations process in background
     const integrationPromises: Promise<any>[] = []
 
@@ -256,29 +302,69 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Use Promise.allSettled to wait for all integrations (for logging), but don't return immediately
-    const integrationResults = await Promise.allSettled(integrationPromises)
-    
-    console.log('[v0] ===== LEAD SUBMISSION END =====')
-    console.log('[v0] Integration results:', JSON.stringify(integrationResults, null, 2))
+    // Always send to Supabase (service-role key is required)
+    integrationPromises.push(sendToSupabase(body).catch(e => ({ sent: false, error: String(e) })))
 
-    // Return success immediately - background integrations may still be processing
-    // This gives the user instant feedback while integrations complete in parallel
+    // Use Promise.allSettled to wait for all integrations and capture their results
+    const integrationResults = await Promise.allSettled(integrationPromises)
+
+    // Extract results from Promise.allSettled for each integration
+    // Index mapping depends on which integrations were included:
+    // - Slack (if configured) → index 0
+    // - Notion (if configured) → index 0 or 1 (after Slack)
+    // - Supabase (always) → always last
+    let slackResult = null
+    let notionResult = null
+    let supabaseResult = null
+    let resultIndex = 0
+
+    // Slack result (if sent)
+    if (SLACK_WEBHOOK_URL) {
+      const result = integrationResults[resultIndex]
+      slackResult = result.status === 'fulfilled' 
+        ? { status: result.value?.sent ? 'success' : 'failed', ...result.value }
+        : { status: 'error', error: String(result.reason) }
+      resultIndex++
+    }
+
+    // Notion result (if sent)
+    if (NOTION_TOKEN && NOTION_DATABASE_ID) {
+      const result = integrationResults[resultIndex]
+      notionResult = result.status === 'fulfilled'
+        ? { status: result.value?.sent ? 'success' : 'failed', ...result.value }
+        : { status: 'error', error: String(result.reason) }
+      resultIndex++
+    }
+
+    // Supabase result (always sent)
+    const supabaseSettledResult = integrationResults[resultIndex]
+    if (supabaseSettledResult.status === 'fulfilled') {
+      const value = supabaseSettledResult.value
+      supabaseResult = value?.sent 
+        ? { status: 'success', data: value.data }
+        : { status: 'error', error: value?.error }
+    } else {
+      supabaseResult = { status: 'error', error: String(supabaseSettledResult.reason) }
+    }
+
+    const timestamp = new Date().toISOString()
+    const allSucceeded = [slackResult, notionResult, supabaseResult].every(r => r === null || r.status === 'success')
+
     return NextResponse.json(
       { 
-        success: true, 
-        message: 'Lead submitted successfully',
+        success: allSucceeded,
+        timestamp,
+        slackResult,
+        notionResult,
+        supabaseResult,
         leadData: {
           name: body.name,
           phone: body.phone,
-          timestamp: new Date().toISOString(),
         }
       },
       { status: 200 }
     )
   } catch (error) {
-    console.error('[v0] ===== ERROR PROCESSING LEAD =====')
-    console.error('[v0] Error:', error instanceof Error ? error.message : String(error))
     return NextResponse.json(
       { 
         success: false, 

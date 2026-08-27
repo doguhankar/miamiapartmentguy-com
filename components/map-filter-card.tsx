@@ -2,21 +2,49 @@
 
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { neighborhoodCenters } from '@/lib/neighborhood-centers';
+import { AgentModeControl } from '@/components/agent-mode-provider';
 
 export interface MapFilterState {
   bedrooms: string[];
   price: string[];
   moveInDate: string[];
+  neighborhood: string | null;
 }
 
 interface MapFilterCardProps {
   filters: MapFilterState;
   onFilterChange: (filters: MapFilterState) => void;
   onClearAll: () => void;
+  buildingCount?: number;
+  onNeighborhoodFlyTo?: (neighborhood: string) => void;
+  searchQuery?: string;
+  onSearchChange?: (q: string) => void;
 }
 
-export function MapFilterCard({ filters, onFilterChange, onClearAll }: MapFilterCardProps) {
-  const [openDropdown, setOpenDropdown] = useState<'bedrooms' | 'price' | 'moveIn' | null>(null);
+export function MapFilterCard({
+  filters,
+  onFilterChange,
+  onClearAll,
+  buildingCount = 107,
+  onNeighborhoodFlyTo,
+  searchQuery = '',
+  onSearchChange,
+}: MapFilterCardProps) {
+  const [openDropdown, setOpenDropdown] = useState<'neighborhood' | 'bedrooms' | 'price' | 'moveIn' | null>(null);
+
+  const neighborhoodOptions = Object.keys(neighborhoodCenters).sort();
+
+  const handleNeighborhoodSelect = (neighborhood: string) => {
+    if (filters.neighborhood === neighborhood) {
+      onFilterChange({ ...filters, neighborhood: null });
+      setOpenDropdown(null);
+    } else {
+      onFilterChange({ ...filters, neighborhood });
+      onNeighborhoodFlyTo?.(neighborhood);
+      setOpenDropdown(null);
+    }
+  };
 
   const bedroomOptions = ['All bedrooms', 'Studio', '1 Bedroom', '2 Bedrooms', '3+ Bedrooms'];
   const priceOptions = ['All prices', '$0-$2,000', '$2,000-$4,000', '$4,000+'];
@@ -55,7 +83,11 @@ export function MapFilterCard({ filters, onFilterChange, onClearAll }: MapFilter
     }
   };
 
-  const hasActiveFilters = filters.bedrooms.length > 0 || filters.price.length > 0 || filters.moveInDate.length > 0;
+  const hasActiveFilters =
+    filters.neighborhood !== null ||
+    filters.bedrooms.length > 0 ||
+    filters.price.length > 0 ||
+    filters.moveInDate.length > 0;
 
   const getSelectedLabel = (type: 'bedrooms' | 'price' | 'moveIn'): string => {
     if (type === 'bedrooms') {
@@ -64,14 +96,7 @@ export function MapFilterCard({ filters, onFilterChange, onClearAll }: MapFilter
       return `${filters.bedrooms.length} selected`;
     } else if (type === 'price') {
       if (filters.price.length === 0) return 'Price';
-      if (filters.price.length === 1) {
-        // Format price display nicely
-        const priceStr = filters.price[0];
-        if (priceStr === '$0-$2,000') return '$0 - $2,000';
-        if (priceStr === '$2,000-$4,000') return '$2,000 - $4,000';
-        if (priceStr === '$4,000+') return '$4,000+';
-        return priceStr;
-      }
+      if (filters.price.length === 1) return filters.price[0];
       return `${filters.price.length} selected`;
     } else {
       if (filters.moveInDate.length === 0) return 'Move in Date';
@@ -80,105 +105,218 @@ export function MapFilterCard({ filters, onFilterChange, onClearAll }: MapFilter
     }
   };
 
-  return (
-    <div className="absolute top-6 left-6 z-10 flex gap-4 items-center">
-      {/* Bedrooms Dropdown */}
-      <div className="relative">
-        <button
-          onClick={() => setOpenDropdown(openDropdown === 'bedrooms' ? null : 'bedrooms')}
-          className="flex items-center justify-between px-3 py-2 w-40 border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors shadow-sm"
-        >
-          <span className="text-sm font-medium text-gray-700 truncate">{getSelectedLabel('bedrooms')}</span>
-          <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform flex-shrink-0 ${openDropdown === 'bedrooms' ? 'rotate-180' : ''}`} />
-        </button>
-        {openDropdown === 'bedrooms' && (
-          <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-gray-300 rounded-md shadow-lg z-20">
-            {bedroomOptions.map(option => (
-              <button
-                key={option}
-                onClick={() => toggleBedroom(option)}
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-sm"
-              >
-                <input
-                  type="checkbox"
-                  checked={option === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(option)}
-                  readOnly
-                  className="rounded"
-                />
-                {option}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+  const pillStyle = (active: boolean): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '10px 16px',
+    borderRadius: '999px',
+    background: '#FFFFFF',
+    border: active ? '1px solid #19C6C0' : '1px solid #DCE1E8',
+    color: active ? '#0A8F8B' : '#263247',
+    fontSize: '13.5px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap' as const,
+    transition: 'all 0.12s ease',
+    fontFamily: 'inherit',
+  });
 
-      {/* Price Dropdown */}
-      <div className="relative">
+  const dropdownStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: 'calc(100% + 6px)',
+    left: 0,
+    minWidth: '200px',
+    background: '#FFFFFF',
+    border: '1px solid #DCE1E8',
+    borderRadius: '10px',
+    boxShadow: '0 10px 28px rgba(10,15,28,0.14)',
+    zIndex: 50,
+    overflow: 'hidden',
+  };
+
+  const dropdownItemStyle = (selected: boolean): React.CSSProperties => ({
+    width: '100%',
+    textAlign: 'left',
+    padding: '9px 14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '13px',
+    color: selected ? '#0A8F8B' : '#263247',
+    background: selected ? 'rgba(25, 198, 192, 0.08)' : 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    transition: 'background 0.1s',
+  });
+
+  return (
+    <div style={{
+      width: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      padding: '10px 20px',
+      background: '#FFFFFF',
+      borderBottom: '1px solid #E8EBF0',
+    }}>
+      {/* Search — leftmost, pink border */}
+      <input
+        type="text"
+        placeholder="Search buildings..."
+        value={searchQuery}
+        onChange={(e) => onSearchChange?.(e.target.value)}
+        style={{
+          width: '220px',
+          flexShrink: 0,
+          background: '#FFFFFF',
+          border: '1px solid #FF4D8D',
+          borderRadius: '8px',
+          padding: '10px 16px',
+          color: '#0A0F1C',
+          fontSize: '13px',
+          outline: 'none',
+          fontFamily: 'inherit',
+          transition: 'box-shadow 0.12s',
+        }}
+        onFocus={(e) => { e.target.style.boxShadow = '0 0 0 2px rgba(255,77,141,0.22)' }}
+        onBlur={(e) => { e.target.style.boxShadow = 'none' }}
+      />
+
+      {/* Price */}
+      <div style={{ position: 'relative' }}>
         <button
+          style={pillStyle(filters.price.length > 0)}
           onClick={() => setOpenDropdown(openDropdown === 'price' ? null : 'price')}
-          className="flex items-center justify-between px-3 py-2 w-40 border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors shadow-sm"
         >
-          <span className="text-sm font-medium text-gray-700 truncate">{getSelectedLabel('price')}</span>
-          <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform flex-shrink-0 ${openDropdown === 'price' ? 'rotate-180' : ''}`} />
+          <span>{getSelectedLabel('price')}</span>
+          <ChevronDown style={{ width: 14, height: 14, transition: 'transform 0.15s', transform: openDropdown === 'price' ? 'rotate(180deg)' : 'none' }} />
         </button>
         {openDropdown === 'price' && (
-          <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-gray-300 rounded-md shadow-lg z-20">
-            {priceOptions.map(option => (
+          <div style={dropdownStyle}>
+            {priceOptions.map(opt => (
               <button
-                key={option}
-                onClick={() => togglePrice(option)}
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-sm"
+                key={opt}
+                style={dropdownItemStyle(opt === 'All prices' ? filters.price.length === 0 : filters.price.includes(opt))}
+                onClick={() => togglePrice(opt)}
+                onMouseEnter={(e) => { if (!(opt === 'All prices' ? filters.price.length === 0 : filters.price.includes(opt))) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                onMouseLeave={(e) => { if (!(opt === 'All prices' ? filters.price.length === 0 : filters.price.includes(opt))) e.currentTarget.style.background = 'transparent' }}
               >
-                <input
-                  type="checkbox"
-                  checked={option === 'All prices' ? filters.price.length === 0 : filters.price.includes(option)}
-                  readOnly
-                  className="rounded"
-                />
-                {option}
+                <input type="checkbox" readOnly style={{ accentColor: '#19C6C0', pointerEvents: 'none' }} checked={opt === 'All prices' ? filters.price.length === 0 : filters.price.includes(opt)} />
+                {opt}
               </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* Move-in Date Dropdown */}
-      <div className="relative">
+      {/* Bedroom Size */}
+      <div style={{ position: 'relative' }}>
         <button
-          onClick={() => setOpenDropdown(openDropdown === 'moveIn' ? null : 'moveIn')}
-          className="flex items-center justify-between px-3 py-2 w-40 border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors shadow-sm"
+          style={pillStyle(filters.bedrooms.length > 0)}
+          onClick={() => setOpenDropdown(openDropdown === 'bedrooms' ? null : 'bedrooms')}
         >
-          <span className="text-sm font-medium text-gray-700 truncate">{getSelectedLabel('moveIn')}</span>
-          <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform flex-shrink-0 ${openDropdown === 'moveIn' ? 'rotate-180' : ''}`} />
+          <span>{getSelectedLabel('bedrooms')}</span>
+          <ChevronDown style={{ width: 14, height: 14, transition: 'transform 0.15s', transform: openDropdown === 'bedrooms' ? 'rotate(180deg)' : 'none' }} />
+        </button>
+        {openDropdown === 'bedrooms' && (
+          <div style={dropdownStyle}>
+            {bedroomOptions.map(opt => (
+              <button
+                key={opt}
+                style={dropdownItemStyle(opt === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(opt))}
+                onClick={() => toggleBedroom(opt)}
+                onMouseEnter={(e) => { if (!(opt === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(opt))) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                onMouseLeave={(e) => { if (!(opt === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(opt))) e.currentTarget.style.background = 'transparent' }}
+              >
+                <input type="checkbox" readOnly style={{ accentColor: '#19C6C0', pointerEvents: 'none' }} checked={opt === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(opt)} />
+                {opt}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Move in Date */}
+      <div style={{ position: 'relative' }}>
+        <button
+          style={pillStyle(filters.moveInDate.length > 0)}
+          onClick={() => setOpenDropdown(openDropdown === 'moveIn' ? null : 'moveIn')}
+        >
+          <span>{getSelectedLabel('moveIn')}</span>
+          <ChevronDown style={{ width: 14, height: 14, transition: 'transform 0.15s', transform: openDropdown === 'moveIn' ? 'rotate(180deg)' : 'none' }} />
         </button>
         {openDropdown === 'moveIn' && (
-          <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-gray-300 rounded-md shadow-lg z-20">
-            {moveInOptions.map(option => (
+          <div style={dropdownStyle}>
+            {moveInOptions.map(opt => (
               <button
-                key={option}
-                onClick={() => toggleMoveIn(option)}
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-sm"
+                key={opt}
+                style={dropdownItemStyle(opt === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(opt))}
+                onClick={() => toggleMoveIn(opt)}
+                onMouseEnter={(e) => { if (!(opt === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(opt))) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                onMouseLeave={(e) => { if (!(opt === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(opt))) e.currentTarget.style.background = 'transparent' }}
               >
-                <input
-                  type="checkbox"
-                  checked={option === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(option)}
-                  readOnly
-                  className="rounded"
-                />
-                {option}
+                <input type="checkbox" readOnly style={{ accentColor: '#19C6C0', pointerEvents: 'none' }} checked={opt === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(opt)} />
+                {opt}
               </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* Clear Filters Button */}
+      {/* Neighborhood */}
+      <div style={{ position: 'relative' }}>
+        <button
+          style={pillStyle(!!filters.neighborhood)}
+          onClick={() => setOpenDropdown(openDropdown === 'neighborhood' ? null : 'neighborhood')}
+        >
+          <span>{filters.neighborhood ? `${filters.neighborhood}` : 'Neighborhood'}</span>
+          <ChevronDown style={{ width: 14, height: 14, transition: 'transform 0.15s', transform: openDropdown === 'neighborhood' ? 'rotate(180deg)' : 'none' }} />
+        </button>
+        {openDropdown === 'neighborhood' && (
+          <div style={{ ...dropdownStyle, maxHeight: '280px', overflowY: 'auto' }}>
+            {neighborhoodOptions.map(opt => (
+              <button
+                key={opt}
+                style={dropdownItemStyle(filters.neighborhood === opt)}
+                onClick={() => handleNeighborhoodSelect(opt)}
+                onMouseEnter={(e) => { if (filters.neighborhood !== opt) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                onMouseLeave={(e) => { if (filters.neighborhood !== opt) e.currentTarget.style.background = 'transparent' }}
+              >
+                <input type="radio" readOnly style={{ accentColor: '#19C6C0', pointerEvents: 'none' }} checked={filters.neighborhood === opt} />
+                {opt}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
+        <AgentModeControl />
+      </div>
+
+      {/* Clear */}
       {hasActiveFilters && (
         <button
           onClick={onClearAll}
-          className="px-3 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors shadow-sm text-sm font-medium text-gray-700"
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#5B6780',
+            fontSize: '13px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            padding: '0 6px',
+            fontFamily: 'inherit',
+            transition: 'color 0.12s',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#B8C4D4' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = '#5B6780' }}
         >
-          Clear Filters
+          ✕ Clear
         </button>
       )}
     </div>

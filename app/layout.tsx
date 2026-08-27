@@ -1,18 +1,15 @@
 import type { Metadata } from 'next'
-import { Archivo, Space_Grotesk } from 'next/font/google'
+import { Geist, Geist_Mono, Archivo, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
+import { AgentModeProvider } from '@/components/agent-mode-provider'
+import { SaveListProvider } from '@/components/save-list-provider'
 
-const archivo = Archivo({
-  subsets: ['latin'],
-  axes: ['wdth'],
-  variable: '--font-archivo',
-})
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-space-grotesk',
-})
+const _geist = Geist({ subsets: ["latin"] });
+const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const _archivo = Archivo({ subsets: ["latin"], weight: ['400', '500', '600', '700'], variable: '--font-archivo' });
+const _spaceGrotesk = Space_Grotesk({ subsets: ["latin"], weight: ['400', '500', '600', '700'], variable: '--font-space-grotesk' });
+const _jetBrainsMono = JetBrains_Mono({ subsets: ["latin"], weight: ['500', '600'], variable: '--font-jetbrains-mono' });
 
 export const metadata: Metadata = {
   title: 'Miami Apartment Guy — Every Building. Every Deal. One Text.',
@@ -21,20 +18,12 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
+        url: '/favicon.svg',
         type: 'image/svg+xml',
       },
     ],
-    apple: '/apple-icon.png',
   },
+  themeColor: '#0B1220',
 }
 
 export default function RootLayout({
@@ -43,9 +32,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${archivo.variable} ${spaceGrotesk.variable}`} style={{ background: '#0B1220' }}>
-      <body className="antialiased" style={{ fontFamily: 'var(--font-space-grotesk,"Space Grotesk",sans-serif)', background: '#0B1220', color: '#F6F8F9', overflowX: 'hidden' }}>
-        {children}
+    <html lang="en" className={`${_archivo.variable} ${_spaceGrotesk.variable} ${_jetBrainsMono.variable}`}>
+      <body className="font-sans antialiased">
+        <AgentModeProvider>
+          <SaveListProvider>{children}</SaveListProvider>
+        </AgentModeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
