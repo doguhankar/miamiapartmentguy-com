@@ -164,7 +164,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
           filteredGroups.map((group) => {
             const prices = group.units.map((u) => u.price).filter((v): v is number => typeof v === 'number')
             return (
-              <div key={group.code} style={{ background: '#f2f0ea', border: `1px solid ${CARD_BORDER}`, borderRadius: 12, overflow: 'hidden', padding: '14px 16px' }}>
+              <div key={group.code} style={{ background: '#f2f0ea', border: `1px solid ${CARD_BORDER}`, borderRadius: 12, overflow: 'hidden', padding: '10px 12px' }}>
                 <div
                   role="button"
                   tabIndex={0}
@@ -176,7 +176,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
                     }
                   }}
                   aria-expanded={Boolean(expandedPlans[group.code])}
-                  style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: 0, cursor: 'pointer', textAlign: 'left' }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: 0, cursor: 'pointer', textAlign: 'left' }}
                 >
                   <button
                     type="button"
@@ -188,7 +188,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
                       src={group.floorPlanImage || '/placeholder.svg'}
                       alt={`${group.bedType} floor plan`}
                       onError={(event) => { event.currentTarget.src = '/placeholder.svg' }}
-                      style={{ width: 76, height: 58, display: 'block', objectFit: 'cover', borderRadius: 8, border: `1px solid ${CARD_BORDER}`, background: '#ffffff' }}
+                      style={{ width: 88, height: 88, display: 'block', flexShrink: 0, objectFit: 'cover', borderRadius: 8, border: `1px solid ${CARD_BORDER}`, background: '#ffffff' }}
                     />
                   </button>
                   <div style={{ flex: 1, minWidth: 0 }}>
