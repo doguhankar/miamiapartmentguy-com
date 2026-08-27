@@ -14,6 +14,7 @@ interface FloorPlanUnit {
   price?: number
   sqft?: number
   availabilityDate?: string | null
+  floorPlanImage?: string | null
 }
 
 interface FloorPlanGroup {
@@ -21,6 +22,7 @@ interface FloorPlanGroup {
   bedType: string
   sqft?: number
   units: FloorPlanUnit[]
+  floorPlanImage?: string | null
 }
 
 const TABS = ['Studio', '1BR', '2BR', '3BR']
@@ -72,7 +74,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
       const supabase = createClient()
       const { data } = await supabase
         .from('units')
-        .select('unitnumber, price, beds, sqft, availabilitydate, floor_plan_code')
+        .select('unitnumber, price, beds, sqft, availabilitydate, floor_plan_code, floor_plan_image')
         .eq('building_id', buildingId)
         .not('floor_plan_code', 'is', null)
 
@@ -86,6 +88,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
           price: typeof row.price === 'number' ? row.price : undefined,
           sqft: typeof row.sqft === 'number' ? row.sqft : undefined,
           availabilityDate: row.availabilitydate ?? null,
+          floorPlanImage: row.floor_plan_image ?? null,
         }
         const existing = byCode.get(code)
         if (existing) {
@@ -96,6 +99,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
             bedType: bedTypeLabel(row.beds),
             sqft: typeof row.sqft === 'number' ? row.sqft : undefined,
             units: [unit],
+            floorPlanImage: row.floor_plan_image ?? null,
           })
         }
       })
@@ -158,6 +162,12 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
             return (
               <div key={group.code} style={{ background: '#f2f0ea', border: `1px solid ${CARD_BORDER}`, borderRadius: 12, overflow: 'hidden', padding: '14px 16px' }}>
                 <div style={{ width: '100%', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <img
+                    src={group.floorPlanImage || '/placeholder.svg'}
+                    alt={`${group.bedType} floor plan`}
+                    onError={(event) => { event.currentTarget.src = '/placeholder.svg' }}
+                    style={{ width: 76, height: 58, flexShrink: 0, objectFit: 'cover', borderRadius: 8, border: `1px solid ${CARD_BORDER}`, background: '#ffffff' }}
+                  />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 600, fontSize: 13, color: '#0A0F1C' }}>
                       {group.bedType} · Plan {group.code}
