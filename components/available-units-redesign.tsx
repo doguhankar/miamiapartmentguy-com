@@ -155,7 +155,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, alignItems: 'start' }}>
         {loading ? (
           <div style={{ padding: 14, color: MUTED, fontSize: 12 }}>Loading floor plans…</div>
         ) : filteredGroups.length === 0 ? (

@@ -57,7 +57,7 @@ export function SimilarBuildings({ buildingId, variant = 'grid' }: { buildingId:
         </div>
         <span style={{ fontSize: 11, color: '#6B7280' }}>10 nearby options</span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }} className="similar-buildings-grid">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, alignItems: 'start' }} className="similar-buildings-grid">
         {buildings.map((item) => (
           <Link className="similar-building-card" key={item.id} href={`/buildings/${item.id}`} style={{ color: '#0A0F1C', textDecoration: 'none', border: '1px solid #ECEDF2', borderRadius: 14, overflow: 'hidden', background: '#fff' }}>
             <div style={{ position: 'relative', height: 130, background: '#F1F2F4' }}>
