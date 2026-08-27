@@ -73,7 +73,6 @@ export function DesktopBuildingCard({
   }
 
   return (
-<<<<<<< HEAD
     <div onClick={() => onClick?.(building)} style={{background:'white', border:'0.5px solid #e5e7eb', borderRadius:12, padding:14, marginBottom:12, cursor:'pointer'}}>
       <div style={{display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:8}}>
         <div>
@@ -81,58 +80,6 @@ export function DesktopBuildingCard({
           <div style={{fontSize:11, color:'#9aa5b8'}}>{building.address}</div>
         </div>
         <span style={{color:'#FF4D8D', fontSize:18, cursor:'pointer'}}>♥</span>
-=======
-    <div
-      className={`rounded-xl overflow-hidden border transition-all duration-200 cursor-pointer group ${
-        isHighlighted || isHovered
-          ? "border-blue-500 shadow-lg scale-[1.02]"
-          : "border-gray-200 shadow-md hover:shadow-xl"
-      }`}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onClick={() => {
-        onClick?.(building);
-        onViewDetails?.(building);
-      }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick?.(building);
-          onViewDetails?.(building);
-        }
-      }}
-    >
-      {/* Image Carousel - Full Width */}
-      <div className="relative h-56 bg-gray-100 overflow-hidden">
-        {/* Star Icon */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onStar?.(building)
-          }}
-          className="absolute top-2 right-2 z-10 p-2 rounded-full bg-white/90 hover:bg-white transition-colors shadow-md hover:shadow-lg"
-          aria-label={isStarred ? "Remove from list" : "Add to list"}
-        >
-          <Star
-            className={`h-5 w-5 transition-colors ${
-              isStarred
-                ? "fill-yellow-400 text-yellow-400"
-                : "text-gray-400 hover:text-yellow-400"
-            }`}
-          />
-        </button>
-
-        {/* Saved Badge (for comparison view) */}
-        {hasSavedBadge && (
-          <div className="absolute top-2 left-2 z-10 px-2.5 py-1 bg-green-500 text-white text-xs font-semibold rounded">
-            Saved
-          </div>
-        )}
-
-        <ImageCarousel images={building.images} />
->>>>>>> 03fc5097df0c4aa2a1dea6ee2c391c3d9ed2e818
       </div>
       <div style={{display:'flex', gap:12}}>
         <div style={{position:'relative', width:150, height:115, flexShrink:0, borderRadius:8, overflow:'hidden'}}>
