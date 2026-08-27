@@ -222,6 +222,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
           })
         )}
       </div>
+      </div>
 
       {selectedImage && (
         <div
