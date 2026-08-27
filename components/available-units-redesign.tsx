@@ -60,7 +60,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
   const [groups, setGroups] = useState<FloorPlanGroup[]>([])
   const [loading, setLoading] = useState(FLOOR_PLAN_CODE_ENABLED)
   const [activeTab, setActiveTab] = useState<string>('')
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [expandedPlans, setExpandedPlans] = useState<Record<string, boolean>>({})
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
   useEffect(() => {
@@ -125,18 +125,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
 
   return (
     <div style={{ marginBottom: 20 }}>
-      <button
-        type="button"
-        onClick={() => setIsExpanded((expanded) => !expanded)}
-        aria-expanded={isExpanded}
-        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', background: 'transparent', border: 0, borderBottom: `1px solid ${CARD_BORDER}`, color: TEXT, cursor: 'pointer', textAlign: 'left' }}
-      >
-        <span style={{ fontSize: 16, fontWeight: 700 }}>Available Units</span>
-        <ChevronDown aria-hidden="true" style={{ transform: isExpanded ? 'rotate(180deg)' : undefined, transition: 'transform 180ms ease' }} />
-      </button>
-
-      {isExpanded && (
-        <div style={{ paddingTop: 14 }}>
+      <div style={{ paddingTop: 14 }}>
       {groups.length > 0 && (
         <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
           {availableTabs.map((tab) => {
@@ -176,10 +165,22 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
             const prices = group.units.map((u) => u.price).filter((v): v is number => typeof v === 'number')
             return (
               <div key={group.code} style={{ background: '#f2f0ea', border: `1px solid ${CARD_BORDER}`, borderRadius: 12, overflow: 'hidden', padding: '14px 16px' }}>
-                <div style={{ width: '100%', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setExpandedPlans((current) => ({ ...current, [group.code]: !current[group.code] }))}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      setExpandedPlans((current) => ({ ...current, [group.code]: !current[group.code] }))
+                    }
+                  }}
+                  aria-expanded={Boolean(expandedPlans[group.code])}
+                  style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: 0, cursor: 'pointer', textAlign: 'left' }}
+                >
                   <button
                     type="button"
-                    onClick={() => setSelectedImage(group.floorPlanImage || '/placeholder.svg')}
+                    onClick={(event) => { event.stopPropagation(); setSelectedImage(group.floorPlanImage || '/placeholder.svg') }}
                     aria-label={`View larger ${group.code} floor plan`}
                     style={{ padding: 0, border: 0, background: 'transparent', cursor: 'zoom-in', flexShrink: 0 }}
                   >
@@ -203,13 +204,24 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
                     </div>
                   </div>
                 </div>
+                {expandedPlans[group.code] && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, borderTop: `1px solid ${CARD_BORDER}`, paddingTop: 12 }}>
+                    {group.units.map((unit) => {
+                      const availability = formatAvail(unit.availabilityDate)
+                      return (
+                        <div key={unit.unitNumber ?? `${group.code}-${unit.price}-${unit.sqft}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, fontSize: 12, color: TEXT }}>
+                          <span>{unit.unitNumber ? `Unit ${unit.unitNumber}` : 'Unit available'}</span>
+                          <span>{unit.price ? fmt(unit.price) : 'Contact'} · <span style={{ color: availability.now ? AVAIL_NOW : AVAIL_LATER }}>{availability.label}</span></span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             )
           })
         )}
       </div>
-        </div>
-      )}
 
       {selectedImage && (
         <div
@@ -217,9 +229,9 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
           aria-modal="true"
           aria-label="Floor plan preview"
           onClick={() => setSelectedImage(null)}
-          style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(0, 0, 0, 0.72)' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(0, 0, 0, 0.82)' }}
         >
-          <div onClick={(event) => event.stopPropagation()} style={{ position: 'relative', maxWidth: 'min(720px, 100%)', maxHeight: '90vh', background: '#fff', borderRadius: 12, padding: 12 }}>
+          <div onClick={(event) => event.stopPropagation()} style={{ position: 'relative', width: 'min(900px, 100%)', minWidth: 'min(600px, calc(100vw - 48px))', maxWidth: 'calc(100vw - 48px)', maxHeight: '94vh', background: '#fff', borderRadius: 12, padding: 16 }}>
             <button type="button" onClick={() => setSelectedImage(null)} aria-label="Close floor plan preview" style={{ position: 'absolute', top: 8, right: 8, zIndex: 1, display: 'grid', placeItems: 'center', width: 32, height: 32, border: 0, borderRadius: '50%', background: 'rgba(0, 0, 0, 0.65)', color: '#fff', cursor: 'pointer' }}>
               <X aria-hidden="true" />
             </button>
@@ -227,7 +239,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
               src={selectedImage}
               alt="Larger floor plan preview"
               onError={(event) => { event.currentTarget.src = '/placeholder.svg' }}
-              style={{ display: 'block', maxWidth: '100%', maxHeight: 'calc(90vh - 24px)', objectFit: 'contain' }}
+              style={{ display: 'block', width: '100%', minHeight: 420, maxHeight: 'calc(94vh - 32px)', objectFit: 'contain' }}
             />
           </div>
         </div>
