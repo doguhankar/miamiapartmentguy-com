@@ -49,7 +49,8 @@ export function MapFilterCard({
 
   const bedroomOptions = ['All bedrooms', 'Studio', '1 Bedroom', '2 Bedrooms', '3+ Bedrooms'];
   const priceOptions = ['All prices', '$0-$2,000', '$2,000-$4,000', '$4,000+'];
-  const moveInOptions = ['Any date', 'ASAP', 'Within 30 days', 'Flexible'];
+  const calendarDays = Array.from({ length: 30 }, (_, index) => index + 1);
+  const calendarBlanks = Array.from({ length: 2 }, (_, index) => `blank-${index}`);
 
   const toggleBedroom = (option: string) => {
     if (option === 'All bedrooms') {
@@ -139,13 +140,13 @@ export function MapFilterCard({
     position: 'absolute',
     top: 'calc(100% + 6px)',
     left: 0,
-    minWidth: '200px',
+    width: '340px',
+    padding: '18px',
     background: '#FFFFFF',
-    border: '1px solid #DCE1E8',
-    borderRadius: '10px',
-    boxShadow: '0 10px 28px rgba(10,15,28,0.14)',
+    border: '1.5px solid #E2E2E5',
+    borderRadius: '12px',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
     zIndex: 50,
-    overflow: 'hidden',
   };
 
   const tileStyle: React.CSSProperties = { border: '1.5px solid #E2E2E5', borderRadius: 8, padding: '10px 6px', textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#17181A', cursor: 'pointer', background: '#FFFFFF' };
@@ -217,7 +218,7 @@ export function MapFilterCard({
           <ChevronDown style={{ width: 14, height: 14, transition: 'transform 0.15s', transform: openDropdown === 'price' ? 'rotate(180deg)' : 'none' }} />
         </button>
         {openDropdown === 'price' && (
-          <div style={{ ...dropdownStyle, width: 290, padding: 18 }}>
+          <div style={dropdownStyle}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 14 }}>
               <input aria-label="Minimum price" placeholder="No min" style={{ ...inputStyle, width: '50%' }} onChange={(e) => togglePrice(e.target.value)} />
               <span>–</span>
@@ -271,8 +272,20 @@ export function MapFilterCard({
         </button>
         {openDropdown === 'moveIn' && (
           <div style={dropdownStyle}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Select move-in date</label>
-            <input aria-label="Move-in date" type="date" value={filters.moveInDate[0] || ''} onChange={(e) => onFilterChange({ ...filters, moveInDate: e.target.value ? [e.target.value] : [] })} style={{ ...inputStyle, width: '100%', marginBottom: 12 }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#17181A' }}>September 2026</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 6 }}>
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => <span key={`${day}-${index}`} style={{ fontSize: 11, color: '#6B7280', textAlign: 'center' }}>{day}</span>)}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 16 }}>
+              {calendarBlanks.map((blank) => <span key={blank} />)}
+              {calendarDays.map((day) => {
+                const date = `2026-09-${String(day).padStart(2, '0')}`;
+                const selected = filters.moveInDate.includes(date);
+                return <button type="button" key={date} aria-label={`September ${day}, 2026`} onClick={() => onFilterChange({ ...filters, moveInDate: selected ? [] : [date] })} style={{ width: 34, height: 34, justifySelf: 'center', border: 0, borderRadius: '50%', background: selected ? '#E8467D' : 'transparent', color: selected ? '#FFFFFF' : '#17181A', fontSize: 13, fontWeight: selected ? 700 : 500, cursor: 'pointer' }}>{day}</button>;
+              })}
+            </div>
             <FilterActions onClear={() => onFilterChange({ ...filters, moveInDate: [] })} onDone={() => setOpenDropdown(null)} />
           </div>
         )}
