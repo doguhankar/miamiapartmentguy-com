@@ -44,13 +44,41 @@ const unitMatchesSize = (unit: AvailableUnit, size: string) => {
   return true;
 };
 
-const unitMatchesBedroomFilter = (unit: AvailableUnit, filter: string) => {
+// The Bedroom Size filter (map-filter-card.tsx) emits '+'-suffixed minimums:
+// 'Studio+', '1+', '2+', '3+', '4+'. Each means "this many bedrooms or more".
+const BEDROOM_MIN_BY_FILTER: Record<string, number> = {
+  'Studio+': 0,
+  '1+': 1,
+  '2+': 2,
+  '3+': 3,
+  '4+': 4,
+};
+
+// Resolve a unit's bedroom count from whichever field actually has it: the
+// numeric/stringified `beds` column from pricing_units, falling back to
+// parsing the floor-plan label text when `beds` isn't present or numeric.
+const getUnitBedCount = (unit: AvailableUnit): number | null => {
+  if (typeof unit.beds === 'number' && Number.isFinite(unit.beds)) return unit.beds;
+  if (typeof unit.beds === 'string') {
+    const trimmed = unit.beds.trim();
+    if (/^studio$/i.test(trimmed)) return 0;
+    const numeric = Number.parseFloat(trimmed);
+    if (Number.isFinite(numeric)) return numeric;
+  }
   const label = `${unit.floorPlanType ?? ''} ${unit.beds ?? ''}`.toLowerCase();
-  if (filter === 'Studio') return label.includes('studio') || /(^|\\D)0(\\D|$)/.test(label);
-  if (filter === '1 Bedroom') return label.includes('1br') || label.includes('1 bedroom') || /(^|\\D)1(\\D|$)/.test(label);
-  if (filter === '2 Bedrooms') return label.includes('2br') || label.includes('2 bedroom') || /(^|\\D)2(\\D|$)/.test(label);
-  if (filter === '3+ Bedrooms') return /(^|\\D)[3-9](\\D|$)/.test(label) || /[3-9]\\s*br/.test(label);
-  return true;
+  if (label.includes('studio')) return 0;
+  const labelMatch = label.match(/(\d+)\s*(br|bed|bedroom)/);
+  if (labelMatch) return Number(labelMatch[1]);
+  return null;
+};
+
+const unitMatchesBedroomFilter = (unit: AvailableUnit, filter: string) => {
+  const min = BEDROOM_MIN_BY_FILTER[filter];
+  if (min === undefined) return true;
+  const beds = getUnitBedCount(unit);
+  // Unknown bed count: don't let a data gap silently exclude the unit.
+  if (beds === null) return true;
+  return beds >= min;
 };
 
 const unitMatchesBathroomFilter = (unit: AvailableUnit, filter: string) => {
@@ -193,9 +221,25 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
     [geocodedBuildings],
   );
   const markerBuildings = useMemo(() => geocodedBuildings, [buildingCoordinatesKey]);
+  const instanceIdRef = useRef(Math.random().toString(36).slice(2, 7));
+
+  // Pricing depends only on which buildings are being shown, not on their
+  // coordinates or on the array's object identity. geocodedBuildings is a
+  // fresh array reference every parent render (it flows from a useMemo that
+  // itself depends on pricingInventory, which this effect writes to via
+  // onPricingDataChange), so depending on that reference directly would
+  // refetch, call onPricingDataChange, and re-render forever even when the
+  // building set hasn't changed. Deriving a stable, order-independent key
+  // from just the building ids breaks that cycle: the effect below only
+  // re-runs when the actual set of buildings changes.
+  const buildingIdsKey = useMemo(
+    () => geocodedBuildings.map((building: any) => String(building.id)).sort().join(','),
+    [geocodedBuildings],
+  );
 
   useEffect(() => {
     let cancelled = false;
+    console.log('[v0] pricing effect FIRING, ids:', buildingIdsKey.split(',').length, 'instanceId:', instanceIdRef.current);
 
     const loadPricing = async () => {
       const entries: Array<readonly [string, { units: AvailableUnit[] }] | null> = [];
@@ -235,6 +279,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
 
       if (!cancelled) {
         const nextPricingData = Object.fromEntries(entries.filter(Boolean) as Array<readonly [string, { units: AvailableUnit[] }]>);
+        console.log('[v0] pricing effect RESOLVED, instanceId:', instanceIdRef.current, 'buildings with units:', Object.keys(nextPricingData).length);
         setPricingData(nextPricingData);
         onPricingDataChange?.(nextPricingData);
         setBuildingImages((imageRows ?? []).reduce((images, row) => {
@@ -248,7 +293,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
 
     loadPricing();
     return () => { cancelled = true };
-  }, [geocodedBuildings]);
+  }, [buildingIdsKey]);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -775,7 +820,12 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       newFilters.neighborhood = neighborhood.charAt(0).toUpperCase() + neighborhood.slice(1).replace(/-/g, ' ');
     }
     if (bedsParam) {
-      newFilters.bedrooms = [parseInt(bedsParam)];
+      // bedsParam is the raw filter token written by updateUrlWithFilters below
+      // (e.g. 'Studio+', '1+', '2+'). parseInt('4+') silently truncates to the
+      // number 4, which doesn't match any key in BEDROOM_MIN_BY_FILTER and made
+      // every bedroom filter a permissive no-op once it round-tripped through
+      // the URL. Keep it as the original string.
+      newFilters.bedrooms = [bedsParam];
     }
     const urlPrice = getPriceRange(priceMinParam, priceMaxParam);
     if (urlPrice.min !== null || urlPrice.max !== null) {
@@ -950,14 +1000,22 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       return true;
     }
 
-    // Check bedrooms filter
+    // Check bedrooms filter. Like the price pre-filter above, this is a coarse
+    // check against the building's static unit-type list (e.g. ['Studio','1B','2B']);
+    // the precise per-unit check against live pricing data happens downstream. It
+    // must never reject a building the unit-level check would still accept, so an
+    // unrecognized unit type or filter value passes through rather than excluding.
     if (mapFilters.bedrooms.length > 0) {
       const bedroomMatch = mapFilters.bedrooms.some(filter => {
-        if (filter === 'Studio') return building.units.includes('Studio');
-        if (filter === '1 Bedroom') return building.units.includes('1B');
-        if (filter === '2 Bedrooms') return building.units.includes('2B');
-        if (filter === '3+ Bedrooms') return building.units.includes('3B');
-        return false;
+        const min = BEDROOM_MIN_BY_FILTER[filter];
+        if (min === undefined) return true;
+        if (!building.units || building.units.length === 0) return true;
+        return building.units.some(unitType => {
+          if (unitType === 'Studio') return min <= 0;
+          const match = unitType.match(/^(\d+)B$/i);
+          if (!match) return true;
+          return Number(match[1]) >= min;
+        });
       });
       if (!bedroomMatch) return false;
     }
