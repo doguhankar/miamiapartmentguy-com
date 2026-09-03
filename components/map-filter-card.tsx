@@ -135,6 +135,19 @@ export function MapFilterCard({
     overflow: 'hidden',
   };
 
+  const tileStyle: React.CSSProperties = { border: '1.5px solid #E2E2E5', borderRadius: 8, padding: '10px 6px', textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#17181A', cursor: 'pointer', background: '#FFFFFF' };
+  const tealTileStyle: React.CSSProperties = { background: 'rgba(47,182,166,0.10)', borderColor: '#2FB6A6', color: '#1F8377' };
+  const coralTileStyle: React.CSSProperties = { background: 'rgba(232,70,125,0.10)', borderColor: '#E8467D', color: '#C6205A' };
+  const inputStyle: React.CSSProperties = { background: '#F7F7F8', border: '1.5px solid #E2E2E5', borderRadius: '8px', color: '#17181A', fontSize: '14px', fontWeight: 700, padding: '10px 12px', outline: 'none' };
+  const presetStyle: React.CSSProperties = { border: '1.5px solid #E2E2E5', borderRadius: '999px', padding: '7px 14px', fontSize: '13px', fontWeight: 700, color: '#6B7280', cursor: 'pointer', background: '#FFFFFF' };
+  const selectedPresetStyle: React.CSSProperties = { background: 'rgba(47,182,166,0.10)', borderColor: '#2FB6A6', color: '#1F8377' };
+  const FilterActions = ({ onClear, onDone }: { onClear: () => void; onDone: () => void }) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+      <button type="button" onClick={onClear} style={{ background: 'none', border: 0, color: '#6B7280', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Clear</button>
+      <button type="button" onClick={onDone} style={{ background: 'none', border: 0, color: '#1F8377', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Done</button>
+    </div>
+  );
+
   const dropdownItemStyle = (selected: boolean): React.CSSProperties => ({
     width: '100%',
     textAlign: 'left',
@@ -186,27 +199,21 @@ export function MapFilterCard({
 
       {/* Price */}
       <div style={{ position: 'relative' }}>
-        <button
-          style={pillStyle(filters.price.length > 0)}
-          onClick={() => setOpenDropdown(openDropdown === 'price' ? null : 'price')}
-        >
+        <button type="button" style={pillStyle(filters.price.length > 0)} onClick={() => setOpenDropdown(openDropdown === 'price' ? null : 'price')}>
           <span>{getSelectedLabel('price')}</span>
           <ChevronDown style={{ width: 14, height: 14, transition: 'transform 0.15s', transform: openDropdown === 'price' ? 'rotate(180deg)' : 'none' }} />
         </button>
         {openDropdown === 'price' && (
-          <div style={dropdownStyle}>
-            {priceOptions.map(opt => (
-              <button
-                key={opt}
-                style={dropdownItemStyle(opt === 'All prices' ? filters.price.length === 0 : filters.price.includes(opt))}
-                onClick={() => togglePrice(opt)}
-                onMouseEnter={(e) => { if (!(opt === 'All prices' ? filters.price.length === 0 : filters.price.includes(opt))) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
-                onMouseLeave={(e) => { if (!(opt === 'All prices' ? filters.price.length === 0 : filters.price.includes(opt))) e.currentTarget.style.background = 'transparent' }}
-              >
-                <input type="checkbox" readOnly style={{ accentColor: '#19C6C0', pointerEvents: 'none' }} checked={opt === 'All prices' ? filters.price.length === 0 : filters.price.includes(opt)} />
-                {opt}
-              </button>
-            ))}
+          <div style={{ ...dropdownStyle, width: 290, padding: 18 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 14 }}>
+              <input aria-label="Minimum price" placeholder="No min" style={{ ...inputStyle, width: '50%' }} onChange={(e) => togglePrice(e.target.value)} />
+              <span>–</span>
+              <input aria-label="Maximum price" placeholder="No max" style={{ ...inputStyle, width: '50%' }} onChange={(e) => togglePrice(e.target.value)} />
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+              {priceOptions.slice(1).map((opt) => <button type="button" key={opt} onClick={() => togglePrice(opt)} style={{ ...presetStyle, ...(filters.price.includes(opt) ? selectedPresetStyle : {}) }}>{opt}</button>)}
+            </div>
+            <FilterActions onClear={() => onFilterChange({ ...filters, price: [] })} onDone={() => setOpenDropdown(null)} />
           </div>
         )}
       </div>
@@ -222,18 +229,16 @@ export function MapFilterCard({
         </button>
         {openDropdown === 'bedrooms' && (
           <div style={dropdownStyle}>
-            {bedroomOptions.map(opt => (
-              <button
-                key={opt}
-                style={dropdownItemStyle(opt === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(opt))}
-                onClick={() => toggleBedroom(opt)}
-                onMouseEnter={(e) => { if (!(opt === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(opt))) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
-                onMouseLeave={(e) => { if (!(opt === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(opt))) e.currentTarget.style.background = 'transparent' }}
-              >
-                <input type="checkbox" readOnly style={{ accentColor: '#19C6C0', pointerEvents: 'none' }} checked={opt === 'All bedrooms' ? filters.bedrooms.length === 0 : filters.bedrooms.includes(opt)} />
-                {opt}
-              </button>
-            ))}
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Beds</div>
+            <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 10 }}>Tap two tiles to set a range</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6, marginBottom: 18 }}>
+              {['Any', 'Studio+', '1+', '2+', '3+', '4+'].map((opt) => { const value = opt === 'Any' ? '' : opt; const selected = value ? filters.bedrooms.includes(value) : filters.bedrooms.length === 0; return <button type="button" key={opt} onClick={() => toggleBedroom(value || 'All bedrooms')} style={{ ...tileStyle, ...(selected ? tealTileStyle : {}) }}>{opt}</button> })}
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Baths</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 16 }}>
+              {['Any', '1+', '2+', '3+'].map((opt) => <button type="button" key={opt} style={{ ...tileStyle, ...(opt === 'Any' ? coralTileStyle : {}) }}>{opt}</button>)}
+            </div>
+            <FilterActions onClear={() => onFilterChange({ ...filters, bedrooms: [] })} onDone={() => setOpenDropdown(null)} />
           </div>
         )}
       </div>
@@ -249,18 +254,9 @@ export function MapFilterCard({
         </button>
         {openDropdown === 'moveIn' && (
           <div style={dropdownStyle}>
-            {moveInOptions.map(opt => (
-              <button
-                key={opt}
-                style={dropdownItemStyle(opt === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(opt))}
-                onClick={() => toggleMoveIn(opt)}
-                onMouseEnter={(e) => { if (!(opt === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(opt))) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
-                onMouseLeave={(e) => { if (!(opt === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(opt))) e.currentTarget.style.background = 'transparent' }}
-              >
-                <input type="checkbox" readOnly style={{ accentColor: '#19C6C0', pointerEvents: 'none' }} checked={opt === 'Any date' ? filters.moveInDate.length === 0 : filters.moveInDate.includes(opt)} />
-                {opt}
-              </button>
-            ))}
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Select move-in date</label>
+            <input aria-label="Move-in date" type="date" value={filters.moveInDate[0] || ''} onChange={(e) => onFilterChange({ ...filters, moveInDate: e.target.value ? [e.target.value] : [] })} style={{ ...inputStyle, width: '100%', marginBottom: 12 }} />
+            <FilterActions onClear={() => onFilterChange({ ...filters, moveInDate: [] })} onDone={() => setOpenDropdown(null)} />
           </div>
         )}
       </div>
