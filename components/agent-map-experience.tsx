@@ -968,12 +968,38 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     return true;
   };
 
-  const filteredBuildings = geocodedBuildings.filter(b => 
+  const filteredBuildings = geocodedBuildings.filter(b =>
     visibleBuildingIds.includes(b.id) &&
     buildingMatchesMapFilters(b) &&
     (b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.neighborhood.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  // Keep map markers and both building lists in sync with every active filter.
+  const visibleFilteredBuildings = useMemo(() => {
+    return filteredBuildings.filter((building) => {
+      const units = pricingInventory[String(building.id)]?.units ?? [];
+
+      if (mapFilters.bedrooms.length > 0 && units.length > 0 && !units.some((unit) =>
+        mapFilters.bedrooms.some((filter) => unitMatchesBedroomFilter(unit, filter))
+      )) return false;
+
+      if (mapFilters.price.length > 0 && units.length > 0 && !units.some((unit) => {
+        if (typeof unit.price !== 'number') return false;
+        return mapFilters.price.some((filter) =>
+          (filter === '$0-$2,000' && unit.price <= 2000) ||
+          (filter === '$2,000-$4,000' && unit.price >= 2000 && unit.price < 4000) ||
+          (filter === '$4,000+' && unit.price >= 4000)
+        );
+      })) return false;
+
+      if (mapFilters.moveInDate.length > 0 && units.length > 0 && !units.some((unit) =>
+        mapFilters.moveInDate.some((filter) => unitAvailableByDate(unit, filter))
+      )) return false;
+
+      return true;
+    });
+  }, [filteredBuildings, mapFilters, pricingInventory]);
 
   const apartmentCount = useMemo(() => {
     if (Object.keys(pricingInventory).length === 0) return 0;
@@ -1194,7 +1220,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   selectedBuilding={selectedBuilding}
   highlightedBuilding={highlightedBuilding}
   onPinClick={(b) => router.push(`/buildings/${b.id}`)}
-  geocodedBuildings={geocodedBuildings}
+                  geocodedBuildings={visibleFilteredBuildings}
   setSelectedBuilding={setSelectedBuilding}
   setInfoBuilding={setInfoBuilding}
   onMapReady={handleMapReady}
@@ -1562,7 +1588,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
             selectedBuilding={selectedBuilding} 
             highlightedBuilding={highlightedBuilding}
             onPinClick={(b) => router.push(`/buildings/${b.id}`)}
-            geocodedBuildings={geocodedBuildings}
+                            geocodedBuildings={visibleFilteredBuildings}
             setSelectedBuilding={setSelectedBuilding}
   setInfoBuilding={setInfoBuilding}
   onMapReady={handleMapReady}
@@ -1589,7 +1615,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
           {/* Scrollable Cards - Vertical Stack — flush from top */}
           <div className="flex-1 overflow-y-auto">
             <div className="p-4 flex flex-col gap-3">
-              {filteredBuildings.map((building) => (
+              {visibleFilteredBuildings.map((building) => (
                 <DesktopBuildingCard
                   key={building.id}
                   building={building}
