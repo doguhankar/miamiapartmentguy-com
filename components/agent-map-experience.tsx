@@ -804,8 +804,18 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       params.set('beds', newFilters.bedrooms[0].toString());
     }
     if (newFilters.price && newFilters.price.length > 0) {
-      params.set('priceMin', newFilters.price[0].min.toString());
-      params.set('priceMax', newFilters.price[0].max.toString());
+      const selectedPrice = newFilters.price[0];
+      if (typeof selectedPrice === 'string') {
+        const range = parseRange(selectedPrice);
+        if (range) {
+          params.set('priceMin', range.min.toString());
+          if (range.max !== null) params.set('priceMax', range.max.toString());
+        }
+      } else if (selectedPrice && typeof selectedPrice === 'object') {
+        const priceRange = selectedPrice as { min?: number; max?: number | null };
+        if (typeof priceRange.min === 'number') params.set('priceMin', priceRange.min.toString());
+        if (typeof priceRange.max === 'number') params.set('priceMax', priceRange.max.toString());
+      }
     }
     if (newFilters.moveInDate && newFilters.moveInDate.length > 0) {
       params.set('moveInDate', newFilters.moveInDate[0]);
