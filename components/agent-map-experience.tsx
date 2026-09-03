@@ -64,10 +64,13 @@ const unitAvailableByDate = (unit: AvailableUnit, requestedDate: string) => {
   return rawDate.slice(0, 10) <= requestedDate;
 };
 
-const parseRange = (value: string) => {
-  const match = value.match(/(\\d[\\d,]*)\\s*[-–]\\s*(\\d[\\d,]*)/);
+  const parseRange = (value: string) => {
+  const openEndedMatch = value.match(/(?:\$?\s*)?(\d[\d,]*)\s*\+$/);
+  if (openEndedMatch) return { min: Number(openEndedMatch[1].replace(/,/g, '')), max: null as number | null };
+
+  const match = value.match(/(?:\$?\s*)?(\d[\d,]*)\s*[-–]\s*(?:\$?\s*)?(\d[\d,]*)/);
   return match ? { min: Number(match[1].replace(/,/g, '')), max: Number(match[2].replace(/,/g, '')) } : null;
-};
+  };
 
 const Tooltip = ({ text }) => {
   const [show, setShow] = useState(false);
@@ -1023,7 +1026,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
 
         if (activeFilters.priceRange.length > 0) {
           const range = parseRange(activeFilters.priceRange[0]);
-          if (range && (typeof unit.price !== 'number' || unit.price < range.min || unit.price > range.max)) return false;
+          if (range && (typeof unit.price !== 'number' || unit.price < range.min || (range.max !== null && unit.price > range.max))) return false;
         }
 
         if (activeFilters.moveIn.length > 0 && !unitAvailableByDate(unit, activeFilters.moveIn[0])) return false;
@@ -1074,7 +1077,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
         .filter((building) => matchesNeighborhood(building) && (pricingInventory[String(building.id)]?.units ?? []).some((unit) => {
           if (filters.unitSize.length > 0 && !filters.unitSize.some((size) => unitMatchesSize(unit, size))) return false;
           const range = filters.priceRange.length > 0 ? parseRange(filters.priceRange[0]) : null;
-          if (range && (typeof unit.price !== 'number' || unit.price < range.min || unit.price > range.max)) return false;
+          if (range && (typeof unit.price !== 'number' || unit.price < range.min || (range.max !== null && unit.price > range.max))) return false;
           if (filters.moveIn.length > 0 && !unitAvailableByDate(unit, filters.moveIn[0])) return false;
           return true;
         }))
