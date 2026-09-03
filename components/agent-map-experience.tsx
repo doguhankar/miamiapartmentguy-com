@@ -29,6 +29,7 @@ type AvailableUnit = {
   square_feet?: number;
   availableDate?: string | null;
   available_date?: string | null;
+  baths?: number | string;
 };
 
 type PricingInventory = Record<string, { units: AvailableUnit[] }>;
@@ -49,6 +50,12 @@ const unitMatchesBedroomFilter = (unit: AvailableUnit, filter: string) => {
   if (filter === '2 Bedrooms') return label.includes('2br') || label.includes('2 bedroom') || /(^|\\D)2(\\D|$)/.test(label);
   if (filter === '3+ Bedrooms') return /(^|\\D)[3-9](\\D|$)/.test(label) || /[3-9]\\s*br/.test(label);
   return true;
+};
+
+const unitMatchesBathroomFilter = (unit: AvailableUnit, filter: string) => {
+  const minimum = Number.parseFloat(filter.replace('+', ''));
+  const baths = typeof unit.baths === 'number' ? unit.baths : Number.parseFloat(String(unit.baths ?? ''));
+  return Number.isFinite(baths) && baths >= minimum;
 };
 
 const unitAvailableByDate = (unit: AvailableUnit, requestedDate: string) => {
@@ -210,8 +217,9 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         const existing = entries.find((entry): entry is readonly [string, { units: AvailableUnit[] }] => entry?.[0] === row.building_id);
         const unit: AvailableUnit = {
           floorPlanType: row.unittype ?? undefined,
-          beds: row.beds ?? undefined,
-          price: typeof row.price === 'number' ? row.price : undefined,
+    beds: row.beds ?? undefined,
+    baths: row.baths ?? undefined,
+    price: typeof row.price === 'number' ? row.price : undefined,
           sqft: typeof row.sqft === 'number' ? row.sqft : undefined,
           availableDate: row.availabilitydate ?? null,
         };
@@ -740,7 +748,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   const [pricingInventory, setPricingInventory] = useState<PricingInventory>({});
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
 
-  const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], price: [], moveInDate: [], neighborhood: null });
+  const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: null });
   const [mapInstance, setMapInstance] = useState<any>(null);
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
 
@@ -762,7 +770,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     const priceMaxParam = searchParams.get('priceMax');
     const moveInDateParam = searchParams.get('moveInDate');
 
-    const newFilters: MapFilterState = { bedrooms: [], price: [], moveInDate: [], neighborhood: null };
+    const newFilters: MapFilterState = { bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: null };
 
     if (neighborhood) {
       newFilters.neighborhood = neighborhood.charAt(0).toUpperCase() + neighborhood.slice(1).replace(/-/g, ' ');
@@ -811,7 +819,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   };
 
   const handleClearAllFilters = () => {
-    setMapFilters({ bedrooms: [], price: [], moveInDate: [], neighborhood: null });
+    setMapFilters({ bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: null });
     router.push('/map');
   };
 
@@ -936,7 +944,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     }
 
     // If no filters are active, include all buildings
-    if (mapFilters.bedrooms.length === 0 && mapFilters.price.length === 0 && mapFilters.moveInDate.length === 0) {
+    if (mapFilters.bedrooms.length === 0 && mapFilters.bathrooms.length === 0 && mapFilters.price.length === 0 && mapFilters.moveInDate.length === 0) {
       return true;
     }
 
@@ -982,6 +990,10 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
 
       if (mapFilters.bedrooms.length > 0 && units.length > 0 && !units.some((unit) =>
         mapFilters.bedrooms.some((filter) => unitMatchesBedroomFilter(unit, filter))
+      )) return false;
+
+      if (mapFilters.bathrooms.length > 0 && units.length > 0 && !units.some((unit) =>
+        mapFilters.bathrooms.some((filter) => unitMatchesBathroomFilter(unit, filter))
       )) return false;
 
       if (mapFilters.price.length > 0 && units.length > 0 && !units.some((unit) => {

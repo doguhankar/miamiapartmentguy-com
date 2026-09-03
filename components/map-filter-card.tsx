@@ -7,6 +7,7 @@ import { AgentModeControl } from '@/components/agent-mode-provider';
 
 export interface MapFilterState {
   bedrooms: string[];
+  bathrooms: string[];
   price: string[];
   moveInDate: string[];
   neighborhood: string | null;
@@ -72,6 +73,17 @@ export function MapFilterCard({
     }
   };
 
+  const toggleBathroom = (option: string) => {
+    if (option === 'Any bathrooms') {
+      onFilterChange({ ...filters, bathrooms: [] });
+      return;
+    }
+    const bathrooms = filters.bathrooms.includes(option)
+      ? filters.bathrooms.filter((value) => value !== option)
+      : [...filters.bathrooms, option];
+    onFilterChange({ ...filters, bathrooms });
+  };
+
   const toggleMoveIn = (option: string) => {
     if (option === 'Any date') {
       onFilterChange({ ...filters, moveInDate: [] });
@@ -86,6 +98,7 @@ export function MapFilterCard({
   const hasActiveFilters =
     filters.neighborhood !== null ||
     filters.bedrooms.length > 0 ||
+    filters.bathrooms.length > 0 ||
     filters.price.length > 0 ||
     filters.moveInDate.length > 0;
 
@@ -236,9 +249,13 @@ export function MapFilterCard({
             </div>
             <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Baths</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 16 }}>
-              {['Any', '1+', '2+', '3+'].map((opt) => <button type="button" key={opt} style={{ ...tileStyle, ...(opt === 'Any' ? coralTileStyle : {}) }}>{opt}</button>)}
+              {['Any', '1+', '2+', '3+'].map((opt) => {
+                const value = opt === 'Any' ? 'Any bathrooms' : opt;
+                const selected = opt === 'Any' ? filters.bathrooms.length === 0 : filters.bathrooms.includes(value);
+                return <button type="button" key={opt} onClick={() => toggleBathroom(value)} style={{ ...tileStyle, ...(selected ? coralTileStyle : {}) }}>{opt}</button>;
+              })}
             </div>
-            <FilterActions onClear={() => onFilterChange({ ...filters, bedrooms: [] })} onDone={() => setOpenDropdown(null)} />
+            <FilterActions onClear={() => onFilterChange({ ...filters, bedrooms: [], bathrooms: [] })} onDone={() => setOpenDropdown(null)} />
           </div>
         )}
       </div>
