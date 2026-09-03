@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { neighborhoodCenters } from '@/lib/neighborhood-centers';
 import { AgentModeControl } from '@/components/agent-mode-provider';
+import { getPriceRange } from '@/lib/price-range';
 
 export interface MapFilterState {
   bedrooms: string[];
@@ -36,9 +37,8 @@ export function MapFilterCard({
   const [priceDraft, setPriceDraft] = useState({ min: '', max: '' });
 
   const commitPriceDraft = (draft = priceDraft) => {
-    const min = draft.min.replace(/[^0-9]/g, '');
-    const max = draft.max.replace(/[^0-9]/g, '');
-    const nextPrice = min || max ? [`${min || ''}-${max || ''}`] : [];
+    const range = getPriceRange(draft.min, draft.max);
+    const nextPrice = range.min !== null || range.max !== null ? [`${range.min ?? ''}-${range.max ?? ''}`] : [];
     onFilterChange({ ...filters, price: nextPrice });
   };
 
@@ -46,8 +46,8 @@ export function MapFilterCard({
 
   useEffect(() => {
     const value = filters.price[0] || '';
-    const [min = '', max = ''] = value.split('-');
-    setPriceDraft({ min, max });
+    const range = getPriceRange(value);
+    setPriceDraft({ min: range.min?.toString() ?? '', max: range.max?.toString() ?? '' });
   }, [filters.price]);
 
   const handleNeighborhoodSelect = (neighborhood: string) => {

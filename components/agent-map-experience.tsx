@@ -20,6 +20,7 @@ import { Heart, Star } from 'lucide-react';
 import { useSaveList } from '@/components/save-list-provider';
 import { createClient } from '@/lib/supabase/client';
 import { buildings as BUILDINGS, type Building } from '@/lib/buildings';
+import { getPriceRange } from '@/lib/price-range';
 
 type AvailableUnit = {
   floorPlanType?: string;
@@ -63,18 +64,6 @@ const unitAvailableByDate = (unit: AvailableUnit, requestedDate: string) => {
   if (!rawDate) return true;
   return rawDate.slice(0, 10) <= requestedDate;
 };
-
-  const parseRange = (value: string) => {
-  const openEndedMatch = value.match(/^\s*(?:\$?\s*)?(\d[\d,]*)\s*\+?\s*$/);
-  if (openEndedMatch) return { min: Number(openEndedMatch[1].replace(/,/g, '')), max: null as number | null };
-
-  const match = value.match(/^\s*(?:\$?\s*)?(\d[\d,]*)?\s*[-–]\s*(?:\$?\s*)?(\d[\d,]*)?\s*$/);
-  if (!match || (!match[1] && !match[2])) return null;
-  return {
-    min: match[1] ? Number(match[1].replace(/,/g, '')) : 0,
-    max: match[2] ? Number(match[2].replace(/,/g, '')) : null,
-  };
-  };
 
 const Tooltip = ({ text }) => {
   const [show, setShow] = useState(false);
@@ -785,8 +774,9 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     if (bedsParam) {
       newFilters.bedrooms = [parseInt(bedsParam)];
     }
-    if (priceMinParam && priceMaxParam) {
-      newFilters.price = [{ min: parseInt(priceMinParam), max: parseInt(priceMaxParam) }];
+    const urlPrice = getPriceRange(priceMinParam, priceMaxParam);
+    if (urlPrice.min !== null || urlPrice.max !== null) {
+      newFilters.price = [`${urlPrice.min ?? ''}-${urlPrice.max ?? ''}`];
     }
     if (moveInDateParam) {
       newFilters.moveInDate = [moveInDateParam];
@@ -809,17 +799,9 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     }
     if (newFilters.price && newFilters.price.length > 0) {
       const selectedPrice = newFilters.price[0];
-      if (typeof selectedPrice === 'string') {
-        const range = parseRange(selectedPrice);
-        if (range) {
-          if (range.min > 0) params.set('priceMin', range.min.toString());
-          if (range.max !== null) params.set('priceMax', range.max.toString());
-        }
-      } else if (selectedPrice && typeof selectedPrice === 'object') {
-        const priceRange = selectedPrice as { min?: number; max?: number | null };
-        if (typeof priceRange.min === 'number') params.set('priceMin', priceRange.min.toString());
-        if (typeof priceRange.max === 'number') params.set('priceMax', priceRange.max.toString());
-      }
+      const priceRange = getPriceRange(selectedPrice);
+      if (priceRange.min !== null) params.set('priceMin', priceRange.min.toString());
+      if (priceRange.max !== null) params.set('priceMax', priceRange.max.toString());
     }
     if (newFilters.moveInDate && newFilters.moveInDate.length > 0) {
       params.set('moveInDate', newFilters.moveInDate[0]);
@@ -1016,8 +998,8 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       if (mapFilters.price.length > 0 && units.length > 0 && !units.some((unit) => {
         if (typeof unit.price !== 'number') return false;
         return mapFilters.price.some((filter) => {
-          const range = parseRange(filter);
-          return !range || (unit.price >= range.min && (range.max === null || unit.price <= range.max));
+          const range = getPriceRange(filter);
+          return (range.min === null || unit.price >= range.min) && (range.max === null || unit.price <= range.max);
         });
       })) return false;
 
