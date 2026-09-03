@@ -305,7 +305,10 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
 
   // Add markers when buildings or selection changes
   useEffect(() => {
-    if (!map.current || !markerBuildings.length) return;
+    // Only bail when the map itself isn't ready. An empty markerBuildings list
+    // is a valid filtered state (e.g. no buildings match) and must still fall
+    // through to clear any stale markers left over from a previous filter.
+    if (!map.current) return;
 
     // Remove existing markers and popups
     markersRef.current.forEach((marker) => marker.remove());
@@ -959,13 +962,16 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       if (!bedroomMatch) return false;
     }
 
-    // Check price filter
+    // Check price filter. This is a coarse, building-level pre-filter based on the
+    // building's cheapest advertised unit (priceMin); the precise per-unit check
+    // against live pricing data happens downstream in visibleFilteredBuildings.
+    // It must never reject a building the unit-level check would still accept, so
+    // only reject here when the building's floor price is above every requested max.
     if (mapFilters.price.length > 0) {
       const priceMatch = mapFilters.price.some(filter => {
-        if (filter === '$0-$2,000') return building.priceMin <= 2000;
-        if (filter === '$2,000-$4,000') return building.priceMin >= 2000 && building.priceMin < 4000;
-        if (filter === '$4,000+') return building.priceMin >= 4000;
-        return false;
+        const range = getPriceRange(filter);
+        if (range.max !== null && building.priceMin > range.max) return false;
+        return true;
       });
       if (!priceMatch) return false;
     }
@@ -1019,21 +1025,21 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       return total + units.filter((unit) => {
         if (activeFilters.unitSize.length > 0 && !activeFilters.unitSize.some((size) => unitMatchesSize(unit, size))) return false;
 
-        if (activeFilters.priceRange.length > 0) {
-          const range = parseRange(activeFilters.priceRange[0]);
-          if (range && (typeof unit.price !== 'number' || unit.price < range.min || (range.max !== null && unit.price > range.max))) return false;
-        }
+  if (activeFilters.priceRange.length > 0) {
+  const range = getPriceRange(activeFilters.priceRange[0]);
+  if ((range.min !== null || range.max !== null) && (typeof unit.price !== 'number' || (range.min !== null && unit.price < range.min) || (range.max !== null && unit.price > range.max))) return false;
+  }
 
         if (activeFilters.moveIn.length > 0 && !unitAvailableByDate(unit, activeFilters.moveIn[0])) return false;
         if (mapFilters.bedrooms.length > 0 && !mapFilters.bedrooms.some((filter) => unitMatchesBedroomFilter(unit, filter))) return false;
 
-        if (mapFilters.price.length > 0) {
-          const priceMatch = typeof unit.price === 'number' && mapFilters.price.some((filter) => {
-            const range = parseRange(filter);
-            return !range || (unit.price >= range.min && (range.max === null || unit.price <= range.max));
-          });
-          if (!priceMatch) return false;
-        }
+  if (mapFilters.price.length > 0) {
+  const priceMatch = typeof unit.price === 'number' && mapFilters.price.some((filter) => {
+  const range = getPriceRange(filter);
+  return (range.min === null || unit.price >= range.min) && (range.max === null || unit.price <= range.max);
+  });
+  if (!priceMatch) return false;
+  }
 
         if (mapFilters.moveInDate.length > 0 && !unitAvailableByDate(unit, mapFilters.moveInDate[0])) return false;
         return true;
@@ -1070,8 +1076,8 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       const matchingBuildingIds = geocodedBuildings
         .filter((building) => matchesNeighborhood(building) && (pricingInventory[String(building.id)]?.units ?? []).some((unit) => {
           if (filters.unitSize.length > 0 && !filters.unitSize.some((size) => unitMatchesSize(unit, size))) return false;
-          const range = filters.priceRange.length > 0 ? parseRange(filters.priceRange[0]) : null;
-          if (range && (typeof unit.price !== 'number' || unit.price < range.min || (range.max !== null && unit.price > range.max))) return false;
+  const range = filters.priceRange.length > 0 ? getPriceRange(filters.priceRange[0]) : { min: null, max: null };
+  if ((range.min !== null || range.max !== null) && (typeof unit.price !== 'number' || (range.min !== null && unit.price < range.min) || (range.max !== null && unit.price > range.max))) return false;
           if (filters.moveIn.length > 0 && !unitAvailableByDate(unit, filters.moveIn[0])) return false;
           return true;
         }))
@@ -1102,9 +1108,9 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
 
         // Check the modal's live dual-handle price range.
         if (filters.priceRange.length > 0 && hasMatchingUnits) {
-          const range = filters.priceRange[0].match(/(\d[\d,]*)\s*[-��]\s*(\d[\d,]*)/);
-          const min = range ? Number(range[1].replace(/,/g, '')) : 0;
-          const max = range ? Number(range[2].replace(/,/g, '')) : Number.POSITIVE_INFINITY;
+          const range = getPriceRange(filters.priceRange[0]);
+          const min = range.min ?? 0;
+          const max = range.max ?? Number.POSITIVE_INFINITY;
           hasMatchingUnits = hasMatchingUnits && building.priceMin >= min && building.priceMin <= max;
         }
 
