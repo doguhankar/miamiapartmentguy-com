@@ -208,7 +208,7 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setInfoBuilding: setInfoBuildingFromMap, onMapReady, onPricingDataChange, onBuildingsInView }) => {
+const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, allBuildingIds, setSelectedBuilding, setInfoBuilding: setInfoBuildingFromMap, onMapReady, onPricingDataChange, onBuildingsInView }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
@@ -221,31 +221,30 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
     [geocodedBuildings],
   );
   const markerBuildings = useMemo(() => geocodedBuildings, [buildingCoordinatesKey]);
-  const instanceIdRef = useRef(Math.random().toString(36).slice(2, 7));
 
-  // Pricing depends only on which buildings are being shown, not on their
-  // coordinates or on the array's object identity. geocodedBuildings is a
-  // fresh array reference every parent render (it flows from a useMemo that
-  // itself depends on pricingInventory, which this effect writes to via
-  // onPricingDataChange), so depending on that reference directly would
-  // refetch, call onPricingDataChange, and re-render forever even when the
-  // building set hasn't changed. Deriving a stable, order-independent key
-  // from just the building ids breaks that cycle: the effect below only
-  // re-runs when the actual set of buildings changes.
-  const buildingIdsKey = useMemo(
-    () => geocodedBuildings.map((building: any) => String(building.id)).sort().join(','),
-    [geocodedBuildings],
-  );
+  // This component is mounted twice at once (mobile layout + desktop layout,
+  // toggled with CSS only), so two instances of this effect are always alive
+  // together. It must key off the full, stable building-id list (allBuildingIds,
+  // derived from the parent's unfiltered geocodedBuildings state) rather than this
+  // component's own `geocodedBuildings` prop, which is the FILTERED list
+  // (visibleFilteredBuildings) and is itself derived from pricingInventory — the
+  // very state this effect writes back via onPricingDataChange. Keying off the
+  // filtered list created a cycle: fetch -> setPricingInventory -> filtered list
+  // changes -> refetch, and with two instances racing to overwrite the same
+  // parent state, that cycle showed up as buildings/pins continuously flashing.
+  // Keying off the full, filter-independent id list breaks the cycle outright:
+  // this key never changes as a result of anything this effect produces, so
+  // pricing is fetched once per building's actual identity, not once per re-render.
+  const buildingIdsKey = useMemo(() => [...allBuildingIds].sort().join(','), [allBuildingIds]);
 
   useEffect(() => {
     let cancelled = false;
-    console.log('[v0] pricing effect FIRING, ids:', buildingIdsKey.split(',').length, 'instanceId:', instanceIdRef.current);
 
     const loadPricing = async () => {
       const entries: Array<readonly [string, { units: AvailableUnit[] }] | null> = [];
 
       const supabase = createClient();
-      const buildingIds = geocodedBuildings.map((building: any) => String(building.id));
+      const buildingIds = allBuildingIds;
       const { data: unitRows } = await supabase
         .from('units')
         .select('building_id, price, beds, baths, sqft, availabilitydate, unittype')
@@ -274,12 +273,11 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       const { data: imageRows } = await supabase
         .from('building_images')
         .select('building_id, image_url, sort_order')
-        .in('building_id', geocodedBuildings.map((building: any) => String(building.id)))
+        .in('building_id', allBuildingIds)
         .order('sort_order', { ascending: true });
 
       if (!cancelled) {
         const nextPricingData = Object.fromEntries(entries.filter(Boolean) as Array<readonly [string, { units: AvailableUnit[] }]>);
-        console.log('[v0] pricing effect RESOLVED, instanceId:', instanceIdRef.current, 'buildings with units:', Object.keys(nextPricingData).length);
         setPricingData(nextPricingData);
         onPricingDataChange?.(nextPricingData);
         setBuildingImages((imageRows ?? []).reduce((images, row) => {
@@ -745,6 +743,11 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   }, [savedIds]);
   const geocodeCache = useRef(new Map());
   const [geocodedBuildings, setGeocodedBuildings] = useState(BUILDINGS);
+  // The full, unfiltered building-id set. Geocoding only fills in lat/lng on the
+  // same buildings, so this list's identity is stable across that update; it's
+  // passed to MapComponent so its pricing fetch keys off "every building" rather
+  // than the filtered list, which would reintroduce a fetch/filter feedback loop.
+  const allBuildingIds = useMemo(() => geocodedBuildings.map((building) => String(building.id)), [geocodedBuildings]);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [highlightedBuilding, setHighlightedBuilding] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -1294,6 +1297,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   highlightedBuilding={highlightedBuilding}
   onPinClick={(b) => router.push(`/buildings/${b.id}`)}
                   geocodedBuildings={visibleFilteredBuildings}
+                  allBuildingIds={allBuildingIds}
   setSelectedBuilding={setSelectedBuilding}
   setInfoBuilding={setInfoBuilding}
   onMapReady={handleMapReady}
@@ -1662,6 +1666,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
             highlightedBuilding={highlightedBuilding}
             onPinClick={(b) => router.push(`/buildings/${b.id}`)}
                             geocodedBuildings={visibleFilteredBuildings}
+                  allBuildingIds={allBuildingIds}
             setSelectedBuilding={setSelectedBuilding}
   setInfoBuilding={setInfoBuilding}
   onMapReady={handleMapReady}
