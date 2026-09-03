@@ -65,11 +65,15 @@ const unitAvailableByDate = (unit: AvailableUnit, requestedDate: string) => {
 };
 
   const parseRange = (value: string) => {
-  const openEndedMatch = value.match(/(?:\$?\s*)?(\d[\d,]*)\s*\+$/);
+  const openEndedMatch = value.match(/^\s*(?:\$?\s*)?(\d[\d,]*)\s*\+?\s*$/);
   if (openEndedMatch) return { min: Number(openEndedMatch[1].replace(/,/g, '')), max: null as number | null };
 
-  const match = value.match(/(?:\$?\s*)?(\d[\d,]*)\s*[-–]\s*(?:\$?\s*)?(\d[\d,]*)/);
-  return match ? { min: Number(match[1].replace(/,/g, '')), max: Number(match[2].replace(/,/g, '')) } : null;
+  const match = value.match(/^\s*(?:\$?\s*)?(\d[\d,]*)?\s*[-–]\s*(?:\$?\s*)?(\d[\d,]*)?\s*$/);
+  if (!match || (!match[1] && !match[2])) return null;
+  return {
+    min: match[1] ? Number(match[1].replace(/,/g, '')) : 0,
+    max: match[2] ? Number(match[2].replace(/,/g, '')) : null,
+  };
   };
 
 const Tooltip = ({ text }) => {
@@ -808,7 +812,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       if (typeof selectedPrice === 'string') {
         const range = parseRange(selectedPrice);
         if (range) {
-          params.set('priceMin', range.min.toString());
+          if (range.min > 0) params.set('priceMin', range.min.toString());
           if (range.max !== null) params.set('priceMax', range.max.toString());
         }
       } else if (selectedPrice && typeof selectedPrice === 'object') {
@@ -1011,11 +1015,10 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
 
       if (mapFilters.price.length > 0 && units.length > 0 && !units.some((unit) => {
         if (typeof unit.price !== 'number') return false;
-        return mapFilters.price.some((filter) =>
-          (filter === '$0-$2,000' && unit.price <= 2000) ||
-          (filter === '$2,000-$4,000' && unit.price >= 2000 && unit.price < 4000) ||
-          (filter === '$4,000+' && unit.price >= 4000)
-        );
+        return mapFilters.price.some((filter) => {
+          const range = parseRange(filter);
+          return !range || (unit.price >= range.min && (range.max === null || unit.price <= range.max));
+        });
       })) return false;
 
       if (mapFilters.moveInDate.length > 0 && units.length > 0 && !units.some((unit) =>
@@ -1042,12 +1045,11 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
         if (activeFilters.moveIn.length > 0 && !unitAvailableByDate(unit, activeFilters.moveIn[0])) return false;
         if (mapFilters.bedrooms.length > 0 && !mapFilters.bedrooms.some((filter) => unitMatchesBedroomFilter(unit, filter))) return false;
 
-        if (mapFilters.price.length > 0 && typeof unit.price === 'number') {
-          const priceMatch = mapFilters.price.some((filter) =>
-            (filter === '$0-$2,000' && unit.price <= 2000) ||
-            (filter === '$2,000-$4,000' && unit.price >= 2000 && unit.price < 4000) ||
-            (filter === '$4,000+' && unit.price >= 4000)
-          );
+        if (mapFilters.price.length > 0) {
+          const priceMatch = typeof unit.price === 'number' && mapFilters.price.some((filter) => {
+            const range = parseRange(filter);
+            return !range || (unit.price >= range.min && (range.max === null || unit.price <= range.max));
+          });
           if (!priceMatch) return false;
         }
 

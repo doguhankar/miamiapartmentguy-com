@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { neighborhoodCenters } from '@/lib/neighborhood-centers';
 import { AgentModeControl } from '@/components/agent-mode-provider';
@@ -33,8 +33,22 @@ export function MapFilterCard({
   onSearchChange,
 }: MapFilterCardProps) {
   const [openDropdown, setOpenDropdown] = useState<'neighborhood' | 'bedrooms' | 'price' | 'moveIn' | null>(null);
+  const [priceDraft, setPriceDraft] = useState({ min: '', max: '' });
+
+  const commitPriceDraft = (draft = priceDraft) => {
+    const min = draft.min.replace(/[^0-9]/g, '');
+    const max = draft.max.replace(/[^0-9]/g, '');
+    const nextPrice = min || max ? [`${min || ''}-${max || ''}`] : [];
+    onFilterChange({ ...filters, price: nextPrice });
+  };
 
   const neighborhoodOptions = Object.keys(neighborhoodCenters).sort();
+
+  useEffect(() => {
+    const value = filters.price[0] || '';
+    const [min = '', max = ''] = value.split('-');
+    setPriceDraft({ min, max });
+  }, [filters.price]);
 
   const handleNeighborhoodSelect = (neighborhood: string) => {
     if (filters.neighborhood === neighborhood) {
@@ -48,7 +62,6 @@ export function MapFilterCard({
   };
 
   const bedroomOptions = ['All bedrooms', 'Studio', '1 Bedroom', '2 Bedrooms', '3+ Bedrooms'];
-  const priceOptions = ['All prices', '$0-$2,000', '$2,000-$4,000', '$4,000+'];
   const calendarDays = Array.from({ length: 30 }, (_, index) => index + 1);
   const calendarBlanks = Array.from({ length: 2 }, (_, index) => `blank-${index}`);
 
@@ -60,17 +73,6 @@ export function MapFilterCard({
         ? filters.bedrooms.filter(b => b !== option)
         : [...filters.bedrooms, option];
       onFilterChange({ ...filters, bedrooms: newBedrooms });
-    }
-  };
-
-  const togglePrice = (option: string) => {
-    if (option === 'All prices') {
-      onFilterChange({ ...filters, price: [] });
-    } else {
-      const newPrice = filters.price.includes(option)
-        ? filters.price.filter(p => p !== option)
-        : [...filters.price, option];
-      onFilterChange({ ...filters, price: newPrice });
     }
   };
 
@@ -153,8 +155,6 @@ export function MapFilterCard({
   const tealTileStyle: React.CSSProperties = { background: 'rgba(47,182,166,0.10)', borderColor: '#2FB6A6', color: '#1F8377' };
   const coralTileStyle: React.CSSProperties = { background: 'rgba(232,70,125,0.10)', borderColor: '#E8467D', color: '#C6205A' };
   const inputStyle: React.CSSProperties = { background: '#F7F7F8', border: '1.5px solid #E2E2E5', borderRadius: '8px', color: '#17181A', fontSize: '14px', fontWeight: 700, padding: '10px 12px', outline: 'none' };
-  const presetStyle: React.CSSProperties = { border: '1.5px solid #E2E2E5', borderRadius: '999px', padding: '7px 14px', fontSize: '13px', fontWeight: 700, color: '#6B7280', cursor: 'pointer', background: '#FFFFFF' };
-  const selectedPresetStyle: React.CSSProperties = { background: 'rgba(47,182,166,0.10)', borderColor: '#2FB6A6', color: '#1F8377' };
   const FilterActions = ({ onClear, onDone }: { onClear: () => void; onDone: () => void }) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
       <button type="button" onClick={onClear} style={{ background: 'none', border: 0, color: '#6B7280', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Clear</button>
@@ -220,14 +220,11 @@ export function MapFilterCard({
         {openDropdown === 'price' && (
           <div style={dropdownStyle}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 14 }}>
-              <input aria-label="Minimum price" placeholder="No min" style={{ ...inputStyle, width: '50%' }} onChange={(e) => togglePrice(e.target.value)} />
+              <input aria-label="Minimum price" placeholder="No min" value={priceDraft.min} style={{ ...inputStyle, width: '50%' }} onChange={(e) => { const nextDraft = { ...priceDraft, min: e.target.value }; setPriceDraft(nextDraft); commitPriceDraft(nextDraft); }} onBlur={() => commitPriceDraft()} onKeyDown={(e) => { if (e.key === 'Enter') commitPriceDraft(); }} />
               <span>–</span>
-              <input aria-label="Maximum price" placeholder="No max" style={{ ...inputStyle, width: '50%' }} onChange={(e) => togglePrice(e.target.value)} />
+              <input aria-label="Maximum price" placeholder="No max" value={priceDraft.max} style={{ ...inputStyle, width: '50%' }} onChange={(e) => { const nextDraft = { ...priceDraft, max: e.target.value }; setPriceDraft(nextDraft); commitPriceDraft(nextDraft); }} onBlur={() => commitPriceDraft()} onKeyDown={(e) => { if (e.key === 'Enter') commitPriceDraft(); }} />
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-              {priceOptions.slice(1).map((opt) => <button type="button" key={opt} onClick={() => togglePrice(opt)} style={{ ...presetStyle, ...(filters.price.includes(opt) ? selectedPresetStyle : {}) }}>{opt}</button>)}
-            </div>
-            <FilterActions onClear={() => onFilterChange({ ...filters, price: [] })} onDone={() => setOpenDropdown(null)} />
+            <FilterActions onClear={() => { setPriceDraft({ min: '', max: '' }); onFilterChange({ ...filters, price: [] }); }} onDone={() => { commitPriceDraft(); setOpenDropdown(null); }} />
           </div>
         )}
       </div>
