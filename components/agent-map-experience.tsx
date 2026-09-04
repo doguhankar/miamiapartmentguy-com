@@ -241,34 +241,54 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
     let cancelled = false;
 
     const loadPricing = async () => {
-      const entries: Array<readonly [string, { units: AvailableUnit[] }] | null> = [];
+      const unitsByBuilding = new Map<string, AvailableUnit[]>();
 
       const supabase = createClient();
       const buildingIds = allBuildingIds;
-      const { data: unitRows } = await supabase
-        .from('units')
-        .select('building_id, price, beds, baths, sqft, availabilitydate, unittype')
-        .in('building_id', buildingIds)
-        .not('building_id', 'is', null);
 
-      (unitRows ?? []).forEach((row) => {
-        if (!row.building_id) return;
-        const existing = entries.find((entry): entry is readonly [string, { units: AvailableUnit[] }] => entry?.[0] === row.building_id);
-        const unit: AvailableUnit = {
-          floorPlanType: row.unittype ?? undefined,
-    beds: row.beds ?? undefined,
-    baths: row.baths ?? undefined,
-    price: typeof row.price === 'number' ? row.price : undefined,
-          sqft: typeof row.sqft === 'number' ? row.sqft : undefined,
-          availableDate: row.availabilitydate ?? null,
-        };
+      // PostgREST caps a single response at 1000 rows by default. The units
+      // table has 3500+ rows across all buildings, so an unbounded select
+      // silently truncated to the first 1000 rows — dropping every building
+      // whose rows fell past that cutoff (e.g. Miami World Tower) entirely
+      // out of pricingInventory. Missing pricing/unit data for a building is
+      // then (correctly) treated as "no data yet" and shown unfiltered,
+      // which is what let those buildings bypass bedroom/price filters.
+      // Page through with .range() until a page comes back short.
+      const PAGE_SIZE = 1000;
+      for (let page = 0; !cancelled; page++) {
+        const from = page * PAGE_SIZE;
+        const to = from + PAGE_SIZE - 1;
+        const { data: unitRows, error } = await supabase
+          .from('units')
+          .select('building_id, price, beds, baths, sqft, availabilitydate, unittype')
+          .in('building_id', buildingIds)
+          .not('building_id', 'is', null)
+          .range(from, to);
 
-        if (existing) {
-          existing[1].units.push(unit);
-        } else {
-          entries.push([String(row.building_id), { units: [unit] }]);
-        }
-      });
+        if (error || !unitRows) break;
+
+        unitRows.forEach((row) => {
+          if (!row.building_id) return;
+          const key = String(row.building_id);
+          const unit: AvailableUnit = {
+            floorPlanType: row.unittype ?? undefined,
+            beds: row.beds ?? undefined,
+            baths: row.baths ?? undefined,
+            price: typeof row.price === 'number' ? row.price : undefined,
+            sqft: typeof row.sqft === 'number' ? row.sqft : undefined,
+            availableDate: row.availabilitydate ?? null,
+          };
+          const existing = unitsByBuilding.get(key);
+          if (existing) existing.push(unit);
+          else unitsByBuilding.set(key, [unit]);
+        });
+
+        if (unitRows.length < PAGE_SIZE) break;
+      }
+
+      const entries: Array<readonly [string, { units: AvailableUnit[] }] | null> = Array.from(
+        unitsByBuilding.entries(),
+      ).map(([id, units]) => [id, { units }] as const);
 
       const { data: imageRows } = await supabase
         .from('building_images')
@@ -1050,31 +1070,40 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   );
 
   // Keep map markers and both building lists in sync with every active filter.
+  // Each active filter category must be satisfied by the SAME unit at once —
+  // not by separate units each satisfying one filter in isolation. Checking
+  // categories in independent `.some()` passes let a building pass when, say,
+  // its cheapest Studio matched the price filter while a different, pricier
+  // 1-bed matched the bedroom filter — no single unit actually matched both.
   const visibleFilteredBuildings = useMemo(() => {
     return filteredBuildings.filter((building) => {
       const units = pricingInventory[String(building.id)]?.units ?? [];
+      const hasActiveFilter =
+        mapFilters.bedrooms.length > 0 ||
+        mapFilters.bathrooms.length > 0 ||
+        mapFilters.price.length > 0 ||
+        mapFilters.moveInDate.length > 0;
 
-      if (mapFilters.bedrooms.length > 0 && units.length > 0 && !units.some((unit) =>
-        mapFilters.bedrooms.some((filter) => unitMatchesBedroomFilter(unit, filter))
-      )) return false;
+      if (!hasActiveFilter || units.length === 0) return true;
 
-      if (mapFilters.bathrooms.length > 0 && units.length > 0 && !units.some((unit) =>
-        mapFilters.bathrooms.some((filter) => unitMatchesBathroomFilter(unit, filter))
-      )) return false;
+      return units.some((unit) => {
+        if (mapFilters.bedrooms.length > 0 && !mapFilters.bedrooms.some((filter) => unitMatchesBedroomFilter(unit, filter))) return false;
 
-      if (mapFilters.price.length > 0 && units.length > 0 && !units.some((unit) => {
-        if (typeof unit.price !== 'number') return false;
-        return mapFilters.price.some((filter) => {
-          const range = getPriceRange(filter);
-          return (range.min === null || unit.price >= range.min) && (range.max === null || unit.price <= range.max);
-        });
-      })) return false;
+        if (mapFilters.bathrooms.length > 0 && !mapFilters.bathrooms.some((filter) => unitMatchesBathroomFilter(unit, filter))) return false;
 
-      if (mapFilters.moveInDate.length > 0 && units.length > 0 && !units.some((unit) =>
-        mapFilters.moveInDate.some((filter) => unitAvailableByDate(unit, filter))
-      )) return false;
+        if (mapFilters.price.length > 0) {
+          if (typeof unit.price !== 'number') return false;
+          const priceMatch = mapFilters.price.some((filter) => {
+            const range = getPriceRange(filter);
+            return (range.min === null || unit.price >= range.min) && (range.max === null || unit.price <= range.max);
+          });
+          if (!priceMatch) return false;
+        }
 
-      return true;
+        if (mapFilters.moveInDate.length > 0 && !mapFilters.moveInDate.some((filter) => unitAvailableByDate(unit, filter))) return false;
+
+        return true;
+      });
     });
   }, [filteredBuildings, mapFilters, pricingInventory]);
 
@@ -1582,7 +1611,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
           </button>
         )}
       </div>
-      {/* ── END MOBILE LAYOUT ─────────────────────────���───────────────────── */}
+      {/* ── END MOBILE LAYOUT ─────────────────────────����───────────────────── */}
 
       {/* Desktop Header - Fixed at Top */}
       <div className="hidden md:flex items-center justify-between px-8 py-7 bg-white flex-shrink-0 border-b border-[#E8EBF0]" style={{ height: '74px' }}>
