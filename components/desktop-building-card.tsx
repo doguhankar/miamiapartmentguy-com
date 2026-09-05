@@ -3,13 +3,22 @@
 import { Building } from "@/lib/buildings"
 import { ImageCarousel } from "./image-carousel"
 import { SaveHeartButton } from "./save-heart-button"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Star } from "lucide-react"
-import { useBuildingPrice } from "@/hooks/use-building-price"
 import { CommissionPill } from "@/components/commission-pill"
+import { getPriceRange } from "@/lib/price-range"
+import {
+  type AvailableUnit,
+  unitMatchesBedroomFilter,
+  unitMatchesBathroomFilter,
+  unitAvailableByDate,
+} from "@/lib/unit-filters"
+import type { MapFilterState } from "@/components/map-filter-card"
 
 interface DesktopBuildingCardProps {
   building: Building
+  units?: AvailableUnit[]
+  mapFilters?: MapFilterState
   isHighlighted?: boolean
   isAgentMode?: boolean
   isStarred?: boolean
@@ -18,6 +27,58 @@ interface DesktopBuildingCardProps {
   onClick?: (building: Building) => void
   onStar?: (building: Building) => void
   onViewDetails?: (building: Building) => void
+}
+
+// Same "Available Month D" / "Available Now" convention used on the building
+// detail page, condensed to fit a single summary line on the card.
+function formatAvailability(availableDate: string | null | undefined): string {
+  if (!availableDate) return "Contact for availability"
+  const today = new Date()
+  const todayStr = today.toISOString().split("T")[0]
+  const dateOnly = availableDate.slice(0, 10)
+  if (dateOnly <= todayStr) return "Avail now"
+  const match = dateOnly.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!match) return availableDate
+  const [, year, month, day] = match
+  const date = new Date(Number(year), Number(month) - 1, Number(day))
+  const monthName = date.toLocaleDateString("en-US", { month: "short" })
+  return `Avail ${monthName} ${Number(day)}`
+}
+
+// Pick the single best unit for the active filters: cheapest match wins,
+// soonest move-in date breaks a price tie.
+function pickBestMatchingUnit(units: AvailableUnit[], mapFilters?: MapFilterState): AvailableUnit | null {
+  if (!mapFilters) return null
+  const { bedrooms, bathrooms, price, moveInDate } = mapFilters
+  const hasActiveFilter = bedrooms.length > 0 || bathrooms.length > 0 || price.length > 0 || moveInDate.length > 0
+  if (!hasActiveFilter || units.length === 0) return null
+
+  const matches = units.filter((unit) => {
+    if (bedrooms.length > 0 && !bedrooms.some((filter) => unitMatchesBedroomFilter(unit, filter))) return false
+    if (bathrooms.length > 0 && !bathrooms.some((filter) => unitMatchesBathroomFilter(unit, filter))) return false
+    if (price.length > 0) {
+      if (typeof unit.price !== "number") return false
+      const matchesPrice = price.some((filter) => {
+        const range = getPriceRange(filter)
+        return (range.min === null || unit.price! >= range.min) && (range.max === null || unit.price! <= range.max)
+      })
+      if (!matchesPrice) return false
+    }
+    if (moveInDate.length > 0 && !moveInDate.some((filter) => unitAvailableByDate(unit, filter))) return false
+    return true
+  })
+
+  if (matches.length === 0) return null
+
+  return matches.reduce((best, unit) => {
+    if (typeof unit.price !== "number") return best
+    if (typeof best.price !== "number") return unit
+    if (unit.price < best.price) return unit
+    if (unit.price > best.price) return best
+    const bestDate = best.availableDate ?? best.available_date ?? ""
+    const unitDate = unit.availableDate ?? unit.available_date ?? ""
+    return unitDate < bestDate ? unit : best
+  })
 }
 
 const AMENITY_COLORS: Record<string, { bg: string; text: string }> = {
@@ -46,6 +107,8 @@ function extractAmenities(building: Building): string[] {
 
 export function DesktopBuildingCard({
   building,
+  units = [],
+  mapFilters,
   isHighlighted = false,
   isAgentMode = false,
   isStarred = false,
@@ -57,10 +120,30 @@ export function DesktopBuildingCard({
 }: DesktopBuildingCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const amenities = extractAmenities(building)
-  const { studioMin, oneBedMin, twoBedMin } = useBuildingPrice(building.id, building.priceMin)
+
+  // Default Studio/1Bed/2Bed starting prices, derived from the same live
+  // pricing data the parent already fetched once for every building — no
+  // per-card fetch needed.
+  const { studioMin, oneBedMin, twoBedMin } = useMemo(() => {
+    let studio: number | null = null
+    let oneBed: number | null = null
+    let twoBed: number | null = null
+    for (const unit of units) {
+      if (typeof unit.price !== "number") continue
+      if (unit.beds === 0) studio = studio === null ? unit.price : Math.min(studio, unit.price)
+      else if (unit.beds === 1) oneBed = oneBed === null ? unit.price : Math.min(oneBed, unit.price)
+      else if (unit.beds === 2) twoBed = twoBed === null ? unit.price : Math.min(twoBed, unit.price)
+    }
+    return { studioMin: studio, oneBedMin: oneBed, twoBedMin: twoBed }
+  }, [units])
   const studioPrice = studioMin ?? building.priceMin
   const oneBedPrice = oneBedMin ?? building.priceMin
   const twoBedPrice = twoBedMin ?? building.priceMin
+
+  // When a bedroom/bathroom/price/move-in filter is active, swap the static
+  // 3-price row for the single unit that actually matches — otherwise a
+  // filtered building can show a price/bed combo that isn't real for it.
+  const bestMatch = useMemo(() => pickBestMatchingUnit(units, mapFilters), [units, mapFilters])
 
   const handleMouseEnter = () => {
     setIsHovered(true)
@@ -88,11 +171,19 @@ export function DesktopBuildingCard({
         </div>
         <div style={{flex:1, display:'flex', flexDirection:'column', justifyContent:'space-between'}}>
           <div>
-            <div style={{display:'flex', marginBottom:6}}>
-              <div style={{paddingRight:12, marginRight:12, borderRight:'0.5px solid #e5e7eb'}}><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{studioPrice}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>Studio</div></div>
-              <div style={{paddingRight:12, marginRight:12, borderRight:'0.5px solid #e5e7eb'}}><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{oneBedPrice}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>1 Bed</div></div>
-              <div><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{twoBedPrice}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>2 Beds</div></div>
-            </div>
+            {bestMatch ? (
+              <div style={{marginBottom:6}}>
+                <div style={{fontSize:13, fontWeight:600, color:'#19C6C0'}}>
+                  Unit {bestMatch.floorPlanType ?? '—'} · ${bestMatch.price?.toLocaleString()} · {formatAvailability(bestMatch.availableDate ?? bestMatch.available_date)}
+                </div>
+              </div>
+            ) : (
+              <div style={{display:'flex', marginBottom:6}}>
+                <div style={{paddingRight:12, marginRight:12, borderRight:'0.5px solid #e5e7eb'}}><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{studioPrice}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>Studio</div></div>
+                <div style={{paddingRight:12, marginRight:12, borderRight:'0.5px solid #e5e7eb'}}><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{oneBedPrice}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>1 Bed</div></div>
+                <div><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{twoBedPrice}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>2 Beds</div></div>
+              </div>
+            )}
             <span style={{background:'#fef3cd', color:'#92660a', fontSize:10, fontWeight:500, padding:'2px 7px', borderRadius:5, marginBottom:6, display:'inline-block'}}>SPECIALS</span>
             <div style={{fontSize:11, color:'#6b7280', lineHeight:1.4, marginBottom:8}}>{building.amenities.join(', ')}</div>
           </div>

@@ -62,8 +62,36 @@ export function MapFilterCard({
   };
 
   const bedroomOptions = ['All bedrooms', 'Studio', '1 Bedroom', '2 Bedrooms', '3+ Bedrooms'];
-  const calendarDays = Array.from({ length: 30 }, (_, index) => index + 1);
-  const calendarBlanks = Array.from({ length: 2 }, (_, index) => `blank-${index}`);
+
+  // Move-in Date calendar: driven by the real current date rather than a
+  // fixed month, so it can actually be navigated to any month covered by
+  // real unit availability data (which spans well beyond a single month).
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const maxMoveInMonth = new Date(today.getFullYear(), today.getMonth() + 12, 1);
+  const [moveInVisibleMonth, setMoveInVisibleMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
+
+  useEffect(() => {
+    if (openDropdown !== 'moveIn') return;
+    const selected = filters.moveInDate[0];
+    if (selected) {
+      const [year, month] = selected.split('-').map(Number);
+      if (Number.isFinite(year) && Number.isFinite(month)) {
+        setMoveInVisibleMonth(new Date(year, month - 1, 1));
+        return;
+      }
+    }
+    setMoveInVisibleMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openDropdown]);
+
+  const moveInMonthLabel = moveInVisibleMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const moveInFirstDayOfWeek = new Date(moveInVisibleMonth.getFullYear(), moveInVisibleMonth.getMonth(), 1).getDay();
+  const moveInDaysInMonth = new Date(moveInVisibleMonth.getFullYear(), moveInVisibleMonth.getMonth() + 1, 0).getDate();
+  const moveInBlanks = Array.from({ length: moveInFirstDayOfWeek }, (_, index) => `blank-${index}`);
+  const moveInDays = Array.from({ length: moveInDaysInMonth }, (_, index) => index + 1);
+  const canGoPrevMoveInMonth = moveInVisibleMonth > new Date(today.getFullYear(), today.getMonth(), 1);
+  const canGoNextMoveInMonth = moveInVisibleMonth < maxMoveInMonth;
 
   const toggleBedroom = (option: string) => {
     if (option === 'All bedrooms') {
@@ -270,17 +298,61 @@ export function MapFilterCard({
         {openDropdown === 'moveIn' && (
           <div style={dropdownStyle}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#17181A' }}>September 2026</span>
+              <button
+                type="button"
+                aria-label="Previous month"
+                disabled={!canGoPrevMoveInMonth}
+                onClick={() => setMoveInVisibleMonth(new Date(moveInVisibleMonth.getFullYear(), moveInVisibleMonth.getMonth() - 1, 1))}
+                style={{ background: 'none', border: 0, fontSize: 16, lineHeight: 1, color: '#17181A', padding: 4, cursor: canGoPrevMoveInMonth ? 'pointer' : 'default', opacity: canGoPrevMoveInMonth ? 1 : 0.3 }}
+              >
+                ‹
+              </button>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#17181A' }}>{moveInMonthLabel}</span>
+              <button
+                type="button"
+                aria-label="Next month"
+                disabled={!canGoNextMoveInMonth}
+                onClick={() => setMoveInVisibleMonth(new Date(moveInVisibleMonth.getFullYear(), moveInVisibleMonth.getMonth() + 1, 1))}
+                style={{ background: 'none', border: 0, fontSize: 16, lineHeight: 1, color: '#17181A', padding: 4, cursor: canGoNextMoveInMonth ? 'pointer' : 'default', opacity: canGoNextMoveInMonth ? 1 : 0.3 }}
+              >
+                ›
+              </button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 6 }}>
               {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => <span key={`${day}-${index}`} style={{ fontSize: 11, color: '#6B7280', textAlign: 'center' }}>{day}</span>)}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 16 }}>
-              {calendarBlanks.map((blank) => <span key={blank} />)}
-              {calendarDays.map((day) => {
-                const date = `2026-09-${String(day).padStart(2, '0')}`;
+              {moveInBlanks.map((blank) => <span key={blank} />)}
+              {moveInDays.map((day) => {
+                const year = moveInVisibleMonth.getFullYear();
+                const month = moveInVisibleMonth.getMonth();
+                const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isPast = new Date(year, month, day) < today;
                 const selected = filters.moveInDate.includes(date);
-                return <button type="button" key={date} aria-label={`September ${day}, 2026`} onClick={() => onFilterChange({ ...filters, moveInDate: selected ? [] : [date] })} style={{ width: 34, height: 34, justifySelf: 'center', border: 0, borderRadius: '50%', background: selected ? '#E8467D' : 'transparent', color: selected ? '#FFFFFF' : '#17181A', fontSize: 13, fontWeight: selected ? 700 : 500, cursor: 'pointer' }}>{day}</button>;
+                const monthName = moveInVisibleMonth.toLocaleDateString('en-US', { month: 'long' });
+                return (
+                  <button
+                    type="button"
+                    key={date}
+                    aria-label={`${monthName} ${day}, ${year}`}
+                    disabled={isPast}
+                    onClick={() => onFilterChange({ ...filters, moveInDate: selected ? [] : [date] })}
+                    style={{
+                      width: 34,
+                      height: 34,
+                      justifySelf: 'center',
+                      border: 0,
+                      borderRadius: '50%',
+                      background: selected ? '#E8467D' : 'transparent',
+                      color: isPast ? '#C7CBD3' : selected ? '#FFFFFF' : '#17181A',
+                      fontSize: 13,
+                      fontWeight: selected ? 700 : 500,
+                      cursor: isPast ? 'default' : 'pointer',
+                    }}
+                  >
+                    {day}
+                  </button>
+                );
               })}
             </div>
             <FilterActions onClear={() => onFilterChange({ ...filters, moveInDate: [] })} onDone={() => setOpenDropdown(null)} />
