@@ -17,6 +17,7 @@ import type { MapFilterState } from "@/components/map-filter-card"
 
 interface DesktopBuildingCardProps {
   building: Building
+  supabaseImages?: string[]
   units?: AvailableUnit[]
   mapFilters?: MapFilterState
   isHighlighted?: boolean
@@ -107,6 +108,7 @@ function extractAmenities(building: Building): string[] {
 
 export function DesktopBuildingCard({
   building,
+  supabaseImages = [],
   units = [],
   mapFilters,
   isHighlighted = false,
@@ -144,6 +146,7 @@ export function DesktopBuildingCard({
   // 3-price row for the single unit that actually matches — otherwise a
   // filtered building can show a price/bed combo that isn't real for it.
   const bestMatch = useMemo(() => pickBestMatchingUnit(units, mapFilters), [units, mapFilters])
+  const cardImage = supabaseImages.find((url) => url.trim()) ?? building.images?.[0] ?? null
 
   const handleMouseEnter = () => {
     setIsHovered(true)
@@ -165,8 +168,19 @@ export function DesktopBuildingCard({
         <span style={{color:'#FF4D8D', fontSize:18, cursor:'pointer'}}>♥</span>
       </div>
       <div style={{display:'flex', gap:12}}>
-        <div style={{position:'relative', width:150, height:115, flexShrink:0, borderRadius:8, overflow:'hidden'}}>
-          <img src={building.images?.[0]} alt={building.name} style={{width:'100%', height:'100%', objectFit:'cover', display:'block'}} />
+        <div style={{position:'relative', width:150, height:115, flexShrink:0, borderRadius:8, overflow:'hidden', background:'#E8ECF2', display:'flex', alignItems:'center', justifyContent:'center'}}>
+          {cardImage ? (
+            <img
+              src={cardImage}
+              alt={building.name}
+              onError={(event) => {
+                event.currentTarget.style.display = 'none'
+              }}
+              style={{width:'100%', height:'100%', objectFit:'cover', display:'block'}}
+            />
+          ) : (
+            <span style={{fontSize:10, color:'#64748B', fontWeight:600}}>No photo</span>
+          )}
           <div style={{position:'absolute', bottom:0, left:0, right:0, background:'rgba(0,0,0,0.55)', padding:'4px 8px', fontSize:9, color:'#fff'}}>Videos • Virtual tours</div>
         </div>
         <div style={{flex:1, display:'flex', flexDirection:'column', justifyContent:'space-between'}}>

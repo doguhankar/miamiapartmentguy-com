@@ -147,7 +147,7 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, allBuildingIds, setSelectedBuilding, setInfoBuilding: setInfoBuildingFromMap, onMapReady, onPricingDataChange, onBuildingsInView }) => {
+const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, allBuildingIds, setSelectedBuilding, setInfoBuilding: setInfoBuildingFromMap, onMapReady, onPricingDataChange, onImageDataChange, onBuildingsInView }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
@@ -239,12 +239,14 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         const nextPricingData = Object.fromEntries(entries.filter(Boolean) as Array<readonly [string, { units: AvailableUnit[] }]>);
         setPricingData(nextPricingData);
         onPricingDataChange?.(nextPricingData);
-        setBuildingImages((imageRows ?? []).reduce((images, row) => {
+        const nextBuildingImages = (imageRows ?? []).reduce((images, row) => {
           const buildingId = String(row.building_id);
           if (!images[buildingId]) images[buildingId] = [];
           if (typeof row.image_url === 'string' && row.image_url.trim()) images[buildingId].push(row.image_url);
           return images;
-        }, {} as Record<string, string[]>));
+        }, {} as Record<string, string[]>);
+        setBuildingImages(nextBuildingImages);
+        onImageDataChange?.(nextBuildingImages);
       }
     };
 
@@ -752,6 +754,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   }, []);
   const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [], neighborhoods: [] });
   const [pricingInventory, setPricingInventory] = useState<PricingInventory>({});
+  const [buildingImages, setBuildingImages] = useState<Record<string, string[]>>({});
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
 
   const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: null });
@@ -1270,6 +1273,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   setInfoBuilding={setInfoBuilding}
   onMapReady={handleMapReady}
   onPricingDataChange={setPricingInventory}
+  onImageDataChange={setBuildingImages}
   onBuildingsInView={setViewportBuildings}
   />
         </div>
@@ -1639,6 +1643,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   setInfoBuilding={setInfoBuilding}
   onMapReady={handleMapReady}
             onPricingDataChange={setPricingInventory}
+            onImageDataChange={setBuildingImages}
             onBuildingsInView={setViewportBuildings}
           />
         </div>
@@ -1665,6 +1670,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                 <DesktopBuildingCard
                   key={building.id}
                   building={building}
+                  supabaseImages={buildingImages[String(building.id)] ?? []}
                   units={pricingInventory[String(building.id)]?.units ?? []}
                   mapFilters={mapFilters}
                   isAgentMode={hasAccess}
