@@ -65,11 +65,23 @@ const FeesDropdown = ({ fees }) => {
 
 const TalkTodonModal = ({ building, onClose }) => {
   const [step, setStep] = useState('form');
-  const [formData, setFormData] = useState({ income: '', credit: '', moveInDate: '', firstName: '', phone: '' });
+  const [formData, setFormData] = useState({ income: '', credit: '', apartmentSize: '', moveInDate: '', firstName: '', phone: '' });
+  const [errors, setErrors] = useState({ credit: '', apartmentSize: '', moveInDate: '' });
   const [result, setResult] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const today = new Date();
+    const todayValue = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const moveInValue = formData.moveInDate ? new Date(`${formData.moveInDate}T00:00:00`) : null;
+    const nextErrors = {
+      credit: !formData.credit ? 'Credit score is required.' : Number(formData.credit) < 300 || Number(formData.credit) > 850 ? 'Enter a credit score between 300 and 850.' : '',
+      apartmentSize: !formData.apartmentSize.trim() ? 'Apartment size is required.' : '',
+      moveInDate: !formData.moveInDate ? 'Move-in date is required.' : moveInValue && moveInValue < todayValue ? 'Choose today or a future date.' : '',
+    };
+    setErrors(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) return;
+
     const income = parseInt(formData.income);
     const credit = parseInt(formData.credit);
     const incomeMultiplier = parseInt(building.incomeReq);
@@ -101,11 +113,18 @@ const TalkTodonModal = ({ building, onClose }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Credit Score</label>
-                <input type="number" required value={formData.credit} onChange={(e) => setFormData({ ...formData, credit: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF4D8D] focus:outline-none" placeholder="e.g., 680" />
+                <input type="number" required min="300" max="850" value={formData.credit} onChange={(e) => setFormData({ ...formData, credit: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF4D8D] focus:outline-none" placeholder="e.g., 680" aria-invalid={Boolean(errors.credit)} aria-describedby={errors.credit ? 'credit-error' : undefined} />
+                {errors.credit && <p id="credit-error" className="mt-1 text-sm text-red-400">{errors.credit}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Apartment Size</label>
+                <input type="text" required value={formData.apartmentSize} onChange={(e) => setFormData({ ...formData, apartmentSize: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF4D8D] focus:outline-none" placeholder="e.g., 1BR, 2BR, Studio" aria-invalid={Boolean(errors.apartmentSize)} aria-describedby={errors.apartmentSize ? 'apartment-size-error' : undefined} />
+                {errors.apartmentSize && <p id="apartment-size-error" className="mt-1 text-sm text-red-400">{errors.apartmentSize}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Move-In Date</label>
-                <input type="date" required value={formData.moveInDate} onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF4D8D] focus:outline-none" />
+                <input type="date" required min={new Date().toISOString().split('T')[0]} value={formData.moveInDate} onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF4D8D] focus:outline-none" aria-invalid={Boolean(errors.moveInDate)} aria-describedby={errors.moveInDate ? 'move-in-date-error' : undefined} />
+                {errors.moveInDate && <p id="move-in-date-error" className="mt-1 text-sm text-red-400">{errors.moveInDate}</p>}
               </div>
               <button type="submit" className="w-full bg-[#FF4D8D] text-white py-3 rounded-lg font-semibold hover:bg-[#E53A73]">Get My Results</button>
             </form>
