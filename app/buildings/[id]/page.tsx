@@ -12,6 +12,7 @@ import { AvailableUnitsRedesign } from '@/components/available-units-redesign'
 import { SimilarBuildings } from '@/components/similar-buildings'
 import { CommissionPill } from '@/components/commission-pill'
 import { SaveBuildingButton } from '@/components/save-building-button'
+import { BuildingImageGallery } from '@/components/building-image-gallery'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface LiveUnit {
@@ -452,16 +453,7 @@ export default function BuildingDetailPage() {
           {/* HERO */}
           <div style={{ boxSizing: 'border-box', width: '100%', padding: '58px 16px 0', flex: '0 0 338px', minHeight: 338 }}>
             <div style={{ boxSizing: 'border-box', position: 'relative', width: '100%', height: 280, minHeight: 280, borderRadius: 16, overflow: 'hidden', background: '#E5E7EB' }}>
-              {allImages[imgIdx] && <Image src={allImages[imgIdx]} alt={`${building.name} photo ${imgIdx + 1}`} fill style={{ objectFit: 'cover' }} priority />}
-
-
-              {allImages.length > 1 && (
-                <div style={{ position: 'absolute', bottom: 12, left: 0, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                  {allImages.slice(0, 8).map((_, i) => (
-                    <span key={i} style={{ width: i === imgIdx ? 8 : 6, height: i === imgIdx ? 8 : 6, borderRadius: '50%', background: i === imgIdx ? '#FFFFFF' : 'rgba(255,255,255,0.55)', transition: 'all 0.2s', flexShrink: 0 }} />
-                  ))}
-                </div>
-              )}
+              <BuildingImageGallery images={allImages} buildingName={building.name} height={280} currentIndex={imgIdx} onCurrentIndexChange={setImgIdx} />
             </div>
           </div>
 
