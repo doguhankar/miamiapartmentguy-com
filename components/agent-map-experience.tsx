@@ -776,7 +776,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   const [buildingImages, setBuildingImages] = useState<Record<string, string[]>>({});
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
 
-  const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: null });
+  const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: [] });
   const [mapInstance, setMapInstance] = useState<any>(null);
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
 
@@ -792,16 +792,16 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
 
   // Load filters from URL params on mount
   useEffect(() => {
-    const neighborhood = searchParams.get('neighborhood');
+    const neighborhoods = searchParams.getAll('neighborhood');
     const bedsParam = searchParams.get('beds');
     const priceMinParam = searchParams.get('priceMin');
     const priceMaxParam = searchParams.get('priceMax');
     const moveInDateParam = searchParams.get('moveInDate');
 
-    const newFilters: MapFilterState = { bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: null };
+    const newFilters: MapFilterState = { bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: [] };
 
-    if (neighborhood) {
-      newFilters.neighborhood = neighborhood.charAt(0).toUpperCase() + neighborhood.slice(1).replace(/-/g, ' ');
+    if (neighborhoods.length > 0) {
+      newFilters.neighborhood = neighborhoods.map((value) => value.charAt(0).toUpperCase() + value.slice(1).replace(/-/g, ' '));
     }
     if (bedsParam) {
       // bedsParam is the raw filter token written by updateUrlWithFilters below
@@ -828,9 +828,9 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   const updateUrlWithFilters = (newFilters: MapFilterState) => {
     const params = new URLSearchParams();
     
-    if (newFilters.neighborhood) {
-      params.set('neighborhood', newFilters.neighborhood.toLowerCase().replace(/ /g, '-'));
-    }
+    newFilters.neighborhood.forEach((neighborhood) => {
+      params.append('neighborhood', neighborhood.toLowerCase().replace(/ /g, '-'));
+    });
     if (newFilters.bedrooms && newFilters.bedrooms.length > 0) {
       params.set('beds', newFilters.bedrooms[0].toString());
     }
@@ -855,7 +855,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   };
 
   const handleClearAllFilters = () => {
-    setMapFilters({ bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: null });
+    setMapFilters({ bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: [] });
     router.push('/map');
   };
 
@@ -975,9 +975,9 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   // Helper function to check if a building matches the map filters
   const buildingMatchesMapFilters = (building: any): boolean => {
     // Check neighborhood filter first
-    if (mapFilters.neighborhood !== null && building.neighborhood !== mapFilters.neighborhood) {
-      return false;
-    }
+  if (mapFilters.neighborhood.length > 0 && !mapFilters.neighborhood.includes(building.neighborhood)) {
+    return false;
+  }
 
     // If no filters are active, include all buildings
     if (mapFilters.bedrooms.length === 0 && mapFilters.bathrooms.length === 0 && mapFilters.price.length === 0 && mapFilters.moveInDate.length === 0) {

@@ -11,7 +11,7 @@ export interface MapFilterState {
   bathrooms: string[];
   price: string[];
   moveInDate: string[];
-  neighborhood: string | null;
+  neighborhood: string[];
 }
 
 interface MapFilterCardProps {
@@ -51,14 +51,11 @@ export function MapFilterCard({
   }, [filters.price]);
 
   const handleNeighborhoodSelect = (neighborhood: string) => {
-    if (filters.neighborhood === neighborhood) {
-      onFilterChange({ ...filters, neighborhood: null });
-      setOpenDropdown(null);
-    } else {
-      onFilterChange({ ...filters, neighborhood });
-      onNeighborhoodFlyTo?.(neighborhood);
-      setOpenDropdown(null);
-    }
+    const nextNeighborhoods = filters.neighborhood.includes(neighborhood)
+      ? filters.neighborhood.filter((value) => value !== neighborhood)
+      : [...filters.neighborhood, neighborhood];
+    onFilterChange({ ...filters, neighborhood: nextNeighborhoods });
+    if (!filters.neighborhood.includes(neighborhood)) onNeighborhoodFlyTo?.(neighborhood);
   };
 
   const bedroomOptions = ['All bedrooms', 'Studio', '1 Bedroom', '2 Bedrooms', '3+ Bedrooms'];
@@ -363,10 +360,10 @@ export function MapFilterCard({
       {/* Neighborhood */}
       <div style={{ position: 'relative' }}>
         <button
-          style={pillStyle(!!filters.neighborhood)}
-          onClick={() => setOpenDropdown(openDropdown === 'neighborhood' ? null : 'neighborhood')}
-        >
-          <span>{filters.neighborhood ? `${filters.neighborhood}` : 'Neighborhood'}</span>
+  style={pillStyle(filters.neighborhood.length > 0)}
+  onClick={() => setOpenDropdown(openDropdown === 'neighborhood' ? null : 'neighborhood')}
+  >
+  <span>{filters.neighborhood.length === 0 ? 'Neighborhood' : filters.neighborhood.length === 1 ? filters.neighborhood[0] : `${filters.neighborhood.length} selected`}</span>
           <ChevronDown style={{ width: 14, height: 14, transition: 'transform 0.15s', transform: openDropdown === 'neighborhood' ? 'rotate(180deg)' : 'none' }} />
         </button>
         {openDropdown === 'neighborhood' && (
@@ -374,13 +371,13 @@ export function MapFilterCard({
             {neighborhoodOptions.map(opt => (
               <button
                 key={opt}
-                style={dropdownItemStyle(filters.neighborhood === opt)}
+                style={dropdownItemStyle(filters.neighborhood.includes(opt))}
                 onClick={() => handleNeighborhoodSelect(opt)}
-                onMouseEnter={(e) => { if (filters.neighborhood !== opt) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
-                onMouseLeave={(e) => { if (filters.neighborhood !== opt) e.currentTarget.style.background = 'transparent' }}
+                onMouseEnter={(e) => { if (!filters.neighborhood.includes(opt)) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                onMouseLeave={(e) => { if (!filters.neighborhood.includes(opt)) e.currentTarget.style.background = 'transparent' }}
               >
-                <input type="radio" readOnly style={{ accentColor: '#19C6C0', pointerEvents: 'none' }} checked={filters.neighborhood === opt} />
-                {opt}
+  <input type="checkbox" readOnly style={{ accentColor: '#19C6C0', pointerEvents: 'none' }} checked={filters.neighborhood.includes(opt)} />
+  {opt}
               </button>
             ))}
           </div>
