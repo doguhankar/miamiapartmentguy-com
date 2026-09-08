@@ -531,7 +531,7 @@ export default function BuildingDetailPage() {
             </button>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, height: 360 }}>
               <div style={{ position: 'relative', height: '100%', borderRadius: 10, overflow: 'hidden', background: '#E5E7EB' }}>
-                {allImages[0] && <Image src={allImages[0]} alt={`${building.name} photo 1`} fill style={{ objectFit: 'cover' }} priority />}
+                <BuildingImageGallery images={allImages} buildingName={building.name} height={360} currentIndex={imgIdx} onCurrentIndexChange={setImgIdx} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: 8, height: '100%' }}>
                 {Array.from({ length: 6 }).map((_, i) => {
