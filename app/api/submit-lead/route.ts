@@ -218,9 +218,16 @@ export async function POST(request: NextRequest) {
   try {
     const body: LeadData = await request.json()
 
-    const SLACK_WEBHOOK_URL = body.slackChannel === 'leads-seb'
+    const requestedSlackChannel = body.slackChannel?.trim().toLowerCase()
+    const slackWebhookName = requestedSlackChannel === 'leads-seb'
+      ? 'SLACK_WEBHOOK_URL_SEB'
+      : 'SLACK_WEBHOOK_URL'
+    const SLACK_WEBHOOK_URL = requestedSlackChannel === 'leads-seb'
       ? process.env.SLACK_WEBHOOK_URL_SEB
       : process.env.SLACK_WEBHOOK_URL
+    if (!SLACK_WEBHOOK_URL) {
+      console.error(`[v0] Slack webhook is not configured for ${slackWebhookName}`)
+    }
     const NOTION_TOKEN = process.env.NOTION_TOKEN
     const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID
 
@@ -230,6 +237,8 @@ export async function POST(request: NextRequest) {
 
     if (SLACK_WEBHOOK_URL) {
       integrationPromises.push(sendToSlack(SLACK_WEBHOOK_URL, body).catch(e => ({ sent: false, error: String(e) })))
+    } else {
+      integrationPromises.push(Promise.resolve({ sent: false, error: `${slackWebhookName} is not configured` }))
     }
 
     if (NOTION_TOKEN && NOTION_DATABASE_ID) {
