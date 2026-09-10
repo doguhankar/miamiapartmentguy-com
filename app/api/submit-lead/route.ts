@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildLeadSlackMessage } from '@/lib/slack-lead-message'
+import { sendGuestCardEmail } from '@/lib/guest-card-email'
 
 interface LeadData {
   moveDate: string
@@ -180,6 +181,34 @@ async function sendToNotion(
   }
 }
 
+async function sendGuestCard(leadData: LeadData) {
+  if (!leadData.buildingId || !leadData.buildingName) return { sent: false, skipped: true }
+
+  const supabase = createAdminClient()
+  const { data: building, error } = await supabase
+    .from('buildings')
+    .select('name, contact_emails')
+    .eq('id', leadData.buildingId)
+    .maybeSingle()
+
+  if (error || !building) {
+    console.error('[guest-card] building lookup failed:', error?.message || 'Building not found')
+    return { sent: false, skipped: true }
+  }
+
+  return sendGuestCardEmail({
+    name: leadData.name,
+    phone: leadData.phone,
+    moveDate: leadData.moveDate,
+    apartmentSize: leadData.apartmentSize,
+    budget: leadData.budget,
+    creditScore: leadData.creditScore,
+    agent: leadData.agent,
+    buildingName: building.name,
+    contactEmails: Array.isArray(building.contact_emails) ? building.contact_emails : [],
+  })
+}
+
 async function sendToSupabase(leadData: LeadData) {
   try {
     const supabase = createAdminClient()
@@ -255,6 +284,9 @@ export async function POST(request: NextRequest) {
 
     // Always send to Supabase (service-role key is required)
     integrationPromises.push(sendToSupabase(body).catch(e => ({ sent: false, error: String(e) })))
+
+    // Send a guest card to the selected building's leasing contacts when available.
+    integrationPromises.push(sendGuestCard(body).catch(e => ({ sent: false, error: String(e) })))
 
     // Use Promise.allSettled to wait for all integrations and capture their results
     const integrationResults = await Promise.allSettled(integrationPromises)
