@@ -119,7 +119,7 @@ export function MoveWithDon({
               <div><label style={labelStyle} htmlFor="lead-name">Your name</label><input id="lead-name" type="text" autoComplete="given-name" placeholder="First name" value={data.name} onChange={(event) => setData((prev) => ({ ...prev, name: event.target.value }))} style={fieldStyle} /></div>
               <div><label style={labelStyle} htmlFor="lead-phone">Your phone</label><input id="lead-phone" type="tel" autoComplete="tel" placeholder="(305) 555-0123" value={data.phone} onChange={(event) => setData((prev) => ({ ...prev, phone: event.target.value }))} style={fieldStyle} /></div>
             </div>
-            <p style={{ color: '#6F7F96', fontSize: 11, lineHeight: 1.5, margin: '18px 0 0' }}>By submitting, you agree to receive texts from {agentDisplayName} about your apartment search. Message and data rates may apply. Reply STOP to opt out.</p>
+            <p style={{ color: '#6F7F96', fontSize: 11, lineHeight: 1.5, margin: '18px 0 0' }}>{"By submitting, you give permission for the team at Miami Apartment Guy to contact you. We're cool people, happy to help."}</p>
             {error && <p role="alert" style={{ color: '#FF8CA8', fontSize: 13, margin: '12px 0 0' }}>{error}</p>}
             <button type="button" onClick={submit} disabled={!canSubmit || submitting} style={{ width: '100%', marginTop: 18, border: 0, borderRadius: 11, padding: '14px 16px', background: canSubmit ? '#FF4D8D' : '#334159', color: canSubmit ? '#fff' : '#8FA0B8', fontSize: 14, fontWeight: 800, cursor: canSubmit ? 'pointer' : 'not-allowed' }}>{submitting ? 'Sending...' : 'Send me real pricing'}</button>
           </>}
