@@ -266,10 +266,10 @@ export async function POST(request: NextRequest) {
     let supabaseResult = null
     let resultIndex = 0
 
-    // Slack result (if sent)
-    if (SLACK_WEBHOOK_URL) {
+    // Slack result (always report whether it was sent or skipped)
+    {
       const result = integrationResults[resultIndex]
-      slackResult = result.status === 'fulfilled' 
+      slackResult = result.status === 'fulfilled'
         ? { status: result.value?.sent ? 'success' : 'failed', ...result.value }
         : { status: 'error', error: String(result.reason) }
       resultIndex++
