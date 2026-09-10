@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { buildLeadSlackMessage } from '@/lib/slack-lead-message'
 
 interface LeadData {
   moveDate: string
@@ -56,70 +57,8 @@ async function sendToSlack(webhookUrl: string, leadData: LeadData) {
     console.log('[v0] Sending to Slack...')
     const isAgentApplicant = leadData.source === 'agent_recruit'
     const slackMessage = isAgentApplicant
-      ? {
-          text: `🧑‍💼 New Agent Applicant\nName: ${leadData.name}\nPhone: ${leadData.phone}\nCurrent brokerage: ${leadData.brokerage || 'Not provided'}\nLicensed in Florida: ${leadData.licensed || 'Not provided'}\nSource: agent_recruit`,
-        }
-      : {
-          text: '🏢 New Lead from Move with Don Form',
-          blocks: [
-        {
-          type: 'header',
-          text: {
-            type: 'plain_text',
-            text: isAgentApplicant ? '🧑‍💼 New Agent Applicant' : '🏢 New Lead Submission',
-          },
-        },
-        {
-          type: 'section',
-          fields: [
-            {
-              type: 'mrkdwn',
-              text: `*Name:*\n${leadData.name}`,
-            },
-            {
-              type: 'mrkdwn',
-              text: `*Phone:*\n${leadData.phone}`,
-            },
-            {
-              type: 'mrkdwn',
-              text: `*Move Date:*\n${leadData.moveDate}`,
-            },
-            {
-              type: 'mrkdwn',
-              text: `*Budget:*\n${leadData.budget}`,
-            },
-            {
-              type: 'mrkdwn',
-              text: `*Apartment Size:*\n${leadData.apartmentSize}`,
-            },
-            {
-              type: 'mrkdwn',
-              text: `*Credit Score:*\n${leadData.creditScore}`,
-            },
-          {
-            type: 'mrkdwn',
-            text: `*Neighborhoods:*\n${leadData.neighborhoods.join(', ')}`,
-          },
-            {
-              type: 'mrkdwn',
-              text: `*Agent:*
-${leadData.agent}`,
-            },
-            ...(isAgentApplicant
-              ? [
-                  { type: 'mrkdwn', text: `*Brokerage:*\n${leadData.brokerage || 'Not provided'}` },
-                  { type: 'mrkdwn', text: `*Licensed in Florida:*\n${leadData.licensed || 'Not provided'}` },
-                  { type: 'mrkdwn', text: '*Source:*\nagent_recruit' },
-                ]
-              : []),
-            {
-              type: 'mrkdwn',
-              text: `*Submitted:*\n${new Date().toISOString()}`,
-            },
-          ],
-        },
-      ],
-        }
+      ? { text: `🧑‍💼 New Agent Applicant\nName: ${leadData.name}\nPhone: ${leadData.phone}` }
+      : buildLeadSlackMessage(leadData)
 
     const slackResponse = await fetch(webhookUrl, {
       method: 'POST',
