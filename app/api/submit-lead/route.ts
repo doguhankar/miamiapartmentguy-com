@@ -196,7 +196,12 @@ async function sendGuestCard(leadData: LeadData) {
     return { sent: false, skipped: true }
   }
 
-  return sendGuestCardEmail({
+  const { data: leadRow } = await supabase.from('leads').select('id').eq('name', leadData.name).eq('phone', leadData.phone).order('created_at', { ascending: false }).limit(1).maybeSingle()
+  const recipients = Array.isArray(building.contact_emails) ? building.contact_emails : []
+  const ccRecipients = ['don@miamiapartmentguy.com']
+  const { data: attempt } = leadRow ? await supabase.from('guest_card_sends').insert({ lead_id: leadRow.id, building_id: building.id, recipients, cc_recipients: ccRecipients, status: 'sending' }).select('id').single() : { data: null }
+  const result = await sendGuestCardEmail({
+    id: leadRow?.id,
     name: leadData.name,
     phone: leadData.phone,
     moveDate: leadData.moveDate,
@@ -205,8 +210,10 @@ async function sendGuestCard(leadData: LeadData) {
     creditScore: leadData.creditScore,
     agent: leadData.agent,
     buildingName: building.name,
-    contactEmails: Array.isArray(building.contact_emails) ? building.contact_emails : [],
+    contactEmails: recipients,
   })
+  if (attempt) await supabase.from('guest_card_sends').update({ status: result.sent ? 'sent' : 'failed', resend_id: result.id ?? null, error_message: result.error ?? null, sent_at: result.sent ? new Date().toISOString() : null, updated_at: new Date().toISOString() }).eq('id', attempt.id)
+  return result
 }
 
 async function sendToSupabase(leadData: LeadData) {

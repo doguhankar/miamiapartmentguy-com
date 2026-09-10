@@ -25,6 +25,8 @@ interface Lead {
   archive_notes: string
   buildings: string[]
   favorited: string[]
+  building_id: string
+  guestCard: { status: 'idle' | 'sending' | 'sent' | 'error'; sentAt: string | null; error: string | null }
   deal: {
     building: string
     unit: string
@@ -57,6 +59,7 @@ interface DbLead {
   deal_value: number | null
   archive_reason: string | null
   archive_notes: string | null
+  building_id: string | null
 }
 
 // Map DB stage value → COLUMNS key
@@ -104,6 +107,8 @@ function dbLeadToLead(row: DbLead): Lead {
     archive_notes: row.archive_notes ?? '',
     buildings: [],
     favorited: [],
+    building_id: row.building_id ?? '',
+    guestCard: { status: 'idle', sentAt: null, error: null },
     deal: { building: '', unit: '', tour: '', leaseStart: '', leaseTerm: '', marketRent: '', invoiceEst: '' },
   }
 }
@@ -232,7 +237,18 @@ export default function AgentPage() {
         .from('leads')
         .select('*')
         .order('created_at', { ascending: false })
-      if (!error && data) setLeads((data as DbLead[]).map(dbLeadToLead))
+      if (!error && data) {
+    const mapped = (data as DbLead[]).map(dbLeadToLead)
+    const withStatuses = await Promise.all(mapped.map(async lead => {
+      try {
+        const response = await fetch(`/api/guest-card/send?leadId=${lead.id}`)
+        const payload = await response.json()
+        const send = payload.send
+        return send ? { ...lead, guestCard: { status: send.status === 'sent' ? 'sent' : send.status === 'failed' ? 'error' : 'idle', sentAt: send.sent_at ?? null, error: send.error_message ?? null } } : lead
+      } catch { return lead }
+    }))
+    setLeads(withStatuses)
+  }
     }
 
     const runAllowlistCheck = async (
@@ -344,6 +360,18 @@ export default function AgentPage() {
   const showToast = (msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(null), 3200)
+  }
+
+  const sendGuestCard = async (leadId: string) => {
+    updateLead(leadId, { guestCard: { status: 'sending', sentAt: null, error: null } })
+    try {
+      const response = await fetch('/api/guest-card/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ leadId }) })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || 'Guest card failed')
+      updateLead(leadId, { guestCard: { status: 'sent', sentAt: payload.sentAt, error: null } })
+    } catch (error) {
+      updateLead(leadId, { guestCard: { status: 'error', sentAt: null, error: error instanceof Error ? error.message : 'Guest card failed' } })
+    }
   }
 
   const saveLead = async (leadId: string, updates: Partial<Lead>) => {
@@ -1374,6 +1402,21 @@ export default function AgentPage() {
                   />
                 </div>
               </div>
+            </div>
+
+            <div style={{ marginBottom: '12px', padding: '12px', border: '1px solid #223252', borderRadius: '8px', background: '#111B2E' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#E9EDF6', fontWeight: 700 }}>Building guest card</div>
+                  <div style={{ fontSize: '11px', color: '#8C97AE', marginTop: '3px' }}>Send registration and tour details to the leasing team.</div>
+                </div>
+                {selectedLead.guestCard.status === 'sent' ? (
+                  <button disabled style={{ padding: '7px 11px', border: '1px solid #19C6C0', borderRadius: '6px', background: 'rgba(25,198,192,.1)', color: '#19C6C0', fontSize: '11px', fontWeight: 700 }}>Sent {selectedLead.guestCard.sentAt ? new Date(selectedLead.guestCard.sentAt).toLocaleString() : ''}</button>
+                ) : (
+                  <button onClick={() => sendGuestCard(selectedLead.id)} disabled={selectedLead.guestCard.status === 'sending'} style={{ padding: '7px 13px', border: 'none', borderRadius: '6px', background: selectedLead.guestCard.status === 'error' ? '#EF4444' : '#1CDCD4', color: '#04201e', fontSize: '11px', fontWeight: 700, cursor: selectedLead.guestCard.status === 'sending' ? 'not-allowed' : 'pointer', opacity: selectedLead.guestCard.status === 'sending' ? .65 : 1 }}>{selectedLead.guestCard.status === 'sending' ? '◌ Sending…' : selectedLead.guestCard.status === 'error' ? 'Retry guest card' : 'Send guest card'}</button>
+                )}
+              </div>
+              {selectedLead.guestCard.status === 'error' && <div style={{ marginTop: '8px', color: '#FF8FAF', fontSize: '11px' }}>{selectedLead.guestCard.error}</div>}
             </div>
 
             {/* ARCHIVE POPUP */}
