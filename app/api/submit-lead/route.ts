@@ -16,6 +16,8 @@ interface LeadData {
   licensed?: string
   agentId?: string
   slackChannel?: string
+  buildingId?: string | null
+  buildingName?: string
 }
 
 // Cache for Notion database schema to avoid fetching on every request
@@ -189,6 +191,7 @@ async function sendToSupabase(leadData: LeadData) {
       beds: leadData.apartmentSize,
       budget: leadData.budget,
       area: leadData.neighborhoods[0] || null,
+      building_id: leadData.buildingId || null,
       credit_range: leadData.creditScore,
       agent_id: leadData.agentId || 'doguhankar1@gmail.com',
       stage: 'New Lead',
