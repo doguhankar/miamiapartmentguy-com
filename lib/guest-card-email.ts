@@ -8,6 +8,9 @@ export interface GuestCardLead {
   moveDate: string
   budget: string
   agent: string
+  agentLicense?: string
+  agentPhone?: string
+  agentEmail?: string
   buildingName: string
   contactEmails: string[]
 }
@@ -39,6 +42,9 @@ export function renderGuestCardHtml(lead: GuestCardLead) {
   const moveDate = escapeHtml(lead.moveDate)
   const budget = escapeHtml(lead.budget)
   const agent = escapeHtml(lead.agent)
+  const agentLicense = escapeHtml(lead.agentLicense ?? 'SL3581300')
+  const agentPhone = escapeHtml(lead.agentPhone ?? '+1 (407) 765-7306')
+  const agentEmail = escapeHtml(lead.agentEmail ?? 'don@miamiapartmentguy.com')
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -104,8 +110,8 @@ export function renderGuestCardHtml(lead: GuestCardLead) {
     <div class="cta-line">Please register <b>${clientName}</b> under Miami Apartment Guy — our team will be handling the application process with them from here through move-in. We&apos;ll be reaching out to ${clientName} shortly to schedule a tour.</div>
     <div class="cta-line">If you&apos;ve got units and any current concessions that&apos;d be a good fit, send them our way — we&apos;ll pass it straight to the client.</div>
     <div class="agent-card">
-      <div class="agent-name">Doğuhan (Don) Karahan</div>
-      <div class="agent-meta">License # SL3581300<br>+1 (407) 765-7306 · don@miamiapartmentguy.com</div>
+      <div class="agent-name">${agent}</div>
+      <div class="agent-meta">License # ${agentLicense}<br>${agentPhone} · ${agentEmail}</div>
     </div>
     <div class="closing-line"><i>If ${clientName} is already in your system, just let us know — otherwise we&apos;ll take it from here.</i><br><br><b>Please keep leads@miamiapartmentguy.com CC&apos;d on all communications with this client for full visibility and cooperation.</b></div>
   </div>
@@ -127,7 +133,7 @@ export async function sendGuestCardEmail(lead: GuestCardLead): Promise<GuestCard
     from: 'Miami Apartment Guy <leads@miamiapartmentguy.com>',
     to: recipients,
     cc,
-    subject: `Guest card: ${lead.name} — ${lead.buildingName}`,
+    subject: `Someone's interested in ${lead.buildingName} 👀`,
     html: renderGuestCardHtml(lead),
   }, { idempotencyKey: `guest-card/${lead.id ?? lead.buildingName}/${lead.name}/${lead.phone}` })
   if (error) return { sent: false, skipped: false, error: error.message }

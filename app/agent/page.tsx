@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import AgentLeadDossier from '@/components/agent-lead-dossier'
 
 interface Lead {
   id: string
@@ -1248,7 +1249,8 @@ export default function AgentPage() {
         </div>
 
         {/* DOSSIER */}
-        {selectedLead && (
+        {selectedLead && <AgentLeadDossier lead={selectedLead} onClose={() => setSelectedLead(null)} onUpdate={(updates) => { updateLead(selectedLead.id, updates); saveLead(selectedLead.id, updates) }} onMarkContacted={() => markContacted(selectedLead.id)} />}
+        {false && selectedLead && (
           <div style={{
             position: 'fixed',
             right: 0,
