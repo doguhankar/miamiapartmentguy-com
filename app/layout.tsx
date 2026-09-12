@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Archivo, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { GoogleAnalytics } from '@next/third-parties/google'
 import './globals.css'
 import { AgentModeProvider } from '@/components/agent-mode-provider'
 import { SaveListProvider } from '@/components/save-list-provider'
@@ -38,6 +39,7 @@ export default function RootLayout({
           <SaveListProvider>{children}</SaveListProvider>
         </AgentModeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
+        {process.env.NEXT_PUBLIC_GA_ID && <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />}
       </body>
     </html>
   )
