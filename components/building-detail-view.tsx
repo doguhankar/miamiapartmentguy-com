@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Heart, Share2, ArrowLeft } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 import { Building } from "@/lib/buildings"
 import { ImageCarousel } from "@/components/image-carousel"
 
@@ -25,6 +26,68 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
   const [error, setError] = useState<string | null>(null)
   const [selectedTab, setSelectedTab] = useState("all")
   const [isHearted, setIsHearted] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const supabase = createClient()
+
+    async function loadUnits() {
+      setLoading(true)
+      setError(null)
+
+      const { data: pricingUnits, error: pricingError } = await supabase
+        .from("pricing_units")
+        .select("floor_plan_type, beds, baths, sqft, price, available_date")
+        .eq("building_id", building.id)
+        .order("price", { ascending: true })
+
+      if (cancelled) return
+
+      if (pricingError && !pricingError.message.toLowerCase().includes("does not exist")) {
+        setError("Unable to load units")
+        setLoading(false)
+        return
+      }
+
+      if (pricingUnits && pricingUnits.length > 0) {
+        setUnits(pricingUnits.map(unit => ({
+          floorPlanType: unit.floor_plan_type ?? "",
+          beds: unit.beds ?? null,
+          baths: unit.baths ?? 0,
+          sqft: unit.sqft ?? 0,
+          price: unit.price,
+          availableDate: unit.available_date ?? "",
+        })))
+        setLoading(false)
+        return
+      }
+
+      const { data: legacyUnits, error: legacyError } = await supabase
+        .from("units")
+        .select("unittype, beds, baths, sqft, price, availabilitydate")
+        .eq("building_id", building.id)
+        .order("price", { ascending: true })
+
+      if (cancelled) return
+
+      if (legacyError) {
+        setError("Unable to load units")
+      } else {
+        setUnits((legacyUnits ?? []).map(unit => ({
+          floorPlanType: unit.unittype ?? "",
+          beds: unit.beds ?? null,
+          baths: unit.baths ?? 0,
+          sqft: unit.sqft ?? 0,
+          price: unit.price,
+          availableDate: unit.availabilitydate ?? "",
+        })))
+      }
+      setLoading(false)
+    }
+
+    loadUnits()
+    return () => { cancelled = true }
+  }, [building.id])
 
   // Get minimum price from units
   const minPrice = units.length > 0 ? Math.min(...units.map(u => u.price)) : building.priceMin
