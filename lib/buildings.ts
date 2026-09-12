@@ -114,7 +114,7 @@ export const buildings: Building[] = [
     priceMin: 1950, priceTier: '$',
     tagline: "Miami's newest highrise, all-glass corner units, two-story amenities",
     concession: 'Two months free on select units',
-    units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60, 90],
+    units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [120],
     images: ['/images/buildings/cmpnd-1.webp','/images/buildings/cmpnd-2.webp','/images/buildings/cmpnd-3.webp','/images/buildings/cmpnd-4.webp','/images/buildings/cmpnd-5.webp','/images/buildings/cmpnd-6.webp','/images/buildings/cmpnd-7.webp','/images/buildings/cmpnd-8.webp','/images/buildings/cmpnd-9.webp','/images/buildings/cmpnd-10.webp','/images/buildings/cmpnd-11.webp','/images/buildings/cmpnd-12.webp','/images/buildings/cmpnd-13.webp','/images/buildings/cmpnd-14.webp','/images/buildings/cmpnd-15.webp','/images/buildings/cmpnd-16.webp'],
     amenities: ['Pool', 'Gym', 'Pet-Friendly', 'Coworking'],
     moveInFees: [{ type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }, { type: 'Deposit', amount: 500 }, { type: 'Utility Set Up Fee', amount: 25 }],

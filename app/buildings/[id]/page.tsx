@@ -30,6 +30,13 @@ interface LiveUnit {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const fmt = (n: number) => '$' + n.toLocaleString()
 
+function formatHoldPeriod(holdDays: number[]): string {
+  const values = holdDays.filter(Number.isFinite)
+  if (values.length === 0) return ''
+  if (values.length === 1) return `${values[0]} days`
+  return `${values.join(', ')} days`
+}
+
 function formatAvail(rawDate: string | null | undefined): { label: string; now: boolean } {
   if (!rawDate) return { label: 'Avail now', now: true }
   const today = new Date().toISOString().slice(0, 10)
@@ -485,7 +492,7 @@ export default function BuildingDetailPage() {
             {building.tagline && <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, marginTop: 8 }}>{building.tagline}</div>}
             <div style={{ display: 'flex', gap: 7, marginTop: 9, flexWrap: 'wrap', alignItems: 'center' }}>
               {building.concession && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#FFF6E5', color: '#92660B', borderRadius: 999, padding: '5px 11px', fontSize: 11, fontWeight: 600 }}><IconStar /> {building.concession}</span>}
-              {building.holdDays && <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>Hold Period: {building.holdDays} days</span>}
+              {building.holdDays?.length > 0 && <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>Hold Period: {formatHoldPeriod(building.holdDays)}</span>}
             </div>
           </div>
 
