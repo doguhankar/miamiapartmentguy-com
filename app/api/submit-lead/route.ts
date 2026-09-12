@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { buildLeadSlackMessage } from '@/lib/slack-lead-message'
+import { sendGuestCardEmail } from '@/lib/guest-card-email'
 
 interface LeadData {
   moveDate: string
@@ -15,6 +17,8 @@ interface LeadData {
   licensed?: string
   agentId?: string
   slackChannel?: string
+  buildingId?: string | null
+  buildingName?: string
 }
 
 // Cache for Notion database schema to avoid fetching on every request
@@ -56,70 +60,8 @@ async function sendToSlack(webhookUrl: string, leadData: LeadData) {
     console.log('[v0] Sending to Slack...')
     const isAgentApplicant = leadData.source === 'agent_recruit'
     const slackMessage = isAgentApplicant
-      ? {
-          text: `🧑‍💼 New Agent Applicant\nName: ${leadData.name}\nPhone: ${leadData.phone}\nCurrent brokerage: ${leadData.brokerage || 'Not provided'}\nLicensed in Florida: ${leadData.licensed || 'Not provided'}\nSource: agent_recruit`,
-        }
-      : {
-          text: '🏢 New Lead from Move with Don Form',
-          blocks: [
-        {
-          type: 'header',
-          text: {
-            type: 'plain_text',
-            text: isAgentApplicant ? '🧑‍💼 New Agent Applicant' : '🏢 New Lead Submission',
-          },
-        },
-        {
-          type: 'section',
-          fields: [
-            {
-              type: 'mrkdwn',
-              text: `*Name:*\n${leadData.name}`,
-            },
-            {
-              type: 'mrkdwn',
-              text: `*Phone:*\n${leadData.phone}`,
-            },
-            {
-              type: 'mrkdwn',
-              text: `*Move Date:*\n${leadData.moveDate}`,
-            },
-            {
-              type: 'mrkdwn',
-              text: `*Budget:*\n${leadData.budget}`,
-            },
-            {
-              type: 'mrkdwn',
-              text: `*Apartment Size:*\n${leadData.apartmentSize}`,
-            },
-            {
-              type: 'mrkdwn',
-              text: `*Credit Score:*\n${leadData.creditScore}`,
-            },
-          {
-            type: 'mrkdwn',
-            text: `*Neighborhoods:*\n${leadData.neighborhoods.join(', ')}`,
-          },
-            {
-              type: 'mrkdwn',
-              text: `*Agent:*
-${leadData.agent}`,
-            },
-            ...(isAgentApplicant
-              ? [
-                  { type: 'mrkdwn', text: `*Brokerage:*\n${leadData.brokerage || 'Not provided'}` },
-                  { type: 'mrkdwn', text: `*Licensed in Florida:*\n${leadData.licensed || 'Not provided'}` },
-                  { type: 'mrkdwn', text: '*Source:*\nagent_recruit' },
-                ]
-              : []),
-            {
-              type: 'mrkdwn',
-              text: `*Submitted:*\n${new Date().toISOString()}`,
-            },
-          ],
-        },
-      ],
-        }
+      ? { text: `🧑‍💼 New Agent Applicant\nName: ${leadData.name}\nPhone: ${leadData.phone}` }
+      : buildLeadSlackMessage(leadData)
 
     const slackResponse = await fetch(webhookUrl, {
       method: 'POST',
@@ -239,6 +181,41 @@ async function sendToNotion(
   }
 }
 
+async function sendGuestCard(leadData: LeadData) {
+  if (!leadData.buildingId || !leadData.buildingName) return { sent: false, skipped: true }
+
+  const supabase = createAdminClient()
+  const { data: building, error } = await supabase
+    .from('buildings')
+    .select('name, contact_emails')
+    .eq('id', leadData.buildingId)
+    .maybeSingle()
+
+  if (error || !building) {
+    console.error('[guest-card] building lookup failed:', error?.message || 'Building not found')
+    return { sent: false, skipped: true }
+  }
+
+  const { data: leadRow } = await supabase.from('leads').select('id').eq('name', leadData.name).eq('phone', leadData.phone).order('created_at', { ascending: false }).limit(1).maybeSingle()
+  const recipients = Array.isArray(building.contact_emails) ? building.contact_emails : []
+  const ccRecipients = ['don@miamiapartmentguy.com']
+  const { data: attempt } = leadRow ? await supabase.from('guest_card_sends').insert({ lead_id: leadRow.id, building_id: building.id, recipients, cc_recipients: ccRecipients, status: 'sending' }).select('id').single() : { data: null }
+  const result = await sendGuestCardEmail({
+    id: leadRow?.id,
+    name: leadData.name,
+    phone: leadData.phone,
+    moveDate: leadData.moveDate,
+    apartmentSize: leadData.apartmentSize,
+    budget: leadData.budget,
+    creditScore: leadData.creditScore,
+    agent: leadData.agent,
+    buildingName: building.name,
+    contactEmails: recipients,
+  })
+  if (attempt) await supabase.from('guest_card_sends').update({ status: result.sent ? 'sent' : 'failed', resend_id: result.id ?? null, error_message: result.error ?? null, sent_at: result.sent ? new Date().toISOString() : null, updated_at: new Date().toISOString() }).eq('id', attempt.id)
+  return result
+}
+
 async function sendToSupabase(leadData: LeadData) {
   try {
     const supabase = createAdminClient()
@@ -250,6 +227,7 @@ async function sendToSupabase(leadData: LeadData) {
       beds: leadData.apartmentSize,
       budget: leadData.budget,
       area: leadData.neighborhoods[0] || null,
+      building_id: leadData.buildingId || null,
       credit_range: leadData.creditScore,
       agent_id: leadData.agentId || 'doguhankar1@gmail.com',
       stage: 'New Lead',
@@ -279,9 +257,16 @@ export async function POST(request: NextRequest) {
   try {
     const body: LeadData = await request.json()
 
-    const SLACK_WEBHOOK_URL = body.slackChannel === 'leads-seb'
+    const requestedSlackChannel = body.slackChannel?.trim().toLowerCase()
+    const slackWebhookName = requestedSlackChannel === 'leads-seb'
+      ? 'SLACK_WEBHOOK_URL_SEB'
+      : 'SLACK_WEBHOOK_URL'
+    const SLACK_WEBHOOK_URL = requestedSlackChannel === 'leads-seb'
       ? process.env.SLACK_WEBHOOK_URL_SEB
       : process.env.SLACK_WEBHOOK_URL
+    if (!SLACK_WEBHOOK_URL) {
+      console.error(`[v0] Slack webhook is not configured for ${slackWebhookName}`)
+    }
     const NOTION_TOKEN = process.env.NOTION_TOKEN
     const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID
 
@@ -291,6 +276,8 @@ export async function POST(request: NextRequest) {
 
     if (SLACK_WEBHOOK_URL) {
       integrationPromises.push(sendToSlack(SLACK_WEBHOOK_URL, body).catch(e => ({ sent: false, error: String(e) })))
+    } else {
+      integrationPromises.push(Promise.resolve({ sent: false, error: `${slackWebhookName} is not configured` }))
     }
 
     if (NOTION_TOKEN && NOTION_DATABASE_ID) {
@@ -305,6 +292,9 @@ export async function POST(request: NextRequest) {
     // Always send to Supabase (service-role key is required)
     integrationPromises.push(sendToSupabase(body).catch(e => ({ sent: false, error: String(e) })))
 
+    // Send a guest card to the selected building's leasing contacts when available.
+    integrationPromises.push(sendGuestCard(body).catch(e => ({ sent: false, error: String(e) })))
+
     // Use Promise.allSettled to wait for all integrations and capture their results
     const integrationResults = await Promise.allSettled(integrationPromises)
 
@@ -318,10 +308,10 @@ export async function POST(request: NextRequest) {
     let supabaseResult = null
     let resultIndex = 0
 
-    // Slack result (if sent)
-    if (SLACK_WEBHOOK_URL) {
+    // Slack result (always report whether it was sent or skipped)
+    {
       const result = integrationResults[resultIndex]
-      slackResult = result.status === 'fulfilled' 
+      slackResult = result.status === 'fulfilled'
         ? { status: result.value?.sent ? 'success' : 'failed', ...result.value }
         : { status: 'error', error: String(result.reason) }
       resultIndex++

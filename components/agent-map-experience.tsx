@@ -20,47 +20,17 @@ import { Heart, Star } from 'lucide-react';
 import { useSaveList } from '@/components/save-list-provider';
 import { createClient } from '@/lib/supabase/client';
 import { buildings as BUILDINGS, type Building } from '@/lib/buildings';
-
-type AvailableUnit = {
-  floorPlanType?: string;
-  beds?: string | number;
-  price?: number;
-  sqft?: number;
-  square_feet?: number;
-  availableDate?: string | null;
-  available_date?: string | null;
-};
+import { getPriceRange } from '@/lib/price-range';
+import {
+  type AvailableUnit,
+  BEDROOM_MIN_BY_FILTER,
+  unitMatchesSize,
+  unitMatchesBedroomFilter,
+  unitMatchesBathroomFilter,
+  unitAvailableByDate,
+} from '@/lib/unit-filters';
 
 type PricingInventory = Record<string, { units: AvailableUnit[] }>;
-
-const unitMatchesSize = (unit: AvailableUnit, size: string) => {
-  const label = `${unit.floorPlanType ?? ''} ${unit.beds ?? ''}`.toLowerCase();
-  if (size === 'Studio') return label.includes('studio') || /(^|\\D)0(\\D|$)/.test(label);
-  if (size === '1BR') return label.includes('1br') || label.includes('1 bedroom') || /(^|\\D)1(\\D|$)/.test(label);
-  if (size === '2BR') return label.includes('2br') || label.includes('2 bedroom') || /(^|\\D)2(\\D|$)/.test(label);
-  if (size === '3BR') return label.includes('3br') || label.includes('3 bedroom') || /(^|\\D)3(\\D|$)/.test(label);
-  return true;
-};
-
-const unitMatchesBedroomFilter = (unit: AvailableUnit, filter: string) => {
-  const label = `${unit.floorPlanType ?? ''} ${unit.beds ?? ''}`.toLowerCase();
-  if (filter === 'Studio') return label.includes('studio') || /(^|\\D)0(\\D|$)/.test(label);
-  if (filter === '1 Bedroom') return label.includes('1br') || label.includes('1 bedroom') || /(^|\\D)1(\\D|$)/.test(label);
-  if (filter === '2 Bedrooms') return label.includes('2br') || label.includes('2 bedroom') || /(^|\\D)2(\\D|$)/.test(label);
-  if (filter === '3+ Bedrooms') return /(^|\\D)[3-9](\\D|$)/.test(label) || /[3-9]\\s*br/.test(label);
-  return true;
-};
-
-const unitAvailableByDate = (unit: AvailableUnit, requestedDate: string) => {
-  const rawDate = unit.availableDate ?? unit.available_date;
-  if (!rawDate) return true;
-  return rawDate.slice(0, 10) <= requestedDate;
-};
-
-const parseRange = (value: string) => {
-  const match = value.match(/(\\d[\\d,]*)\\s*[-–]\\s*(\\d[\\d,]*)/);
-  return match ? { min: Number(match[1].replace(/,/g, '')), max: Number(match[2].replace(/,/g, '')) } : null;
-};
 
 const Tooltip = ({ text }) => {
   const [show, setShow] = useState(false);
@@ -95,11 +65,23 @@ const FeesDropdown = ({ fees }) => {
 
 const TalkTodonModal = ({ building, onClose }) => {
   const [step, setStep] = useState('form');
-  const [formData, setFormData] = useState({ income: '', credit: '', moveInDate: '', firstName: '', phone: '' });
+  const [formData, setFormData] = useState({ income: '', credit: '', apartmentSize: '', moveInDate: '', firstName: '', phone: '' });
+  const [errors, setErrors] = useState({ credit: '', apartmentSize: '', moveInDate: '' });
   const [result, setResult] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const today = new Date();
+    const todayValue = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const moveInValue = formData.moveInDate ? new Date(`${formData.moveInDate}T00:00:00`) : null;
+    const nextErrors = {
+      credit: !formData.credit ? 'Credit score is required.' : Number(formData.credit) < 300 || Number(formData.credit) > 850 ? 'Enter a credit score between 300 and 850.' : '',
+      apartmentSize: !formData.apartmentSize.trim() ? 'Apartment size is required.' : '',
+      moveInDate: !formData.moveInDate ? 'Move-in date is required.' : moveInValue && moveInValue < todayValue ? 'Choose today or a future date.' : '',
+    };
+    setErrors(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) return;
+
     const income = parseInt(formData.income);
     const credit = parseInt(formData.credit);
     const incomeMultiplier = parseInt(building.incomeReq);
@@ -131,11 +113,18 @@ const TalkTodonModal = ({ building, onClose }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Credit Score</label>
-                <input type="number" required value={formData.credit} onChange={(e) => setFormData({ ...formData, credit: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF4D8D] focus:outline-none" placeholder="e.g., 680" />
+                <input type="number" required min="300" max="850" value={formData.credit} onChange={(e) => setFormData({ ...formData, credit: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF4D8D] focus:outline-none" placeholder="e.g., 680" aria-invalid={Boolean(errors.credit)} aria-describedby={errors.credit ? 'credit-error' : undefined} />
+                {errors.credit && <p id="credit-error" className="mt-1 text-sm text-red-400">{errors.credit}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Apartment Size</label>
+                <input type="text" required value={formData.apartmentSize} onChange={(e) => setFormData({ ...formData, apartmentSize: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF4D8D] focus:outline-none" placeholder="e.g., 1BR, 2BR, Studio" aria-invalid={Boolean(errors.apartmentSize)} aria-describedby={errors.apartmentSize ? 'apartment-size-error' : undefined} />
+                {errors.apartmentSize && <p id="apartment-size-error" className="mt-1 text-sm text-red-400">{errors.apartmentSize}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Move-In Date</label>
-                <input type="date" required value={formData.moveInDate} onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF4D8D] focus:outline-none" />
+                <input type="date" required min={new Date().toISOString().split('T')[0]} value={formData.moveInDate} onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF4D8D] focus:outline-none" aria-invalid={Boolean(errors.moveInDate)} aria-describedby={errors.moveInDate ? 'move-in-date-error' : undefined} />
+                {errors.moveInDate && <p id="move-in-date-error" className="mt-1 text-sm text-red-400">{errors.moveInDate}</p>}
               </div>
               <button type="submit" className="w-full bg-[#FF4D8D] text-white py-3 rounded-lg font-semibold hover:bg-[#E53A73]">Get My Results</button>
             </form>
@@ -177,7 +166,7 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, setSelectedBuilding, setInfoBuilding: setInfoBuildingFromMap, onMapReady, onPricingDataChange, onBuildingsInView }) => {
+const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, allBuildingIds, setSelectedBuilding, setInfoBuilding: setInfoBuildingFromMap, onMapReady, onPricingDataChange, onImageDataChange, onBuildingsInView }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
@@ -191,60 +180,98 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
   );
   const markerBuildings = useMemo(() => geocodedBuildings, [buildingCoordinatesKey]);
 
+  // This component is mounted twice at once (mobile layout + desktop layout,
+  // toggled with CSS only), so two instances of this effect are always alive
+  // together. It must key off the full, stable building-id list (allBuildingIds,
+  // derived from the parent's unfiltered geocodedBuildings state) rather than this
+  // component's own `geocodedBuildings` prop, which is the FILTERED list
+  // (visibleFilteredBuildings) and is itself derived from pricingInventory — the
+  // very state this effect writes back via onPricingDataChange. Keying off the
+  // filtered list created a cycle: fetch -> setPricingInventory -> filtered list
+  // changes -> refetch, and with two instances racing to overwrite the same
+  // parent state, that cycle showed up as buildings/pins continuously flashing.
+  // Keying off the full, filter-independent id list breaks the cycle outright:
+  // this key never changes as a result of anything this effect produces, so
+  // pricing is fetched once per building's actual identity, not once per re-render.
+  const buildingIdsKey = useMemo(() => [...allBuildingIds].sort().join(','), [allBuildingIds]);
+
   useEffect(() => {
     let cancelled = false;
 
     const loadPricing = async () => {
-      const entries: Array<readonly [string, { units: AvailableUnit[] }] | null> = [];
+      const unitsByBuilding = new Map<string, AvailableUnit[]>();
 
       const supabase = createClient();
-      const buildingIds = geocodedBuildings.map((building: any) => String(building.id));
-      const { data: unitRows } = await supabase
-        .from('units')
-        .select('building_id, price, beds, baths, sqft, availabilitydate, unittype')
-        .in('building_id', buildingIds)
-        .not('building_id', 'is', null);
+      const buildingIds = allBuildingIds;
 
-      (unitRows ?? []).forEach((row) => {
-        if (!row.building_id) return;
-        const existing = entries.find((entry): entry is readonly [string, { units: AvailableUnit[] }] => entry?.[0] === row.building_id);
-        const unit: AvailableUnit = {
-          floorPlanType: row.unittype ?? undefined,
-          beds: row.beds ?? undefined,
-          price: typeof row.price === 'number' ? row.price : undefined,
-          sqft: typeof row.sqft === 'number' ? row.sqft : undefined,
-          availableDate: row.availabilitydate ?? null,
-        };
+      // PostgREST caps a single response at 1000 rows by default. The units
+      // table has 3500+ rows across all buildings, so an unbounded select
+      // silently truncated to the first 1000 rows — dropping every building
+      // whose rows fell past that cutoff (e.g. Miami World Tower) entirely
+      // out of pricingInventory. Missing pricing/unit data for a building is
+      // then (correctly) treated as "no data yet" and shown unfiltered,
+      // which is what let those buildings bypass bedroom/price filters.
+      // Page through with .range() until a page comes back short.
+      const PAGE_SIZE = 1000;
+      for (let page = 0; !cancelled; page++) {
+        const from = page * PAGE_SIZE;
+        const to = from + PAGE_SIZE - 1;
+        const { data: unitRows, error } = await supabase
+          .from('units')
+          .select('building_id, price, beds, baths, sqft, availabilitydate, unittype')
+          .in('building_id', buildingIds)
+          .not('building_id', 'is', null)
+          .range(from, to);
 
-        if (existing) {
-          existing[1].units.push(unit);
-        } else {
-          entries.push([String(row.building_id), { units: [unit] }]);
-        }
-      });
+        if (error || !unitRows) break;
+
+        unitRows.forEach((row) => {
+          if (!row.building_id) return;
+          const key = String(row.building_id);
+          const unit: AvailableUnit = {
+            floorPlanType: row.unittype ?? undefined,
+            beds: row.beds ?? undefined,
+            baths: row.baths ?? undefined,
+            price: typeof row.price === 'number' ? row.price : undefined,
+            sqft: typeof row.sqft === 'number' ? row.sqft : undefined,
+            availableDate: row.availabilitydate ?? null,
+          };
+          const existing = unitsByBuilding.get(key);
+          if (existing) existing.push(unit);
+          else unitsByBuilding.set(key, [unit]);
+        });
+
+        if (unitRows.length < PAGE_SIZE) break;
+      }
+
+      const entries: Array<readonly [string, { units: AvailableUnit[] }] | null> = Array.from(
+        unitsByBuilding.entries(),
+      ).map(([id, units]) => [id, { units }] as const);
 
       const { data: imageRows } = await supabase
         .from('building_images')
         .select('building_id, image_url, sort_order')
-        .in('building_id', geocodedBuildings.map((building: any) => String(building.id)))
+        .in('building_id', allBuildingIds)
         .order('sort_order', { ascending: true });
 
       if (!cancelled) {
         const nextPricingData = Object.fromEntries(entries.filter(Boolean) as Array<readonly [string, { units: AvailableUnit[] }]>);
         setPricingData(nextPricingData);
         onPricingDataChange?.(nextPricingData);
-        setBuildingImages((imageRows ?? []).reduce((images, row) => {
+        const nextBuildingImages = (imageRows ?? []).reduce((images, row) => {
           const buildingId = String(row.building_id);
           if (!images[buildingId]) images[buildingId] = [];
           if (typeof row.image_url === 'string' && row.image_url.trim()) images[buildingId].push(row.image_url);
           return images;
-        }, {} as Record<string, string[]>));
+        }, {} as Record<string, string[]>);
+        setBuildingImages(nextBuildingImages);
+        onImageDataChange?.(nextBuildingImages);
       }
     };
 
     loadPricing();
     return () => { cancelled = true };
-  }, [geocodedBuildings]);
+  }, [buildingIdsKey]);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -301,7 +328,10 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
 
   // Add markers when buildings or selection changes
   useEffect(() => {
-    if (!map.current || !markerBuildings.length) return;
+    // Only bail when the map itself isn't ready. An empty markerBuildings list
+    // is a valid filtered state (e.g. no buildings match) and must still fall
+    // through to clear any stale markers left over from a previous filter.
+    if (!map.current) return;
 
     // Remove existing markers and popups
     markersRef.current.forEach((marker) => marker.remove());
@@ -693,6 +723,11 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   }, [savedIds]);
   const geocodeCache = useRef(new Map());
   const [geocodedBuildings, setGeocodedBuildings] = useState(BUILDINGS);
+  // The full, unfiltered building-id set. Geocoding only fills in lat/lng on the
+  // same buildings, so this list's identity is stable across that update; it's
+  // passed to MapComponent so its pricing fetch keys off "every building" rather
+  // than the filtered list, which would reintroduce a fetch/filter feedback loop.
+  const allBuildingIds = useMemo(() => geocodedBuildings.map((building) => String(building.id)), [geocodedBuildings]);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [highlightedBuilding, setHighlightedBuilding] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -738,9 +773,10 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   }, []);
   const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [], neighborhoods: [] });
   const [pricingInventory, setPricingInventory] = useState<PricingInventory>({});
+  const [buildingImages, setBuildingImages] = useState<Record<string, string[]>>({});
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
 
-  const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], price: [], moveInDate: [], neighborhood: null });
+  const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: [] });
   const [mapInstance, setMapInstance] = useState<any>(null);
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
 
@@ -756,22 +792,28 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
 
   // Load filters from URL params on mount
   useEffect(() => {
-    const neighborhood = searchParams.get('neighborhood');
+    const neighborhoods = searchParams.getAll('neighborhood');
     const bedsParam = searchParams.get('beds');
     const priceMinParam = searchParams.get('priceMin');
     const priceMaxParam = searchParams.get('priceMax');
     const moveInDateParam = searchParams.get('moveInDate');
 
-    const newFilters: MapFilterState = { bedrooms: [], price: [], moveInDate: [], neighborhood: null };
+    const newFilters: MapFilterState = { bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: [] };
 
-    if (neighborhood) {
-      newFilters.neighborhood = neighborhood.charAt(0).toUpperCase() + neighborhood.slice(1).replace(/-/g, ' ');
+    if (neighborhoods.length > 0) {
+      newFilters.neighborhood = neighborhoods.map((value) => value.charAt(0).toUpperCase() + value.slice(1).replace(/-/g, ' '));
     }
     if (bedsParam) {
-      newFilters.bedrooms = [parseInt(bedsParam)];
+      // bedsParam is the raw filter token written by updateUrlWithFilters below
+      // (e.g. 'Studio+', '1+', '2+'). parseInt('4+') silently truncates to the
+      // number 4, which doesn't match any key in BEDROOM_MIN_BY_FILTER and made
+      // every bedroom filter a permissive no-op once it round-tripped through
+      // the URL. Keep it as the original string.
+      newFilters.bedrooms = [bedsParam];
     }
-    if (priceMinParam && priceMaxParam) {
-      newFilters.price = [{ min: parseInt(priceMinParam), max: parseInt(priceMaxParam) }];
+    const urlPrice = getPriceRange(priceMinParam, priceMaxParam);
+    if (urlPrice.min !== null || urlPrice.max !== null) {
+      newFilters.price = [`${urlPrice.min ?? ''}-${urlPrice.max ?? ''}`];
     }
     if (moveInDateParam) {
       newFilters.moveInDate = [moveInDateParam];
@@ -786,15 +828,17 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   const updateUrlWithFilters = (newFilters: MapFilterState) => {
     const params = new URLSearchParams();
     
-    if (newFilters.neighborhood) {
-      params.set('neighborhood', newFilters.neighborhood.toLowerCase().replace(/ /g, '-'));
-    }
+    newFilters.neighborhood.forEach((neighborhood) => {
+      params.append('neighborhood', neighborhood.toLowerCase().replace(/ /g, '-'));
+    });
     if (newFilters.bedrooms && newFilters.bedrooms.length > 0) {
       params.set('beds', newFilters.bedrooms[0].toString());
     }
     if (newFilters.price && newFilters.price.length > 0) {
-      params.set('priceMin', newFilters.price[0].min.toString());
-      params.set('priceMax', newFilters.price[0].max.toString());
+      const selectedPrice = newFilters.price[0];
+      const priceRange = getPriceRange(selectedPrice);
+      if (priceRange.min !== null) params.set('priceMin', priceRange.min.toString());
+      if (priceRange.max !== null) params.set('priceMax', priceRange.max.toString());
     }
     if (newFilters.moveInDate && newFilters.moveInDate.length > 0) {
       params.set('moveInDate', newFilters.moveInDate[0]);
@@ -811,7 +855,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   };
 
   const handleClearAllFilters = () => {
-    setMapFilters({ bedrooms: [], price: [], moveInDate: [], neighborhood: null });
+    setMapFilters({ bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: [] });
     router.push('/map');
   };
 
@@ -931,34 +975,45 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   // Helper function to check if a building matches the map filters
   const buildingMatchesMapFilters = (building: any): boolean => {
     // Check neighborhood filter first
-    if (mapFilters.neighborhood !== null && building.neighborhood !== mapFilters.neighborhood) {
-      return false;
-    }
+  if (mapFilters.neighborhood.length > 0 && !mapFilters.neighborhood.includes(building.neighborhood)) {
+    return false;
+  }
 
     // If no filters are active, include all buildings
-    if (mapFilters.bedrooms.length === 0 && mapFilters.price.length === 0 && mapFilters.moveInDate.length === 0) {
+    if (mapFilters.bedrooms.length === 0 && mapFilters.bathrooms.length === 0 && mapFilters.price.length === 0 && mapFilters.moveInDate.length === 0) {
       return true;
     }
 
-    // Check bedrooms filter
+    // Check bedrooms filter. Like the price pre-filter above, this is a coarse
+    // check against the building's static unit-type list (e.g. ['Studio','1B','2B']);
+    // the precise per-unit check against live pricing data happens downstream. It
+    // must never reject a building the unit-level check would still accept, so an
+    // unrecognized unit type or filter value passes through rather than excluding.
     if (mapFilters.bedrooms.length > 0) {
       const bedroomMatch = mapFilters.bedrooms.some(filter => {
-        if (filter === 'Studio') return building.units.includes('Studio');
-        if (filter === '1 Bedroom') return building.units.includes('1B');
-        if (filter === '2 Bedrooms') return building.units.includes('2B');
-        if (filter === '3+ Bedrooms') return building.units.includes('3B');
-        return false;
+        const min = BEDROOM_MIN_BY_FILTER[filter];
+        if (min === undefined) return true;
+        if (!building.units || building.units.length === 0) return true;
+        return building.units.some(unitType => {
+          if (unitType === 'Studio') return min <= 0;
+          const match = unitType.match(/^(\d+)B$/i);
+          if (!match) return true;
+          return Number(match[1]) >= min;
+        });
       });
       if (!bedroomMatch) return false;
     }
 
-    // Check price filter
+    // Check price filter. This is a coarse, building-level pre-filter based on the
+    // building's cheapest advertised unit (priceMin); the precise per-unit check
+    // against live pricing data happens downstream in visibleFilteredBuildings.
+    // It must never reject a building the unit-level check would still accept, so
+    // only reject here when the building's floor price is above every requested max.
     if (mapFilters.price.length > 0) {
       const priceMatch = mapFilters.price.some(filter => {
-        if (filter === '$0-$2,000') return building.priceMin <= 2000;
-        if (filter === '$2,000-$4,000') return building.priceMin >= 2000 && building.priceMin < 4000;
-        if (filter === '$4,000+') return building.priceMin >= 4000;
-        return false;
+        const range = getPriceRange(filter);
+        if (range.max !== null && building.priceMin > range.max) return false;
+        return true;
       });
       if (!priceMatch) return false;
     }
@@ -968,12 +1023,50 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     return true;
   };
 
-  const filteredBuildings = geocodedBuildings.filter(b => 
+  const filteredBuildings = geocodedBuildings.filter(b =>
     visibleBuildingIds.includes(b.id) &&
     buildingMatchesMapFilters(b) &&
     (b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.neighborhood.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  // Keep map markers and both building lists in sync with every active filter.
+  // Each active filter category must be satisfied by the SAME unit at once —
+  // not by separate units each satisfying one filter in isolation. Checking
+  // categories in independent `.some()` passes let a building pass when, say,
+  // its cheapest Studio matched the price filter while a different, pricier
+  // 1-bed matched the bedroom filter — no single unit actually matched both.
+  const visibleFilteredBuildings = useMemo(() => {
+    return filteredBuildings.filter((building) => {
+      const units = pricingInventory[String(building.id)]?.units ?? [];
+      const hasActiveFilter =
+        mapFilters.bedrooms.length > 0 ||
+        mapFilters.bathrooms.length > 0 ||
+        mapFilters.price.length > 0 ||
+        mapFilters.moveInDate.length > 0;
+
+      if (!hasActiveFilter || units.length === 0) return true;
+
+      return units.some((unit) => {
+        if (mapFilters.bedrooms.length > 0 && !mapFilters.bedrooms.some((filter) => unitMatchesBedroomFilter(unit, filter))) return false;
+
+        if (mapFilters.bathrooms.length > 0 && !mapFilters.bathrooms.some((filter) => unitMatchesBathroomFilter(unit, filter))) return false;
+
+        if (mapFilters.price.length > 0) {
+          if (typeof unit.price !== 'number') return false;
+          const priceMatch = mapFilters.price.some((filter) => {
+            const range = getPriceRange(filter);
+            return (range.min === null || unit.price >= range.min) && (range.max === null || unit.price <= range.max);
+          });
+          if (!priceMatch) return false;
+        }
+
+        if (mapFilters.moveInDate.length > 0 && !mapFilters.moveInDate.some((filter) => unitAvailableByDate(unit, filter))) return false;
+
+        return true;
+      });
+    });
+  }, [filteredBuildings, mapFilters, pricingInventory]);
 
   const apartmentCount = useMemo(() => {
     if (Object.keys(pricingInventory).length === 0) return 0;
@@ -983,22 +1076,21 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       return total + units.filter((unit) => {
         if (activeFilters.unitSize.length > 0 && !activeFilters.unitSize.some((size) => unitMatchesSize(unit, size))) return false;
 
-        if (activeFilters.priceRange.length > 0) {
-          const range = parseRange(activeFilters.priceRange[0]);
-          if (range && (typeof unit.price !== 'number' || unit.price < range.min || unit.price > range.max)) return false;
-        }
+  if (activeFilters.priceRange.length > 0) {
+  const range = getPriceRange(activeFilters.priceRange[0]);
+  if ((range.min !== null || range.max !== null) && (typeof unit.price !== 'number' || (range.min !== null && unit.price < range.min) || (range.max !== null && unit.price > range.max))) return false;
+  }
 
         if (activeFilters.moveIn.length > 0 && !unitAvailableByDate(unit, activeFilters.moveIn[0])) return false;
         if (mapFilters.bedrooms.length > 0 && !mapFilters.bedrooms.some((filter) => unitMatchesBedroomFilter(unit, filter))) return false;
 
-        if (mapFilters.price.length > 0 && typeof unit.price === 'number') {
-          const priceMatch = mapFilters.price.some((filter) =>
-            (filter === '$0-$2,000' && unit.price <= 2000) ||
-            (filter === '$2,000-$4,000' && unit.price >= 2000 && unit.price < 4000) ||
-            (filter === '$4,000+' && unit.price >= 4000)
-          );
-          if (!priceMatch) return false;
-        }
+  if (mapFilters.price.length > 0) {
+  const priceMatch = typeof unit.price === 'number' && mapFilters.price.some((filter) => {
+  const range = getPriceRange(filter);
+  return (range.min === null || unit.price >= range.min) && (range.max === null || unit.price <= range.max);
+  });
+  if (!priceMatch) return false;
+  }
 
         if (mapFilters.moveInDate.length > 0 && !unitAvailableByDate(unit, mapFilters.moveInDate[0])) return false;
         return true;
@@ -1035,8 +1127,8 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       const matchingBuildingIds = geocodedBuildings
         .filter((building) => matchesNeighborhood(building) && (pricingInventory[String(building.id)]?.units ?? []).some((unit) => {
           if (filters.unitSize.length > 0 && !filters.unitSize.some((size) => unitMatchesSize(unit, size))) return false;
-          const range = filters.priceRange.length > 0 ? parseRange(filters.priceRange[0]) : null;
-          if (range && (typeof unit.price !== 'number' || unit.price < range.min || unit.price > range.max)) return false;
+  const range = filters.priceRange.length > 0 ? getPriceRange(filters.priceRange[0]) : { min: null, max: null };
+  if ((range.min !== null || range.max !== null) && (typeof unit.price !== 'number' || (range.min !== null && unit.price < range.min) || (range.max !== null && unit.price > range.max))) return false;
           if (filters.moveIn.length > 0 && !unitAvailableByDate(unit, filters.moveIn[0])) return false;
           return true;
         }))
@@ -1067,9 +1159,9 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
 
         // Check the modal's live dual-handle price range.
         if (filters.priceRange.length > 0 && hasMatchingUnits) {
-          const range = filters.priceRange[0].match(/(\d[\d,]*)\s*[-��]\s*(\d[\d,]*)/);
-          const min = range ? Number(range[1].replace(/,/g, '')) : 0;
-          const max = range ? Number(range[2].replace(/,/g, '')) : Number.POSITIVE_INFINITY;
+          const range = getPriceRange(filters.priceRange[0]);
+          const min = range.min ?? 0;
+          const max = range.max ?? Number.POSITIVE_INFINITY;
           hasMatchingUnits = hasMatchingUnits && building.priceMin >= min && building.priceMin <= max;
         }
 
@@ -1194,11 +1286,13 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   selectedBuilding={selectedBuilding}
   highlightedBuilding={highlightedBuilding}
   onPinClick={(b) => router.push(`/buildings/${b.id}`)}
-  geocodedBuildings={geocodedBuildings}
+                  geocodedBuildings={visibleFilteredBuildings}
+                  allBuildingIds={allBuildingIds}
   setSelectedBuilding={setSelectedBuilding}
   setInfoBuilding={setInfoBuilding}
   onMapReady={handleMapReady}
   onPricingDataChange={setPricingInventory}
+  onImageDataChange={setBuildingImages}
   onBuildingsInView={setViewportBuildings}
   />
         </div>
@@ -1479,7 +1573,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
           </button>
         )}
       </div>
-      {/* ── END MOBILE LAYOUT ─────────────────────────���───────────────────── */}
+      {/* ── END MOBILE LAYOUT ─────────────────────────����───────────────────── */}
 
       {/* Desktop Header - Fixed at Top */}
       <div className="hidden md:flex items-center justify-between px-8 py-7 bg-white flex-shrink-0 border-b border-[#E8EBF0]" style={{ height: '74px' }}>
@@ -1562,11 +1656,13 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
             selectedBuilding={selectedBuilding} 
             highlightedBuilding={highlightedBuilding}
             onPinClick={(b) => router.push(`/buildings/${b.id}`)}
-            geocodedBuildings={geocodedBuildings}
+                            geocodedBuildings={visibleFilteredBuildings}
+                  allBuildingIds={allBuildingIds}
             setSelectedBuilding={setSelectedBuilding}
   setInfoBuilding={setInfoBuilding}
   onMapReady={handleMapReady}
             onPricingDataChange={setPricingInventory}
+            onImageDataChange={setBuildingImages}
             onBuildingsInView={setViewportBuildings}
           />
         </div>
@@ -1589,10 +1685,13 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
           {/* Scrollable Cards - Vertical Stack — flush from top */}
           <div className="flex-1 overflow-y-auto">
             <div className="p-4 flex flex-col gap-3">
-              {filteredBuildings.map((building) => (
+              {visibleFilteredBuildings.map((building) => (
                 <DesktopBuildingCard
                   key={building.id}
                   building={building}
+                  supabaseImages={buildingImages[String(building.id)] ?? []}
+                  units={pricingInventory[String(building.id)]?.units ?? []}
+                  mapFilters={mapFilters}
                   isAgentMode={hasAccess}
                   isHighlighted={selectedBuilding?.id === building.id}
                                   isStarred={starredBuildings.has(String(building.id))}

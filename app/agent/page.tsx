@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import AgentLeadDossier from '@/components/agent-lead-dossier'
 
 interface Lead {
   id: string
@@ -25,6 +26,8 @@ interface Lead {
   archive_notes: string
   buildings: string[]
   favorited: string[]
+  building_id: string
+  guestCard: { status: 'idle' | 'sending' | 'sent' | 'error'; sentAt: string | null; error: string | null }
   deal: {
     building: string
     unit: string
@@ -57,6 +60,7 @@ interface DbLead {
   deal_value: number | null
   archive_reason: string | null
   archive_notes: string | null
+  building_id: string | null
 }
 
 // Map DB stage value → COLUMNS key
@@ -104,6 +108,8 @@ function dbLeadToLead(row: DbLead): Lead {
     archive_notes: row.archive_notes ?? '',
     buildings: [],
     favorited: [],
+    building_id: row.building_id ?? '',
+    guestCard: { status: 'idle', sentAt: null, error: null },
     deal: { building: '', unit: '', tour: '', leaseStart: '', leaseTerm: '', marketRent: '', invoiceEst: '' },
   }
 }
@@ -118,13 +124,13 @@ function parseBudgetMidpoint(budget: string): number {
 }
 
 const COLUMNS = [
-  { key: 'newlead', label: 'New Lead', color: '#5B6780', stage: 'New Lead' },
-  { key: 'discoverycall', label: 'Discovery Call Made', color: '#19C6C0', stage: 'Discovery Call Made' },
-  { key: 'optionssent', label: 'Options Sent', color: '#19C6C0', stage: 'Options Sent' },
-  { key: 'followup', label: 'Follow Up', color: '#FFC24B', stage: 'Follow Up' },
-  { key: 'tourscheduled', label: 'Tour Scheduled', color: '#FF4D8D', stage: 'Tour Scheduled' },
-  { key: 'applied', label: 'Applied / Signed Lease', color: '#FF4D8D', stage: 'Applied / Signed Lease' },
-  { key: 'archive', label: 'Archive', color: '#5B6780', stage: 'Archive' },
+  { key: 'newlead', label: 'New Lead', color: '#7FD9A8', stage: 'New Lead' },
+  { key: 'discoverycall', label: 'Discovery Call Made', color: '#6FD9CC', stage: 'Discovery Call Made' },
+  { key: 'optionssent', label: 'Options Sent', color: '#6FD9CC', stage: 'Options Sent' },
+  { key: 'followup', label: 'Follow Up', color: '#E8C468', stage: 'Follow Up' },
+  { key: 'tourscheduled', label: 'Tour Scheduled', color: '#EFA0BE', stage: 'Tour Scheduled' },
+  { key: 'applied', label: 'Applied / Signed Lease', color: '#E0447B', stage: 'Applied / Signed Lease' },
+  { key: 'archive', label: 'Archive', color: '#EBEBEB', stage: 'Archive' },
 ]
 
 const BUILDINGS = [
@@ -232,7 +238,18 @@ export default function AgentPage() {
         .from('leads')
         .select('*')
         .order('created_at', { ascending: false })
-      if (!error && data) setLeads((data as DbLead[]).map(dbLeadToLead))
+      if (!error && data) {
+    const mapped = (data as DbLead[]).map(dbLeadToLead)
+    const withStatuses = await Promise.all(mapped.map(async lead => {
+      try {
+        const response = await fetch(`/api/guest-card/send?leadId=${lead.id}`)
+        const payload = await response.json()
+        const send = payload.send
+        return send ? { ...lead, guestCard: { status: send.status === 'sent' ? 'sent' : send.status === 'failed' ? 'error' : 'idle', sentAt: send.sent_at ?? null, error: send.error_message ?? null } } : lead
+      } catch { return lead }
+    }))
+    setLeads(withStatuses)
+  }
     }
 
     const runAllowlistCheck = async (
@@ -344,6 +361,18 @@ export default function AgentPage() {
   const showToast = (msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(null), 3200)
+  }
+
+  const sendGuestCard = async (leadId: string) => {
+    updateLead(leadId, { guestCard: { status: 'sending', sentAt: null, error: null } })
+    try {
+      const response = await fetch('/api/guest-card/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ leadId }) })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || 'Guest card failed')
+      updateLead(leadId, { guestCard: { status: 'sent', sentAt: payload.sentAt, error: null } })
+    } catch (error) {
+      updateLead(leadId, { guestCard: { status: 'error', sentAt: null, error: error instanceof Error ? error.message : 'Guest card failed' } })
+    }
   }
 
   const saveLead = async (leadId: string, updates: Partial<Lead>) => {
@@ -717,8 +746,8 @@ export default function AgentPage() {
 
   return (
     <div style={{
-      background: '#0B1220',
-      color: '#E9EDF6',
+      background: '#F7F7F5',
+      color: '#222222',
       fontFamily: '"Inter", sans-serif',
       minHeight: '100vh',
     }}>
@@ -727,7 +756,7 @@ export default function AgentPage() {
         body { margin: 0; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #223252; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb { background: #EBEBEB; border-radius: 8px; }
       `}</style>
 
       {/* TOPBAR */}
@@ -735,25 +764,25 @@ export default function AgentPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '16px 24px',
-        borderBottom: '1px solid #223252',
-        background: 'linear-gradient(180deg, #0D1526, #0B1220)',
+        padding: '18px 32px',
+        borderBottom: '1px solid #EBEBEB',
+        background: '#FFFFFF',
       }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '2px' }}>
-          <span style={{ fontFamily: '"Archivo", sans-serif', fontWeight: 900, fontSize: '20px', letterSpacing: '0.5px', color: '#fff' }}>MIAMI APARTMENT</span>
-          <span style={{ fontFamily: '"Archivo", sans-serif', fontWeight: 900, fontSize: '20px', letterSpacing: '0.5px', color: '#FF4D8D' }}>GUY</span>
-          <span style={{ fontSize: '11px', color: '#5B6780', marginLeft: '10px', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 600 }}>Your Pipeline</span>
+          <span style={{ fontFamily: '"Archivo", sans-serif', fontWeight: 900, fontSize: '17px', letterSpacing: '-0.01em', color: '#111111' }}>MIAMI APARTMENT</span>
+          <span style={{ fontFamily: '"Archivo", sans-serif', fontWeight: 900, fontSize: '17px', letterSpacing: '-0.01em', color: '#E0447B' }}>GUY</span>
+          <span style={{ fontSize: '11px', color: '#B0B0B0', marginLeft: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>Your Pipeline</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <input
             placeholder="Search leads…"
             style={{
-              background: '#111B2E',
-              border: '1px solid #223252',
-              borderRadius: '8px',
-              padding: '8px 12px',
-              fontSize: '13px',
-              color: '#8C97AE',
+              background: '#F7F7F5',
+              border: '1px solid #EBEBEB',
+              borderRadius: '10px',
+              padding: '9px 16px',
+              fontSize: '13.5px',
+              color: '#222222',
               fontFamily: '"Inter", sans-serif',
               width: '220px',
               outline: 'none',
@@ -763,33 +792,33 @@ export default function AgentPage() {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            padding: '6px 10px 6px 6px',
+            padding: '6px 12px 6px 6px',
             borderRadius: '100px',
-            background: '#111B2E',
-            border: '1px solid #223252',
+            background: '#F7F7F5',
+            border: '1px solid #EBEBEB',
             cursor: 'pointer',
             transition: 'border-color 0.12s ease',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#19C6C0')}
-          onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#223252')}
+          onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#E0447B')}
+          onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#EBEBEB')}
           onClick={handleLogout}
           title="Click to logout"
           >
             <div style={{
-              width: '26px',
-              height: '26px',
+              width: '30px',
+              height: '30px',
               borderRadius: '50%',
-              background: '#19C6C0',
+              background: '#E7F7F1',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '11px',
+              fontSize: '12px',
               fontWeight: 700,
-              color: '#03211F',
+              color: '#0F6E56',
             }}>
               {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
             </div>
-            <span style={{ fontSize: '13px', color: '#8C97AE' }}>{user?.name || 'User'} · Agent</span>
+            <span style={{ fontSize: '13.5px', fontWeight: 600, color: '#222222' }}>{user?.name || 'User'} · Agent</span>
           </div>
         </div>
       </div>
@@ -798,9 +827,9 @@ export default function AgentPage() {
       <div style={{ display: 'flex', height: 'calc(100vh - 61px)' }}>
         {/* KANBAN */}
         <div style={{ flex: 1, minWidth: 0, padding: '20px 0 0 24px', display: 'flex', flexDirection: 'column', paddingRight: selectedLead ? 0 : 24, overflowY: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <h1 style={{ fontFamily: '"Archivo", sans-serif', fontSize: '17px', fontWeight: 700, margin: 0, color: '#E9EDF6' }}>
-              Your Pipeline <span style={{ color: '#5B6780', fontSize: '12px', fontWeight: 500, marginLeft: '8px' }}>· {leads.length}</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <h1 style={{ fontFamily: '"Archivo", sans-serif', fontSize: '22px', fontWeight: 800, letterSpacing: '-0.01em', margin: 0, color: '#111111' }}>
+              Your Pipeline <span style={{ color: '#B0B0B0', fontSize: '16px', fontWeight: 500, marginLeft: '8px' }}>· {leads.length}</span>
             </h1>
             <button
               onClick={() => {
@@ -814,15 +843,16 @@ export default function AgentPage() {
                 position: 'sticky',
                 right: '32px',
                 zIndex: selectedLead ? 5 : 100,
-                background: '#1CDCD4',
-                color: '#04201e',
+                background: '#E0447B',
+                color: '#FFFFFF',
                 border: 'none',
                 borderRadius: '100px',
-                padding: '10px 18px',
-                fontSize: '13px',
+                padding: '11px 20px',
+                fontSize: '13.5px',
                 fontWeight: 700,
                 fontFamily: '"Archivo", sans-serif',
                 cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(224,68,123,0.25)',
                 transition: 'all 0.12s ease',
               }}
               onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-1px)' }}
@@ -864,13 +894,13 @@ export default function AgentPage() {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     paddingBottom: '10px',
-                    marginBottom: '10px',
-                    borderBottom: `2px solid ${col.color}`,
+                    marginBottom: '14px',
+                    borderBottom: `3px solid ${col.color}`,
                   }}>
-                    <h3 style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.3px', margin: 0, color: '#E9EDF6', textTransform: 'uppercase' }}>
+                    <h3 style={{ fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.04em', margin: 0, color: '#444444', textTransform: 'uppercase' }}>
                       {col.label}
                     </h3>
-                    <span style={{ fontSize: '11px', color: '#5B6780', background: '#111B2E', padding: '1px 7px', borderRadius: '20px' }}>
+                    <span style={{ fontSize: '11.5px', color: '#B0B0B0' }}>
                       {colLeads.length}
                     </span>
                   </div>
@@ -879,13 +909,14 @@ export default function AgentPage() {
                     {/* Blank card for new lead entry */}
                     {isNewLeadColumn && showBlankCard && (
                       <div style={{
-                        background: '#152238',
-                        border: '2px dashed #1CDCD4',
-                        borderRadius: '10px',
-                        padding: '11px 12px',
+                        background: '#FFFFFF',
+                        border: '2px dashed #E0447B',
+                        borderRadius: '16px',
+                        padding: '13px 14px',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '8px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                       }}>
                         <input
                           ref={blankCardNameRef}
@@ -894,17 +925,17 @@ export default function AgentPage() {
                           value={blankCardData.name}
                           onChange={(e) => setBlankCardData(prev => ({ ...prev, name: e.target.value }))}
                           style={{
-                            background: '#0F1729',
-                            border: '1px solid #223252',
-                            borderRadius: '6px',
-                            padding: '7px 8px',
-                            fontSize: '12px',
-                            color: '#E9EDF6',
+                            background: '#F7F7F5',
+                            border: '1px solid #EBEBEB',
+                            borderRadius: '8px',
+                            padding: '7px 9px',
+                            fontSize: '12.5px',
+                            color: '#222222',
                             fontFamily: 'inherit',
                             outline: 'none',
                           }}
-                          onFocus={(e) => { e.target.style.borderColor = '#1CDCD4' }}
-                          onBlur={(e) => { e.target.style.borderColor = '#223252' }}
+                          onFocus={(e) => { e.target.style.borderColor = '#E0447B' }}
+                          onBlur={(e) => { e.target.style.borderColor = '#EBEBEB' }}
                         />
                         <input
                           type="tel"
@@ -912,17 +943,17 @@ export default function AgentPage() {
                           value={blankCardData.phone}
                           onChange={(e) => setBlankCardData(prev => ({ ...prev, phone: e.target.value }))}
                           style={{
-                            background: '#0F1729',
-                            border: '1px solid #223252',
-                            borderRadius: '6px',
-                            padding: '7px 8px',
-                            fontSize: '12px',
-                            color: '#E9EDF6',
+                            background: '#F7F7F5',
+                            border: '1px solid #EBEBEB',
+                            borderRadius: '8px',
+                            padding: '7px 9px',
+                            fontSize: '12.5px',
+                            color: '#222222',
                             fontFamily: 'inherit',
                             outline: 'none',
                           }}
-                          onFocus={(e) => { e.target.style.borderColor = '#1CDCD4' }}
-                          onBlur={(e) => { e.target.style.borderColor = '#223252' }}
+                          onFocus={(e) => { e.target.style.borderColor = '#E0447B' }}
+                          onBlur={(e) => { e.target.style.borderColor = '#EBEBEB' }}
                         />
                         <input
                           type="text"
@@ -930,17 +961,17 @@ export default function AgentPage() {
                           value={blankCardData.beds}
                           onChange={(e) => setBlankCardData(prev => ({ ...prev, beds: e.target.value }))}
                           style={{
-                            background: '#0F1729',
-                            border: '1px solid #223252',
-                            borderRadius: '6px',
-                            padding: '7px 8px',
-                            fontSize: '12px',
-                            color: '#E9EDF6',
+                            background: '#F7F7F5',
+                            border: '1px solid #EBEBEB',
+                            borderRadius: '8px',
+                            padding: '7px 9px',
+                            fontSize: '12.5px',
+                            color: '#222222',
                             fontFamily: 'inherit',
                             outline: 'none',
                           }}
-                          onFocus={(e) => { e.target.style.borderColor = '#1CDCD4' }}
-                          onBlur={(e) => { e.target.style.borderColor = '#223252' }}
+                          onFocus={(e) => { e.target.style.borderColor = '#E0447B' }}
+                          onBlur={(e) => { e.target.style.borderColor = '#EBEBEB' }}
                         />
                         <input
                           type="text"
@@ -948,17 +979,17 @@ export default function AgentPage() {
                           value={blankCardData.budget}
                           onChange={(e) => setBlankCardData(prev => ({ ...prev, budget: e.target.value }))}
                           style={{
-                            background: '#0F1729',
-                            border: '1px solid #223252',
-                            borderRadius: '6px',
-                            padding: '7px 8px',
-                            fontSize: '12px',
-                            color: '#E9EDF6',
+                            background: '#F7F7F5',
+                            border: '1px solid #EBEBEB',
+                            borderRadius: '8px',
+                            padding: '7px 9px',
+                            fontSize: '12.5px',
+                            color: '#222222',
                             fontFamily: 'inherit',
                             outline: 'none',
                           }}
-                          onFocus={(e) => { e.target.style.borderColor = '#1CDCD4' }}
-                          onBlur={(e) => { e.target.style.borderColor = '#223252' }}
+                          onFocus={(e) => { e.target.style.borderColor = '#E0447B' }}
+                          onBlur={(e) => { e.target.style.borderColor = '#EBEBEB' }}
                         />
                         <input
                           type="text"
@@ -966,45 +997,45 @@ export default function AgentPage() {
                           value={blankCardData.move_in_timing}
                           onChange={(e) => setBlankCardData(prev => ({ ...prev, move_in_timing: e.target.value }))}
                           style={{
-                            background: '#0F1729',
-                            border: '1px solid #223252',
-                            borderRadius: '6px',
-                            padding: '7px 8px',
-                            fontSize: '12px',
-                            color: '#E9EDF6',
+                            background: '#F7F7F5',
+                            border: '1px solid #EBEBEB',
+                            borderRadius: '8px',
+                            padding: '7px 9px',
+                            fontSize: '12.5px',
+                            color: '#222222',
                             fontFamily: 'inherit',
                             outline: 'none',
                           }}
-                          onFocus={(e) => { e.target.style.borderColor = '#1CDCD4' }}
-                          onBlur={(e) => { e.target.style.borderColor = '#223252' }}
+                          onFocus={(e) => { e.target.style.borderColor = '#E0447B' }}
+                          onBlur={(e) => { e.target.style.borderColor = '#EBEBEB' }}
                         />
                         <textarea
                           placeholder="Notes (optional)"
                           value={blankCardData.notes}
                           onChange={(e) => setBlankCardData(prev => ({ ...prev, notes: e.target.value }))}
                           style={{
-                            background: '#0F1729',
-                            border: '1px solid #223252',
-                            borderRadius: '6px',
-                            padding: '7px 8px',
-                            fontSize: '12px',
-                            color: '#E9EDF6',
+                            background: '#F7F7F5',
+                            border: '1px solid #EBEBEB',
+                            borderRadius: '8px',
+                            padding: '7px 9px',
+                            fontSize: '12.5px',
+                            color: '#222222',
                             fontFamily: 'inherit',
                             outline: 'none',
                             resize: 'none',
                             minHeight: '40px',
                           }}
-                          onFocus={(e) => { e.target.style.borderColor = '#1CDCD4' }}
-                          onBlur={(e) => { e.target.style.borderColor = '#223252' }}
+                          onFocus={(e) => { e.target.style.borderColor = '#E0447B' }}
+                          onBlur={(e) => { e.target.style.borderColor = '#EBEBEB' }}
                         />
                         {blankCardError && (
                           <div style={{
                             fontSize: '11px',
-                            color: '#FF4D8D',
-                            background: 'rgba(255, 77, 141, 0.1)',
+                            color: '#D9534F',
+                            background: '#FDECEC',
                             padding: '6px 8px',
                             borderRadius: '6px',
-                            borderLeft: '2px solid #FF4D8D',
+                            borderLeft: '2px solid #D9534F',
                           }}>
                             {blankCardError}
                           </div>
@@ -1015,10 +1046,10 @@ export default function AgentPage() {
                             disabled={blankCardLoading}
                             style={{
                               flex: 1,
-                              background: '#1CDCD4',
-                              color: '#04201e',
+                              background: '#E0447B',
+                              color: '#FFFFFF',
                               border: 'none',
-                              borderRadius: '6px',
+                              borderRadius: '8px',
                               padding: '7px 8px',
                               fontSize: '11px',
                               fontWeight: 700,
@@ -1037,10 +1068,10 @@ export default function AgentPage() {
                             }}
                             style={{
                               flex: 1,
-                              background: '#223252',
-                              color: '#E9EDF6',
-                              border: '1px solid #223252',
-                              borderRadius: '6px',
+                              background: '#F7F7F5',
+                              color: '#444444',
+                              border: '1px solid #EBEBEB',
+                              borderRadius: '8px',
                               padding: '7px 8px',
                               fontSize: '11px',
                               fontWeight: 600,
@@ -1056,6 +1087,7 @@ export default function AgentPage() {
                     {colLeads.map((lead) => {
                       const days = safeGetDays(lead.lastContacted)
                       const color = spokeColor(days)
+                      const isArchive = col.key === 'archive'
                       return (
                         <div
                           key={lead.id}
@@ -1063,44 +1095,43 @@ export default function AgentPage() {
                           onDragStart={(e) => handleDragStart(e, lead.id)}
                           onClick={() => setSelectedLead(lead)}
                           style={{
-                            background: draggedLeadId === lead.id ? '#0B1220' : '#152238',
-                            border: selectedLead?.id === lead.id ? '1px solid #FF4D8D' : '1px solid #223252',
-                            borderRadius: '10px',
-                            padding: '11px 12px',
+                            background: draggedLeadId === lead.id ? '#F0F0EE' : isArchive ? '#FBFBFA' : '#FFFFFF',
+                            border: selectedLead?.id === lead.id ? '1px solid #E0447B' : '1px solid transparent',
+                            borderRadius: '16px',
+                            padding: '14px 16px',
                             cursor: draggedLeadId === lead.id ? 'grabbing' : 'grab',
-                            transition: 'border-color 0.15s ease, transform 0.1s ease, opacity 0.1s ease',
+                            transition: 'box-shadow 0.15s ease, transform 0.15s ease, opacity 0.1s ease',
                             position: 'relative',
-                            boxShadow: selectedLead?.id === lead.id ? '0 0 0 1px #FF4D8D, 0 4px 14px rgba(255,77,141,0.15)' : 'none',
+                            boxShadow: selectedLead?.id === lead.id ? '0 0 0 1px #E0447B, 0 4px 16px rgba(224,68,123,0.15)' : isArchive ? 'none' : '0 2px 8px rgba(0,0,0,0.05)',
                             opacity: draggedLeadId === lead.id ? 0.6 : 1,
                           }}
-                          onMouseEnter={(e) => !selectedLead?.id === lead.id && draggedLeadId !== lead.id && (e.currentTarget.style.borderColor = '#5B6780')}
-                          onMouseLeave={(e) => !selectedLead?.id === lead.id && draggedLeadId !== lead.id && (e.currentTarget.style.borderColor = '#223252')}
+                          onMouseEnter={(e) => { if (!isArchive && selectedLead?.id !== lead.id && draggedLeadId !== lead.id) { e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)'; e.currentTarget.style.transform = 'translateY(-1px)' } }}
+                          onMouseLeave={(e) => { if (!isArchive && selectedLead?.id !== lead.id && draggedLeadId !== lead.id) { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)'; e.currentTarget.style.transform = 'translateY(0)' } }}
                         >
-                          <div style={{
-                            position: 'absolute',
-                            top: '10px',
-                            right: '10px',
-                            width: '10px',
-                            height: '10px',
-                            borderRadius: '50%',
-                            background: color === 'green' ? '#2ECC71' : color === 'yellow' ? '#F39C12' : '#E74C3C',
-                            flexShrink: 0,
-                          }} />
-                          <div style={{ fontSize: '13px', fontWeight: 600, color: '#E9EDF6', marginBottom: '6px' }}>
-                            {lead.first} {lead.last.charAt(0)}.
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <div style={{ fontSize: '14px', fontWeight: 700, color: '#222222' }}>
+                              {lead.first} {lead.last.charAt(0)}.
+                            </div>
+                            <div style={{
+                              width: '8px',
+                              height: '8px',
+                              borderRadius: '50%',
+                              background: color === 'green' ? '#4FBE7C' : color === 'yellow' ? '#F39C12' : '#E85D5D',
+                              flexShrink: 0,
+                            }} />
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', color: '#8C97AE', marginTop: '3px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', color: '#717171', marginTop: '2px' }}>
                             <span>{lead.beds}</span>
-                            <span style={{ color: '#FFC24B', fontWeight: 600, fontFamily: '"Space Mono", monospace' }}>{lead.budget}</span>
+                            <span style={{ color: '#C93868', fontWeight: 700 }}>{lead.budget}</span>
                           </div>
-                          <div style={{ fontSize: '11.5px', color: '#8C97AE', marginTop: '3px' }}>{lead.move}</div>
+                          <div style={{ fontSize: '12.5px', color: '#717171', marginTop: '2px' }}>{lead.move}</div>
                           {lead.quick_note && (
                             <div style={{
                               marginTop: '8px',
                               fontSize: '11px',
                               fontStyle: 'italic',
-                              color: '#6B7488',
-                              borderTop: '1px dashed #223252',
+                              color: '#909090',
+                              borderTop: '1px dashed #EBEBEB',
                               paddingTop: '6px',
                             }}>
                               {lead.quick_note}
@@ -1150,69 +1181,66 @@ export default function AgentPage() {
               }}>
                 {/* GCI */}
                 <div style={{
-                  background: '#151E33',
-                  border: '0.5px solid rgba(255,77,141,0.25)',
-                  borderLeft: '2px solid #FF4D8D',
-                  borderRadius: '12px',
+                  background: '#FFFFFF',
+                  borderRadius: '16px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                   padding: '1rem 1.25rem',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 500, color: '#6B7488', letterSpacing: '0.05em', margin: 0 }}>GCI</p>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF4D8D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <p style={{ fontSize: '11px', fontWeight: 600, color: '#B0B0B0', letterSpacing: '0.05em', margin: 0, textTransform: 'uppercase' }}>GCI</p>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E0447B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
                     </svg>
                   </div>
-                  <p style={{ fontSize: '28px', fontWeight: 500, color: '#FFFFFF', margin: 0 }}>{fmt(gci)}</p>
+                  <p style={{ fontSize: '28px', fontWeight: 700, color: '#111111', margin: 0 }}>{fmt(gci)}</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF4D8D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E0447B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12"/>
                     </svg>
-                    <p style={{ fontSize: '12px', color: '#F4C0D1', margin: 0 }}>{closedThisMonth.length} deals closed this month</p>
+                    <p style={{ fontSize: '12px', color: '#717171', margin: 0 }}>{closedThisMonth.length} deals closed this month</p>
                   </div>
                 </div>
 
                 {/* PPV */}
                 <div style={{
-                  background: '#151E33',
-                  border: '0.5px solid rgba(25,198,192,0.25)',
-                  borderLeft: '2px solid #19C6C0',
-                  borderRadius: '12px',
+                  background: '#FFFFFF',
+                  borderRadius: '16px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                   padding: '1rem 1.25rem',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 500, color: '#6B7488', letterSpacing: '0.05em', margin: 0 }}>PPV</p>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#19C6C0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <p style={{ fontSize: '11px', fontWeight: 600, color: '#B0B0B0', letterSpacing: '0.05em', margin: 0, textTransform: 'uppercase' }}>PPV</p>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
                     </svg>
                   </div>
-                  <p style={{ fontSize: '28px', fontWeight: 500, color: '#FFFFFF', margin: 0 }}>{fmt(ppv)}</p>
+                  <p style={{ fontSize: '28px', fontWeight: 700, color: '#111111', margin: 0 }}>{fmt(ppv)}</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#19C6C0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
                     </svg>
-                    <p style={{ fontSize: '12px', color: '#9FE1CB', margin: 0 }}>{activeLeads.length} active leads in motion</p>
+                    <p style={{ fontSize: '12px', color: '#717171', margin: 0 }}>{activeLeads.length} active leads in motion</p>
                   </div>
                 </div>
 
                 {/* Conversion Rate */}
                 <div style={{
-                  background: '#151E33',
-                  border: '0.5px solid rgba(255,194,75,0.25)',
-                  borderLeft: '2px solid #FFC24B',
-                  borderRadius: '12px',
+                  background: '#FFFFFF',
+                  borderRadius: '16px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                   padding: '1rem 1.25rem',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 500, color: '#6B7488', letterSpacing: '0.05em', margin: 0 }}>conversion rate</p>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFC24B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <p style={{ fontSize: '11px', fontWeight: 600, color: '#B0B0B0', letterSpacing: '0.05em', margin: 0, textTransform: 'uppercase' }}>conversion rate</p>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9971F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
                     </svg>
                   </div>
-                  <p style={{ fontSize: '28px', fontWeight: 500, color: '#FFFFFF', margin: 0 }}>{convRate}%</p>
-                  <div style={{ margin: '8px 0 0', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', height: '4px', overflow: 'hidden' }}>
-                    <div style={{ background: '#FFC24B', height: '100%', width: `${convRate}%`, borderRadius: '4px', transition: 'width 0.4s ease' }} />
+                  <p style={{ fontSize: '28px', fontWeight: 700, color: '#111111', margin: 0 }}>{convRate}%</p>
+                  <div style={{ margin: '8px 0 0', background: '#F7F7F5', borderRadius: '4px', height: '4px', overflow: 'hidden' }}>
+                    <div style={{ background: '#E8C468', height: '100%', width: `${convRate}%`, borderRadius: '4px', transition: 'width 0.4s ease' }} />
                   </div>
-                  <p style={{ fontSize: '12px', color: '#FAC775', margin: '6px 0 0' }}>{closedTotal} of {totalLeads} leads closed</p>
+                  <p style={{ fontSize: '12px', color: '#717171', margin: '6px 0 0' }}>{closedTotal} of {totalLeads} leads closed</p>
                 </div>
               </div>
             )
@@ -1221,503 +1249,23 @@ export default function AgentPage() {
 
         {/* DOSSIER */}
         {selectedLead && (
-          <div style={{
-            position: 'fixed',
-            right: 0,
-            top: '61px',
-            bottom: 0,
-            width: '480px',
-            background: '#111B2E',
-            padding: '22px 20px',
-            overflowY: 'auto',
-            zIndex: 10,
-            boxShadow: '-8px 0 24px rgba(0,0,0,0.4)',
-            borderLeft: '1px solid #223252',
-          }}>
-            <button
-              onClick={() => setSelectedLead(null)}
-              style={{
-                position: 'absolute',
-                top: '14px',
-                right: '14px',
-                width: '28px',
-                height: '28px',
-                borderRadius: '8px',
-                background: '#152238',
-                border: '1px solid #223252',
-                color: '#8C97AE',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                fontSize: '15px',
-                transition: 'all 0.12s ease',
-                zIndex: 5,
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#E9EDF6'; e.currentTarget.style.borderColor = '#FF4D8D'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#8C97AE'; e.currentTarget.style.borderColor = '#223252'; }}
-            >
-              ✕
-            </button>
-
-            {/* HEADER — Compact design with avatar, name, contacted status, quick note, email/phone */}
-            <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '0.5px solid #223252' }}>
-              {/* Top row: Avatar + Name + Contacted Status */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingRight: '28px' }}>
-                <div style={{
-                  width: '38px',
-                  height: '38px',
-                  flex: '0 0 38px',
-                  borderRadius: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 500,
-                  fontSize: '13px',
-                  color: '#19C6C0',
-                  background: 'rgba(25, 198, 192, 0.15)',
-                }}>
-                  {selectedLead.first.charAt(0)}{selectedLead.last.charAt(0)}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                    <p style={{ fontWeight: 500, fontSize: '15px', margin: 0, color: '#fff' }}>
-                      {selectedLead.first} {selectedLead.last}
-                    </p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '0 0 auto' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <span style={{
-                          width: '5px',
-                          height: '5px',
-                          borderRadius: '50%',
-                          background: spokeColor(safeGetDays(selectedLead.lastContacted)) === 'green' ? '#4ADE80' : spokeColor(safeGetDays(selectedLead.lastContacted)) === 'yellow' ? '#F39C12' : '#EF4444',
-                          display: 'inline-block',
-                        }} />
-                        <span style={{ fontSize: '11px', color: '#A9B2C3' }}>Contacted {spokeText(safeGetDays(selectedLead.lastContacted))}</span>
-                      </div>
-                      <button
-                        onClick={handleSpokeWith}
-                        disabled={spokeWithLoading}
-                        title="Mark as spoke with today"
-                        style={{
-                          padding: '4px 10px',
-                          fontSize: '11px',
-                          fontWeight: 500,
-                          color: '#1CDCD4',
-                          background: 'transparent',
-                          border: '1px solid #1CDCD4',
-                          borderRadius: '5px',
-                          cursor: spokeWithLoading ? 'not-allowed' : 'pointer',
-                          transition: 'all 0.12s ease',
-                          opacity: spokeWithLoading ? 0.6 : 1,
-                        }}
-                        onMouseEnter={(e) => { 
-                          if (!spokeWithLoading) {
-                            e.currentTarget.style.background = 'rgba(28, 220, 212, 0.1)'
-                            e.currentTarget.style.color = '#1CDCD4'
-                          }
-                        }}
-                        onMouseLeave={(e) => { 
-                          e.currentTarget.style.background = 'transparent'
-                          e.currentTarget.style.color = '#1CDCD4'
-                        }}
-                      >
-                        → Spoke with
-                      </button>
-                      <button
-                        onClick={() => setArchivePopupOpen(true)}
-                        style={{
-                          padding: '4px 10px',
-                          fontSize: '11px',
-                          fontWeight: 500,
-                          color: '#fff',
-                          background: '#EF4444',
-                          border: 'none',
-                          borderRadius: '5px',
-                          cursor: 'pointer',
-                          transition: 'all 0.12s ease',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = '#DC2626' }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = '#EF4444' }}
-                      >
-                        Archive
-                      </button>
-                    </div>
-                  </div>
-                  {spokeWithError && (
-                    <p style={{ fontSize: '11px', color: '#FF4D8D', margin: '6px 0 0', fontWeight: 500 }}>
-                      {spokeWithError}
-                    </p>
-                  )}
-                  {/* Quick note input — borderless, italic, muted */}
-                  <input
-                    type="text"
-                    value={selectedLead.quick_note}
-                    onChange={(e) => updateLead(selectedLead.id, { quick_note: e.target.value })}
-                    onBlur={(e) => saveLead(selectedLead.id, { quick_note: e.target.value })}
-                    placeholder="Add a note..."
-                    style={{
-                      border: 'none',
-                      background: 'transparent',
-                      padding: 0,
-                      marginTop: '1px',
-                      fontSize: '12px',
-                      fontStyle: 'italic',
-                      color: selectedLead.quick_note ? '#E9EDF6' : '#6B7488',
-                      width: '100%',
-                      height: 'auto',
-                      fontFamily: '"Inter", sans-serif',
-                      outline: 'none',
-                    }}
-                    onFocus={(e) => { if (!selectedLead.quick_note) e.target.style.color = '#E9EDF6' }}
-                    onBlur={(e) => { if (!e.target.value) e.target.style.color = '#6B7488' }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* ARCHIVE POPUP */}
-            {archivePopupOpen && (
-              <div style={{
-                background: '#152238',
-                border: '1px solid #223252',
-                borderRadius: '10px',
-                padding: '16px',
-                marginBottom: '12px',
-                borderTop: '3px solid #EF4444',
-              }}>
-                <p style={{ margin: '0 0 12px', fontSize: '13px', fontWeight: 600, color: '#fff' }}>Why are you archiving this lead?</p>
-                <select
-                  value={archiveReason}
-                  onChange={(e) => setArchiveReason(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 10px',
-                    marginBottom: '12px',
-                    background: '#0B1220',
-                    border: '0.5px solid #223252',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    color: '#E9EDF6',
-                    fontFamily: '"Inter", sans-serif',
-                    outline: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <option value="">Select a reason...</option>
-                  <option value="Ghosted / stopped responding">Ghosted / stopped responding</option>
-                  <option value="Went with another agent/competitor">Went with another agent/competitor</option>
-                  <option value="Budget mismatch">Budget mismatch</option>
-                  <option value="Bad credit / income">Bad credit / income</option>
-                  <option value="Not serious / tire-kicker">Not serious / tire-kicker</option>
-                  <option value="Found a place already">Found a place already</option>
-                  <option value="Duplicate/test lead">Duplicate/test lead</option>
-                </select>
-                <textarea
-                  value={archiveNotes}
-                  onChange={(e) => setArchiveNotes(e.target.value)}
-                  placeholder="Any context for later..."
-                  style={{
-                    width: '100%',
-                    padding: '8px 10px',
-                    marginBottom: '12px',
-                    background: '#0B1220',
-                    border: '0.5px solid #223252',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    color: '#E9EDF6',
-                    fontFamily: '"Inter", sans-serif',
-                    outline: 'none',
-                    resize: 'none',
-                    height: '48px',
-                  }}
-                />
-                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                  <button
-                    onClick={() => {
-                      setArchivePopupOpen(false)
-                      setArchiveReason('')
-                      setArchiveNotes('')
-                    }}
-                    style={{
-                      padding: '6px 14px',
-                      fontSize: '12px',
-                      color: '#A9B2C3',
-                      background: 'transparent',
-                      border: '0.5px solid #223252',
-                      borderRadius: '5px',
-                      cursor: 'pointer',
-                      transition: 'all 0.12s ease',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#5B6780'; e.currentTarget.style.color = '#E9EDF6' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#223252'; e.currentTarget.style.color = '#A9B2C3' }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleArchiveLead}
-                    disabled={!archiveReason}
-                    style={{
-                      padding: '6px 14px',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      color: archiveReason ? '#fff' : '#6B7488',
-                      background: archiveReason ? '#EF4444' : '#5B6780',
-                      border: 'none',
-                      borderRadius: '5px',
-                      cursor: archiveReason ? 'pointer' : 'not-allowed',
-                      transition: 'all 0.12s ease',
-                      opacity: archiveReason ? 1 : 0.5,
-                    }}
-                    onMouseEnter={(e) => { if (archiveReason) e.currentTarget.style.background = '#DC2626' }}
-                    onMouseLeave={(e) => { if (archiveReason) e.currentTarget.style.background = '#EF4444' }}
-                  >
-                    Archive lead
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* EMAIL & PHONE — Icon + borderless input */}
-            <div style={{ borderTop: '0.5px solid #223252', marginTop: '8px', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '8px', paddingBottom: '8px', borderBottom: '0.5px solid #223252' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '14px', color: '#6B7488', flex: '0 0 auto' }}>✉</span>
-                <input
-                  type="text"
-                  value={selectedLead.email}
-                  onChange={(e) => updateLead(selectedLead.id, { email: e.target.value })}
-                  onBlur={(e) => saveLead(selectedLead.id, { email: e.target.value })}
-                  placeholder="Add email"
-                  style={{
-                    border: 'none',
-                    background: 'transparent',
-                    fontSize: '12px',
-                    padding: 0,
-                    flex: 1,
-                    color: '#E9EDF6',
-                    height: 'auto',
-                    fontFamily: '"Inter", sans-serif',
-                    outline: 'none',
-                  }}
-                />
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '14px', color: '#6B7488', flex: '0 0 auto' }}>☎</span>
-                <input
-                  type="text"
-                  value={selectedLead.phone}
-                  onChange={(e) => updateLead(selectedLead.id, { phone: e.target.value })}
-                  onBlur={(e) => saveLead(selectedLead.id, { phone: e.target.value })}
-                  placeholder="Add phone"
-                  style={{
-                    border: 'none',
-                    background: 'transparent',
-                    fontSize: '12px',
-                    padding: 0,
-                    flex: 1,
-                    color: '#E9EDF6',
-                    height: 'auto',
-                    fontFamily: '"Inter", sans-serif',
-                    outline: 'none',
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* INQUIRY */}
-            <div style={{
-              background: '#152238',
-              border: '1px solid #223252',
-              borderRadius: '14px',
-              padding: '12px',
-              marginBottom: '20px',
-              borderLeft: '3px solid #19C6C0',
-            }}>
-              <p style={{
-                margin: '0 0 10px',
-                fontSize: '10px',
-                fontWeight: 500,
-                color: '#6B7488',
-                textTransform: 'uppercase',
-                letterSpacing: '0.03em',
-              }}>
-                INQUIRY
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                <div>
-                  <p style={{ fontSize: '10px', color: '#6B7488', margin: '0 0 2px' }}>beds</p>
-                  <input value={selectedLead.beds} onChange={(e) => updateLead(selectedLead.id, { beds: e.target.value })} onBlur={(e) => saveLead(selectedLead.id, { beds: e.target.value })} style={{
-                    width: '100%', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '6px 8px', fontSize: '12px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
-                  }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: '10px', color: '#6B7488', margin: '0 0 2px' }}>budget</p>
-                  <input value={selectedLead.budget} onChange={(e) => updateLead(selectedLead.id, { budget: e.target.value })} onBlur={(e) => saveLead(selectedLead.id, { budget: e.target.value })} style={{
-                    width: '100%', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '6px 8px', fontSize: '12px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
-                  }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: '10px', color: '#6B7488', margin: '0 0 2px' }}>move-in</p>
-                  <input value={selectedLead.move} onChange={(e) => updateLead(selectedLead.id, { move: e.target.value })} onBlur={(e) => saveLead(selectedLead.id, { move: e.target.value })} style={{
-                    width: '100%', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '6px 8px', fontSize: '12px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
-                  }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: '10px', color: '#6B7488', margin: '0 0 2px' }}>area</p>
-                  <input value={selectedLead.area} onChange={(e) => updateLead(selectedLead.id, { area: e.target.value })} onBlur={(e) => saveLead(selectedLead.id, { area: e.target.value })} style={{
-                    width: '100%', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '6px 8px', fontSize: '12px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
-                  }} />
-                </div>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <p style={{ fontSize: '10px', color: '#6B7488', margin: '0 0 2px' }}>notes</p>
-                  <textarea value={selectedLead.notes} onChange={(e) => updateLead(selectedLead.id, { notes: e.target.value })} onBlur={(e) => saveLead(selectedLead.id, { notes: e.target.value })} style={{
-                    width: '100%', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '6px 8px', fontSize: '12px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none', resize: 'none', height: '48px',
-                  }} />
-                </div>
-              </div>
-            </div>
-
-            {/* FAVORITED */}
-            <div style={{
-              background: '#152238',
-              border: '1px solid #223252',
-              borderRadius: '14px',
-              padding: '22px',
-              marginBottom: '20px',
-              borderLeft: '3px solid #FFC24B',
-            }}>
-              <h4 style={{
-                margin: '0 0 16px',
-                fontFamily: '"Archivo", sans-serif',
-                fontSize: '13.5px',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.8px',
-                color: '#E9EDF6',
-              }}>
-                OPTIONS FAVORITED
-              </h4>
-              {selectedLead.buildings.length === 0 ? (
-                <div style={{ fontSize: '12.5px', color: '#5B6780' }}>No options sent yet.</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
-                  {selectedLead.buildings.map((building) => (
-                    <div key={building} style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      background: '#0B1220',
-                      border: '1px solid #223252',
-                      borderRadius: '8px',
-                      padding: '11px 12px',
-                      fontSize: '13px',
-                    }}>
-                      <span>{building}</span>
-                      <button
-                        onClick={() => toggleFavorite(selectedLead.id, building)}
-                        style={{
-                          cursor: 'pointer',
-                          fontSize: '16px',
-                          lineHeight: 1,
-                          userSelect: 'none',
-                          transition: 'color 0.1s ease',
-                          background: 'none',
-                          border: 'none',
-                          padding: 0,
-                          color: selectedLead.favorited.includes(building) ? '#FFC24B' : '#5B6780',
-                        }}
-                      >
-                        ★
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* DEAL INFO */}
-            <div style={{
-              background: '#152238',
-              border: '1px solid #223252',
-              borderRadius: '14px',
-              padding: '22px',
-              marginBottom: '20px',
-              borderLeft: '3px solid #FF4D8D',
-            }}>
-              <h4 style={{
-                margin: '0 0 16px',
-                fontFamily: '"Archivo", sans-serif',
-                fontSize: '13.5px',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.8px',
-                color: '#E9EDF6',
-              }}>
-                DEAL INFO
-              </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 18px' }}>
-                <div>
-                  <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Building</label>
-                  <input value={selectedLead.deal.building} onChange={(e) => updateLead(selectedLead.id, { deal: { ...selectedLead.deal, building: e.target.value } })} style={{
-                    width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
-                  }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Unit</label>
-                  <input value={selectedLead.deal.unit} onChange={(e) => updateLead(selectedLead.id, { deal: { ...selectedLead.deal, unit: e.target.value } })} style={{
-                    width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
-                  }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>First Tour</label>
-                  <input value={selectedLead.deal.tour} onChange={(e) => updateLead(selectedLead.id, { deal: { ...selectedLead.deal, tour: e.target.value } })} style={{
-                    width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
-                  }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Lease Start</label>
-                  <input value={selectedLead.deal.leaseStart} onChange={(e) => updateLead(selectedLead.id, { deal: { ...selectedLead.deal, leaseStart: e.target.value } })} style={{
-                    width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
-                  }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Term</label>
-                  <input value={selectedLead.deal.leaseTerm} onChange={(e) => updateLead(selectedLead.id, { deal: { ...selectedLead.deal, leaseTerm: e.target.value } })} style={{
-                    width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
-                  }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.6px', color: '#5B6780', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Market Rent</label>
-                  <input value={selectedLead.deal.marketRent} onChange={(e) => updateLead(selectedLead.id, { deal: { ...selectedLead.deal, marketRent: e.target.value } })} style={{
-                    width: '100%', background: '#0B1220', border: '1px solid #223252', borderRadius: '7px', padding: '10px 12px', fontSize: '13px', color: '#E9EDF6', fontFamily: '"Inter", sans-serif', outline: 'none',
-                  }} />
-                </div>
-              </div>
-              <button
-                onClick={() => generateInvoice(selectedLead.id)}
-                style={{
-                  marginTop: '16px',
-                  width: '100%',
-                  textAlign: 'center',
-                  padding: '14px',
-                  borderRadius: '10px',
-                  background: '#FF4D8D',
-                  color: '#2A0714',
-                  fontWeight: 700,
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  fontFamily: '"Archivo", sans-serif',
-                  letterSpacing: '0.4px',
-                  transition: 'filter 0.12s ease',
-                  border: 'none',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(1.08)')}
-                onMouseLeave={(e) => (e.currentTarget.style.filter = 'brightness(1)')}
-              >
-                GENERATE INVOICE
-              </button>
-            </div>
-          </div>
+          <AgentLeadDossier
+            lead={selectedLead}
+            onClose={() => setSelectedLead(null)}
+            onUpdate={(updates) => { updateLead(selectedLead.id, updates); saveLead(selectedLead.id, updates) }}
+            onMarkContacted={handleSpokeWith}
+            spokeWithLoading={spokeWithLoading}
+            spokeWithError={spokeWithError}
+            archiveOpen={archivePopupOpen}
+            onOpenArchive={() => setArchivePopupOpen(true)}
+            archiveReason={archiveReason}
+            onArchiveReasonChange={setArchiveReason}
+            archiveNotes={archiveNotes}
+            onArchiveNotesChange={setArchiveNotes}
+            onArchiveCancel={() => { setArchivePopupOpen(false); setArchiveReason(''); setArchiveNotes('') }}
+            onArchiveConfirm={handleArchiveLead}
+            onGenerateInvoice={() => generateInvoice(selectedLead.id)}
+          />
         )}
       </div>
 

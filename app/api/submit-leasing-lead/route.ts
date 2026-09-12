@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { buildLeadSlackMessage } from '@/lib/slack-lead-message'
 
 interface LeasingLeadBody {
   buildingName?: unknown
@@ -60,27 +61,12 @@ export async function POST(request: NextRequest) {
       const slackResponse = await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: '🏢 New Leasing Lead Submission',
-          blocks: [
-            {
-              type: 'header',
-              text: { type: 'plain_text', text: '🏢 New Leasing Lead Submission' },
-            },
-            {
-              type: 'section',
-              fields: [
-                { type: 'mrkdwn', text: `*Name:*\n${name}` },
-                { type: 'mrkdwn', text: `*Phone:*\n${phone}` },
-                { type: 'mrkdwn', text: `*Email:*\n${email || 'Not provided'}` },
-                { type: 'mrkdwn', text: `*Building:*\n${buildingName}` },
-                { type: 'mrkdwn', text: `*Building ID:*\n${buildingId}` },
-                { type: 'mrkdwn', text: `*Interested in:*\n${intents.length ? intents.join(', ') : 'Not specified'}` },
-                { type: 'mrkdwn', text: `*Submitted:*\n${new Date().toISOString()}` },
-              ],
-            },
-          ],
-        }),
+        body: JSON.stringify(buildLeadSlackMessage({
+          name,
+          phone,
+          buildingName,
+          source: 'leasing_form',
+        })),
       })
 
       if (!slackResponse.ok) {

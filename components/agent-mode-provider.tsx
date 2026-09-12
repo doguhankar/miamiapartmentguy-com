@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import { createContext, useContext, useMemo, useState } from "react"
 import useSWR from "swr"
 import { createClient } from "@/lib/supabase/client"
 
@@ -14,8 +14,6 @@ type AgentModeContextValue = {
 }
 
 const AgentModeContext = createContext<AgentModeContextValue>({ isUnlocked: false, hasAccess: false, toggleAgentMode: () => {}, unlockAgentMode: () => {}, commissionFor: () => null })
-const storageKey = "mag-agent-mode-unlocked"
-
 function useCommissionRows() {
   return useSWR<CommissionRow[]>("agent-commissions", async () => {
     const supabase = createClient()
@@ -28,18 +26,12 @@ function useCommissionRows() {
 export function AgentModeProvider({ children }: { children: React.ReactNode }) {
   const [hasAccess, setHasAccess] = useState(false)
   const [isUnlocked, setIsUnlocked] = useState(false)
-  useEffect(() => {
-    const unlocked = window.localStorage.getItem(storageKey) === "1"
-    setHasAccess(unlocked)
-    setIsUnlocked(unlocked)
-  }, [])
   const { data } = useCommissionRows()
   const toggleAgentMode = () => {
     if (!hasAccess) return
     setIsUnlocked((value) => !value)
   }
   const unlockAgentMode = () => {
-    window.localStorage.setItem(storageKey, "1")
     setHasAccess(true)
     setIsUnlocked(true)
   }
