@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   if (leadError || !lead) return NextResponse.json({ error: 'Lead not found' }, { status: 404 })
   const ids = body.buildingIds?.length ? body.buildingIds : lead.building_id ? [lead.building_id] : []
   if (!ids.length) return NextResponse.json({ error: 'Select at least one building' }, { status: 422 })
-  const { data: buildings, error: buildingError } = await supabase.from('buildings').select('id,name,contact_emails').in('id', ids)
+  const { data: buildings, error: buildingError } = await supabase.from('buildings').select('id,name,contact_emails').in('id', ids).eq('is_archived', false)
   if (buildingError) return NextResponse.json({ error: 'Buildings not found' }, { status: 404 })
   const agent = AGENTS[(lead.agent_id ?? 'don').toLowerCase()] ?? AGENTS.don
   const results = await Promise.all((buildings ?? []).map(async building => {

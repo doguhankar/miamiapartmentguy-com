@@ -82,7 +82,7 @@ export default function AgentLeadDossier({
   const [sending, setSending] = useState(false)
   useEffect(() => {
     let cancelled = false
-    createClient().from('buildings').select('id,name,neighborhood,contact_emails').order('name').then(({ data }) => {
+    createClient().from('buildings').select('id,name,neighborhood,contact_emails,is_archived').eq('is_archived', false).order('name').then(({ data }) => {
       if (!cancelled) setBuildings((data ?? []) as Building[])
     })
     fetch(`/api/guest-card/send?leadId=${lead.id}`).then(response => response.json()).then(payload => {

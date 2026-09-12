@@ -19,7 +19,7 @@ import { copyToClipboard, showToast } from '@/lib/toast-utils';
 import { Heart, Star } from 'lucide-react';
 import { useSaveList } from '@/components/save-list-provider';
 import { createClient } from '@/lib/supabase/client';
-import { buildings as BUILDINGS, type Building } from '@/lib/buildings';
+import { buildings as BUILDING_CATALOG, type Building } from '@/lib/buildings';
 import { getPriceRange } from '@/lib/price-range';
 import {
   type AvailableUnit,
@@ -722,7 +722,20 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     return () => buttons.forEach((button) => button.removeEventListener('click', stopHeartEvent, { capture: true }));
   }, [savedIds]);
   const geocodeCache = useRef(new Map());
-  const [geocodedBuildings, setGeocodedBuildings] = useState(BUILDINGS);
+  const [visibleBuildings, setVisibleBuildings] = useState(BUILDING_CATALOG)
+  const VISIBLE_BUILDINGS = visibleBuildings
+  const [geocodedBuildings, setGeocodedBuildings] = useState(VISIBLE_BUILDINGS)
+  useEffect(() => {
+    let cancelled = false
+    createClient().from('buildings').select('id,is_archived').then(({ data }) => {
+      if (cancelled || !data) return
+      const archivedIds = new Set(data.filter(row => row.is_archived).map(row => String(row.id)))
+      const activeBuildings = BUILDING_CATALOG.filter(building => !archivedIds.has(String(building.id)))
+      setVisibleBuildings(activeBuildings)
+      setGeocodedBuildings(activeBuildings)
+    })
+    return () => { cancelled = true }
+  }, [])
   // The full, unfiltered building-id set. Geocoding only fills in lat/lng on the
   // same buildings, so this list's identity is stable across that update; it's
   // passed to MapComponent so its pricing fetch keys off "every building" rather
@@ -756,7 +769,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     supabase
       .from('building_images')
       .select('building_id, image_url, sort_order')
-      .in('building_id', BUILDINGS.map((b: any) => String(b.id)))
+      .in('building_id', VISIBLE_BUILDINGS.map((b: any) => String(b.id)))
       .order('sort_order', { ascending: true })
       .then(({ data: imageRows }) => {
         if (cancelled) return;
@@ -774,7 +787,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [], neighborhoods: [] });
   const [pricingInventory, setPricingInventory] = useState<PricingInventory>({});
   const [buildingImages, setBuildingImages] = useState<Record<string, string[]>>({});
-  const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(BUILDINGS.map(b => b.id));
+  const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(VISIBLE_BUILDINGS.map(b => b.id));
 
   const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: [] });
   const [mapInstance, setMapInstance] = useState<any>(null);
@@ -1119,7 +1132,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
 
     // If no filters selected, show all buildings
     if (filters.unitSize.length === 0 && filters.priceRange.length === 0 && filters.moveIn.length === 0 && filters.neighborhoods.length === 0) {
-      setVisibleBuildingIds(BUILDINGS.map(b => b.id));
+      setVisibleBuildingIds(VISIBLE_BUILDINGS.map(b => b.id));
       return;
     }
 
@@ -1186,7 +1199,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       const failedAddresses = [];
       let successCount = 0;
 
-      const geocodePromises = BUILDINGS.map(async (building) => {
+      const geocodePromises = VISIBLE_BUILDINGS.map(async (building) => {
         // Check cache first
         if (geocodeCache.current.has(building.address)) {
           const cached = geocodeCache.current.get(building.address);
@@ -1640,7 +1653,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
           filters={mapFilters}
           onFilterChange={handleFilterChange}
           onClearAll={handleClearAllFilters}
-          buildingCount={BUILDINGS.length}
+          buildingCount={VISIBLE_BUILDINGS.length}
           onNeighborhoodFlyTo={handleNeighborhoodFlyTo}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
