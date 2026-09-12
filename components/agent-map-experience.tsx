@@ -1467,28 +1467,6 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                           ))}
                         </div>
                       )}
-                      {/* Heart button */}
-                      <button
-                        ref={(button) => { heartButtonRefs.current[String(building.id)] = button; }}
-                        data-building-id={String(building.id)}
-                        type="button"
-                        aria-label={savedIds.includes(String(building.id)) ? 'Remove saved building' : 'Save building'}
-                        aria-pressed={savedIds.includes(String(building.id))}
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                        onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                        onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                        style={{
-                          position: 'absolute', top: 8, right: 8, zIndex: 20,
-                          width: 32, height: 32, borderRadius: 999,
-                          background: '#FFFFFF', border: 'none',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer',
-                          boxShadow: '0 2px 8px rgba(10,15,28,0.12)',
-                          color: savedIds.includes(String(building.id)) ? '#EF4444' : '#6B7280',
-                        }}
-                      >
-                        <Heart size={16} fill={savedIds.includes(String(building.id)) ? 'currentColor' : 'none'} />
-                      </button>
                     </div>
 
                     {/* Card body */}
