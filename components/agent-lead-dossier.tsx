@@ -281,6 +281,11 @@ export default function AgentLeadDossier({
           >
             {sending ? 'Sending…' : `Send guest cards (${selected.length} selected)`}
           </button>
+          {selected.length > 0 && (
+            <p style={{ margin: '8px 2px 0', color: '#8A8A8A', fontSize: 11.5, lineHeight: 1.4 }}>
+              Selected: {selected.map(id => buildings.find(b => b.id === id)?.name).filter(Boolean).join(', ')}
+            </p>
+          )}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 14 }}>
             {selected.map(id => {
               const b = buildings.find(x => x.id === id)
