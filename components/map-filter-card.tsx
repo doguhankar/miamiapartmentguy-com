@@ -124,11 +124,12 @@ export function MapFilterCard({
   };
 
   const hasActiveFilters =
-    filters.neighborhood !== null ||
+    filters.neighborhood.length > 0 ||
     filters.bedrooms.length > 0 ||
     filters.bathrooms.length > 0 ||
     filters.price.length > 0 ||
-    filters.moveInDate.length > 0;
+    filters.moveInDate.length > 0 ||
+    searchQuery.trim().length > 0;
 
   const getSelectedLabel = (type: 'bedrooms' | 'price' | 'moveIn'): string => {
     if (type === 'bedrooms') {
