@@ -165,7 +165,6 @@ export function DesktopBuildingCard({
           <div style={{fontWeight:600, fontSize:15, color:'#111', marginBottom:2}}>{building.name} {isAgentMode && <CommissionPill buildingName={building.name} />}</div>
           <div style={{fontSize:11, color:'#9aa5b8'}}>{building.address}</div>
         </div>
-        <span style={{color:'#FF4D8D', fontSize:18, cursor:'pointer'}}>♥</span>
       </div>
       <div style={{display:'flex', gap:12}}>
         <div style={{position:'relative', width:150, height:115, flexShrink:0, borderRadius:8, overflow:'hidden', background:'#E8ECF2', display:'flex', alignItems:'center', justifyContent:'center'}}>
