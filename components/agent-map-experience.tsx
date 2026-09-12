@@ -169,6 +169,7 @@ const TalkTodonModal = ({ building, onClose }) => {
 const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, allBuildingIds, setSelectedBuilding, setInfoBuilding: setInfoBuildingFromMap, onMapReady, onPricingDataChange, onImageDataChange, onBuildingsInView }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const mapReadyReportedRef = useRef(false);
   const markersRef = useRef([]);
   const popupsRef = useRef([]);
   const markerMetaRef = useRef(new Map());
@@ -280,6 +281,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
     mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
     // Create map instance
+    let resizeObserver: ResizeObserver | null = null;
     try {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
@@ -312,13 +314,44 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       map.current.on('load', updateBuildingsInView);
       map.current.on('moveend', updateBuildingsInView);
 
-      // Register map instance with parent
-      onMapReady?.(map.current);
+      const reportReadyIfVisible = () => {
+        const container = mapContainer.current;
+        const instance = map.current;
+        if (!container || !instance || mapReadyReportedRef.current) return;
+
+        const rect = container.getBoundingClientRect();
+        const styles = window.getComputedStyle(container);
+        const isVisible = styles.display !== 'none' && styles.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+        if (!isVisible) return;
+
+        instance.resize();
+        mapReadyReportedRef.current = true;
+        console.info('[v0] Map instance ready:', { width: Math.round(rect.width), height: Math.round(rect.height) });
+        onMapReady?.(instance);
+      };
+
+      resizeObserver = new ResizeObserver(() => {
+        const container = mapContainer.current;
+        const instance = map.current;
+        if (!container || !instance) return;
+
+        const rect = container.getBoundingClientRect();
+        const styles = window.getComputedStyle(container);
+        const isVisible = styles.display !== 'none' && styles.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+        if (!isVisible) return;
+
+        instance.resize();
+        reportReadyIfVisible();
+      });
+      resizeObserver.observe(mapContainer.current);
+      reportReadyIfVisible();
     } catch (error) {
       console.error('[v0] Map initialization error:', error);
     }
 
     return () => {
+      resizeObserver?.disconnect();
+      mapReadyReportedRef.current = false;
       if (map.current) {
         map.current.remove();
         map.current = null;
