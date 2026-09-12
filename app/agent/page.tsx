@@ -245,7 +245,7 @@ export default function AgentPage() {
         const response = await fetch(`/api/guest-card/send?leadId=${lead.id}`)
         const payload = await response.json()
         const send = payload.send
-        return send ? { ...lead, guestCard: { status: send.status === 'sent' ? 'sent' : send.status === 'failed' ? 'error' : 'idle', sentAt: send.sent_at ?? null, error: send.error_message ?? null } } : lead
+        return send ? { ...lead, guestCard: { status: (send.status === 'sent' ? 'sent' : send.status === 'failed' ? 'error' : 'idle') as Lead['guestCard']['status'], sentAt: send.sent_at ?? null, error: send.error_message ?? null } } : lead
       } catch { return lead }
     }))
     setLeads(withStatuses)

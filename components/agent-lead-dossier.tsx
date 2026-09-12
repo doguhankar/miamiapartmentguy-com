@@ -78,8 +78,30 @@ export default function AgentLeadDossier({
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<string[]>([])
   const [statuses, setStatuses] = useState<Record<string, 'sent' | 'missing' | 'error'>>({})
+  const [sentAtByBuilding, setSentAtByBuilding] = useState<Record<string, string>>({})
   const [sending, setSending] = useState(false)
-  useEffect(() => { createClient().from('buildings').select('id,name,neighborhood,contact_emails').order('name').then(({ data }) => setBuildings((data ?? []) as Building[])) }, [])
+  useEffect(() => {
+    let cancelled = false
+    createClient().from('buildings').select('id,name,neighborhood,contact_emails').order('name').then(({ data }) => {
+      if (!cancelled) setBuildings((data ?? []) as Building[])
+    })
+    fetch(`/api/guest-card/send?leadId=${lead.id}`).then(response => response.json()).then(payload => {
+      if (cancelled) return
+      const sentStatuses: Record<string, 'sent' | 'missing' | 'error'> = {}
+      const timestamps: Record<string, string> = {}
+      for (const send of payload.sends ?? []) {
+        if (send.status === 'sent') {
+          sentStatuses[send.building_id] = 'sent'
+          if (send.sent_at) timestamps[send.building_id] = send.sent_at
+        }
+      }
+      setStatuses(current => ({ ...current, ...sentStatuses }))
+      setSentAtByBuilding(timestamps)
+    }).catch(() => undefined)
+    return () => { cancelled = true }
+  }, [lead.id])
+
+  const formatSentDate = (value: string) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   const groups = useMemo(() => buildings.filter(b => b.name.toLowerCase().includes(query.toLowerCase()) || (b.neighborhood ?? '').toLowerCase().includes(query.toLowerCase())).reduce<Record<string, Building[]>>((all, b) => { const key = b.neighborhood || 'Other'; (all[key] ||= []).push(b); return all }, {}), [buildings, query])
   const sendCards = async () => {
     if (!selected.length) return
@@ -88,9 +110,14 @@ export default function AgentLeadDossier({
     try {
       const response = await fetch('/api/guest-card/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ leadId: lead.id, buildingIds: selected }) })
       const result = await response.json()
-      for (const item of result.results ?? []) next[item.buildingId] = item.sent ? 'sent' : item.skipped ? 'missing' : 'error'
+      for (const item of result.results ?? []) {
+        next[item.buildingId] = item.sent ? 'sent' : item.skipped ? 'missing' : 'error'
+        if (item.sent && item.sentAt) setSentAtByBuilding(current => ({ ...current, [item.buildingId]: item.sentAt }))
+      }
     } catch { selected.forEach(id => { next[id] = 'error' }) }
-    setStatuses(next); setSending(false)
+    setStatuses(next)
+    setSelected(current => current.filter(id => next[id] !== 'sent'))
+    setSending(false)
   }
 
   const field = (label: string, icon: string, value: string, placeholder: string, editable?: 'phone' | 'email') => (
@@ -209,12 +236,40 @@ export default function AgentLeadDossier({
               {Object.entries(groups).map(([neighborhood, items]) => (
                 <div key={neighborhood}>
                   <div style={{ color: '#B0B0B0', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', padding: '10px 4px 4px' }}>{neighborhood}</div>
-                  {items.map(b => (
-                    <label key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 4px', borderBottom: '1px solid #F5F5F5', fontSize: 14, color: '#222222', cursor: 'pointer' }}>
-                      <input type="checkbox" checked={selected.includes(b.id)} onChange={() => setSelected(s => s.includes(b.id) ? s.filter(id => id !== b.id) : [...s, b.id])} style={{ width: 17, height: 17, accentColor: '#E0447B' }} />
-                      {b.name}
-                    </label>
-                  ))}
+                  {items.map(b => {
+                    const isSent = statuses[b.id] === 'sent'
+                    const isSelected = selected.includes(b.id)
+                    return (
+                      <label
+                        key={b.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          padding: '11px 4px',
+                          borderBottom: '1px solid #F5F5F5',
+                          fontSize: 14,
+                          color: isSent ? '#A6A6A6' : '#222222',
+                          cursor: isSent ? 'not-allowed' : 'pointer',
+                          opacity: isSent ? 0.72 : 1,
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          disabled={isSent}
+                          onChange={() => setSelected(s => s.includes(b.id) ? s.filter(id => id !== b.id) : [...s, b.id])}
+                          style={{ width: 17, height: 17, accentColor: '#E0447B', cursor: isSent ? 'not-allowed' : 'pointer' }}
+                        />
+                        <span style={{ flex: 1 }}>{b.name}</span>
+                        {isSent && sentAtByBuilding[b.id] && (
+                          <span style={{ color: '#8D8D8D', fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                            ✓ Sent {formatSentDate(sentAtByBuilding[b.id])}
+                          </span>
+                        )}
+                      </label>
+                    )
+                  })}
                 </div>
               ))}
             </div>

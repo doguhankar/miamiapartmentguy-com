@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const result = await sendGuestCardEmail({ id: `${lead.id}-${building.id}`, name: lead.name ?? '', email: lead.email ?? '', phone: lead.phone ?? '', moveDate: lead.move_in_timing ?? '', budget: lead.budget === 'You tell me' ? 'Flexible' : lead.budget ?? '', agent: agent.name, agentLicense: agent.license, agentPhone: agent.phone, agentEmail: agent.email, buildingName: building.name, contactEmails: recipients })
     const now = new Date().toISOString()
     await supabase.from('guest_card_sends').update({ status: result.sent ? 'sent' : 'failed', resend_id: result.id ?? null, error_message: result.error ?? null, sent_at: result.sent ? now : null, updated_at: now }).eq('id', attempt.id)
-    return { buildingId: building.id, sent: result.sent, skipped: false, error: result.error }
+    return { buildingId: building.id, sent: result.sent, sentAt: result.sent ? now : null, skipped: false, error: result.error }
   }))
   return NextResponse.json({ results })
 }
@@ -36,7 +36,17 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const leadId = Number(new URL(request.url).searchParams.get('leadId'))
   if (!Number.isInteger(leadId)) return NextResponse.json({ error: 'Invalid lead id' }, { status: 400 })
-  const { data, error } = await createAdminClient().from('guest_card_sends').select('id,status,created_at,sent_at,error_message').eq('lead_id', leadId).order('created_at', { ascending: false }).limit(1).maybeSingle()
+  const { data, error } = await createAdminClient()
+    .from('guest_card_sends')
+    .select('building_id,status,created_at,sent_at,error_message')
+    .eq('lead_id', leadId)
+    .order('created_at', { ascending: false })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ send: data })
+
+  const latestByBuilding = new Map<string, (typeof data)[number]>()
+  for (const send of data ?? []) {
+    if (!latestByBuilding.has(send.building_id)) latestByBuilding.set(send.building_id, send)
+  }
+
+  return NextResponse.json({ sends: Array.from(latestByBuilding.values()) })
 }
