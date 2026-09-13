@@ -35,7 +35,7 @@ export const buildings: Building[] = [
   // ── BRICKELL ─────────────────────────────────────────────────────────────
   {
     id: "flow-brickell", name: 'Flow Brickell', neighborhood: 'Brickell',
-    address: '275 SW 6th St, Miami, FL 33130', lat: 25.7684, lng: -80.1890,
+    address: '275 SW 6th St, Miami, FL 33130', lat: 25.76835, lng: -80.19902,
     priceMin: 2841, priceMax: 11250, priceTier: '$$',
     tagline: 'Vibrant community, social hub, always buzzing',
     concession: '1 month free on select units',
@@ -48,7 +48,7 @@ export const buildings: Building[] = [
   },
   {
     id: "modera-riverside", name: 'Modera Riverside', neighborhood: 'Brickell',
-    address: '300 SW 2nd Ave, Miami, FL 33130', lat: 25.7561, lng: -80.1954,
+    address: '300 SW 2nd Ave, Miami, FL 33130', lat: 25.77091, lng: -80.19785,
     priceMin: 2500, priceTier: '$$',
     tagline: 'Affordable high rise, quiet, Brickell vibes without the price tag',
     concession: '50% off first 60 days',
@@ -60,7 +60,7 @@ export const buildings: Building[] = [
   },
   {
     id: "maizon", name: 'Maizon', neighborhood: 'Brickell',
-    address: '221 SW 12th St, Miami, FL 33130', lat: 25.7528, lng: -80.1858,
+    address: '221 SW 12th St, Miami, FL 33130', lat: 25.76253, lng: -80.19755,
     priceMin: 2235, priceTier: '$',
     tagline: 'Modern living, walkable Brickell, accessible pricing',
     concession: '$500 move-in credit',
@@ -110,7 +110,7 @@ export const buildings: Building[] = [
   // ── DOWNTOWN ──────────────────────────────────────────────────────────────
   {
     id: "cmpnd", name: 'CMPND', neighborhood: 'Downtown',
-    address: '55 NE 2nd St, Miami, FL 33132', lat: 25.7751, lng: -80.1924,
+    address: '55 NE 2nd St, Miami, FL 33132', lat: 25.77618, lng: -80.1928,
     priceMin: 1950, priceTier: '$',
     tagline: "Miami's newest highrise, all-glass corner units, two-story amenities",
     concession: 'Two months free on select units',
@@ -122,7 +122,7 @@ export const buildings: Building[] = [
   },
   {
     id: "miami-world-tower", name: 'Miami World Tower', neighborhood: 'Downtown',
-    address: '710 NE 1st Ave, Miami, FL 33132', lat: 25.7765, lng: -80.1933,
+    address: '710 NE 1st Ave, Miami, FL 33132', lat: 25.7815233, lng: -80.1925008,
     priceMin: 2410, priceTier: '$$',
     tagline: 'All-glass downtown, vibrant location, panoramic views',
     concession: 'Up to two months free on select apartments',
@@ -158,7 +158,7 @@ export const buildings: Building[] = [
   },
   {
     id: "11", name: 'Monarc at Met', neighborhood: 'Downtown',
-    address: '201 SE 2nd Ave, Miami, FL 33131', lat: 25.7667, lng: -80.1883,
+    address: '201 SE 2nd Ave, Miami, FL 33131', lat: 25.7724762, lng: -80.1902667,
     priceMin: 2692, priceTier: '$$',
     tagline: 'Quiet luxury on a budget, city views, accessible',
     concession: 'No current concessions',
@@ -183,7 +183,7 @@ export const buildings: Building[] = [
   // ── EDGEWATER ─────────────────────────────────────────────────────────────
   {
     id: "13", name: '2000 Biscayne', neighborhood: 'Edgewater',
-    address: '251 NE 20th St, Miami, FL 33137', lat: 25.7890, lng: -80.1870,
+    address: '251 NE 20th St, Miami, FL 33137', lat: 25.7954816, lng: -80.1896729,
     priceMin: 2800, priceTier: '$$',
     tagline: 'Waterfront views, modern luxury, Biscayne Bay access',
     concession: 'TBD',
@@ -195,7 +195,7 @@ export const buildings: Building[] = [
   },
   {
     id: "14", name: 'Modera Edgewater', neighborhood: 'Edgewater',
-    address: '455 NE 24th St, Miami, FL 33137', lat: 25.7920, lng: -80.1890,
+    address: '455 NE 24th St, Miami, FL 33137', lat: 25.8005944, lng: -80.1871807,
     priceMin: 2300, priceTier: '$',
     tagline: 'Modern affordability, bay views, quiet residential',
     concession: 'TBD',
@@ -207,7 +207,7 @@ export const buildings: Building[] = [
   },
   {
     id: "15", name: 'Blu 27 Edgewater', neighborhood: 'Edgewater',
-    address: '2701 Biscayne Blvd, Miami, FL 33137', lat: 25.7910, lng: -80.1880,
+    address: '2701 Biscayne Blvd, Miami, FL 33137', lat: 25.803051, lng: -80.1890367,
     priceMin: 2500, priceTier: '$$',
     tagline: 'Contemporary design, blue-tinted glass, premium amenities',
     concession: 'TBD',
@@ -218,7 +218,7 @@ export const buildings: Building[] = [
   },
   {
     id: "16", name: 'Metro Edgewater', neighborhood: 'Edgewater',
-    address: '452 NE 31st St, Miami, FL 33137', lat: 25.7905, lng: -80.1885,
+    address: '452 NE 31st St, Miami, FL 33137', lat: 25.8062995, lng: -80.1874968,
     priceMin: 2200, priceTier: '$',
     tagline: 'Urban living, transit-friendly, walkable neighborhood',
     concession: 'TBD',
@@ -229,7 +229,7 @@ export const buildings: Building[] = [
   },
   {
     id: "17", name: 'The Hamilton', neighborhood: 'Edgewater',
-    address: '555 NE 34th St, Miami, FL 33137', lat: 25.7895, lng: -80.1865,
+    address: '555 NE 34th St, Miami, FL 33137', lat: 25.8091465, lng: -80.1862499,
     priceMin: 2900, priceTier: '$$',
     tagline: 'Waterfront elegance, luxury finishes, bay proximity',
     concession: 'TBD',
@@ -242,7 +242,7 @@ export const buildings: Building[] = [
   // ── MIDTOWN ───────────────��───────────────────────────────────────────────
   {
     id: "18", name: 'AMLI Midtown 29', neighborhood: 'Midtown',
-    address: '180 NE 29th St, Miami, FL 33137', lat: 25.7940, lng: -80.1910,
+    address: '180 NE 29th St, Miami, FL 33137', lat: 25.8038899, lng: -80.1919465,
     priceMin: 2400, priceTier: '$$',
     tagline: 'Modern midtown, transit hub, urban living',
     concession: 'TBD',
@@ -253,7 +253,7 @@ export const buildings: Building[] = [
   },
   {
     id: "19", name: 'AMLI Midtown Miami', neighborhood: 'Midtown',
-    address: '3000 NE 2nd Ave, Miami, FL 33137', lat: 25.7955, lng: -80.1910,
+    address: '3000 NE 2nd Ave, Miami, FL 33137', lat: 25.8053952, lng: -80.1917007,
     priceMin: 2500, priceTier: '$$',
     tagline: 'Sleek apartments, walkable midtown, city vibes',
     concession: 'TBD',
@@ -264,7 +264,7 @@ export const buildings: Building[] = [
   },
   {
     id: "20", name: 'Eve at The District', neighborhood: 'Midtown',
-    address: '3635 NE 1st Ave, Miami, FL 33137', lat: 25.7950, lng: -80.1900,
+    address: '3635 NE 1st Ave, Miami, FL 33137', lat: 25.8108859, lng: -80.1927205,
     priceMin: 2350, priceTier: '$$',
     tagline: 'Tech-forward living, midtown energy, community spaces',
     concession: 'TBD',
@@ -275,7 +275,7 @@ export const buildings: Building[] = [
   },
   {
     id: "21", name: 'Midtown Five', neighborhood: 'Midtown',
-    address: '125 NE 32nd St, Miami, FL 33137', lat: 25.7960, lng: -80.1905,
+    address: '125 NE 32nd St, Miami, FL 33137', lat: 25.8068161, lng: -80.1927112,
     priceMin: 2600, priceTier: '$$',
     tagline: 'Five-star amenities, premium midtown, cosmopolitan lifestyle',
     concession: 'TBD',
@@ -297,7 +297,7 @@ export const buildings: Building[] = [
   },
   {
     id: "23", name: 'Cortland Midtown Miami', neighborhood: 'Midtown',
-    address: '2901 NE 1st Ave, Miami, FL 33137', lat: 25.7965, lng: -80.1912,
+    address: '2901 NE 1st Ave, Miami, FL 33137', lat: 25.8043315, lng: -80.1930183,
     priceMin: 2300, priceTier: '$',
     tagline: 'Quality living, midtown location, reliable community',
     concession: 'TBD',
@@ -321,7 +321,7 @@ export const buildings: Building[] = [
   },
   {
     id: "25", name: 'Amara Wynwood', neighborhood: 'Wynwood',
-    address: '45 NE 27th St, Miami, FL 33137', lat: 25.7985, lng: -80.1995,
+    address: '45 NE 27th St, Miami, FL 33137', lat: 25.8028889, lng: -80.1937409,
     priceMin: 2350, priceTier: '$$',
     tagline: 'Modern Wynwood, art district living, cultural vibes',
     concession: 'TBD',
@@ -399,7 +399,7 @@ export const buildings: Building[] = [
   },
   {
     id: "32", name: 'The Dorsey', neighborhood: 'Wynwood',
-    address: '286 NW 29th St, Miami, FL 33127', lat: 25.7975, lng: -80.1970,
+    address: '286 NW 29th St, Miami, FL 33127', lat: 25.8037122, lng: -80.2008642,
     priceMin: 2100, priceTier: '$',
     tagline: 'Vintage Wynwood vibes, hip location, neighborhood character',
     concession: 'TBD',
@@ -421,7 +421,7 @@ export const buildings: Building[] = [
   },
   {
     id: "34", name: 'Strata Wynwood', neighborhood: 'Wynwood',
-    address: '21 NE 22nd St, Miami, FL 33137', lat: 25.7987, lng: -80.1997,
+    address: '21 NE 22nd St, Miami, FL 33137', lat: 25.7980893, lng: -80.1931449,
     priceMin: 2400, priceTier: '$$',
     tagline: 'Layered living, Wynwood center, urban design',
     concession: 'TBD',
@@ -444,7 +444,7 @@ export const buildings: Building[] = [
   // ── NORTH MIAMI / NMB ─────────────────────────────────────────────────────
   {
     id: "37", name: 'Manor Biscayne', neighborhood: 'North Miami',
-    address: '1650 NE 124th St, North Miami, FL 33181', lat: 25.7848, lng: -80.1877,
+    address: '1650 NE 124th St, North Miami, FL 33181', lat: 25.89013, lng: -80.1655,
     priceMin: 2450, priceTier: '$$',
     tagline: 'Waterfront Biscayne Bay views, modern amenities',
     concession: 'Contact for current offers',
@@ -455,7 +455,7 @@ export const buildings: Building[] = [
   },
   {
     id: "38", name: 'Aura North Miami Beach', neighborhood: 'North Miami Beach',
-    address: '17071 W Dixie Hwy, North Miami Beach, FL 33160', lat: 25.9301, lng: -80.1198,
+    address: '17071 W Dixie Hwy, North Miami Beach, FL 33160', lat: 25.9328947, lng: -80.1525327,
     priceMin: 2850, priceTier: '$$',
     tagline: 'Luxury beachfront living, world-class resort amenities',
     concession: 'Contact for current offers',
@@ -466,7 +466,7 @@ export const buildings: Building[] = [
   },
   {
     id: "39", name: 'Biscayne Shores', neighborhood: 'North Miami',
-    address: '11295 Biscayne Blvd, Miami, FL 33181', lat: 25.7893, lng: -80.1865,
+    address: '11295 Biscayne Blvd, Miami, FL 33181', lat: 25.88053, lng: -80.16376,
     priceMin: 2200, priceTier: '$',
     tagline: 'Bay-adjacent living, contemporary design, walkable',
     concession: 'Contact for current offers',
@@ -477,7 +477,7 @@ export const buildings: Building[] = [
   },
   {
     id: "40", name: 'The Gardens', neighborhood: 'North Miami',
-    address: '1155 NE 126th St, North Miami, FL 33161', lat: 25.8816, lng: -80.1670,
+    address: '1155 NE 126th St, North Miami, FL 33161', lat: 25.89166, lng: -80.17532,
     priceMin: 1950, priceTier: '$',
     tagline: 'Tropical oasis, family-friendly, nature-inspired',
     concession: 'Contact for current offers',
@@ -488,7 +488,7 @@ export const buildings: Building[] = [
   },
   {
     id: "41", name: 'Soleste Nomi Beach', neighborhood: 'North Miami Beach',
-    address: '16395 Biscayne Blvd, North Miami Beach, FL 33160', lat: 25.9289, lng: -80.1202,
+    address: '16395 Biscayne Blvd, North Miami Beach, FL 33160', lat: 25.9274887, lng: -80.1532814,
     priceMin: 3100, priceTier: '$$$',
     tagline: 'Beach luxury, contemporary design, premium finishes',
     concession: 'Contact for current offers',
@@ -510,7 +510,7 @@ export const buildings: Building[] = [
   },
   {
     id: "43", name: 'Biscayne 112', neighborhood: 'Downtown',
-    address: '1121 Biscayne Blvd, Miami, FL 33132', lat: 25.7778, lng: -80.1901,
+    address: '1121 Biscayne Blvd, Miami, FL 33132', lat: 25.7848633, lng: -80.1891014,
     priceMin: 2350, priceTier: '$$',
     tagline: 'Urban downtown, cultural district, vibrant energy',
     concession: 'Contact for current offers',
@@ -521,7 +521,7 @@ export const buildings: Building[] = [
   },
   {
     id: "44", name: 'The Shoreline at Sole Mia', neighborhood: 'North Miami Beach',
-    address: '2321 Laguna Cir, North Miami, FL 33181', lat: 25.9280, lng: -80.1206,
+    address: '2321 Laguna Cir, North Miami, FL 33181', lat: 25.9118481, lng: -80.1515761,
     priceMin: 2950, priceTier: '$$',
     tagline: 'Beachfront tranquility, resort-style living, ocean views',
     concession: 'Contact for current offers',
@@ -534,7 +534,7 @@ export const buildings: Building[] = [
   // ── AVENTURA ──────────────────────────────────────────────────────────────
   {
     id: "45", name: 'Blu Aventura', neighborhood: 'Aventura',
-    address: '2335 NE 186th St, Miami, FL 33180', lat: 25.9601, lng: -80.1312,
+    address: '2335 NE 186th St, Miami, FL 33180', lat: 25.9473575, lng: -80.1537435,
     priceMin: 2650, priceTier: '$$',
     tagline: 'Modern waterfront living, luxury finishes, community-focused',
     concession: 'Contact for current offers',
@@ -610,7 +610,7 @@ export const buildings: Building[] = [
   },
   {
     id: "52", name: 'Town Hollywood', neighborhood: 'Hollywood',
-    address: '2000 Stirling Rd, Hollywood, FL 33020', lat: 26.0583, lng: -80.1706,
+    address: '2000 Stirling Rd, Hollywood, FL 33020', lat: 26.04793, lng: -80.16471,
     priceMin: 2300, priceTier: '$$',
     tagline: 'Community-focused, residential feel',
     concession: 'Contact for current offers',
@@ -652,7 +652,7 @@ export const buildings: Building[] = [
   },
   {
     id: "56", name: 'Alvista Hollywood', neighborhood: 'Hollywood',
-    address: '812 South Park Road, Hollywood, FL 33021', lat: 26.0095, lng: -80.1625,
+    address: '812 South Park Road, Hollywood, FL 33021', lat: 26.0039079, lng: -80.1760275,
     priceMin: 2420, priceTier: '$$',
     tagline: 'Park views, residential tranquility',
     concession: 'Contact for current offers',
@@ -674,7 +674,7 @@ export const buildings: Building[] = [
   },
   {
     id: "58", name: 'Elevate Dania Beach', neighborhood: 'Dania Beach',
-    address: '600 East Dania Beach Boulevard, Dania Beach, FL 33004', lat: 26.0507, lng: -80.1419,
+    address: '600 East Dania Beach Boulevard, Dania Beach, FL 33004', lat: 26.051928, lng: -80.132857,
     priceMin: 2650, priceTier: '$$',
     tagline: 'Luxury coastal living, modern design',
     concession: 'Contact for current offers',
@@ -684,7 +684,7 @@ export const buildings: Building[] = [
   },
   {
     id: "59", name: 'Avery Dania Pointe East', neighborhood: 'Dania Beach',
-    address: '120 North Compass Way, Dania Beach, FL 33004', lat: 26.0510, lng: -80.1425,
+    address: '120 North Compass Way, Dania Beach, FL 33004', lat: 26.0528543, lng: -80.1579811,
     priceMin: 2700, priceTier: '$$',
     tagline: 'Contemporary waterfront, lifestyle community',
     concession: 'Contact for current offers',
@@ -706,7 +706,7 @@ export const buildings: Building[] = [
   // ── ALLAPATTAH ────────────────────────────────────────────────────────────
   {
     id: "66", name: 'Soleste Spring Garden', neighborhood: 'Allapattah',
-    address: '1005 Spring Garden Road, Miami, FL 33136', lat: 25.7762, lng: -80.2245,
+    address: '1005 Spring Garden Road, Miami, FL 33136', lat: 25.785618, lng: -80.2113163,
     priceMin: 2350, priceTier: '$$',
     tagline: 'Spring Garden vibes, urban garden living',
     concession: 'Contact for current offers',
@@ -739,7 +739,7 @@ export const buildings: Building[] = [
   // ── LITTLE HAVANA ─────────────────────────────────────────────────────────
   {
     id: "69", name: 'Gallery Marti Parc', neighborhood: 'Little Havana',
-    address: '450 SW 5th Street, Miami, FL 33130', lat: 25.7594, lng: -80.2125,
+    address: '450 SW 5th Street, Miami, FL 33130', lat: 25.768717, lng: -80.2017375,
     priceMin: 2300, priceTier: '$$',
     tagline: 'Gallery district living, cultural heart vibes',
     concession: 'Contact for current offers',
@@ -749,7 +749,7 @@ export const buildings: Building[] = [
   },
   {
     id: "70", name: 'Ram Miami River North/South', neighborhood: 'Little Havana',
-    address: '590 West Flagler Street, Miami, FL 33130', lat: 25.7628, lng: -80.2088,
+    address: '590 West Flagler Street, Miami, FL 33130', lat: 25.7735494, lng: -80.2041674,
     priceMin: 2550, priceTier: '$$',
     tagline: 'River district living, modern riverside',
     concession: 'Contact for current offers',
@@ -789,7 +789,7 @@ export const buildings: Building[] = [
   },
   {
     id: "74", name: 'Tides at River Rapids', neighborhood: 'Little Havana',
-    address: '2750 NW South River Dr, Miami, FL 33125', lat: 25.7875, lng: -80.2198,
+    address: '2750 NW South River Dr, Miami, FL 33125', lat: 25.7926969, lng: -80.2408666,
     priceMin: 2600, priceTier: '$$',
     tagline: 'Tidal living, river escape tranquility',
     concession: 'Contact for current offers',
@@ -832,7 +832,7 @@ export const buildings: Building[] = [
   },
   {
     id: "78", name: 'Casero', neighborhood: 'Doral',
-    address: '8255 Park Blvd, Doral, FL 33126', lat: 25.8145, lng: -80.3268,
+    address: '8255 Park Blvd, Doral, FL 33126', lat: 25.81469, lng: -80.3318,
     priceMin: 2380, priceTier: '$$',
     tagline: 'Park boulevard living, home sweet home',
     concession: 'Contact for current offers',
@@ -863,7 +863,7 @@ export const buildings: Building[] = [
   },
   {
     id: "81", name: 'Palma', neighborhood: 'Doral',
-    address: '5250 NW 84th Avenue, Doral, FL 33166', lat: 25.8015, lng: -80.3125,
+    address: '5250 NW 84th Avenue, Doral, FL 33166', lat: 25.8189, lng: -80.33517,
     priceMin: 2470, priceTier: '$$',
     tagline: 'Downtown Doral palma vibes, lush living',
     concession: 'Contact for current offers',
@@ -894,7 +894,7 @@ export const buildings: Building[] = [
   },
   {
     id: "84", name: 'Gran Vista at Doral', neighborhood: 'Doral',
-    address: '4400 NW 79th Avenue, Doral, FL 33166', lat: 25.8087, lng: -80.3168,
+    address: '4400 NW 79th Avenue, Doral, FL 33166', lat: 25.8144646, lng: -80.3266821,
     priceMin: 2490, priceTier: '$$',
     tagline: 'Grand vistas, panoramic lifestyle views',
     concession: 'Contact for current offers',
@@ -904,7 +904,7 @@ export const buildings: Building[] = [
   },
   {
     id: "85", name: 'Cordoba', neighborhood: 'Doral',
-    address: '8150 NW 53rd Street, Doral, FL 33166', lat: 25.8062, lng: -80.3087,
+    address: '8150 NW 53rd Street, Doral, FL 33166', lat: 25.82131, lng: -80.32928,
     priceMin: 2410, priceTier: '$$',
     tagline: 'Cordoba charm, Spanish colonial spirit',
     concession: 'Contact for current offers',
@@ -915,7 +915,7 @@ export const buildings: Building[] = [
   },
   {
     id: "86", name: 'Palms of Doral', neighborhood: 'Doral',
-    address: '5611 NW 112th Avenue, Doral, FL 33178', lat: 25.8326, lng: -80.3698,
+    address: '5611 NW 112th Avenue, Doral, FL 33178', lat: 25.82529, lng: -80.37785,
     priceMin: 2530, priceTier: '$$',
     tagline: 'Palms oasis, tropical paradise living',
     concession: 'Contact for current offers',
@@ -925,7 +925,7 @@ export const buildings: Building[] = [
   },
   {
     id: "87", name: '275 Fontaine Parc', neighborhood: 'Doral',
-    address: '275 Fontainebleau Blvd, Miami, FL 33172', lat: 25.7954, lng: -80.3456,
+    address: '275 Fontainebleau Blvd, Miami, FL 33172', lat: 25.7723215, lng: -80.3393098,
     priceMin: 2360, priceTier: '$$',
     tagline: 'Fontaine park elegance, metropolitan class',
     concession: 'Contact for current offers',
@@ -948,7 +948,7 @@ export const buildings: Building[] = [
   },
   {
     id: "89", name: 'Grove Central Residences', neighborhood: 'Coconut Grove',
-    address: '2800 SW 27th Terrace, Miami, FL 33133', lat: 25.7333, lng: -80.2381,
+    address: '2800 SW 27th Terrace, Miami, FL 33133', lat: 25.7405922, lng: -80.239359,
     priceMin: 2480, priceTier: '$$',
     tagline: 'Central grove living, community hub vibes',
     concession: 'Contact for current offers',
@@ -970,7 +970,7 @@ export const buildings: Building[] = [
   },
   {
     id: "91", name: 'Platform 3750', neighborhood: 'Coconut Grove',
-    address: '3750 South Dixie Highway, Miami, FL 33133', lat: 25.7289, lng: -80.2464,
+    address: '3750 South Dixie Highway, Miami, FL 33133', lat: 25.7313949, lng: -80.2543356,
     priceMin: 2380, priceTier: '$$',
     tagline: 'Platform living, southern grove exposure',
     concession: 'Contact for current offers',
@@ -1023,7 +1023,7 @@ export const buildings: Building[] = [
   },
   {
     id: "96", name: 'The Mile Coral Gables', neighborhood: 'Coconut Grove',
-    address: '3622 Coral Way, Miami, FL 33145', lat: 25.7338, lng: -80.2545,
+    address: '3622 Coral Way, Miami, FL 33145', lat: 25.7494972, lng: -80.2526407,
     priceMin: 2570, priceTier: '$$',
     tagline: 'The mile lifestyle, destination living',
     concession: 'Contact for current offers',
@@ -1067,7 +1067,7 @@ export const buildings: Building[] = [
   // ── LAS OLAS / FORT LAUDERDALE ────────────────────────────────────────────
   {
     id: "100", name: 'Society Las Olas', neighborhood: 'Las Olas',
-    address: '301 SW 1st Ave, Fort Lauderdale, FL 33301', lat: 26.1156, lng: -80.1481,
+    address: '301 SW 1st Ave, Fort Lauderdale, FL 33301', lat: 26.1195998, lng: -80.144908,
     priceMin: 2700, priceTier: '$$',
     tagline: 'Las Olas society living, luxury downtown',
     concession: 'Contact for current offers',
@@ -1077,7 +1077,7 @@ export const buildings: Building[] = [
   },
   {
     id: "101", name: 'Flow Fort Lauderdale', neighborhood: 'Las Olas',
-    address: '221 SW 1st Ave, Fort Lauderdale, FL 33301', lat: 26.1153, lng: -80.1476,
+    address: '221 SW 1st Ave, Fort Lauderdale, FL 33301', lat: 26.1203725, lng: -80.1446075,
     priceMin: 2550, priceTier: '$$',
     tagline: 'Flow living, organic contemporary design',
     concession: 'Contact for current offers',
@@ -1117,7 +1117,7 @@ export const buildings: Building[] = [
   },
   {
     id: "105", name: 'Veneto Las Olas', neighborhood: 'Las Olas',
-    address: '201 S Federal Hwy, Fort Lauderdale, FL 33301', lat: 26.1147, lng: -80.1393,
+    address: '201 S Federal Hwy, Fort Lauderdale, FL 33301', lat: 26.1203086, lng: -80.137579,
     priceMin: 2670, priceTier: '$$',
     tagline: 'Veneto italian charm, federal avenue',
     concession: 'Contact for current offers',
@@ -1127,7 +1127,7 @@ export const buildings: Building[] = [
   },
   {
     id: "106", name: 'Icon Las Olas', neighborhood: 'Las Olas',
-    address: '500 East Las Olas Blvd, Fort Lauderdale, FL 33301', lat: 26.1186, lng: -80.1437,
+    address: '500 East Las Olas Blvd, Fort Lauderdale, FL 33301', lat: 26.119124, lng: -80.138033,
     priceMin: 2580, priceTier: '$$',
     tagline: 'Icon living, boulevard distinction',
     concession: 'Contact for current offers',
@@ -1137,7 +1137,7 @@ export const buildings: Building[] = [
   },
   {
     id: "107", name: 'The Registry', neighborhood: 'Las Olas',
-    address: '419 SE 2nd Street, Fort Lauderdale, FL 33301', lat: 26.1177, lng: -80.1444,
+    address: '419 SE 2nd Street, Fort Lauderdale, FL 33301', lat: 26.1207368, lng: -80.1391029,
     priceMin: 2510, priceTier: '$$',
     tagline: 'Registry prestige, southeast living',
     concession: 'Contact for current offers',
@@ -1147,7 +1147,7 @@ export const buildings: Building[] = [
   },
   {
     id: "108", name: 'Coasterra', neighborhood: 'Las Olas',
-    address: '150 SE 3rd Avenue, Fort Lauderdale, FL 33301', lat: 26.1182, lng: -80.1448,
+    address: '150 SE 3rd Avenue, Fort Lauderdale, FL 33301', lat: 26.1211023, lng: -80.140377,
     priceMin: 2640, priceTier: '$$',
     tagline: 'Coasterra living, coastal contemporary',
     concession: 'Contact for current offers',
@@ -1177,7 +1177,7 @@ export const buildings: Building[] = [
   },
   {
     id: "111", name: '10x Las Olas Walk', neighborhood: 'Las Olas',
-    address: '106 S Federal Highway, Fort Lauderdale, FL 33301', lat: 26.1167, lng: -80.1386,
+    address: '106 S Federal Highway, Fort Lauderdale, FL 33301', lat: 26.1211793, lng: -80.1369213,
     priceMin: 2490, priceTier: '$$',
     tagline: 'Las Olas walk, multiplied community',
     concession: 'Contact for current offers',
