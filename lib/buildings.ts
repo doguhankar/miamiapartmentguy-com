@@ -35,7 +35,7 @@ export const buildings: Building[] = [
   // ── BRICKELL ─────────────────────────────────────────────────────────────
   {
     id: "flow-brickell", name: 'Flow Brickell', neighborhood: 'Brickell',
-    address: '275 SW 6th St, Miami, FL 33130', lat: 25.7684, lng: -80.1890,
+    address: '275 SW 6th St, Miami, FL 33130', lat: 25.7683487, lng: -80.1988803,
     priceMin: 2841, priceMax: 11250, priceTier: '$$',
     tagline: 'Vibrant community, social hub, always buzzing',
     concession: '1 month free on select units',
@@ -48,7 +48,7 @@ export const buildings: Building[] = [
   },
   {
     id: "modera-riverside", name: 'Modera Riverside', neighborhood: 'Brickell',
-    address: '300 SW 2nd Ave, Miami, FL 33130', lat: 25.7561, lng: -80.1954,
+    address: '300 SW 2nd Ave, Miami, FL 33130', lat: 25.7710299, lng: -80.1978664,
     priceMin: 2500, priceTier: '$$',
     tagline: 'Affordable high rise, quiet, Brickell vibes without the price tag',
     concession: '50% off first 60 days',
@@ -110,7 +110,7 @@ export const buildings: Building[] = [
   // ── DOWNTOWN ──────────────────────────────────────────────────────────────
   {
     id: "cmpnd", name: 'CMPND', neighborhood: 'Downtown',
-    address: '55 NE 2nd St, Miami, FL 33132', lat: 25.7751, lng: -80.1924,
+    address: '55 NE 2nd St, Miami, FL 33132', lat: 25.7763011, lng: -80.1928479,
     priceMin: 1950, priceTier: '$',
     tagline: "Miami's newest highrise, all-glass corner units, two-story amenities",
     concession: 'Two months free on select units',
@@ -239,7 +239,7 @@ export const buildings: Building[] = [
     monthlyCharges: [],
   },
 
-  // ── MIDTOWN ───────────────��───────────────────────────────────────────────
+  // ─��� MIDTOWN ───────────────��───────────────────────────────────────────────
   {
     id: "18", name: 'AMLI Midtown 29', neighborhood: 'Midtown',
     address: '180 NE 29th St, Miami, FL 33137', lat: 25.7940, lng: -80.1910,
@@ -444,7 +444,7 @@ export const buildings: Building[] = [
   // ── NORTH MIAMI / NMB ─────────────────────────────────────────────────────
   {
     id: "37", name: 'Manor Biscayne', neighborhood: 'North Miami',
-    address: '1650 NE 124th St, North Miami, FL 33181', lat: 25.7848, lng: -80.1877,
+    address: '1650 NE 124th St, North Miami, FL 33181', lat: 25.8901862, lng: -80.1655093,
     priceMin: 2450, priceTier: '$$',
     tagline: 'Waterfront Biscayne Bay views, modern amenities',
     concession: 'Contact for current offers',
@@ -466,7 +466,7 @@ export const buildings: Building[] = [
   },
   {
     id: "39", name: 'Biscayne Shores', neighborhood: 'North Miami',
-    address: '11295 Biscayne Blvd, Miami, FL 33181', lat: 25.7893, lng: -80.1865,
+    address: '11295 Biscayne Blvd, Miami, FL 33181', lat: 25.8803163, lng: -80.1645539,
     priceMin: 2200, priceTier: '$',
     tagline: 'Bay-adjacent living, contemporary design, walkable',
     concession: 'Contact for current offers',
@@ -832,7 +832,7 @@ export const buildings: Building[] = [
   },
   {
     id: "78", name: 'Casero', neighborhood: 'Doral',
-    address: '8255 Park Blvd, Doral, FL 33126', lat: 25.8145, lng: -80.3268,
+    address: '8255 Park Blvd, Doral, FL 33126', lat: 25.7744891, lng: -80.3292752,
     priceMin: 2380, priceTier: '$$',
     tagline: 'Park boulevard living, home sweet home',
     concession: 'Contact for current offers',
