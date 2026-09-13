@@ -754,7 +754,6 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     buttons.forEach((button) => button.addEventListener('click', stopHeartEvent, { capture: true }));
     return () => buttons.forEach((button) => button.removeEventListener('click', stopHeartEvent, { capture: true }));
   }, [savedIds]);
-  const geocodeCache = useRef(new Map());
   const [visibleBuildings, setVisibleBuildings] = useState(BUILDING_CATALOG)
   const VISIBLE_BUILDINGS = visibleBuildings
   const [geocodedBuildings, setGeocodedBuildings] = useState(VISIBLE_BUILDINGS)
@@ -769,10 +768,9 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     })
     return () => { cancelled = true }
   }, [])
-  // The full, unfiltered building-id set. Geocoding only fills in lat/lng on the
-  // same buildings, so this list's identity is stable across that update; it's
-  // passed to MapComponent so its pricing fetch keys off "every building" rather
-  // than the filtered list, which would reintroduce a fetch/filter feedback loop.
+  // The full, unfiltered building-id set is passed to MapComponent so pricing
+  // fetches key off every building rather than the filtered list. This avoids
+  // reintroducing a fetch/filter feedback loop while preserving static coordinates.
   const allBuildingIds = useMemo(() => geocodedBuildings.map((building) => String(building.id)), [geocodedBuildings]);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [highlightedBuilding, setHighlightedBuilding] = useState(null);
@@ -1224,56 +1222,6 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
 
     setVisibleBuildingIds(matchingBuildingIds);
   };
-
-  // Geocoding useEffect
-  useEffect(() => {
-    const geocodeAddresses = async () => {
-      const MAPBOX_TOKEN = 'pk.eyJ1IjoiZG9ua2FyYWhhbiIsImEiOiJjbXAzamJ1eHIwMGQ2MnJvbHU1MHNwZWlzIn0.8De9qZEqvTRmh8-d-25NfQ';
-      const failedAddresses = [];
-      let successCount = 0;
-
-      const geocodePromises = VISIBLE_BUILDINGS.map(async (building) => {
-        // Check cache first
-        if (geocodeCache.current.has(building.address)) {
-          const cached = geocodeCache.current.get(building.address);
-          successCount++;
-          return { ...building, lat: cached.lat, lng: cached.lng };
-        }
-
-        try {
-          const encodedAddress = encodeURIComponent(building.address);
-          const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${MAPBOX_TOKEN}`;
-          
-          const response = await fetch(url);
-          const data = await response.json();
-
-          if (data.features && data.features.length > 0) {
-            const [lng, lat] = data.features[0].geometry.coordinates;
-            geocodeCache.current.set(building.address, { lat, lng });
-            successCount++;
-            return { ...building, lat, lng };
-          } else {
-            failedAddresses.push(building.address);
-            return building; // Keep original coordinates
-          }
-        } catch (error) {
-          failedAddresses.push(building.address);
-          return building; // Keep original coordinates
-        }
-      });
-
-      const geocodedResults = await Promise.all(geocodePromises);
-      setGeocodedBuildings(geocodedResults);
-
-      // Log results
-      console.log(`[Geocoding] Successfully geocoded ${successCount}/${geocodedResults.length} addresses`);
-      if (failedAddresses.length > 0) {
-        console.warn(`[Geocoding] Failed to geocode ${failedAddresses.length} addresses:`, failedAddresses);
-      }
-    };
-
-    geocodeAddresses();
-  }, []);
 
   const handleSaveList = async () => {
     if (starredBuildings.size === 0) return;
