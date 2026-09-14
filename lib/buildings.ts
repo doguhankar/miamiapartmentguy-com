@@ -134,7 +134,7 @@ export const buildings: Building[] = [
   },
   {
     id: "muze-at-met", name: 'Muze at Met', neighborhood: 'Downtown',
-    address: '340 SE 3rd St, Miami, FL 33131', lat: 25.7679, lng: -80.1892,
+    address: '340 SE 3rd St, Miami, FL 33131', lat: 25.7712, lng: -80.1885,
     priceMin: 2627, priceTier: '$$',
     tagline: 'Quiet luxury, city views, spacious layouts',
     concession: '1.5 months free on 1Bs, 1 month on 2/3 beds',
@@ -146,7 +146,7 @@ export const buildings: Building[] = [
   },
   {
     id: "monarc-at-met", name: 'Flow Miami World', neighborhood: 'Downtown',
-    address: '698 NE 1st Ave, Miami, FL 33132', lat: 25.7763, lng: -80.1931,
+    address: '698 NE 1st Ave, Miami, FL 33132', lat: 25.7808, lng: -80.1925,
     priceMin: 2223, priceTier: '$$',
     tagline: 'Vibrant community, social hub, always buzzing',
     concession: '3 months free on all apartments',
@@ -366,7 +366,7 @@ export const buildings: Building[] = [
   },
   {
     id: "29", name: 'Wynd 27 & Wynd 28', neighborhood: 'Wynwood',
-    address: '127 NW 27th St, Miami, FL 33127', lat: 25.7992, lng: -80.2000,
+    address: '127 NW 27th St, Miami, FL 33127', lat: 25.8024, lng: -80.1977,
     priceMin: 2600, priceTier: '$$',
     tagline: 'Twin towers, Wynwood landmark, modern luxury',
     concession: 'TBD',
@@ -377,7 +377,7 @@ export const buildings: Building[] = [
   },
   {
     id: "30", name: '29 WYN', neighborhood: 'Wynwood',
-    address: '2828 NW 1st Ave, Miami, FL 33127', lat: 25.8005, lng: -80.2002,
+    address: '2828 NW 1st Ave, Miami, FL 33127', lat: 25.8035, lng: -80.1974,
     priceMin: 2300, priceTier: '$',
     tagline: 'Wynwood heart, street art views, creative neighborhood',
     concession: 'TBD',
@@ -388,7 +388,7 @@ export const buildings: Building[] = [
   },
   {
     id: "31", name: 'AMLI Wynwood', neighborhood: 'Wynwood',
-    address: '70 NW 25th St, Miami, FL 33127', lat: 25.7988, lng: -80.1980,
+    address: '70 NW 25th St, Miami, FL 33127', lat: 25.8007, lng: -80.1964,
     priceMin: 2450, priceTier: '$$',
     tagline: 'Modern Wynwood, walkable galleries, artsy living',
     concession: 'TBD',
@@ -567,7 +567,7 @@ export const buildings: Building[] = [
   },
   {
     id: "48", name: 'Avida Aventura', neighborhood: 'Aventura',
-    address: '19401 W Dixie Hwy, Miami, FL 33180', lat: 25.9588, lng: -80.1358,
+    address: '19401 W Dixie Hwy, Miami, FL 33180', lat: 25.9550, lng: -80.1476,
     priceMin: 2550, priceTier: '$$',
     tagline: 'Vibrant community, thoughtful design, modern lifestyle',
     concession: 'Contact for current offers',
@@ -580,7 +580,7 @@ export const buildings: Building[] = [
   // ── HOLLYWOOD ─────────────────────────────────────────────────────────────
   {
     id: "49", name: 'Bread Building', neighborhood: 'Hollywood',
-    address: '1770 South Young Circle, Hollywood, FL 33020', lat: 26.0118, lng: -80.1484,
+    address: '1770 South Young Circle, Hollywood, FL 33020', lat: 26.0110, lng: -80.1423,
     priceMin: 2400, priceTier: '$$',
     tagline: 'Modern urban living, walkable district vibes',
     concession: 'Contact for current offers',
@@ -642,7 +642,7 @@ export const buildings: Building[] = [
   },
   {
     id: "55", name: 'Circ Residences', neighborhood: 'Hollywood',
-    address: '1776 Polk Street, Hollywood, FL 33020', lat: 26.0108, lng: -80.1472,
+    address: '1776 Polk Street, Hollywood, FL 33020', lat: 26.0130, lng: -80.1432,
     priceMin: 2380, priceTier: '$$',
     tagline: 'Contemporary design, community spaces',
     concession: 'Contact for current offers',
@@ -727,7 +727,7 @@ export const buildings: Building[] = [
   },
   {
     id: "68", name: 'Lantower River Landing', neighborhood: 'Allapattah',
-    address: '1480 NW North River Dr, Miami, FL 33125', lat: 25.7899, lng: -80.2184,
+    address: '1480 NW North River Dr, Miami, FL 33125', lat: 25.7862, lng: -80.2206,
     priceMin: 2480, priceTier: '$$',
     tagline: 'Riverfront living, urban waterfront escape',
     concession: 'Contact for current offers',
@@ -873,7 +873,7 @@ export const buildings: Building[] = [
   },
   {
     id: "82", name: 'The Landmark South', neighborhood: 'Doral',
-    address: '6055 NW 105th Ct, Doral, FL 33178', lat: 25.827, lng: -80.366,
+    address: '6055 NW 105th Ct, Doral, FL 33178', lat: 25.8292, lng: -80.3687,
     priceMin: 2580, priceTier: '$$',
     tagline: 'Landmark living, iconic community hub',
     concession: 'Contact for current offers',
@@ -959,7 +959,7 @@ export const buildings: Building[] = [
   },
   {
     id: "90", name: 'Cascade Link at Douglas', neighborhood: 'Coconut Grove',
-    address: '3050 SW 37th Avenue, Miami, FL 33133', lat: 25.7365, lng: -80.2526,
+    address: '3050 SW 37th Avenue, Miami, FL 33133', lat: 25.7342, lng: -80.2544,
     priceMin: 2600, priceTier: '$$',
     tagline: 'Cascade link living, flowing contemporary',
     concession: 'Contact for current offers',
@@ -1002,7 +1002,7 @@ export const buildings: Building[] = [
   },
   {
     id: "94", name: 'Zoi House Grove', neighborhood: 'Coconut Grove',
-    address: '2900 SW 28th Ln, Miami, FL 33133', lat: 25.7351, lng: -80.2397,
+    address: '2900 SW 28th Ln, Miami, FL 33133', lat: 25.7395, lng: -80.2406,
     priceMin: 2540, priceTier: '$$',
     tagline: 'Zoi house living, artistic grove character',
     concession: 'Contact for current offers',
@@ -1044,7 +1044,7 @@ export const buildings: Building[] = [
   },
   {
     id: "98", name: 'Modera Douglas Station', neighborhood: 'Coconut Grove',
-    address: '3760 Bird Road, Miami, FL 33146', lat: 25.7329, lng: -80.2529,
+    address: '3760 Bird Road, Miami, FL 33146', lat: 25.7346, lng: -80.2552,
     priceMin: 2490, priceTier: '$$',
     tagline: 'Modera station living, southeast gables',
     concession: 'Contact for current offers',
