@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ChevronDown, X } from 'lucide-react'
+import { ChevronDown, X, Heart } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useAgentList } from '@/components/agent-list-provider'
 
 // `floor_plan_code` now exists on public.units (added via migration) and is
 // backfilled for Flow Brickell with placeholder codes: real Studio mapping
@@ -16,6 +17,10 @@ interface FloorPlanUnit {
   sqft?: number
   availabilityDate?: string | null
   floorPlanImage?: string | null
+  beds?: number | null
+  baths?: number | null
+  buildingName?: string | null
+  unitType?: string | null
 }
 
 interface FloorPlanGroup {
@@ -57,6 +62,7 @@ function bedTypeLabel(beds: number | null | undefined): string {
 }
 
 export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
+  const { showHearts, toggle, has } = useAgentList()
   const [groups, setGroups] = useState<FloorPlanGroup[]>([])
   const [loading, setLoading] = useState(FLOOR_PLAN_CODE_ENABLED)
   const [activeTab, setActiveTab] = useState<string>('')
@@ -77,7 +83,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
       const supabase = createClient()
       const { data } = await supabase
         .from('units')
-        .select('unitnumber, price, beds, sqft, availabilitydate, floor_plan_code, floor_plan_image')
+        .select('unitnumber, price, beds, baths, sqft, availabilitydate, floor_plan_code, floor_plan_image, buildingname, unittype')
         .eq('building_id', buildingId)
         .not('floor_plan_code', 'is', null)
 
@@ -92,6 +98,10 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
           sqft: typeof row.sqft === 'number' ? row.sqft : undefined,
           availabilityDate: row.availabilitydate ?? null,
           floorPlanImage: row.floor_plan_image ?? null,
+          beds: typeof row.beds === 'number' ? row.beds : null,
+          baths: typeof row.baths === 'number' ? row.baths : null,
+          buildingName: row.buildingname ?? null,
+          unitType: row.unittype ?? null,
         }
         const existing = byCode.get(code)
         if (existing) {
@@ -208,9 +218,35 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, borderTop: `1px solid ${CARD_BORDER}`, paddingTop: 12 }}>
                     {group.units.map((unit) => {
                       const availability = formatAvail(unit.availabilityDate)
+                      const canHeart = showHearts && Boolean(buildingId) && Boolean(unit.unitNumber)
+                      const saved = canHeart ? has(buildingId, unit.unitNumber as string) : false
                       return (
                         <div key={unit.unitNumber ?? `${group.code}-${unit.price}-${unit.sqft}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, fontSize: 12, color: TEXT }}>
-                          <span>{unit.unitNumber ? `Unit ${unit.unitNumber}` : 'Unit available'}</span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            {canHeart && (
+                              <button
+                                type="button"
+                                aria-label={saved ? `Remove unit ${unit.unitNumber} from list` : `Add unit ${unit.unitNumber} to list`}
+                                aria-pressed={saved}
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  toggle({
+                                    building_id: buildingId,
+                                    unit_number: unit.unitNumber as string,
+                                    building_name: unit.buildingName ?? null,
+                                    unit_type: unit.unitType ?? null,
+                                    beds: unit.beds ?? null,
+                                    baths: unit.baths ?? null,
+                                    price: unit.price ?? null,
+                                  })
+                                }}
+                                style={{ display: 'grid', placeItems: 'center', width: 24, height: 24, padding: 0, border: 0, background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
+                              >
+                                <Heart size={16} aria-hidden="true" style={{ color: saved ? '#E5285A' : MUTED, fill: saved ? '#E5285A' : 'none' }} />
+                              </button>
+                            )}
+                            <span>{unit.unitNumber ? `Unit ${unit.unitNumber}` : 'Unit available'}</span>
+                          </span>
                           <span>{unit.price ? fmt(unit.price) : 'Contact'} · <span style={{ color: availability.now ? AVAIL_NOW : AVAIL_LATER }}>{availability.label}</span></span>
                         </div>
                       )

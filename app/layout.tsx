@@ -5,6 +5,8 @@ import { GoogleAnalytics } from '@next/third-parties/google'
 import './globals.css'
 import { AgentModeProvider } from '@/components/agent-mode-provider'
 import { SaveListProvider } from '@/components/save-list-provider'
+import { AgentListProvider } from '@/components/agent-list-provider'
+import { AgentListBar } from '@/components/agent-list-bar'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -36,7 +38,10 @@ export default function RootLayout({
     <html lang="en" className={`${_archivo.variable} ${_spaceGrotesk.variable} ${_jetBrainsMono.variable}`}>
       <body className="font-sans antialiased">
         <AgentModeProvider>
-          <SaveListProvider>{children}</SaveListProvider>
+          <AgentListProvider>
+            <SaveListProvider>{children}</SaveListProvider>
+            <AgentListBar />
+          </AgentListProvider>
         </AgentModeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
         {process.env.NEXT_PUBLIC_GA_ID && <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />}
