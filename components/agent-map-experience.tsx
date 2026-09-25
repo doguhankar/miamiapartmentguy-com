@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import mapboxgl from 'mapbox-gl';
 import { HowItWorksModal } from '@/components/how-it-works-modal';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -21,6 +21,7 @@ import { useSaveList } from '@/components/save-list-provider';
 import { createClient } from '@/lib/supabase/client';
 import { buildings as BUILDING_CATALOG, type Building } from '@/lib/buildings';
 import { getPriceRange } from '@/lib/price-range';
+import { saveMapQuery, readMapQuery, clearMapQuery, saveBuildingOrigin } from '@/lib/map-return';
 import {
   type AvailableUnit,
   BEDROOM_MIN_BY_FILTER,
@@ -833,6 +834,9 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const didRestoreRef = useRef(false);
+  const pendingRestoreRef = useRef(false);
 
   // Load filters from URL params on mount
   useEffect(() => {
@@ -868,6 +872,47 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     }
   }, [searchParams]);
 
+  // Safety net (restore): on first mount, if this page has no filter params in
+  // the URL but a filtered view was saved for it earlier in this tab, restore
+  // that URL once. Guarded by a ref so it can never loop.
+  useEffect(() => {
+    if (didRestoreRef.current) return;
+    didRestoreRef.current = true;
+    const hasFilterParams =
+      searchParams.getAll('neighborhood').length > 0 ||
+      searchParams.has('beds') ||
+      searchParams.has('priceMin') ||
+      searchParams.has('priceMax') ||
+      searchParams.has('moveInDate');
+    if (!hasFilterParams) {
+      const saved = readMapQuery(pathname);
+      if (saved) {
+        pendingRestoreRef.current = true;
+        router.replace(`${pathname}?${saved}`, { scroll: false });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Safety net (save): persist the current filtered view (per tab) whenever the
+  // params change, but only after the restore check has run — otherwise the
+  // first render's empty params would delete the saved query before it can be
+  // restored.
+  useEffect(() => {
+    if (!didRestoreRef.current) return;
+    const hasFilterParams =
+      searchParams.getAll('neighborhood').length > 0 ||
+      searchParams.has('beds') ||
+      searchParams.has('priceMin') ||
+      searchParams.has('priceMax') ||
+      searchParams.has('moveInDate');
+    if (pendingRestoreRef.current) {
+      if (!hasFilterParams) return; // wait for the restore navigation to land
+      pendingRestoreRef.current = false;
+    }
+    saveMapQuery(pathname, new URLSearchParams(Array.from(searchParams.entries())));
+  }, [searchParams, pathname]);
+
   // Update URL when filters change
   const updateUrlWithFilters = (newFilters: MapFilterState) => {
     const params = new URLSearchParams();
@@ -888,8 +933,8 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       params.set('moveInDate', newFilters.moveInDate[0]);
     }
     
-    const newUrl = `/map${params.toString() ? '?' + params.toString() : ''}`;
-    router.push(newUrl);
+    const newUrl = `${pathname}${params.toString() ? '?' + params.toString() : ''}`;
+    router.replace(newUrl, { scroll: false });
   };
 
   // Wrapper for filter changes that also updates URL
@@ -900,7 +945,15 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
 
   const handleClearAllFilters = () => {
     setMapFilters({ bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: [] });
-    router.push('/map');
+    clearMapQuery(pathname);
+    router.replace(pathname, { scroll: false });
+  };
+
+  // Navigate to a building's detail page while remembering which map page (and
+  // its filtered URL) it was opened from, so the building page can return here.
+  const openBuilding = (id: string) => {
+    saveBuildingOrigin(pathname);
+    router.push(`/buildings/${id}`);
   };
 
   // Callback to receive map instance from MapComponent
@@ -1279,7 +1332,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   expandedNeighborhoods={expandedNeighborhoods}
   selectedBuilding={selectedBuilding}
   highlightedBuilding={highlightedBuilding}
-  onPinClick={(b) => router.push(`/buildings/${b.id}`)}
+  onPinClick={(b) => openBuilding(b.id)}
                   geocodedBuildings={visibleFilteredBuildings}
                   allBuildingIds={allBuildingIds}
   setSelectedBuilding={setSelectedBuilding}
@@ -1406,7 +1459,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                 return (
                   <div
                     key={building.id}
-                    onClick={() => router.push(`/buildings/${building.id}`)}
+                    onClick={() => openBuilding(building.id)}
                     style={{
                       background: '#ffffff',
                       borderRadius: 16,
@@ -1627,7 +1680,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
             expandedNeighborhoods={expandedNeighborhoods} 
             selectedBuilding={selectedBuilding} 
             highlightedBuilding={highlightedBuilding}
-            onPinClick={(b) => router.push(`/buildings/${b.id}`)}
+            onPinClick={(b) => openBuilding(b.id)}
                             geocodedBuildings={visibleFilteredBuildings}
                   allBuildingIds={allBuildingIds}
             setSelectedBuilding={setSelectedBuilding}
@@ -1668,7 +1721,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                   isHighlighted={selectedBuilding?.id === building.id}
                                   isStarred={starredBuildings.has(String(building.id))}
                   onHover={setHighlightedBuilding}
-                  onClick={() => router.push(`/buildings/${building.id}`)}
+                  onClick={() => openBuilding(building.id)}
                   onStar={(b) => {
                     const newStarred = new Set(starredBuildings);
                     if (newStarred.has(String(b.id))) {

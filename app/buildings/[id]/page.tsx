@@ -13,6 +13,7 @@ import { SimilarBuildings } from '@/components/similar-buildings'
 import { CommissionPill } from '@/components/commission-pill'
 import { SaveBuildingButton } from '@/components/save-building-button'
 import { BuildingImageGallery } from '@/components/building-image-gallery'
+import { readBuildingOrigin, readMapQuery } from '@/lib/map-return'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface LiveUnit {
@@ -175,6 +176,20 @@ export default function BuildingDetailPage() {
   const params = useParams()
   const router = useRouter()
   const buildingId = params.id as string
+
+  // Return to the map the user came from. If this building was opened from
+  // within the app in this tab, step back so the map viewport and list scroll
+  // stay put; otherwise (direct link / fresh tab) fall back to the saved
+  // filtered map URL rather than a bare /map.
+  const handleBack = useCallback(() => {
+    const origin = readBuildingOrigin()
+    if (origin) {
+      router.back()
+      return
+    }
+    const saved = readMapQuery('/map')
+    router.replace(saved ? `/map?${saved}` : '/map')
+  }, [router])
 
   const building = buildings.find(b => b.id === buildingId)
   const { images: supabaseImages } = useSupabaseImages(buildingId)
@@ -449,7 +464,7 @@ export default function BuildingDetailPage() {
       <div className="detail-mobile-shell">
       <div className="building-detail-shell" style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         <button
-          onClick={() => router.push('/map')}
+          onClick={handleBack}
           style={{ position: 'absolute', zIndex: 5, top: 16, left: 18, display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', color: TEXT, fontSize: 11, fontWeight: 700, background: 'rgba(255,255,255,0.92)', border: `1px solid ${BORDER}`, borderRadius: 7, padding: '8px 11px', boxShadow: '0 2px 8px rgba(10,15,28,0.08)' }}
         >
           <IconBack /> Back to map
@@ -531,7 +546,7 @@ export default function BuildingDetailPage() {
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ position: 'relative', padding: '16px 24px' }}>
             <button
-              onClick={() => router.push('/map')}
+              onClick={handleBack}
               style={{ position: 'absolute', top: 28, left: 36, zIndex: 10, display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: 'none', borderRadius: 999, padding: '8px 16px', fontSize: 13, fontWeight: 500, color: TEXT, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
             >
               <IconBack /> Back to map
