@@ -83,15 +83,17 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
       const supabase = createClient()
       const { data } = await supabase
         .from('units')
-        .select('unitnumber, price, beds, baths, sqft, availabilitydate, floor_plan_code, floor_plan_image, buildingname, unittype')
+        .select('unitnumber, price, beds, baths, sqft, availabilitydate, floor_plan_code, plan_name, floor_plan_image, buildingname, unittype')
         .eq('building_id', buildingId)
-        .not('floor_plan_code', 'is', null)
 
       if (cancelled) return
 
       const byCode = new Map<string, FloorPlanGroup>()
       ;(data ?? []).forEach((row: any) => {
-        const code = row.floor_plan_code as string
+        // Some units are missing floor_plan_code entirely. Rather than hide
+        // real available inventory, fall back to plan_name, then unittype,
+        // then a generic bed-count label so every priced unit still surfaces.
+        const code: string = row.floor_plan_code || row.plan_name || row.unittype || bedTypeLabel(row.beds)
         const unit: FloorPlanUnit = {
           unitNumber: row.unitnumber ?? undefined,
           price: typeof row.price === 'number' ? row.price : undefined,
