@@ -16,7 +16,7 @@ import { CommissionPill } from '@/components/commission-pill';
 
 import { MapFilterCard, type MapFilterState } from '@/components/map-filter-card';
 import { copyToClipboard, showToast } from '@/lib/toast-utils';
-import { Heart, Star } from 'lucide-react';
+import { Heart, Search, Star } from 'lucide-react';
 import { useSaveList } from '@/components/save-list-provider';
 import { createClient } from '@/lib/supabase/client';
 import { buildings as BUILDING_CATALOG, type Building } from '@/lib/buildings';
@@ -1601,7 +1601,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       {/* ── END MOBILE LAYOUT ─────────────────────────����───────────────────── */}
 
       {/* Desktop Header - Fixed at Top */}
-      <div className="hidden md:flex items-center justify-between px-8 py-7 bg-white flex-shrink-0 border-b border-[#E8EBF0]" style={{ height: '74px' }}>
+      <div className="hidden md:grid grid-cols-[1fr_auto_1fr] items-center px-8 py-7 bg-white flex-shrink-0 border-b border-[#E8EBF0]" style={{ height: '74px' }}>
         {/* Wordmark */}
         <Link href="/" style={{ textDecoration: 'none', cursor: 'pointer' }}>
           <div className="flex items-center gap-1">
@@ -1613,9 +1613,22 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
             </span>
           </div>
         </Link>
+
+        <div className="flex h-[52px] w-[480px] items-center gap-2.5 rounded-[26px] border border-[#DDE1E9] bg-white py-0 pl-[22px] pr-1.5 shadow-[0_2px_12px_rgba(10,15,28,0.08)]">
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="min-w-0 flex-1 border-0 bg-transparent text-[15px] text-[#0A0F1C] outline-none"
+            placeholder="Search buildings"
+            aria-label="Search buildings"
+          />
+          <button type="button" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FF4D8D]" aria-label="Search">
+            <Search size={19} color="white" />
+          </button>
+        </div>
         
         {/* Header Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="justify-self-end" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {/* How it Works Button */}
           <button 
             onClick={() => setShowHowItWorksModal(true)}

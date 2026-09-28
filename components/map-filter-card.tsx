@@ -151,13 +151,15 @@ export function MapFilterCard({
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    padding: '10px 16px',
-    borderRadius: '999px',
-    background: '#FFFFFF',
-    border: active ? '1px solid #19C6C0' : '1px solid #DCE1E8',
-    color: active ? '#0A8F8B' : '#263247',
-    fontSize: '13.5px',
-    fontWeight: 500,
+    height: '44px',
+    padding: '0 16px 0 20px',
+    borderRadius: '22px',
+    background: active ? '#F8F9FB' : '#FFFFFF',
+    border: active ? '1px solid #0A0F1C' : '1px solid #D3D8E1',
+    boxShadow: active ? 'inset 0 0 0 1px #0A0F1C' : 'none',
+    color: '#0A0F1C',
+    fontSize: '14px',
+    fontWeight: active ? 700 : 500,
     cursor: 'pointer',
     whiteSpace: 'nowrap' as const,
     transition: 'all 0.12s ease',
@@ -209,34 +211,12 @@ export function MapFilterCard({
       width: '100%',
       display: 'flex',
       alignItems: 'center',
+      justifyContent: 'center',
       gap: '10px',
       padding: '10px 20px',
       background: '#FFFFFF',
       borderBottom: '1px solid #E8EBF0',
     }}>
-      {/* Search — leftmost, pink border */}
-      <input
-        type="text"
-        placeholder="Search buildings..."
-        value={searchQuery}
-        onChange={(e) => onSearchChange?.(e.target.value)}
-        style={{
-          width: '220px',
-          flexShrink: 0,
-          background: '#FFFFFF',
-          border: '1px solid #FF4D8D',
-          borderRadius: '8px',
-          padding: '10px 16px',
-          color: '#0A0F1C',
-          fontSize: '13px',
-          outline: 'none',
-          fontFamily: 'inherit',
-          transition: 'box-shadow 0.12s',
-        }}
-        onFocus={(e) => { e.target.style.boxShadow = '0 0 0 2px rgba(255,77,141,0.22)' }}
-        onBlur={(e) => { e.target.style.boxShadow = 'none' }}
-      />
-
       {/* Price */}
       <div style={{ position: 'relative' }}>
         <button type="button" style={pillStyle(filters.price.length > 0)} onClick={() => setOpenDropdown(openDropdown === 'price' ? null : 'price')}>
@@ -385,7 +365,7 @@ export function MapFilterCard({
         )}
       </div>
 
-      <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
+      <div style={{ flexShrink: 0 }}>
         <AgentModeControl />
       </div>
 
@@ -394,22 +374,22 @@ export function MapFilterCard({
         <button
           onClick={onClearAll}
           style={{
-            background: 'none',
+            background: 'transparent',
             border: 'none',
-            color: '#5B6780',
-            fontSize: '13px',
+            color: '#0B7F7A',
+            fontSize: '14px',
+            fontWeight: 600,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: '5px',
+            height: '44px',
             padding: '0 6px',
             fontFamily: 'inherit',
-            transition: 'color 0.12s',
+            textDecoration: 'underline',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#B8C4D4' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = '#5B6780' }}
         >
-          ✕ Clear
+          Clear all
         </button>
       )}
     </div>
