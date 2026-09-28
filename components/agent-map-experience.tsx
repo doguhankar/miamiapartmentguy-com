@@ -1674,26 +1674,8 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
 
       {/* Desktop Layout - Zillow Style */}
       <div className="hidden md:flex flex-1 gap-0 h-full overflow-hidden">
-        {/* Map - 64% of width */}
-        <div className="flex-1 basis-[64%] relative h-full w-full">
-          <MapComponent 
-            expandedNeighborhoods={expandedNeighborhoods} 
-            selectedBuilding={selectedBuilding} 
-            highlightedBuilding={highlightedBuilding}
-            onPinClick={(b) => openBuilding(b.id)}
-                            geocodedBuildings={visibleFilteredBuildings}
-                  allBuildingIds={allBuildingIds}
-            setSelectedBuilding={setSelectedBuilding}
-  setInfoBuilding={setInfoBuilding}
-  onMapReady={handleMapReady}
-            onPricingDataChange={setPricingInventory}
-            onImageDataChange={setBuildingImages}
-            onBuildingsInView={setViewportBuildings}
-          />
-        </div>
-
-        {/* Cards Panel - 36% of width */}
-        <div className="basis-[36%] bg-[#F8F9FB] border-l border-[#E8EBF0] overflow-hidden flex flex-col" style={{ position: 'relative', zIndex: 20, pointerEvents: 'auto', background: 'white' }}>
+        {/* Cards Panel - 55% of width */}
+        <div className="basis-[55%] bg-[#F8F9FB] border-r border-[#E8EBF0] overflow-hidden flex flex-col" style={{ position: 'relative', zIndex: 20, pointerEvents: 'auto', background: 'white' }}>
           {/* Save list button — only visible when buildings are starred */}
           {starredBuildings.size > 0 && (
             <div className="px-4 pt-3 pb-0 flex justify-end">
@@ -1707,9 +1689,12 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
             </div>
           )}
 
-          {/* Scrollable Cards - Vertical Stack — flush from top */}
+          {/* Scrollable Cards - Two-column grid */}
           <div className="flex-1 overflow-y-auto">
-            <div className="p-4 flex flex-col gap-3">
+            <div className="grid grid-cols-2 auto-rows-max content-start gap-x-5 gap-y-7 p-6">
+              <div className="col-span-2 font-bold text-[22px]" style={{ fontFamily: 'Archivo' }}>
+                {visibleFilteredBuildings.length} building{visibleFilteredBuildings.length === 1 ? '' : 's'}
+              </div>
               {visibleFilteredBuildings.map((building) => (
                 <DesktopBuildingCard
                   key={building.id}
@@ -1735,6 +1720,24 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Map - 45% of width */}
+        <div className="flex-1 basis-[45%] relative h-full w-full">
+          <MapComponent 
+            expandedNeighborhoods={expandedNeighborhoods} 
+            selectedBuilding={selectedBuilding} 
+            highlightedBuilding={highlightedBuilding}
+            onPinClick={(b) => openBuilding(b.id)}
+                            geocodedBuildings={visibleFilteredBuildings}
+                  allBuildingIds={allBuildingIds}
+            setSelectedBuilding={setSelectedBuilding}
+  setInfoBuilding={setInfoBuilding}
+  onMapReady={handleMapReady}
+            onPricingDataChange={setPricingInventory}
+            onImageDataChange={setBuildingImages}
+            onBuildingsInView={setViewportBuildings}
+          />
         </div>
       </div>
 
