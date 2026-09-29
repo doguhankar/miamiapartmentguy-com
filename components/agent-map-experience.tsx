@@ -743,18 +743,6 @@ export interface AgentMapExperienceConfig {
 export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSelection, agentDisplayName = 'Don' }: AgentMapExperienceConfig) {
   const { hasAccess } = useAgentMode();
   const { savedIds, toggleSave } = useSaveList();
-  const heartButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  useEffect(() => {
-    const stopHeartEvent = (event: Event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const button = event.currentTarget as HTMLButtonElement;
-      void toggleSave(button.dataset.buildingId ?? '');
-    };
-    const buttons = Object.values(heartButtonRefs.current).filter(Boolean) as HTMLButtonElement[];
-    buttons.forEach((button) => button.addEventListener('click', stopHeartEvent, { capture: true }));
-    return () => buttons.forEach((button) => button.removeEventListener('click', stopHeartEvent, { capture: true }));
-  }, [savedIds]);
   const [visibleBuildings, setVisibleBuildings] = useState(BUILDING_CATALOG)
   const VISIBLE_BUILDINGS = visibleBuildings
   const [geocodedBuildings, setGeocodedBuildings] = useState(VISIBLE_BUILDINGS)
@@ -779,7 +767,6 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell', 'Downtown']);
   const [searchQuery, setSearchQuery] = useState('');
   const [infoBuilding, setInfoBuilding] = useState(null);
-  const [starredBuildings, setStarredBuildings] = useState<Set<string>>(new Set());
   const [isSavingList, setIsSavingList] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showMoveWithDonModal, setShowMoveWithDonModal] = useState(false);
@@ -1277,11 +1264,11 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   };
 
   const handleSaveList = async () => {
-    if (starredBuildings.size === 0) return;
+    if (savedIds.length === 0) return;
 
     setIsSavingList(true);
     try {
-      const buildingIds = Array.from(starredBuildings);
+      const buildingIds = savedIds.map(String);
       const response = await fetch('/api/lists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1690,14 +1677,14 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
         {/* Cards Panel - 55% of width */}
         <div className="basis-[55%] bg-[#F8F9FB] border-r border-[#E8EBF0] overflow-hidden flex flex-col" style={{ position: 'relative', zIndex: 20, pointerEvents: 'auto', background: 'white' }}>
           {/* Save list button — only visible when buildings are starred */}
-          {starredBuildings.size > 0 && (
+          {savedIds.length > 0 && (
             <div className="px-4 pt-3 pb-0 flex justify-end">
               <button
                 onClick={() => handleSaveList()}
                 disabled={isSavingList}
                 className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors"
               >
-                Save list ({starredBuildings.size})
+                Save list ({savedIds.length})
               </button>
             </div>
           )}
@@ -1717,18 +1704,10 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                   mapFilters={mapFilters}
                   isAgentMode={hasAccess}
                   isHighlighted={selectedBuilding?.id === building.id}
-                                  isStarred={starredBuildings.has(String(building.id))}
+                                  isStarred={savedIds.includes(String(building.id))}
                   onHover={setHighlightedBuilding}
                   onClick={() => openBuilding(building.id)}
-                  onStar={(b) => {
-                    const newStarred = new Set(starredBuildings);
-                    if (newStarred.has(String(b.id))) {
-                      newStarred.delete(String(b.id));
-                    } else {
-                      newStarred.add(String(b.id));
-                    }
-                    setStarredBuildings(newStarred);
-                  }}
+                  onStar={() => toggleSave(String(building.id))}
                                 />
               ))}
             </div>

@@ -152,6 +152,24 @@ export function DesktopBuildingCard({
             {building.concession}
           </span>
         )}
+        {isAgentMode && (
+          <button
+            type="button"
+            aria-label={isStarred ? `Remove ${building.name} from saved buildings` : `Save ${building.name}`}
+            aria-pressed={isStarred}
+            onClick={(event) => {
+              event.stopPropagation()
+              onStar?.(building)
+            }}
+            className={`absolute right-3 top-3 flex size-11 items-center justify-center rounded-full border transition-colors ${
+              isStarred ? "border-[#DB2777] bg-[#DB2777]" : "border-white/80 bg-black/25"
+            }`}
+          >
+            <svg viewBox="0 0 24 24" width="24" height="24" fill={isStarred ? "white" : "none"} stroke={isStarred ? "white" : "#F8FAFC"} strokeWidth="1.8" aria-hidden="true">
+              <path d="M12 21C12 21 3 14.5 3 8.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 9 2.5C21 14.5 12 21 12 21z" />
+            </svg>
+          </button>
+        )}
       </div>
       <div className="flex flex-col gap-0.5 px-0.5 pt-3">
         <div className="text-base font-semibold leading-snug text-[#0A0F1C]">
