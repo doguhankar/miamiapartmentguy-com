@@ -32,14 +32,14 @@ interface FloorPlanGroup {
 }
 
 const TABS = ['Studio', '1BR', '2BR', '3BR']
-const TEAL = '#19C6C0'
-const TEAL_DARK = '#0F6E56'
+const TEAL = '#0B7F7A'
+const TEAL_DARK = '#0E9A93'
 const TEAL_TEXT = '#04342C'
-const CARD_BG = '#F8F9FB'
-const CARD_BORDER = '#E8EBF0'
-const TAB_BORDER = '#D3D8E1'
-const MUTED = '#9AA1AC'
-const TEXT = '#0A0F1C'
+const CARD_BG = '#FFFFFF'
+const CARD_BORDER = '#DDDDDD'
+const TAB_BORDER = '#DDDDDD'
+const MUTED = '#6A6A6A'
+const TEXT = '#222222'
 const AVAIL_NOW = '#639922'
 const AVAIL_LATER = '#92660B'
 
@@ -154,9 +154,9 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
                   borderRadius: 20,
                   fontSize: 12,
                   fontWeight: 500,
-                  border: active ? `0.5px solid ${TEAL_DARK}` : `0.5px solid ${TAB_BORDER}`,
-                  background: active ? TEAL : '#fff',
-                  color: active ? TEAL_TEXT : MUTED,
+                  border: active ? '1px solid #222222' : `1px solid ${TAB_BORDER}`,
+                  background: active ? '#222222' : '#fff',
+                  color: active ? '#fff' : MUTED,
                   cursor: 'pointer',
                 }}
               >

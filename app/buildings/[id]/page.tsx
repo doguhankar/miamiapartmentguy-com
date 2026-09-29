@@ -306,6 +306,15 @@ export default function BuildingDetailPage() {
   const SUCCESS_BG = '#E8F8EE'
   const CYAN = '#E0F7FA'
   const CYAN_DARK = '#0097A7'
+  const AB_TEXT = '#222222'
+  const AB_MUTED = '#6A6A6A'
+  const AB_BORDER = '#DDDDDD'
+  const AB_HAIRLINE = '#EBEBEB'
+  const AB_PANEL_BORDER = '#B0B0B0'
+  const TEAL = '#0B7F7A'
+  const TEAL_LIGHT = '#E6F6F5'
+  const BADGE_BG = '#FFE3EE'
+  const BADGE_TEXT = '#A80F47'
 
   // ── Shared content blocks (reused by both mobile and desktop layouts) ──────
   const unitsSection = (
@@ -542,60 +551,77 @@ export default function BuildingDetailPage() {
       </div>
       </div>
 
-      {/* ── DESKTOP SHELL (new layout, >=769px) ── */}
-      <div className="detail-desktop-shell">
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ position: 'relative', padding: '16px 24px' }}>
-            <button
-              onClick={handleBack}
-              style={{ position: 'absolute', top: 28, left: 36, zIndex: 10, display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: 'none', borderRadius: 999, padding: '8px 16px', fontSize: 13, fontWeight: 500, color: TEXT, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
-            >
-              <IconBack /> Back to map
-            </button>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, height: 360 }}>
-              <div style={{ position: 'relative', height: '100%', borderRadius: 10, overflow: 'hidden', background: '#E5E7EB' }}>
-                <BuildingImageGallery images={allImages} buildingName={building.name} height={360} currentIndex={imgIdx} onCurrentIndexChange={setImgIdx} />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: 8, height: '100%' }}>
-                {Array.from({ length: 6 }).map((_, i) => {
-                  const photo = allImages[i + 1]
-                  return (
-                    <div key={i} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', background: '#D1D1D1' }}>
-                      {photo && <Image src={photo} alt={`${building.name} photo ${i + 2}`} fill style={{ objectFit: 'cover' }} />}
-                    </div>
-                  )
-                })}
-              </div>
+      {/* ── DESKTOP SHELL (Airbnb-style layout, >=769px) ── */}
+      <div className="detail-desktop-shell" style={{ padding: '0 80px', color: AB_TEXT }}>
+        <div style={{ width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', padding: '26px 0 14px' }}>
+            <h1 style={{ margin: 0, fontFamily: 'var(--font-archivo)', fontSize: 28, fontWeight: 800, lineHeight: 1.2, letterSpacing: '-0.02em' }}>{building.name}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+              <button type="button" onClick={() => navigator.share?.({ title: building.name, url: window.location.href })} style={{ height: 40, display: 'inline-flex', alignItems: 'center', gap: 8, padding: 0, border: 0, background: 'transparent', color: AB_TEXT, fontSize: 14, fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}><IconShare /> Share</button>
+              <button type="button" aria-label="Save building" style={{ height: 40, display: 'inline-flex', alignItems: 'center', gap: 8, padding: 0, border: 0, background: 'transparent', color: AB_TEXT, fontSize: 14, fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}><IconHeart filled={saved} /> {saved ? 'Saved' : 'Save'}</button>
             </div>
           </div>
 
-          <div style={{ padding: '12px 24px' }}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: MUTED, marginBottom: 5 }}>{building.neighborhood}</div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}><h1 style={{ fontFamily: 'var(--font-archivo)', fontSize: 26, fontWeight: 800, lineHeight: 1.2, color: TEXT, margin: 0 }}>{building.name}</h1><CommissionPill buildingName={building.name} /></div>
-                  <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: '#0B7F7A', marginTop: 4, textDecoration: 'none' }}><IconPin /> {building.address || building.neighborhood}</a>
-                  {building.tagline && <div style={{ fontSize: 14, color: '#4B5563', fontStyle: 'italic', lineHeight: 1.5, marginTop: 8, maxWidth: 560 }}>{building.tagline}</div>}
-                  <div style={{ display: 'flex', gap: 10, marginTop: 9, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 24, fontWeight: 800, color: TEXT }}>{fmt(realMin)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo starting</span></div>
-                    {building.concession && <span style={{ display: 'inline-flex', alignItems: 'center', background: '#FFE3EE', color: '#A80F47', borderRadius: 999, padding: '7px 14px', fontSize: 12, fontWeight: 700 }}>{building.concession}</span>}
-                  </div>
-                  {building.holdDays && <div style={{ fontSize: 12, color: MUTED, fontWeight: 600, marginTop: 10 }}>Hold Period: {building.holdDays} days</div>}
-                  <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-                    <button onClick={() => setShowLeasingForm(true)} style={{ border: 'none', borderRadius: 999, padding: '12px 26px', background: '#19C6C0', color: '#04342C', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Connect with Leasing</button>
-                    <a href={`sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`} style={{ border: 'none', borderRadius: 999, padding: '9px 20px', background: '#FF4D8D', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Text Don</a>
-                  </div>
+          <div style={{ position: 'relative', width: '100%', height: 600, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: 8 }}>
+            {Array.from({ length: 5 }).map((_, index) => {
+              const photo = allImages[index]
+              const tileStyle = index === 0 ? { gridColumn: '1 / 3', gridRow: '1 / 3', borderRadius: '12px 0 0 12px' } : index === 1 ? { gridColumn: 3, gridRow: 1, borderRadius: 0 } : index === 2 ? { gridColumn: 4, gridRow: 1, borderRadius: '0 12px 0 0' } : index === 3 ? { gridColumn: 3, gridRow: 2, borderRadius: 0 } : { gridColumn: 4, gridRow: 2, borderRadius: '0 0 12px 0' }
+              return <div key={index} style={{ position: 'relative', overflow: 'hidden', background: '#E8ECF2', ...tileStyle }}>{photo && <Image src={photo} alt={`${building.name} photo ${index + 1}`} fill sizes="25vw" style={{ objectFit: 'cover' }} />}</div>
+            })}
+            <button type="button" onClick={() => document.querySelector<HTMLButtonElement>(`button[aria-label="Open ${building.name} photo gallery"]`)?.click()} style={{ position: 'absolute', right: 24, bottom: 24, height: 40, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0 14px', border: '1px solid #222222', borderRadius: 8, background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}><span aria-hidden="true">▦</span> Show all photos</button>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 72, paddingTop: 44 }}>
+            <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+              <section style={{ paddingBottom: 24, borderBottom: `1px solid ${AB_HAIRLINE}` }}>
+                <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 22, fontWeight: 700 }}>Apartment building in {building.neighborhood}, Miami</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: 15 }}>
+                  {building.management && <><span>Managed by <span style={{ textDecoration: 'underline' }}>{building.management}</span></span><span style={{ color: AB_MUTED }}>·</span></>}
+                  <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ color: TEAL, textDecoration: 'underline' }}>{building.address || building.neighborhood}</a>
                 </div>
-              </div>
+                {building.tagline && <div style={{ marginTop: 14, maxWidth: 680, color: AB_MUTED, fontSize: 16, fontStyle: 'italic', lineHeight: 1.6 }}>“{building.tagline}”</div>}
+              </section>
+
+              <section style={{ display: 'flex', flexDirection: 'column', gap: 20, padding: '26px 0', borderBottom: `1px solid ${AB_HAIRLINE}` }}>
+                {building.concession && <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18 }}><span style={{ flexShrink: 0, marginTop: 2, fontSize: 24, color: TEAL }}>✦</span><div><div style={{ fontSize: 16, fontWeight: 600 }}>{building.concession}</div><div style={{ color: AB_MUTED, fontSize: 15, lineHeight: 1.5 }}>Concession applies to 12-month leases signed this month. Ask Don which lines qualify.</div></div></div>}
+                {building.holdDays?.length > 0 && <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18 }}><span style={{ flexShrink: 0, marginTop: 2, fontSize: 24, color: TEAL }}>◷</span><div><div style={{ fontSize: 16, fontWeight: 600 }}>{formatHoldPeriod(building.holdDays)} hold period</div><div style={{ color: AB_MUTED, fontSize: 15, lineHeight: 1.5 }}>Pricing and availability are held from application.</div></div></div>}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18 }}><span style={{ flexShrink: 0, marginTop: 2, fontSize: 24, color: TEAL }}>✓</span><div><div style={{ fontSize: 16, fontWeight: 600 }}>Guarantor accepted</div><div style={{ color: AB_MUTED, fontSize: 15, lineHeight: 1.5 }}>Third-party guarantors and co-signers approved — helpful for students and new-to-market renters.</div></div></div>
+              </section>
+
+              <section style={{ padding: '30px 0', borderBottom: `1px solid ${AB_HAIRLINE}` }}>
+                <h2 style={{ margin: 0, fontFamily: 'var(--font-archivo)', fontSize: 22, fontWeight: 700 }}>Available units</h2>
+                <div style={{ margin: '7px 0 20px', color: AB_MUTED, fontSize: 15 }}>Explore current floor plans, pricing, and availability.</div>
+                <AvailableUnitsRedesign buildingId={buildingId} />
+              </section>
+
+              <section style={{ padding: '30px 0', borderBottom: `1px solid ${AB_HAIRLINE}` }}>
+                <h2 style={{ margin: 0, fontFamily: 'var(--font-archivo)', fontSize: 22, fontWeight: 700 }}>Building fees</h2>
+                <div style={{ marginTop: 7, color: AB_MUTED, fontSize: 15 }}>What to budget for at move-in and each month</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 40, marginTop: 22 }}>
+                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>DUE AT MOVE-IN</div>{(building.moveInFees ?? []).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total initial</span><span>{fmt(totalMoveIn)}</span></div></div>
+                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>RECURRING MONTHLY</div>{(building.monthlyCharges ?? []).filter(fee => !/(pet fee|parking)/i.test(fee.type)).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total monthly</span><span>{fmt(totalMonthly)}/mo</span></div></div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 22, padding: '16px 22px', borderRadius: 12, background: 'linear-gradient(90deg,#0B7F7A,#0E9A93)', color: '#fff', fontSize: 16, fontWeight: 700 }}><span>True monthly cost — starting</span><strong style={{ fontSize: 18 }}>{fmt(building.priceMin + totalMonthly)}/mo</strong></div>
+                {(building.moveInFees ?? []).some(fee => fee.type.toLowerCase().includes('deposit')) && <div style={{ marginTop: 12, color: AB_MUTED, fontSize: 14, fontStyle: 'italic' }}>Deposits are due on move-in or application, not upfront.</div>}
+              </section>
+
+              {building.amenities.length > 0 && <section style={{ padding: '30px 0 0' }}><h2 style={{ margin: '0 0 20px', fontFamily: 'var(--font-archivo)', fontSize: 22, fontWeight: 700 }}>What this building offers</h2><div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', columnGap: 40, rowGap: 16 }}>{building.amenities.slice(0, 8).map((amenity, index) => <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 16 }}><span style={{ flexShrink: 0, width: 22, color: TEAL, fontSize: 22 }}>✓</span>{amenity}</div>)}</div>{building.amenities.length > 8 && <details style={{ marginTop: 20 }}><summary style={{ height: 48, display: 'inline-flex', alignItems: 'center', padding: '0 18px', border: '1px solid #222222', borderRadius: 8, background: '#fff', fontSize: 16, fontWeight: 600, cursor: 'pointer', listStyle: 'none' }}>Show all amenities</summary><div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', columnGap: 40, rowGap: 16, marginTop: 16 }}>{building.amenities.slice(8).map((amenity, index) => <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 16 }}><span style={{ flexShrink: 0, width: 22, color: TEAL, fontSize: 22 }}>✓</span>{amenity}</div>)}</div></details>}</section>}
             </div>
+
+            <aside style={{ flex: '0 0 372px', position: 'sticky', top: 24, padding: 24, border: `1px solid ${AB_BORDER}`, borderRadius: 12, boxShadow: '0 6px 16px rgba(0,0,0,0.12)', background: '#fff' }}>
+              <div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 24, fontWeight: 800 }}>{fmt(realMin)}</strong> <span style={{ color: AB_MUTED, fontSize: 16 }}>/mo starting</span></div>
+              {building.concession && <div style={{ display: 'inline-flex', marginTop: 12, padding: '7px 13px', borderRadius: 999, background: BADGE_BG, color: BADGE_TEXT, fontSize: 13, fontWeight: 700 }}>{building.concession}</div>}
+              <div style={{ marginTop: 18, border: `1px solid ${AB_PANEL_BORDER}`, borderRadius: 10, overflow: 'hidden' }}><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}><div style={{ padding: 14 }}><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.06em' }}>HOLD PERIOD</div><div style={{ marginTop: 5, fontSize: 14 }}>{formatHoldPeriod(building.holdDays)}</div></div><div style={{ padding: 14, borderLeft: `1px solid ${AB_PANEL_BORDER}` }}><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.06em' }}>MOVE-IN</div><div style={{ marginTop: 5, color: AB_MUTED, fontSize: 14 }}>Add date</div></div></div><div style={{ display: 'flex', justifyContent: 'space-between', padding: 14, borderTop: `1px solid ${AB_PANEL_BORDER}`, fontSize: 14 }}><span><span style={{ display: 'block', fontSize: 10, fontWeight: 800, letterSpacing: '0.06em' }}>FLOOR PLAN</span><span style={{ display: 'block', marginTop: 5 }}>Any · Studio–3BR</span></span><span>⌄</span></div></div>
+              <a href={`sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: 52, marginTop: 16, borderRadius: 10, background: 'linear-gradient(90deg,#E61E4D,#D70466)', color: '#fff', fontSize: 16, fontWeight: 700, textDecoration: 'none' }}>Text Don</a>
+              <button type="button" onClick={() => setShowLeasingForm(true)} style={{ width: '100%', height: 52, marginTop: 10, border: `1px solid ${TEAL}`, borderRadius: 10, background: '#fff', color: TEAL, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>Connect with leasing</button>
+              <div style={{ marginTop: 14, textAlign: 'center', color: AB_MUTED, fontSize: 14 }}>You won&apos;t be charged — no credit impact</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 22, paddingBottom: 22, borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 15 }}><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ textDecoration: 'underline' }}>Income requirement</span><span>3× rent</span></div><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ textDecoration: 'underline' }}>Credit score</span><span>650+</span></div><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ textDecoration: 'underline' }}>Guarantor</span><span>Accepted</span></div></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 18, fontSize: 16, fontWeight: 700 }}><span>Monthly fees</span><span>{fmt(totalMonthly)}/mo</span></div>
+              <div style={{ marginTop: 16, textAlign: 'center', color: AB_MUTED, fontSize: 14 }}>◈ &nbsp;Pre-qualify before you tour</div>
+            </aside>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, padding: '12px 24px 24px' }}>
-            <div>{unitsSection}</div>
-            <div>{feesSection}</div>
-            <SimilarBuildings buildingId={buildingId} variant="carousel" />
-          </div>
+          <div style={{ marginTop: 40, paddingTop: 30, borderTop: `1px solid ${AB_HAIRLINE}`, paddingBottom: 40 }}><SimilarBuildings buildingId={buildingId} variant="carousel" /></div>
         </div>
       </div>
 
