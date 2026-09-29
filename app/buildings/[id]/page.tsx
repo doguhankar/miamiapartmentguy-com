@@ -12,6 +12,8 @@ import { AvailableUnitsRedesign } from '@/components/available-units-redesign'
 import { SimilarBuildings } from '@/components/similar-buildings'
 import { CommissionPill } from '@/components/commission-pill'
 import { SaveBuildingButton } from '@/components/save-building-button'
+import { useAgentMode } from '@/components/agent-mode-provider'
+import { useSaveList } from '@/components/save-list-provider'
 import { BuildingImageGallery } from '@/components/building-image-gallery'
 import { readBuildingOrigin, readMapQuery } from '@/lib/map-return'
 
@@ -85,7 +87,7 @@ const IconBack = () => (
   </svg>
 )
 const IconHeart = ({ filled }: { filled: boolean }) => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? '#FF3D82' : 'none'} stroke={filled ? '#FF3D82' : 'currentColor'} strokeWidth="2" strokeLinecap="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? '#E61E4D' : 'none'} stroke={filled ? '#E61E4D' : 'currentColor'} strokeWidth="2" strokeLinecap="round">
     <path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 000-7.6z" />
   </svg>
 )
@@ -171,6 +173,8 @@ export default function BuildingDetailPage() {
   const params = useParams()
   const router = useRouter()
   const buildingId = params.id as string
+  const { hasAccess } = useAgentMode()
+  const { savedIds, toggleSave } = useSaveList()
 
   // Return to the map the user came from. If this building was opened from
   // within the app in this tab, step back so the map viewport and list scroll
@@ -191,7 +195,6 @@ export default function BuildingDetailPage() {
 
   const allImages = supabaseImages.length > 0 ? supabaseImages : (building?.images ?? [])
   const [imgIdx, setImgIdx] = useState(0)
-  const [saved, setSaved] = useState(false)
 
   const [liveUnits, setLiveUnits] = useState<LiveUnit[]>([])
   const [showAllUnits, setShowAllUnits] = useState(false)
@@ -558,7 +561,20 @@ export default function BuildingDetailPage() {
             <h1 style={{ margin: 0, fontFamily: 'var(--font-archivo)', fontSize: 28, fontWeight: 800, lineHeight: 1.2, letterSpacing: '-0.02em' }}>{building.name}</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
               <button type="button" onClick={() => navigator.share?.({ title: building.name, url: window.location.href })} style={{ height: 40, display: 'inline-flex', alignItems: 'center', gap: 8, padding: 0, border: 0, background: 'transparent', color: AB_TEXT, fontSize: 14, fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}><IconShare /> Share</button>
-              <button type="button" aria-label="Save building" style={{ height: 40, display: 'inline-flex', alignItems: 'center', gap: 8, padding: 0, border: 0, background: 'transparent', color: AB_TEXT, fontSize: 14, fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}><IconHeart filled={saved} /> {saved ? 'Saved' : 'Save'}</button>
+              {hasAccess && (() => {
+                const isSaved = savedIds.includes(String(building.id))
+                return (
+                  <button
+                    type="button"
+                    aria-pressed={isSaved}
+                    aria-label={`${isSaved ? 'Remove' : 'Save'} ${building.name}`}
+                    onClick={() => toggleSave(String(building.id))}
+                    style={{ height: 40, display: 'inline-flex', alignItems: 'center', gap: 8, padding: 0, border: 0, background: 'transparent', color: AB_TEXT, fontSize: 14, fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}
+                  >
+                    <IconHeart filled={isSaved} /> {isSaved ? 'Saved' : 'Save'}
+                  </button>
+                )
+              })()}
             </div>
           </div>
 
