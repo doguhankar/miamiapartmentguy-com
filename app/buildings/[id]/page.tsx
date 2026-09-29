@@ -297,7 +297,7 @@ export default function BuildingDetailPage() {
     ? Math.min(...liveUnits.map((u) => u.price).filter((value): value is number => Boolean(value)))
     : building.priceMin
 
-  // ── Styling tokens ──────────────────────────────���───────────────────────────
+  // ── Styling tokens ──────────────────────────────���────────���──────────────────
   const NAVY = '#0B1220'
   const PINK = '#FF3D82'
   const GOLD = '#FFC24B'
@@ -555,7 +555,7 @@ export default function BuildingDetailPage() {
       </div>
 
       {/* ── DESKTOP SHELL (Airbnb-style layout, >=769px) ── */}
-      <div className="detail-desktop-shell" style={{ padding: '0 80px', color: AB_TEXT }}>
+      <div className="detail-desktop-shell" style={{ minHeight: '100%', padding: '0 80px', background: '#FFFFFF', color: AB_TEXT }}>
         <div style={{ width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', padding: '26px 0 14px' }}>
             <h1 style={{ margin: 0, fontFamily: 'var(--font-archivo)', fontSize: 28, fontWeight: 800, lineHeight: 1.2, letterSpacing: '-0.02em' }}>{building.name}</h1>
@@ -621,7 +621,7 @@ export default function BuildingDetailPage() {
                 {(building.moveInFees ?? []).some(fee => fee.type.toLowerCase().includes('deposit')) && <div style={{ marginTop: 12, color: AB_MUTED, fontSize: 14, fontStyle: 'italic' }}>Deposits are due on move-in or application, not upfront.</div>}
               </section>
 
-              {building.amenities.length > 0 && <section style={{ padding: '30px 0 0' }}><h2 style={{ margin: '0 0 20px', fontFamily: 'var(--font-archivo)', fontSize: 22, fontWeight: 700 }}>What this building offers</h2><div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', columnGap: 40, rowGap: 16 }}>{building.amenities.slice(0, 8).map((amenity, index) => <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 16 }}><span style={{ flexShrink: 0, width: 22, color: TEAL, fontSize: 22 }}>✓</span>{amenity}</div>)}</div>{building.amenities.length > 8 && <details style={{ marginTop: 20 }}><summary style={{ height: 48, display: 'inline-flex', alignItems: 'center', padding: '0 18px', border: '1px solid #222222', borderRadius: 8, background: '#fff', fontSize: 16, fontWeight: 600, cursor: 'pointer', listStyle: 'none' }}>Show all amenities</summary><div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', columnGap: 40, rowGap: 16, marginTop: 16 }}>{building.amenities.slice(8).map((amenity, index) => <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 16 }}><span style={{ flexShrink: 0, width: 22, color: TEAL, fontSize: 22 }}>✓</span>{amenity}</div>)}</div></details>}</section>}
+
             </div>
 
             <aside style={{ flex: '0 0 372px', position: 'sticky', top: 24, padding: 24, border: `1px solid ${AB_BORDER}`, borderRadius: 12, boxShadow: '0 6px 16px rgba(0,0,0,0.12)', background: '#fff' }}>

@@ -176,7 +176,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
           filteredGroups.map((group) => {
             const prices = group.units.map((u) => u.price).filter((v): v is number => typeof v === 'number')
             return (
-              <div key={group.code} style={{ background: '#f2f0ea', border: `1px solid ${CARD_BORDER}`, borderRadius: 12, overflow: 'hidden', padding: '10px 12px' }}>
+              <div key={group.code} style={{ position: 'relative', background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 14, overflow: 'hidden' }}>
                 <div
                   role="button"
                   tabIndex={0}
@@ -188,31 +188,30 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
                     }
                   }}
                   aria-expanded={Boolean(expandedPlans[group.code])}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: 0, cursor: 'pointer', textAlign: 'left' }}
+                  style={{ width: '100%', cursor: 'pointer', textAlign: 'left' }}
                 >
-                  <button
-                    type="button"
-                    onClick={(event) => { event.stopPropagation(); setSelectedImage(group.floorPlanImage || '/placeholder.svg') }}
-                    aria-label={`View larger ${group.code} floor plan`}
-                    style={{ padding: 0, border: 0, background: 'transparent', cursor: 'zoom-in', flexShrink: 0 }}
-                  >
-                    <img
-                      src={group.floorPlanImage || '/placeholder.svg'}
-                      alt={`${group.bedType} floor plan`}
-                      onError={(event) => { event.currentTarget.src = '/placeholder.svg' }}
-                      style={{ width: 88, height: 88, display: 'block', flexShrink: 0, objectFit: 'cover', borderRadius: 8, border: `1px solid ${CARD_BORDER}`, background: '#ffffff' }}
-                    />
-                  </button>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: '#0A0F1C' }}>
-                      Plan {group.code}
-                    </div>
-                    <div style={{ fontSize: 11, color: '#6b6b68', margin: '2px 0 6px' }}>
-                      {group.sqft ? `${group.sqft.toLocaleString()} sqft · ` : ''}
-                      {group.units.length} available
-                    </div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: TEAL_DARK }}>
-                      {prices.length ? `${fmt(Math.min(...prices))}+` : 'Contact'}
+                  <div style={{ position: 'relative', width: '100%', height: 196, background: '#ffffff' }}>
+                    <button
+                      type="button"
+                      onClick={(event) => { event.stopPropagation(); setSelectedImage(group.floorPlanImage || '/placeholder.svg') }}
+                      aria-label={`View larger ${group.code} floor plan`}
+                      style={{ width: '100%', height: '100%', padding: 0, border: 0, background: 'transparent', cursor: 'zoom-in' }}
+                    >
+                      <img
+                        src={group.floorPlanImage || '/placeholder.svg'}
+                        alt={`${group.bedType} floor plan`}
+                        onError={(event) => { event.currentTarget.src = '/placeholder.svg' }}
+                        style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover' }}
+                      />
+                    </button>
+                    {(() => { const availability = formatAvail(group.units[0]?.availabilityDate); return <span style={{ position: 'absolute', top: 14, left: 14, padding: '5px 11px', borderRadius: 999, background: availability.now ? '#EAF5DC' : '#FFF2D6', color: availability.now ? AVAIL_NOW : AVAIL_LATER, fontSize: 12, fontWeight: 700 }}>{availability.label}</span> })()}
+                  </div>
+                  <div style={{ padding: '18px 20px 20px' }}>
+                    <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 18, fontWeight: 700, color: TEXT }}>Plan {group.code}</div>
+                    <div style={{ marginTop: 5, fontSize: 15, color: MUTED }}>{group.sqft ? `${group.sqft.toLocaleString()} sqft · ` : ''}{group.units.length} available</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 14 }}>
+                      <span style={{ fontFamily: 'var(--font-archivo)', fontSize: 22, fontWeight: 800, color: TEAL }}>{prices.length ? fmt(Math.min(...prices)) : 'Contact'}<span style={{ marginLeft: 4, fontFamily: 'inherit', fontSize: 15, fontWeight: 400, color: MUTED }}>{prices.length ? '/mo' : ''}</span></span>
+                      <span style={{ color: TEXT, fontSize: 14, fontWeight: 600, textDecoration: 'underline' }}>View units</span>
                     </div>
                   </div>
                 </div>
