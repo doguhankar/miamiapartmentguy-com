@@ -1614,7 +1614,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
           </div>
         </Link>
 
-        <div className="flex h-[52px] w-[480px] items-center gap-2.5 rounded-[26px] border border-[#DDE1E9] bg-white py-0 pl-[22px] pr-1.5 shadow-[0_2px_12px_rgba(10,15,28,0.08)]">
+        <div className="flex h-[52px] w-[480px] items-center gap-2.5 rounded-[26px] border border-[#DDE1E9] bg-white py-0 pl-[22px] pr-1.5 shadow-[0_2px_12px_rgba(10,15,28,0.08)] -mt-2">
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
