@@ -104,11 +104,6 @@ const IconCard = () => (
     <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
   </svg>
 )
-const IconStar = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 2l2.4 7.2H22l-6 4.6 2.3 7.2-6.3-4.6-6.3 4.6 2.3-7.2-6-4.6h7.6z" />
-  </svg>
-)
 const IconPin = () => (
   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
@@ -299,7 +294,7 @@ export default function BuildingDetailPage() {
     ? Math.min(...liveUnits.map((u) => u.price).filter((value): value is number => Boolean(value)))
     : building.priceMin
 
-  // ── Styling tokens ──────────────────────────────────────────────────────────
+  // ── Styling tokens ──────────────────────────────���───────────────────────────
   const NAVY = '#0B1220'
   const PINK = '#FF3D82'
   const GOLD = '#FFC24B'
@@ -314,7 +309,7 @@ export default function BuildingDetailPage() {
 
   // ── Shared content blocks (reused by both mobile and desktop layouts) ──────
   const unitsSection = (
-    <div style={{ border: '1.5px solid #1a1a1a', borderRadius: 20, background: '#ffffff', padding: 28 }}>
+    <div style={{ border: '1px solid #E8EBF0', borderRadius: 20, background: '#ffffff', padding: 28 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconHome /> Available Units</div>
       <AvailableUnitsRedesign buildingId={buildingId} />
     </div>
@@ -328,21 +323,25 @@ export default function BuildingDetailPage() {
         onClick={() => setFeesOpen((current) => !current)}
         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 7, margin: 0, padding: '16px 18px', fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT, border: 'none', background: '#ffffff', cursor: 'pointer', textAlign: 'left', outline: 'none', boxShadow: 'none' }}
       >
-        <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}><IconCard /> Building Fees</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ width: 36, height: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: 10, background: '#E6F6F5', color: '#0B7F7A' }}><IconCard /></span>
+          <span><span style={{ display: 'block' }}>Building Fees</span><span style={{ display: 'block', marginTop: 3, fontFamily: 'inherit', fontSize: 13, fontWeight: 400, color: '#9AA1AC' }}>What to budget for at move-in and each month</span></span>
+        </span>
         <i aria-hidden="true" className="fees-chevron" style={{ display: 'block', width: 8, height: 8, flexShrink: 0, borderRight: `2px solid ${MUTED}`, borderBottom: `2px solid ${MUTED}`, transition: 'transform 180ms ease', transform: feesOpen ? 'rotate(225deg)' : 'rotate(45deg)' }} />
       </button>
       {feesOpen && (
-        <div style={{ padding: '0 18px 2px', background: '#ffffff' }}>
-          <div style={{ borderTop: `1px solid ${BORDER}`, padding: '16px 0 0', marginBottom: 14, background: '#ffffff' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '0 18px 16px', background: '#ffffff' }}>
+          <div style={{ padding: '16px 18px', background: '#F8F9FB', border: '1px solid #E8EBF0', borderRadius: 14 }}>
             <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Due at move-in</div>
             {(building.moveInFees ?? []).map((f, i, arr) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12, borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : 'none' }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0 0', marginTop: 6, fontWeight: 800, fontSize: 13, borderTop: `2px solid ${BORDER}` }}><span>Total Initial</span><span>{fmt(totalMoveIn)}</span></div>
-            <div style={{ height: 16 }} />
+          </div>
+          <div style={{ padding: '16px 18px', background: '#F8F9FB', border: '1px solid #E8EBF0', borderRadius: 14 }}>
             <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Recurring monthly</div>
             {(building.monthlyCharges ?? []).filter(f => !/(pet fee|parking)/i.test(f.type)).map((f, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12 }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 12px', marginTop: 8, fontWeight: 800, fontSize: 13, borderRadius: 8, background: '#19C6C0', color: '#04342C' }}><span>Total Monthly Fees</span><span>{fmt(totalMonthly)}/mo</span></div>
           </div>
-          {(building.moveInFees ?? []).some(f => f.type.toLowerCase().includes('deposit')) && <div style={{ fontSize: 10, color: MUTED, margin: '-5px 2px 14px' }}>Deposits are due on move-in or application, not upfront.</div>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', boxSizing: 'border-box', padding: '16px 22px', borderRadius: 999, background: '#0B7F7A', color: '#fff', fontWeight: 700, fontSize: 13 }}><span>Total Monthly Fees</span><span>{fmt(totalMonthly)}/mo</span></div>
+          {(building.moveInFees ?? []).some(f => f.type.toLowerCase().includes('deposit')) && <div style={{ margin: 0, textAlign: 'center', fontSize: 12, color: '#9AA1AC', fontStyle: 'italic' }}>Deposits are due on move-in or application, not upfront.</div>}
         </div>
       )}
     </div>
@@ -506,7 +505,7 @@ export default function BuildingDetailPage() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}><span style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Starting at</span><div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 22, color: TEXT }}>{fmt(building.priceMin)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo</span></div></div>
             {building.tagline && <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, marginTop: 8 }}>{building.tagline}</div>}
             <div style={{ display: 'flex', gap: 7, marginTop: 9, flexWrap: 'wrap', alignItems: 'center' }}>
-              {building.concession && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#FFF6E5', color: '#92660B', borderRadius: 999, padding: '5px 11px', fontSize: 11, fontWeight: 600 }}><IconStar /> {building.concession}</span>}
+              {building.concession && <span style={{ display: 'inline-flex', alignItems: 'center', background: '#FFE3EE', color: '#A80F47', borderRadius: 999, padding: '7px 14px', fontSize: 12, fontWeight: 700 }}>{building.concession}</span>}
               {building.holdDays?.length > 0 && <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>Hold Period: {formatHoldPeriod(building.holdDays)}</span>}
             </div>
           </div>
@@ -568,44 +567,24 @@ export default function BuildingDetailPage() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 32, padding: '12px 24px', alignItems: 'center' }}>
+          <div style={{ padding: '12px 24px' }}>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: MUTED, marginBottom: 5 }}>{building.neighborhood}</div>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}><h1 style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.2, color: TEXT, margin: 0 }}>{building.name}</h1><CommissionPill buildingName={building.name} /></div>
-                  <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: '#185FA5', marginTop: 4, textDecoration: 'none' }}><IconPin /> {building.address || building.neighborhood}</a>
-                  {building.tagline && <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, marginTop: 8, maxWidth: 560 }}>{building.tagline}</div>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}><h1 style={{ fontFamily: 'var(--font-archivo)', fontSize: 26, fontWeight: 800, lineHeight: 1.2, color: TEXT, margin: 0 }}>{building.name}</h1><CommissionPill buildingName={building.name} /></div>
+                  <a href={`https://maps.apple.com/?address=${encodeURIComponent(building.address || building.neighborhood)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, color: '#0B7F7A', marginTop: 4, textDecoration: 'none' }}><IconPin /> {building.address || building.neighborhood}</a>
+                  {building.tagline && <div style={{ fontSize: 14, color: '#4B5563', fontStyle: 'italic', lineHeight: 1.5, marginTop: 8, maxWidth: 560 }}>{building.tagline}</div>}
                   <div style={{ display: 'flex', gap: 10, marginTop: 9, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 24, fontWeight: 600, color: TEXT }}>{fmt(realMin)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo starting</span></div>
-                    {building.concession && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#FFF6E5', color: '#92660B', borderRadius: 999, padding: '5px 11px', fontSize: 11, fontWeight: 600 }}><IconStar /> {building.concession}</span>}
+                    <div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 24, fontWeight: 800, color: TEXT }}>{fmt(realMin)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo starting</span></div>
+                    {building.concession && <span style={{ display: 'inline-flex', alignItems: 'center', background: '#FFE3EE', color: '#A80F47', borderRadius: 999, padding: '7px 14px', fontSize: 12, fontWeight: 700 }}>{building.concession}</span>}
                   </div>
-                  {building.holdDays && <div style={{ fontSize: 11, color: MUTED, fontWeight: 600, marginTop: 10 }}>Hold Period: {building.holdDays} days</div>}
+                  {building.holdDays && <div style={{ fontSize: 12, color: MUTED, fontWeight: 600, marginTop: 10 }}>Hold Period: {building.holdDays} days</div>}
                   <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-                    <button onClick={() => setShowLeasingForm(true)} style={{ border: 'none', borderRadius: 999, padding: '9px 20px', background: '#19C6C0', color: '#04342C', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Connect with Leasing</button>
+                    <button onClick={() => setShowLeasingForm(true)} style={{ border: 'none', borderRadius: 999, padding: '12px 26px', background: '#19C6C0', color: '#04342C', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Connect with Leasing</button>
                     <a href={`sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`} style={{ border: 'none', borderRadius: 999, padding: '9px 20px', background: '#FF4D8D', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Text Don</a>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ background: '#fff', border: `0.5px solid ${BORDER}`, borderRadius: 12, padding: 16, textAlign: 'center' }}>
-                <div style={{ fontSize: 12, color: MUTED, marginBottom: 8 }}>What&apos;s your income?</div>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={formatIncomeDisplay(income)}
-                  onChange={e => setIncome(e.target.value.replace(/[^\d]/g, ''))}
-                  placeholder="$0"
-                  style={{ width: '100%', boxSizing: 'border-box', fontSize: 20, fontWeight: 600, border: '1px dashed rgba(25, 198, 192, 0.55)', borderRadius: 8, background: '#F7F7F5', color: TEXT, outline: 'none', boxShadow: '0 0 0 2px rgba(25, 198, 192, 0.08)', textAlign: 'center', padding: '8px 10px' }}
-                />
-                <div style={{ fontSize: 11, color: MUTED, lineHeight: 1.3, marginTop: 8 }}>Add your monthly income, we&apos;ll tell you how much you can qualify for at this building.</div>
-              </div>
-              <div style={{ background: '#fff', border: `0.5px solid ${BORDER}`, borderRadius: 12, padding: 16, textAlign: 'center' }}>
-                <div style={{ fontSize: 12, color: MUTED, marginBottom: 8 }}>You qualify for</div>
-                <div style={{ fontSize: 20, fontWeight: 600, color: TEXT, marginBottom: 12 }}>Max Rent: {fmt(maxRent)}/mo</div>
-                <div style={{ fontSize: 11, color: MUTED, lineHeight: 1.3 }}>Subject to verification &amp; building approval.</div>
               </div>
             </div>
           </div>
