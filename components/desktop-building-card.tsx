@@ -1,10 +1,7 @@
 "use client"
 
 import { Building } from "@/lib/buildings"
-import { ImageCarousel } from "./image-carousel"
-import { SaveHeartButton } from "./save-heart-button"
 import { useMemo, useState } from "react"
-import { Star } from "lucide-react"
 import { CommissionPill } from "@/components/commission-pill"
 import { getPriceRange } from "@/lib/price-range"
 import {
@@ -82,17 +79,6 @@ function pickBestMatchingUnit(units: AvailableUnit[], mapFilters?: MapFilterStat
   })
 }
 
-const AMENITY_COLORS: Record<string, { bg: string; text: string }> = {
-  pool: { bg: "bg-blue-100", text: "text-blue-700" },
-  gym: { bg: "bg-green-100", text: "text-green-700" },
-  doorman: { bg: "bg-purple-100", text: "text-purple-700" },
-  lounge: { bg: "bg-pink-100", text: "text-pink-700" },
-  rooftop: { bg: "bg-orange-100", text: "text-orange-700" },
-  concierge: { bg: "bg-indigo-100", text: "text-indigo-700" },
-  parking: { bg: "bg-yellow-100", text: "text-yellow-700" },
-  furnished: { bg: "bg-teal-100", text: "text-teal-700" },
-}
-
 function extractAmenities(building: Building): string[] {
   if ("amenities" in building && Array.isArray(building.amenities)) {
     return building.amenities as string[]
@@ -121,31 +107,15 @@ export function DesktopBuildingCard({
   onViewDetails,
 }: DesktopBuildingCardProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const amenities = extractAmenities(building)
+  const cheapestOverall = useMemo(() => {
+    const numericPrices = units
+      .map((unit) => unit.price)
+      .filter((price): price is number => typeof price === "number")
+    return numericPrices.length > 0 ? Math.min(...numericPrices) : building.priceMin
+  }, [units, building.priceMin])
 
-  // Default Studio/1Bed/2Bed starting prices, derived from the same live
-  // pricing data the parent already fetched once for every building — no
-  // per-card fetch needed.
-  const { studioMin, oneBedMin, twoBedMin } = useMemo(() => {
-    let studio: number | null = null
-    let oneBed: number | null = null
-    let twoBed: number | null = null
-    for (const unit of units) {
-      if (typeof unit.price !== "number") continue
-      if (unit.beds === 0) studio = studio === null ? unit.price : Math.min(studio, unit.price)
-      else if (unit.beds === 1) oneBed = oneBed === null ? unit.price : Math.min(oneBed, unit.price)
-      else if (unit.beds === 2) twoBed = twoBed === null ? unit.price : Math.min(twoBed, unit.price)
-    }
-    return { studioMin: studio, oneBedMin: oneBed, twoBedMin: twoBed }
-  }, [units])
-  const studioPrice = studioMin ?? building.priceMin
-  const oneBedPrice = oneBedMin ?? building.priceMin
-  const twoBedPrice = twoBedMin ?? building.priceMin
-
-  // When a bedroom/bathroom/price/move-in filter is active, swap the static
-  // 3-price row for the single unit that actually matches — otherwise a
-  // filtered building can show a price/bed combo that isn't real for it.
   const bestMatch = useMemo(() => pickBestMatchingUnit(units, mapFilters), [units, mapFilters])
+  const displayedPrice = bestMatch?.price ?? cheapestOverall
   const cardImage = supabaseImages.find((url) => url.trim()) ?? building.images?.[0] ?? null
 
   const handleMouseEnter = () => {
@@ -159,49 +129,58 @@ export function DesktopBuildingCard({
   }
 
   return (
-    <div onClick={() => onClick?.(building)} style={{background:'white', border:'0.5px solid #e5e7eb', borderRadius:12, padding:14, marginBottom:12, cursor:'pointer'}}>
-      <div style={{display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:8}}>
-        <div>
-          <div style={{fontWeight:600, fontSize:15, color:'#111', marginBottom:2}}>{building.name} {isAgentMode && <CommissionPill buildingName={building.name} />}</div>
-          <div style={{fontSize:11, color:'#9aa5b8'}}>{building.address}</div>
+    <article onClick={() => onClick?.(building)} className="cursor-pointer">
+      <div
+        className={`relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#E8ECF2] ${isHighlighted ? "ring-2 ring-[#DB2777]" : ""}`}
+      >
+        {cardImage ? (
+          <img
+            src={cardImage}
+            alt={building.name}
+            onError={(event) => {
+              event.currentTarget.style.display = "none"
+            }}
+            className="block size-full object-cover"
+          />
+        ) : (
+          <span className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-[#64748B]">
+            No photo
+          </span>
+        )}
+        {building.concession && (
+          <span className="absolute left-3 top-3 max-w-[70%] truncate rounded-full bg-[#FFE3EE] px-3 py-1.5 text-xs font-bold text-[#A80F47]">
+            {building.concession}
+          </span>
+        )}
+        {isAgentMode && (
+          <button
+            type="button"
+            aria-label={isStarred ? `Remove ${building.name} from saved buildings` : `Save ${building.name}`}
+            aria-pressed={isStarred}
+            onClick={(event) => {
+              event.stopPropagation()
+              onStar?.(building)
+            }}
+            className={`absolute right-3 top-3 flex size-11 items-center justify-center rounded-full border transition-colors ${
+              isStarred ? "border-[#DB2777] bg-[#DB2777]" : "border-white/80 bg-black/25"
+            }`}
+          >
+            <svg viewBox="0 0 24 24" width="24" height="24" fill={isStarred ? "white" : "none"} stroke={isStarred ? "white" : "#F8FAFC"} strokeWidth="1.8" aria-hidden="true">
+              <path d="M12 21C12 21 3 14.5 3 8.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 9 2.5C21 14.5 12 21 12 21z" />
+            </svg>
+          </button>
+        )}
+      </div>
+      <div className="flex flex-col gap-0.5 px-0.5 pt-3">
+        <div className="text-base font-semibold leading-snug text-[#0A0F1C]">
+          {building.name} {isAgentMode && <CommissionPill buildingName={building.name} />}
+        </div>
+        <div className="text-sm text-[#6B7280]">{building.neighborhood}</div>
+        <div className="mt-0.5 text-[15px] font-semibold text-[#0A0F1C]">
+          From ${displayedPrice.toLocaleString("en-US")}
+          <span className="font-normal text-[#6B7280]">/mo</span>
         </div>
       </div>
-      <div style={{display:'flex', gap:12}}>
-        <div style={{position:'relative', width:150, height:115, flexShrink:0, borderRadius:8, overflow:'hidden', background:'#E8ECF2', display:'flex', alignItems:'center', justifyContent:'center'}}>
-          {cardImage ? (
-            <img
-              src={cardImage}
-              alt={building.name}
-              onError={(event) => {
-                event.currentTarget.style.display = 'none'
-              }}
-              style={{width:'100%', height:'100%', objectFit:'cover', display:'block'}}
-            />
-          ) : (
-            <span style={{fontSize:10, color:'#64748B', fontWeight:600}}>No photo</span>
-          )}
-          <div style={{position:'absolute', bottom:0, left:0, right:0, background:'rgba(0,0,0,0.55)', padding:'4px 8px', fontSize:9, color:'#fff'}}>Videos • Virtual tours</div>
-        </div>
-        <div style={{flex:1, display:'flex', flexDirection:'column', justifyContent:'space-between'}}>
-          <div>
-            {bestMatch ? (
-              <div style={{marginBottom:6}}>
-                <div style={{fontSize:13, fontWeight:600, color:'#19C6C0'}}>
-                  Unit {bestMatch.floorPlanType ?? '—'} · ${bestMatch.price?.toLocaleString()} · {formatAvailability(bestMatch.availableDate ?? bestMatch.available_date)}
-                </div>
-              </div>
-            ) : (
-              <div style={{display:'flex', marginBottom:6}}>
-                <div style={{paddingRight:12, marginRight:12, borderRight:'0.5px solid #e5e7eb'}}><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{studioPrice}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>Studio</div></div>
-                <div style={{paddingRight:12, marginRight:12, borderRight:'0.5px solid #e5e7eb'}}><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{oneBedPrice}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>1 Bed</div></div>
-                <div><div style={{fontSize:13, fontWeight:500, color:'#19C6C0'}}>{twoBedPrice}+</div><div style={{fontSize:10, color:'#9aa5b8'}}>2 Beds</div></div>
-              </div>
-            )}
-            <span style={{background:'#fef3cd', color:'#92660a', fontSize:10, fontWeight:500, padding:'2px 7px', borderRadius:5, marginBottom:6, display:'inline-block'}}>SPECIALS</span>
-            <div style={{fontSize:11, color:'#6b7280', lineHeight:1.4, marginBottom:8}}>{building.amenities.join(', ')}</div>
-          </div>
-        </div>
-      </div>
-    </div>
+    </article>
   )
 }

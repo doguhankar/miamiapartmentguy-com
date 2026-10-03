@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ChevronDown, X } from 'lucide-react'
+import { ChevronDown, X, Heart } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useAgentList } from '@/components/agent-list-provider'
 
 // `floor_plan_code` now exists on public.units (added via migration) and is
 // backfilled for Flow Brickell with placeholder codes: real Studio mapping
@@ -16,6 +17,10 @@ interface FloorPlanUnit {
   sqft?: number
   availabilityDate?: string | null
   floorPlanImage?: string | null
+  beds?: number | null
+  baths?: number | null
+  buildingName?: string | null
+  unitType?: string | null
 }
 
 interface FloorPlanGroup {
@@ -27,14 +32,14 @@ interface FloorPlanGroup {
 }
 
 const TABS = ['Studio', '1BR', '2BR', '3BR']
-const TEAL = '#19C6C0'
-const TEAL_DARK = '#0F6E56'
+const TEAL = '#0B7F7A'
+const TEAL_DARK = '#0E9A93'
 const TEAL_TEXT = '#04342C'
-const CARD_BG = '#F9F8F6'
-const CARD_BORDER = '#D3D1C7'
-const TAB_BORDER = '#B4B2A9'
-const MUTED = '#888780'
-const TEXT = '#3D3D3A'
+const CARD_BG = '#FFFFFF'
+const CARD_BORDER = '#DDDDDD'
+const TAB_BORDER = '#DDDDDD'
+const MUTED = '#6A6A6A'
+const TEXT = '#222222'
 const AVAIL_NOW = '#639922'
 const AVAIL_LATER = '#92660B'
 
@@ -57,6 +62,7 @@ function bedTypeLabel(beds: number | null | undefined): string {
 }
 
 export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
+  const { showHearts, toggle, has } = useAgentList()
   const [groups, setGroups] = useState<FloorPlanGroup[]>([])
   const [loading, setLoading] = useState(FLOOR_PLAN_CODE_ENABLED)
   const [activeTab, setActiveTab] = useState<string>('')
@@ -77,21 +83,27 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
       const supabase = createClient()
       const { data } = await supabase
         .from('units')
-        .select('unitnumber, price, beds, sqft, availabilitydate, floor_plan_code, floor_plan_image')
+        .select('unitnumber, price, beds, baths, sqft, availabilitydate, floor_plan_code, plan_name, floor_plan_image, buildingname, unittype')
         .eq('building_id', buildingId)
-        .not('floor_plan_code', 'is', null)
 
       if (cancelled) return
 
       const byCode = new Map<string, FloorPlanGroup>()
       ;(data ?? []).forEach((row: any) => {
-        const code = row.floor_plan_code as string
+        // Some units are missing floor_plan_code entirely. Rather than hide
+        // real available inventory, fall back to plan_name, then unittype,
+        // then a generic bed-count label so every priced unit still surfaces.
+        const code: string = row.floor_plan_code || row.plan_name || row.unittype || bedTypeLabel(row.beds)
         const unit: FloorPlanUnit = {
           unitNumber: row.unitnumber ?? undefined,
           price: typeof row.price === 'number' ? row.price : undefined,
           sqft: typeof row.sqft === 'number' ? row.sqft : undefined,
           availabilityDate: row.availabilitydate ?? null,
           floorPlanImage: row.floor_plan_image ?? null,
+          beds: typeof row.beds === 'number' ? row.beds : null,
+          baths: typeof row.baths === 'number' ? row.baths : null,
+          buildingName: row.buildingname ?? null,
+          unitType: row.unittype ?? null,
         }
         const existing = byCode.get(code)
         if (existing) {
@@ -142,9 +154,9 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
                   borderRadius: 20,
                   fontSize: 12,
                   fontWeight: 500,
-                  border: active ? `0.5px solid ${TEAL_DARK}` : `0.5px solid ${TAB_BORDER}`,
-                  background: active ? TEAL : '#fff',
-                  color: active ? TEAL_TEXT : MUTED,
+                  border: active ? '1px solid #222222' : `1px solid ${TAB_BORDER}`,
+                  background: active ? '#222222' : '#fff',
+                  color: active ? '#fff' : MUTED,
                   cursor: 'pointer',
                 }}
               >
@@ -164,7 +176,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
           filteredGroups.map((group) => {
             const prices = group.units.map((u) => u.price).filter((v): v is number => typeof v === 'number')
             return (
-              <div key={group.code} style={{ background: '#f2f0ea', border: `1px solid ${CARD_BORDER}`, borderRadius: 12, overflow: 'hidden', padding: '10px 12px' }}>
+              <div key={group.code} style={{ position: 'relative', background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 14, overflow: 'hidden' }}>
                 <div
                   role="button"
                   tabIndex={0}
@@ -176,31 +188,30 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
                     }
                   }}
                   aria-expanded={Boolean(expandedPlans[group.code])}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: 0, cursor: 'pointer', textAlign: 'left' }}
+                  style={{ width: '100%', cursor: 'pointer', textAlign: 'left' }}
                 >
-                  <button
-                    type="button"
-                    onClick={(event) => { event.stopPropagation(); setSelectedImage(group.floorPlanImage || '/placeholder.svg') }}
-                    aria-label={`View larger ${group.code} floor plan`}
-                    style={{ padding: 0, border: 0, background: 'transparent', cursor: 'zoom-in', flexShrink: 0 }}
-                  >
-                    <img
-                      src={group.floorPlanImage || '/placeholder.svg'}
-                      alt={`${group.bedType} floor plan`}
-                      onError={(event) => { event.currentTarget.src = '/placeholder.svg' }}
-                      style={{ width: 88, height: 88, display: 'block', flexShrink: 0, objectFit: 'cover', borderRadius: 8, border: `1px solid ${CARD_BORDER}`, background: '#ffffff' }}
-                    />
-                  </button>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: '#0A0F1C' }}>
-                      Plan {group.code}
-                    </div>
-                    <div style={{ fontSize: 11, color: '#6b6b68', margin: '2px 0 6px' }}>
-                      {group.sqft ? `${group.sqft.toLocaleString()} sqft · ` : ''}
-                      {group.units.length} available
-                    </div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: TEAL_DARK }}>
-                      {prices.length ? `${fmt(Math.min(...prices))}+` : 'Contact'}
+                  <div style={{ position: 'relative', width: '100%', height: 196, background: '#ffffff' }}>
+                    <button
+                      type="button"
+                      onClick={(event) => { event.stopPropagation(); setSelectedImage(group.floorPlanImage || '/placeholder.svg') }}
+                      aria-label={`View larger ${group.code} floor plan`}
+                      style={{ width: '100%', height: '100%', padding: 0, border: 0, background: 'transparent', cursor: 'zoom-in' }}
+                    >
+                      <img
+                        src={group.floorPlanImage || '/placeholder.svg'}
+                        alt={`${group.bedType} floor plan`}
+                        onError={(event) => { event.currentTarget.src = '/placeholder.svg' }}
+                        style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover' }}
+                      />
+                    </button>
+                    {(() => { const availability = formatAvail(group.units[0]?.availabilityDate); return <span style={{ position: 'absolute', top: 14, left: 14, padding: '5px 11px', borderRadius: 999, background: availability.now ? '#EAF5DC' : '#FFF2D6', color: availability.now ? AVAIL_NOW : AVAIL_LATER, fontSize: 12, fontWeight: 700 }}>{availability.label}</span> })()}
+                  </div>
+                  <div style={{ padding: '18px 20px 20px' }}>
+                    <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 18, fontWeight: 700, color: TEXT }}>Plan {group.code}</div>
+                    <div style={{ marginTop: 5, fontSize: 15, color: MUTED }}>{group.sqft ? `${group.sqft.toLocaleString()} sqft · ` : ''}{group.units.length} available</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 14 }}>
+                      <span style={{ fontFamily: 'var(--font-archivo)', fontSize: 22, fontWeight: 800, color: TEAL }}>{prices.length ? fmt(Math.min(...prices)) : 'Contact'}<span style={{ marginLeft: 4, fontFamily: 'inherit', fontSize: 15, fontWeight: 400, color: MUTED }}>{prices.length ? '/mo' : ''}</span></span>
+                      <span style={{ color: TEXT, fontSize: 14, fontWeight: 600, textDecoration: 'underline' }}>View units</span>
                     </div>
                   </div>
                 </div>
@@ -208,9 +219,35 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, borderTop: `1px solid ${CARD_BORDER}`, paddingTop: 12 }}>
                     {group.units.map((unit) => {
                       const availability = formatAvail(unit.availabilityDate)
+                      const canHeart = showHearts && Boolean(buildingId) && Boolean(unit.unitNumber)
+                      const saved = canHeart ? has(buildingId, unit.unitNumber as string) : false
                       return (
                         <div key={unit.unitNumber ?? `${group.code}-${unit.price}-${unit.sqft}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, fontSize: 12, color: TEXT }}>
-                          <span>{unit.unitNumber ? `Unit ${unit.unitNumber}` : 'Unit available'}</span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            {canHeart && (
+                              <button
+                                type="button"
+                                aria-label={saved ? `Remove unit ${unit.unitNumber} from list` : `Add unit ${unit.unitNumber} to list`}
+                                aria-pressed={saved}
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  toggle({
+                                    building_id: buildingId,
+                                    unit_number: unit.unitNumber as string,
+                                    building_name: unit.buildingName ?? null,
+                                    unit_type: unit.unitType ?? null,
+                                    beds: unit.beds ?? null,
+                                    baths: unit.baths ?? null,
+                                    price: unit.price ?? null,
+                                  })
+                                }}
+                                style={{ display: 'grid', placeItems: 'center', width: 24, height: 24, padding: 0, border: 0, background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
+                              >
+                                <Heart size={16} aria-hidden="true" style={{ color: saved ? '#E5285A' : MUTED, fill: saved ? '#E5285A' : 'none' }} />
+                              </button>
+                            )}
+                            <span>{unit.unitNumber ? `Unit ${unit.unitNumber}` : 'Unit available'}</span>
+                          </span>
                           <span>{unit.price ? fmt(unit.price) : 'Contact'} · <span style={{ color: availability.now ? AVAIL_NOW : AVAIL_LATER }}>{availability.label}</span></span>
                         </div>
                       )

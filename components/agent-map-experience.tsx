@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import mapboxgl from 'mapbox-gl';
 import { HowItWorksModal } from '@/components/how-it-works-modal';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -16,11 +16,12 @@ import { CommissionPill } from '@/components/commission-pill';
 
 import { MapFilterCard, type MapFilterState } from '@/components/map-filter-card';
 import { copyToClipboard, showToast } from '@/lib/toast-utils';
-import { Heart, Star } from 'lucide-react';
+import { Heart, Search, Star } from 'lucide-react';
 import { useSaveList } from '@/components/save-list-provider';
 import { createClient } from '@/lib/supabase/client';
 import { buildings as BUILDING_CATALOG, type Building } from '@/lib/buildings';
 import { getPriceRange } from '@/lib/price-range';
+import { saveMapQuery, readMapQuery, clearMapQuery, saveBuildingOrigin } from '@/lib/map-return';
 import {
   type AvailableUnit,
   BEDROOM_MIN_BY_FILTER,
@@ -181,6 +182,32 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
   );
   const markerBuildings = useMemo(() => geocodedBuildings, [buildingCoordinatesKey]);
 
+  // The 'load'/'moveend' listeners registered in the mount effect below are
+  // attached once and never re-registered, so a plain closure over
+  // geocodedBuildings would permanently see whatever filtered list existed at
+  // mount time. Reading through a ref keeps the bounds check current, and the
+  // effect below re-runs it whenever the filtered building list itself
+  // changes (e.g. typing in search) — not just when the map pans.
+  const geocodedBuildingsRef = useRef(geocodedBuildings);
+  useEffect(() => {
+    geocodedBuildingsRef.current = geocodedBuildings;
+  }, [geocodedBuildings]);
+
+  const updateBuildingsInView = useCallback(() => {
+    if (!map.current) return;
+    const bounds = map.current.getBounds();
+    onBuildingsInView?.(geocodedBuildingsRef.current.filter((building: any) => (
+      building.lat >= bounds.getSouth() &&
+      building.lat <= bounds.getNorth() &&
+      building.lng >= bounds.getWest() &&
+      building.lng <= bounds.getEast()
+    )));
+  }, [onBuildingsInView]);
+
+  useEffect(() => {
+    updateBuildingsInView();
+  }, [geocodedBuildings, updateBuildingsInView]);
+
   // This component is mounted twice at once (mobile layout + desktop layout,
   // toggled with CSS only), so two instances of this effect are always alive
   // together. It must key off the full, stable building-id list (allBuildingIds,
@@ -300,17 +327,6 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
 
       map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
       
-      const updateBuildingsInView = () => {
-        if (!map.current) return;
-        const bounds = map.current.getBounds();
-        onBuildingsInView?.(geocodedBuildings.filter((building: any) => (
-          building.lat >= bounds.getSouth() &&
-          building.lat <= bounds.getNorth() &&
-          building.lng >= bounds.getWest() &&
-          building.lng <= bounds.getEast()
-        )));
-      };
-
       map.current.on('load', updateBuildingsInView);
       map.current.on('moveend', updateBuildingsInView);
 
@@ -742,18 +758,6 @@ export interface AgentMapExperienceConfig {
 export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSelection, agentDisplayName = 'Don' }: AgentMapExperienceConfig) {
   const { hasAccess } = useAgentMode();
   const { savedIds, toggleSave } = useSaveList();
-  const heartButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  useEffect(() => {
-    const stopHeartEvent = (event: Event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const button = event.currentTarget as HTMLButtonElement;
-      void toggleSave(button.dataset.buildingId ?? '');
-    };
-    const buttons = Object.values(heartButtonRefs.current).filter(Boolean) as HTMLButtonElement[];
-    buttons.forEach((button) => button.addEventListener('click', stopHeartEvent, { capture: true }));
-    return () => buttons.forEach((button) => button.removeEventListener('click', stopHeartEvent, { capture: true }));
-  }, [savedIds]);
   const [visibleBuildings, setVisibleBuildings] = useState(BUILDING_CATALOG)
   const VISIBLE_BUILDINGS = visibleBuildings
   const [geocodedBuildings, setGeocodedBuildings] = useState(VISIBLE_BUILDINGS)
@@ -778,7 +782,6 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   const [expandedNeighborhoods, setExpandedNeighborhoods] = useState(['Brickell', 'Downtown']);
   const [searchQuery, setSearchQuery] = useState('');
   const [infoBuilding, setInfoBuilding] = useState(null);
-  const [starredBuildings, setStarredBuildings] = useState<Set<string>>(new Set());
   const [isSavingList, setIsSavingList] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showMoveWithDonModal, setShowMoveWithDonModal] = useState(false);
@@ -833,6 +836,9 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const didRestoreRef = useRef(false);
+  const pendingRestoreRef = useRef(false);
 
   // Load filters from URL params on mount
   useEffect(() => {
@@ -868,6 +874,47 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     }
   }, [searchParams]);
 
+  // Safety net (restore): on first mount, if this page has no filter params in
+  // the URL but a filtered view was saved for it earlier in this tab, restore
+  // that URL once. Guarded by a ref so it can never loop.
+  useEffect(() => {
+    if (didRestoreRef.current) return;
+    didRestoreRef.current = true;
+    const hasFilterParams =
+      searchParams.getAll('neighborhood').length > 0 ||
+      searchParams.has('beds') ||
+      searchParams.has('priceMin') ||
+      searchParams.has('priceMax') ||
+      searchParams.has('moveInDate');
+    if (!hasFilterParams) {
+      const saved = readMapQuery(pathname);
+      if (saved) {
+        pendingRestoreRef.current = true;
+        router.replace(`${pathname}?${saved}`, { scroll: false });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Safety net (save): persist the current filtered view (per tab) whenever the
+  // params change, but only after the restore check has run — otherwise the
+  // first render's empty params would delete the saved query before it can be
+  // restored.
+  useEffect(() => {
+    if (!didRestoreRef.current) return;
+    const hasFilterParams =
+      searchParams.getAll('neighborhood').length > 0 ||
+      searchParams.has('beds') ||
+      searchParams.has('priceMin') ||
+      searchParams.has('priceMax') ||
+      searchParams.has('moveInDate');
+    if (pendingRestoreRef.current) {
+      if (!hasFilterParams) return; // wait for the restore navigation to land
+      pendingRestoreRef.current = false;
+    }
+    saveMapQuery(pathname, new URLSearchParams(Array.from(searchParams.entries())));
+  }, [searchParams, pathname]);
+
   // Update URL when filters change
   const updateUrlWithFilters = (newFilters: MapFilterState) => {
     const params = new URLSearchParams();
@@ -888,8 +935,8 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       params.set('moveInDate', newFilters.moveInDate[0]);
     }
     
-    const newUrl = `/map${params.toString() ? '?' + params.toString() : ''}`;
-    router.push(newUrl);
+    const newUrl = `${pathname}${params.toString() ? '?' + params.toString() : ''}`;
+    router.replace(newUrl, { scroll: false });
   };
 
   // Wrapper for filter changes that also updates URL
@@ -900,7 +947,15 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
 
   const handleClearAllFilters = () => {
     setMapFilters({ bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: [] });
-    router.push('/map');
+    clearMapQuery(pathname);
+    router.replace(pathname, { scroll: false });
+  };
+
+  // Navigate to a building's detail page while remembering which map page (and
+  // its filtered URL) it was opened from, so the building page can return here.
+  const openBuilding = (id: string) => {
+    saveBuildingOrigin(pathname);
+    router.push(`/buildings/${id}`);
   };
 
   // Callback to receive map instance from MapComponent
@@ -1067,12 +1122,20 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     return true;
   };
 
-  const filteredBuildings = geocodedBuildings.filter(b =>
+  // Memoized so this array keeps a stable identity when its contents haven't
+  // actually changed. Recomputing it as a plain `.filter()` on every render
+  // gave `visibleFilteredBuildings` (and therefore the `geocodedBuildings`
+  // prop passed to MapComponent) a new reference each render, which fired
+  // MapComponent's `[geocodedBuildings, updateBuildingsInView]` effect every
+  // render, called `onBuildingsInView` (setViewportBuildings) every render,
+  // and triggered a parent re-render — an infinite "Maximum update depth
+  // exceeded" loop that starved click handling on the mobile list.
+  const filteredBuildings = useMemo(() => geocodedBuildings.filter(b =>
     visibleBuildingIds.includes(b.id) &&
     buildingMatchesMapFilters(b) &&
     (b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.neighborhood.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  ), [geocodedBuildings, visibleBuildingIds, mapFilters, searchQuery]);
 
   // Keep map markers and both building lists in sync with every active filter.
   // Each active filter category must be satisfied by the SAME unit at once —
@@ -1224,11 +1287,11 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   };
 
   const handleSaveList = async () => {
-    if (starredBuildings.size === 0) return;
+    if (savedIds.length === 0) return;
 
     setIsSavingList(true);
     try {
-      const buildingIds = Array.from(starredBuildings);
+      const buildingIds = savedIds.map(String);
       const response = await fetch('/api/lists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1279,7 +1342,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   expandedNeighborhoods={expandedNeighborhoods}
   selectedBuilding={selectedBuilding}
   highlightedBuilding={highlightedBuilding}
-  onPinClick={(b) => router.push(`/buildings/${b.id}`)}
+  onPinClick={(b) => openBuilding(b.id)}
                   geocodedBuildings={visibleFilteredBuildings}
                   allBuildingIds={allBuildingIds}
   setSelectedBuilding={setSelectedBuilding}
@@ -1394,7 +1457,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
           {mobileSheetState !== 'sliver' && (
             <>
               {/* Scrollable content */}
-              <div id="mobile-listing-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y', overscrollBehaviorY: 'contain', padding: '0 14px max(16px, env(safe-area-inset-bottom))' }}>
+              <div id="mobile-listing-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y', overscrollBehaviorY: 'contain', padding: '0 14px calc(92px + env(safe-area-inset-bottom))' }}>
 
 
             {/* Building cards — v17 */}
@@ -1406,7 +1469,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                 return (
                   <div
                     key={building.id}
-                    onClick={() => router.push(`/buildings/${building.id}`)}
+                    onClick={() => openBuilding(building.id)}
                     style={{
                       background: '#ffffff',
                       borderRadius: 16,
@@ -1548,7 +1611,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       {/* ── END MOBILE LAYOUT ─────────────────────────����───────────────────── */}
 
       {/* Desktop Header - Fixed at Top */}
-      <div className="hidden md:flex items-center justify-between px-8 py-7 bg-white flex-shrink-0 border-b border-[#E8EBF0]" style={{ height: '74px' }}>
+      <div className="hidden md:grid grid-cols-[1fr_auto_1fr] items-center px-8 py-7 bg-white flex-shrink-0 border-b border-[#E8EBF0]" style={{ height: '74px' }}>
         {/* Wordmark */}
         <Link href="/" style={{ textDecoration: 'none', cursor: 'pointer' }}>
           <div className="flex items-center gap-1">
@@ -1560,9 +1623,22 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
             </span>
           </div>
         </Link>
+
+        <div className="flex h-[52px] w-[480px] items-center gap-2.5 rounded-[26px] border border-[#DDE1E9] bg-white py-0 pl-[22px] pr-1.5 shadow-[0_2px_12px_rgba(10,15,28,0.08)] -mt-2">
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="min-w-0 flex-1 border-0 bg-transparent text-[15px] text-[#0A0F1C] outline-none"
+            placeholder="Search buildings"
+            aria-label="Search buildings"
+          />
+          <button type="button" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FF4D8D]" aria-label="Search">
+            <Search size={19} color="white" />
+          </button>
+        </div>
         
         {/* Header Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="justify-self-end" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {/* How it Works Button */}
           <button 
             onClick={() => setShowHowItWorksModal(true)}
@@ -1621,42 +1697,27 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
 
       {/* Desktop Layout - Zillow Style */}
       <div className="hidden md:flex flex-1 gap-0 h-full overflow-hidden">
-        {/* Map - 64% of width */}
-        <div className="flex-1 basis-[64%] relative h-full w-full">
-          <MapComponent 
-            expandedNeighborhoods={expandedNeighborhoods} 
-            selectedBuilding={selectedBuilding} 
-            highlightedBuilding={highlightedBuilding}
-            onPinClick={(b) => router.push(`/buildings/${b.id}`)}
-                            geocodedBuildings={visibleFilteredBuildings}
-                  allBuildingIds={allBuildingIds}
-            setSelectedBuilding={setSelectedBuilding}
-  setInfoBuilding={setInfoBuilding}
-  onMapReady={handleMapReady}
-            onPricingDataChange={setPricingInventory}
-            onImageDataChange={setBuildingImages}
-            onBuildingsInView={setViewportBuildings}
-          />
-        </div>
-
-        {/* Cards Panel - 36% of width */}
-        <div className="basis-[36%] bg-[#F8F9FB] border-l border-[#E8EBF0] overflow-hidden flex flex-col" style={{ position: 'relative', zIndex: 20, pointerEvents: 'auto', background: 'white' }}>
+        {/* Cards Panel - 55% of width */}
+        <div className="basis-[55%] bg-[#F8F9FB] border-r border-[#E8EBF0] overflow-hidden flex flex-col" style={{ position: 'relative', zIndex: 20, pointerEvents: 'auto', background: 'white' }}>
           {/* Save list button — only visible when buildings are starred */}
-          {starredBuildings.size > 0 && (
+          {savedIds.length > 0 && (
             <div className="px-4 pt-3 pb-0 flex justify-end">
               <button
                 onClick={() => handleSaveList()}
                 disabled={isSavingList}
                 className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors"
               >
-                Save list ({starredBuildings.size})
+                Save list ({savedIds.length})
               </button>
             </div>
           )}
 
-          {/* Scrollable Cards - Vertical Stack — flush from top */}
+          {/* Scrollable Cards - Two-column grid */}
           <div className="flex-1 overflow-y-auto">
-            <div className="p-4 flex flex-col gap-3">
+            <div className="grid grid-cols-2 auto-rows-max content-start gap-x-5 gap-y-7 p-6">
+              <div className="col-span-2 font-bold text-[22px]" style={{ fontFamily: 'Archivo' }}>
+                {visibleFilteredBuildings.length} building{visibleFilteredBuildings.length === 1 ? '' : 's'}
+              </div>
               {visibleFilteredBuildings.map((building) => (
                 <DesktopBuildingCard
                   key={building.id}
@@ -1666,22 +1727,32 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                   mapFilters={mapFilters}
                   isAgentMode={hasAccess}
                   isHighlighted={selectedBuilding?.id === building.id}
-                                  isStarred={starredBuildings.has(String(building.id))}
+                                  isStarred={savedIds.includes(String(building.id))}
                   onHover={setHighlightedBuilding}
-                  onClick={() => router.push(`/buildings/${building.id}`)}
-                  onStar={(b) => {
-                    const newStarred = new Set(starredBuildings);
-                    if (newStarred.has(String(b.id))) {
-                      newStarred.delete(String(b.id));
-                    } else {
-                      newStarred.add(String(b.id));
-                    }
-                    setStarredBuildings(newStarred);
-                  }}
+                  onClick={() => openBuilding(building.id)}
+                  onStar={() => toggleSave(String(building.id))}
                                 />
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Map - 45% of width */}
+        <div className="flex-1 basis-[45%] relative h-full w-full">
+          <MapComponent 
+            expandedNeighborhoods={expandedNeighborhoods} 
+            selectedBuilding={selectedBuilding} 
+            highlightedBuilding={highlightedBuilding}
+            onPinClick={(b) => openBuilding(b.id)}
+                            geocodedBuildings={visibleFilteredBuildings}
+                  allBuildingIds={allBuildingIds}
+            setSelectedBuilding={setSelectedBuilding}
+  setInfoBuilding={setInfoBuilding}
+  onMapReady={handleMapReady}
+            onPricingDataChange={setPricingInventory}
+            onImageDataChange={setBuildingImages}
+            onBuildingsInView={setViewportBuildings}
+          />
         </div>
       </div>
 
