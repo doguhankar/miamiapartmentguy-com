@@ -587,9 +587,12 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       button.style.cursor = 'pointer';
       button.onmouseover = () => button.style.backgroundColor = '#E53A73';
       button.onmouseout = () => button.style.backgroundColor = '#FF4D8D';
-      button.onclick = () => {
-        setInfoBuildingFromMap(building);
+      // Navigate directly instead of routing through setInfoBuilding, which
+      // set dead state with nothing bound to render it (button was a no-op).
+      button.onclick = (event) => {
+        event.stopPropagation();
         popup.remove();
+        onPinClick(building);
       };
       content.appendChild(button);
       popupContent.appendChild(content);
