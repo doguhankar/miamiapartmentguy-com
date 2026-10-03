@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import mapboxgl from 'mapbox-gl';
@@ -182,6 +182,32 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
   );
   const markerBuildings = useMemo(() => geocodedBuildings, [buildingCoordinatesKey]);
 
+  // The 'load'/'moveend' listeners registered in the mount effect below are
+  // attached once and never re-registered, so a plain closure over
+  // geocodedBuildings would permanently see whatever filtered list existed at
+  // mount time. Reading through a ref keeps the bounds check current, and the
+  // effect below re-runs it whenever the filtered building list itself
+  // changes (e.g. typing in search) — not just when the map pans.
+  const geocodedBuildingsRef = useRef(geocodedBuildings);
+  useEffect(() => {
+    geocodedBuildingsRef.current = geocodedBuildings;
+  }, [geocodedBuildings]);
+
+  const updateBuildingsInView = useCallback(() => {
+    if (!map.current) return;
+    const bounds = map.current.getBounds();
+    onBuildingsInView?.(geocodedBuildingsRef.current.filter((building: any) => (
+      building.lat >= bounds.getSouth() &&
+      building.lat <= bounds.getNorth() &&
+      building.lng >= bounds.getWest() &&
+      building.lng <= bounds.getEast()
+    )));
+  }, [onBuildingsInView]);
+
+  useEffect(() => {
+    updateBuildingsInView();
+  }, [geocodedBuildings, updateBuildingsInView]);
+
   // This component is mounted twice at once (mobile layout + desktop layout,
   // toggled with CSS only), so two instances of this effect are always alive
   // together. It must key off the full, stable building-id list (allBuildingIds,
@@ -301,17 +327,6 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
 
       map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
       
-      const updateBuildingsInView = () => {
-        if (!map.current) return;
-        const bounds = map.current.getBounds();
-        onBuildingsInView?.(geocodedBuildings.filter((building: any) => (
-          building.lat >= bounds.getSouth() &&
-          building.lat <= bounds.getNorth() &&
-          building.lng >= bounds.getWest() &&
-          building.lng <= bounds.getEast()
-        )));
-      };
-
       map.current.on('load', updateBuildingsInView);
       map.current.on('moveend', updateBuildingsInView);
 
@@ -1107,12 +1122,20 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     return true;
   };
 
-  const filteredBuildings = geocodedBuildings.filter(b =>
+  // Memoized so this array keeps a stable identity when its contents haven't
+  // actually changed. Recomputing it as a plain `.filter()` on every render
+  // gave `visibleFilteredBuildings` (and therefore the `geocodedBuildings`
+  // prop passed to MapComponent) a new reference each render, which fired
+  // MapComponent's `[geocodedBuildings, updateBuildingsInView]` effect every
+  // render, called `onBuildingsInView` (setViewportBuildings) every render,
+  // and triggered a parent re-render — an infinite "Maximum update depth
+  // exceeded" loop that starved click handling on the mobile list.
+  const filteredBuildings = useMemo(() => geocodedBuildings.filter(b =>
     visibleBuildingIds.includes(b.id) &&
     buildingMatchesMapFilters(b) &&
     (b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.neighborhood.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  ), [geocodedBuildings, visibleBuildingIds, mapFilters, searchQuery]);
 
   // Keep map markers and both building lists in sync with every active filter.
   // Each active filter category must be satisfied by the SAME unit at once —
@@ -1434,7 +1457,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
           {mobileSheetState !== 'sliver' && (
             <>
               {/* Scrollable content */}
-              <div id="mobile-listing-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y', overscrollBehaviorY: 'contain', padding: '0 14px max(16px, env(safe-area-inset-bottom))' }}>
+              <div id="mobile-listing-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y', overscrollBehaviorY: 'contain', padding: '0 14px calc(92px + env(safe-area-inset-bottom))' }}>
 
 
             {/* Building cards — v17 */}
