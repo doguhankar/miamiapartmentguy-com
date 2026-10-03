@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono, Archivo, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { GoogleAnalytics } from '@next/third-parties/google'
@@ -12,6 +12,9 @@ const _archivo = Archivo({ subsets: ["latin"], weight: ['400', '500', '600', '70
 const _spaceGrotesk = Space_Grotesk({ subsets: ["latin"], weight: ['400', '500', '600', '700'], variable: '--font-space-grotesk' });
 const _jetBrainsMono = JetBrains_Mono({ subsets: ["latin"], weight: ['500', '600'], variable: '--font-jetbrains-mono' });
 
+export const viewport: Viewport = {
+}
+
 export const metadata: Metadata = {
   title: 'Miami Apartment Guy — Every Building. Every Deal. One Text.',
   description: 'Free apartment locating across Greater Miami. Live pricing on 108+ buildings from Brickell to Edgewater. Text your budget, get real quotes same day.',
@@ -24,7 +27,6 @@ export const metadata: Metadata = {
       },
     ],
   },
-  themeColor: '#0B1220',
 }
 
 export default function RootLayout({
