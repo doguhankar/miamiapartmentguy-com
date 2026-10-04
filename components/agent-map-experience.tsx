@@ -760,7 +760,7 @@ export interface AgentMapExperienceConfig {
 
 export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSelection, agentDisplayName = 'Don' }: AgentMapExperienceConfig) {
   const { hasAccess } = useAgentMode();
-  const { savedIds, toggleSave } = useSaveList();
+  const { savedIds, toggleSave, remove, clear } = useSaveList();
   const [visibleBuildings, setVisibleBuildings] = useState(BUILDING_CATALOG)
   const VISIBLE_BUILDINGS = visibleBuildings
   const [geocodedBuildings, setGeocodedBuildings] = useState(VISIBLE_BUILDINGS)
@@ -1289,6 +1289,25 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     setVisibleBuildingIds(matchingBuildingIds);
   };
 
+  const handleRemoveSavedBuilding = async (buildingId: string) => {
+    try {
+      await remove(buildingId)
+      showToast('Building removed from list', { type: 'success' })
+    } catch {
+      showToast('Failed to remove building', { type: 'error' })
+    }
+  }
+
+  const handleClearSavedList = async () => {
+    if (!savedIds.length || !window.confirm('Clear all buildings from this list?')) return
+    try {
+      await clear()
+      showToast('Saved list cleared', { type: 'success' })
+    } catch {
+      showToast('Failed to clear list', { type: 'error' })
+    }
+  }
+
   const handleSaveList = async () => {
     if (savedIds.length === 0) return;
 
@@ -1450,9 +1469,9 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
               </div>
             ) : (
               /* Count line */
-              <div style={{ padding: '5px 16px 10px', fontSize: 11.5, color: '#6B7280', fontWeight: 500 }}>
-  <b style={{ color: '#0A0F1C', fontWeight: 700 }}>{viewportBuildings.length > 0 ? viewportBuildings.length : filteredBuildings.length}</b>{' '}
-  in view
+              <div style={{ padding: '5px 16px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5, color: '#6B7280', fontWeight: 500 }}>
+                <span><b style={{ color: '#0A0F1C', fontWeight: 700 }}>{viewportBuildings.length > 0 ? viewportBuildings.length : filteredBuildings.length}</b>{' '}in view</span>
+                {savedIds.length > 0 && <button type="button" onClick={handleClearSavedList} style={{ border: '1px solid #FECACA', color: '#DC2626', background: '#FFF', borderRadius: 6, padding: '4px 8px', fontSize: 10, fontWeight: 700 }}>Clear saved</button>}
               </div>
             )}
           </div>
@@ -1489,6 +1508,14 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                           alt={building.name}
                           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                         />
+                      )}
+                      {savedIds.includes(String(building.id)) && (
+                        <button
+                          type="button"
+                          aria-label={`Remove ${building.name} from saved list`}
+                          onClick={(event) => { event.stopPropagation(); handleRemoveSavedBuilding(String(building.id)) }}
+                          style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, width: 32, height: 32, borderRadius: 999, border: '1px solid rgba(255,255,255,0.8)', background: 'rgba(10,15,28,0.72)', color: '#fff', fontSize: 21, lineHeight: 1, cursor: 'pointer' }}
+                        >×</button>
                       )}
                       {/* Neighborhood tag */}
                       <div style={{
@@ -1704,7 +1731,13 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
         <div className="basis-[55%] bg-[#F8F9FB] border-r border-[#E8EBF0] overflow-hidden flex flex-col" style={{ position: 'relative', zIndex: 20, pointerEvents: 'auto', background: 'white' }}>
           {/* Save list button — only visible when buildings are starred */}
           {savedIds.length > 0 && (
-            <div className="px-4 pt-3 pb-0 flex justify-end">
+              <div className="px-4 pt-3 pb-0 flex justify-end gap-2">
+              <button
+                onClick={handleClearSavedList}
+                className="border border-red-200 text-red-600 hover:bg-red-50 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors"
+              >
+                Clear list
+              </button>
               <button
                 onClick={() => handleSaveList()}
                 disabled={isSavingList}
@@ -1733,8 +1766,9 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                                   isStarred={savedIds.includes(String(building.id))}
                   onHover={setHighlightedBuilding}
                   onClick={() => openBuilding(building.id)}
-                  onStar={() => toggleSave(String(building.id))}
-                                />
+  onStar={() => toggleSave(String(building.id))}
+  onRemove={() => handleRemoveSavedBuilding(String(building.id))}
+  />
               ))}
             </div>
           </div>

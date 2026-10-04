@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 type SaveUser = { id: string; firstName: string; shareSlug: string }
-type SaveContext = { user: SaveUser | null; savedIds: string[]; beginSave: (buildingId: string) => void; toggleSave: (buildingId: string) => Promise<void>; toggle: (buildingId: string) => Promise<void>; share: () => Promise<string | null> }
+type SaveContext = { user: SaveUser | null; savedIds: string[]; beginSave: (buildingId: string) => void; toggleSave: (buildingId: string) => Promise<void>; toggle: (buildingId: string) => Promise<void>; remove: (buildingId: string) => Promise<void>; clear: () => Promise<void>; share: () => Promise<string | null> }
 export const SaveListContext = createContext<SaveContext | null>(null)
 const Context = SaveListContext
 const key = 'mag-save-user'
@@ -39,6 +39,20 @@ export function SaveListProvider({ children }: { children: React.ReactNode }) {
     await saveFor(user.id, buildingId, !savedIds.includes(String(buildingId)))
   }
   const toggle = toggleSave
+  const remove = async (buildingId: string) => {
+    if (!user) return
+    const response = await fetch(`/api/saves/${user.id}?buildingId=${encodeURIComponent(buildingId)}`, { method: 'DELETE' })
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error)
+    setSavedIds((current) => current.filter((id) => id !== String(buildingId)))
+  }
+  const clear = async () => {
+    if (!user) return
+    const response = await fetch(`/api/saves/${user.id}`, { method: 'DELETE' })
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error)
+    setSavedIds([])
+  }
   const share = async () => {
     if (!user) return null
     const response = await fetch('/api/saves/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id }) })
@@ -47,7 +61,7 @@ export function SaveListProvider({ children }: { children: React.ReactNode }) {
     await navigator.clipboard.writeText(url)
     return url
   }
-  const value = useMemo(() => ({ user, savedIds, beginSave, toggleSave, toggle, share }), [user, savedIds])
+  const value = useMemo(() => ({ user, savedIds, beginSave, toggleSave, toggle, remove, clear, share }), [user, savedIds])
   return <Context.Provider value={value}>{children}<SaveIdentityModal pending={pending} onClose={() => setPending(null)} onSubmit={createUser} /></Context.Provider>
 }
 
