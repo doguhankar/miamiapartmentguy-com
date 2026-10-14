@@ -5,6 +5,7 @@ import { useMemo, useState } from "react"
 import { CommissionPill } from "@/components/commission-pill"
 import { getPriceRange } from "@/lib/price-range"
 import { hasPrice, PRICING_COMING_SOON } from "@/lib/price-display"
+import { lowestApproxPrice, useApproxPricing } from "@/lib/approx-pricing"
 import {
   type AvailableUnit,
   unitMatchesBedroomFilter,
@@ -110,12 +111,15 @@ export function DesktopBuildingCard({
   onViewDetails,
 }: DesktopBuildingCardProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const approxPricing = useApproxPricing()
+  const approxLowest = lowestApproxPrice(approxPricing[String(building.id)])
   const cheapestOverall = useMemo(() => {
     const numericPrices = units
       .map((unit) => unit.price)
       .filter((price): price is number => hasPrice(price))
-    return numericPrices.length > 0 ? Math.min(...numericPrices) : building.priceMin
-  }, [units, building.priceMin])
+    if (numericPrices.length > 0) return Math.min(...numericPrices)
+    return approxLowest ?? building.priceMin
+  }, [units, building.priceMin, approxLowest])
 
   const bestMatch = useMemo(() => pickBestMatchingUnit(units, mapFilters), [units, mapFilters])
   const displayedPrice = bestMatch?.price ?? cheapestOverall

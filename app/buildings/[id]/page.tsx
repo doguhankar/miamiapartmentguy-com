@@ -17,6 +17,7 @@ import { useSaveList } from '@/components/save-list-provider'
 import { BuildingImageGallery } from '@/components/building-image-gallery'
 import { readBuildingOrigin, readMapQuery } from '@/lib/map-return'
 import { hasPrice, PRICING_COMING_SOON } from '@/lib/price-display'
+import { formatApproxPlan, lowestApproxPrice, useApproxPricing } from '@/lib/approx-pricing'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface LiveUnit {
@@ -198,6 +199,8 @@ export default function BuildingDetailPage() {
   const [imgIdx, setImgIdx] = useState(0)
 
   const [liveUnits, setLiveUnits] = useState<LiveUnit[]>([])
+  const [unitsLoaded, setUnitsLoaded] = useState(false)
+  const approxPlans = useApproxPricing()[buildingId]
   const [showAllUnits, setShowAllUnits] = useState(false)
   const [selectedUnit, setSelectedUnit] = useState<LiveUnit | null>(null)
   const [activePriceType, setActivePriceType] = useState<string | null>('Studio')
@@ -229,6 +232,7 @@ export default function BuildingDetailPage() {
         sqft: typeof unit.sqft === 'number' ? unit.sqft : undefined,
         availabilityDate: unit.availabilitydate ?? null,
       })))
+      setUnitsLoaded(true)
     }
 
     loadLiveUnits()
@@ -299,7 +303,9 @@ export default function BuildingDetailPage() {
   const livePrices = liveUnits.map((u) => u.price).filter((value): value is number => hasPrice(value))
   const realMin = livePrices.length ? Math.min(...livePrices) : building.priceMin
   const priceKnown = hasPrice(realMin)
-  const startingPrice = hasPrice(building.priceMin) ? building.priceMin : realMin
+  const approxLowest = livePrices.length ? null : lowestApproxPrice(approxPlans)
+  const showApproxPricing = unitsLoaded && livePrices.length === 0 && approxLowest !== null
+  const startingPrice = approxLowest ?? (hasPrice(building.priceMin) ? building.priceMin : realMin)
   const startingKnown = hasPrice(startingPrice)
 
   // ── Styling tokens ──────────────────────────────���────────���──────────────────
@@ -325,10 +331,24 @@ export default function BuildingDetailPage() {
   const BADGE_TEXT = '#A80F47'
 
   // ── Shared content blocks (reused by both mobile and desktop layouts) ──────
+  const unitsContent = showApproxPricing && approxPlans ? (
+    <div>
+      <div style={{ fontSize: 12, fontWeight: 600, color: MUTED, marginBottom: 10 }}>Approximate pricing.</div>
+      {approxPlans.map((plan, i) => (
+        <div key={plan.type} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 0', fontSize: 14, borderTop: i === 0 ? 'none' : `1px solid ${BORDER}` }}>
+          <span style={{ color: TEXT, fontWeight: 600 }}>{plan.type}</span>
+          <strong style={{ color: TEXT }}>{formatApproxPlan(plan)}</strong>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <AvailableUnitsRedesign buildingId={buildingId} />
+  )
+
   const unitsSection = (
     <div style={{ border: '1px solid #E8EBF0', borderRadius: 20, background: '#ffffff', padding: 28 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconHome /> Available Units</div>
-      <AvailableUnitsRedesign buildingId={buildingId} />
+      {unitsContent}
     </div>
   )
 
@@ -619,7 +639,7 @@ export default function BuildingDetailPage() {
               <section style={{ padding: '30px 0', borderBottom: `1px solid ${AB_HAIRLINE}` }}>
                 <h2 style={{ margin: 0, fontFamily: 'var(--font-archivo)', fontSize: 22, fontWeight: 700 }}>Available units</h2>
                 <div style={{ margin: '7px 0 20px', color: AB_MUTED, fontSize: 15 }}>Explore current floor plans, pricing, and availability.</div>
-                <AvailableUnitsRedesign buildingId={buildingId} />
+                {unitsContent}
               </section>
 
               <section style={{ padding: '30px 0', borderBottom: `1px solid ${AB_HAIRLINE}` }}>

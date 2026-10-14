@@ -22,6 +22,7 @@ import { createClient } from '@/lib/supabase/client';
 import { buildings as BUILDING_CATALOG, type Building } from '@/lib/buildings';
 import { getPriceRange } from '@/lib/price-range';
 import { hasPrice, PRICING_COMING_SOON } from '@/lib/price-display';
+import { lowestApproxPrice, useApproxPricing, type ApproxPlan } from '@/lib/approx-pricing';
 import { saveMapQuery, readMapQuery, clearMapQuery, saveBuildingOrigin } from '@/lib/map-return';
 import {
   type AvailableUnit,
@@ -33,6 +34,41 @@ import {
 } from '@/lib/unit-filters';
 
 type PricingInventory = Record<string, { units: AvailableUnit[] }>;
+
+// Live scraped units win; otherwise fall back to approximate pricing_units, then the static price.
+const resolvePinPrice = (building: any, liveUnits: AvailableUnit[], plans: ApproxPlan[] | undefined) => {
+  const prices = liveUnits.map((unit) => unit.price as number);
+  if (prices.length) return { lowest: Math.min(...prices), highest: Math.max(...prices), approx: false };
+  const approxLowest = lowestApproxPrice(plans);
+  if (approxLowest !== null) return { lowest: approxLowest, highest: approxLowest, approx: true };
+  return { lowest: building.priceMin, highest: building.priceMax || building.priceMin, approx: false };
+};
+
+const formatPinPrice = ({ lowest, highest, approx }: { lowest: number; highest: number; approx: boolean }) => {
+  const format = (value: number) => `$${Math.round(value).toLocaleString()}`;
+  if (approx) return `From ${format(lowest)}`;
+  return lowest === highest ? format(lowest) : `${format(lowest)} – ${format(highest)}`;
+};
+
+const MobileCardPrice = ({ building, units, plans }: { building: any; units: AvailableUnit[]; plans: ApproxPlan[] | undefined }) => {
+  const hasLiveUnits = units.some((unit) => hasPrice(unit.price));
+  const approxLowest = hasLiveUnits ? null : lowestApproxPrice(plans);
+  if (approxLowest !== null) {
+    return (
+      <div style={{ fontFamily: 'var(--font-archivo), Archivo, sans-serif', fontSize: 15, fontWeight: 700, color: '#0A0F1C' }}>
+        From ${approxLowest.toLocaleString()}
+      </div>
+    );
+  }
+  if (hasPrice(building.priceMin)) {
+    return (
+      <div style={{ fontFamily: 'var(--font-archivo), Archivo, sans-serif', fontSize: 15, fontWeight: 700, color: '#0A0F1C' }}>
+        ${building.priceMin.toLocaleString()}+
+      </div>
+    );
+  }
+  return <div style={{ fontSize: 13, fontWeight: 600, color: '#6B7280' }}>{PRICING_COMING_SOON}</div>;
+};
 
 const Tooltip = ({ text }) => {
   const [show, setShow] = useState(false);
@@ -176,6 +212,9 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
   const popupsRef = useRef([]);
   const markerMetaRef = useRef(new Map());
   const [pricingData, setPricingData] = useState<PricingInventory>({});
+  const approxPricing = useApproxPricing();
+  const approxPricingRef = useRef(approxPricing);
+  approxPricingRef.current = approxPricing;
   const [buildingImages, setBuildingImages] = useState<Record<string, string[]>>({});
   const buildingCoordinatesKey = useMemo(
     () => geocodedBuildings.map((building: any) => `${building.id}:${building.lng}:${building.lat}`).join('|'),
@@ -543,21 +582,16 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       content.appendChild(location);
 
       const liveUnits = pricingData[building.id]?.units?.filter((unit) => hasPrice(unit.price)) || [];
-      const prices = liveUnits.map((unit) => unit.price as number);
-      const lowestPrice = prices.length ? Math.min(...prices) : building.priceMin;
-      const highestPrice = prices.length ? Math.max(...prices) : building.priceMax || building.priceMin;
-      const formatPrice = (value: number) => `$${Math.round(value).toLocaleString()}`;
+      const resolvedPrice = resolvePinPrice(building, liveUnits, approxPricingRef.current[String(building.id)]);
 
       const price = document.createElement('div');
-      if (!hasPrice(lowestPrice)) {
+      if (!hasPrice(resolvedPrice.lowest)) {
         price.textContent = PRICING_COMING_SOON;
         price.style.color = '#7B8799';
         price.style.fontSize = '15px';
         price.style.fontWeight = '600';
       } else {
-        price.textContent = lowestPrice === highestPrice
-          ? formatPrice(lowestPrice)
-          : `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice)}`;
+        price.textContent = formatPinPrice(resolvedPrice);
         price.style.color = '#172033';
         price.style.fontSize = '20px';
         price.style.fontWeight = '750';
@@ -716,19 +750,14 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
 
       const liveUnits = pricingData[building.id]?.units?.filter((unit) => hasPrice(unit.price)) || [];
-      const prices = liveUnits.map((unit) => unit.price as number);
-      const lowestPrice = prices.length ? Math.min(...prices) : building.priceMin;
-      const highestPrice = prices.length ? Math.max(...prices) : building.priceMax || building.priceMin;
-      const formatPrice = (value: number) => `$${Math.round(value).toLocaleString()}`;
-      if (!hasPrice(lowestPrice)) {
+      const resolvedPrice = resolvePinPrice(building, liveUnits, approxPricing[String(building.id)]);
+      if (!hasPrice(resolvedPrice.lowest)) {
         price.textContent = PRICING_COMING_SOON;
         price.style.color = '#7B8799';
         price.style.fontSize = '15px';
         price.style.fontWeight = '600';
       } else {
-        price.textContent = lowestPrice === highestPrice
-          ? formatPrice(lowestPrice)
-          : `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice)}`;
+        price.textContent = formatPinPrice(resolvedPrice);
         price.style.color = '#172033';
         price.style.fontSize = '20px';
         price.style.fontWeight = '750';
@@ -758,7 +787,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         placeholder.style.display = 'flex';
       }
     });
-  }, [selectedBuilding, pricingData, buildingImages]);
+  }, [selectedBuilding, pricingData, buildingImages, approxPricing]);
 
   return <div ref={mapContainer} className="w-full h-full" />;
 };
@@ -841,6 +870,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   }, []);
   const [activeFilters, setActiveFilters] = useState<FilterState>({ unitSize: [], priceRange: [], moveIn: [], neighborhoods: [] });
   const [pricingInventory, setPricingInventory] = useState<PricingInventory>({});
+  const approxPricing = useApproxPricing();
   const [buildingImages, setBuildingImages] = useState<Record<string, string[]>>({});
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(VISIBLE_BUILDINGS.map(b => b.id));
 
@@ -1576,13 +1606,11 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                         {building.address}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {hasPrice(building.priceMin) ? (
-                          <div style={{ fontFamily: 'var(--font-archivo), Archivo, sans-serif', fontSize: 15, fontWeight: 700, color: '#0A0F1C' }}>
-                            ${building.priceMin.toLocaleString()}+
-                          </div>
-                        ) : (
-                          <div style={{ fontSize: 13, fontWeight: 600, color: '#6B7280' }}>{PRICING_COMING_SOON}</div>
-                        )}
+                        <MobileCardPrice
+                          building={building}
+                          units={pricingInventory[String(building.id)]?.units ?? []}
+                          plans={approxPricing[String(building.id)]}
+                        />
                         {hasSpecial && (
                           <span style={{
                             display: 'inline-flex', alignItems: 'center',

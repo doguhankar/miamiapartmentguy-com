@@ -1296,6 +1296,7 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
+    commission: '50%',
     moveInFees: [], monthlyCharges: [],
   },
   {
@@ -1306,6 +1307,7 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
+    commission: '50%',
     moveInFees: [], monthlyCharges: [],
   },
   {
