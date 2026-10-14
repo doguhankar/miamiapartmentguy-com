@@ -331,22 +331,24 @@ export default function BuildingDetailPage() {
   const BADGE_TEXT = '#A80F47'
 
   // ── Shared content blocks (reused by both mobile and desktop layouts) ──────
+  const unitsContent = showApproxPricing && approxPlans ? (
+    <div>
+      <div style={{ fontSize: 12, fontWeight: 600, color: MUTED, marginBottom: 10 }}>Approximate pricing.</div>
+      {approxPlans.map((plan, i) => (
+        <div key={plan.type} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 0', fontSize: 14, borderTop: i === 0 ? 'none' : `1px solid ${BORDER}` }}>
+          <span style={{ color: TEXT, fontWeight: 600 }}>{plan.type}</span>
+          <strong style={{ color: TEXT }}>{formatApproxPlan(plan)}</strong>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <AvailableUnitsRedesign buildingId={buildingId} />
+  )
+
   const unitsSection = (
     <div style={{ border: '1px solid #E8EBF0', borderRadius: 20, background: '#ffffff', padding: 28 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, fontFamily: 'var(--font-archivo)', fontSize: 13, fontWeight: 800, color: TEXT }}><IconHome /> Available Units</div>
-      {showApproxPricing && approxPlans ? (
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: MUTED, marginBottom: 10 }}>Approximate pricing.</div>
-          {approxPlans.map((plan, i) => (
-            <div key={plan.type} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 0', fontSize: 14, borderTop: i === 0 ? 'none' : `1px solid ${BORDER}` }}>
-              <span style={{ color: TEXT, fontWeight: 600 }}>{plan.type}</span>
-              <strong style={{ color: TEXT }}>{formatApproxPlan(plan)}</strong>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <AvailableUnitsRedesign buildingId={buildingId} />
-      )}
+      {unitsContent}
     </div>
   )
 
@@ -637,7 +639,7 @@ export default function BuildingDetailPage() {
               <section style={{ padding: '30px 0', borderBottom: `1px solid ${AB_HAIRLINE}` }}>
                 <h2 style={{ margin: 0, fontFamily: 'var(--font-archivo)', fontSize: 22, fontWeight: 700 }}>Available units</h2>
                 <div style={{ margin: '7px 0 20px', color: AB_MUTED, fontSize: 15 }}>Explore current floor plans, pricing, and availability.</div>
-                <AvailableUnitsRedesign buildingId={buildingId} />
+                {unitsContent}
               </section>
 
               <section style={{ padding: '30px 0', borderBottom: `1px solid ${AB_HAIRLINE}` }}>
