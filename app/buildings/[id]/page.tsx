@@ -280,6 +280,8 @@ export default function BuildingDetailPage() {
   const totalMonthly = (building.monthlyCharges ?? []).filter(f =>
     !/(pet fee|parking)/i.test(f.type)
   ).reduce((s, f) => s + f.amount, 0)
+  const totalMoveInLabel = (building.moveInFees ?? []).length > 0 ? fmt(totalMoveIn) : PRICING_COMING_SOON
+  const totalMonthlyLabel = (building.monthlyCharges ?? []).length > 0 ? `${fmt(totalMonthly)}/mo` : PRICING_COMING_SOON
   const trueMonthly = effectiveRent + totalMonthly
 
   // Calculator
@@ -350,7 +352,7 @@ export default function BuildingDetailPage() {
             <div style={{ flex: '1 1 220px', padding: '16px 18px', background: '#F8F9FB', border: '1px solid #E8EBF0', borderRadius: 14 }}>
               <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Due at move-in</div>
               {(building.moveInFees ?? []).map((f, i, arr) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12, borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : 'none' }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0 0', marginTop: 6, fontWeight: 800, fontSize: 13, borderTop: `2px solid ${BORDER}` }}><span>Total Initial</span><span>{fmt(totalMoveIn)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0 0', marginTop: 6, fontWeight: 800, fontSize: 13, borderTop: `2px solid ${BORDER}` }}><span>Total Initial</span><span>{totalMoveInLabel}</span></div>
             </div>
             <div style={{ flex: '1 1 220px', padding: '16px 18px', background: '#F8F9FB', border: '1px solid #E8EBF0', borderRadius: 14 }}>
               <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Recurring monthly</div>
@@ -390,8 +392,8 @@ export default function BuildingDetailPage() {
 
       <div style={{ background: '#fff', border: '1px solid #E5E3DC', borderRadius: 12, padding: 16, marginBottom: 14 }}>
         <div style={{ fontSize: 18, fontWeight: 600, color: '#0B1220', marginBottom: 10 }}>Move-in and monthly costs</div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Total upfront</span><span style={{ color: TEXT }}>{fmt(totalMoveIn)}</span></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Monthly fees</span><span style={{ color: TEXT }}>{fmt(totalMonthly)}/mo</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Total upfront</span><span style={{ color: TEXT }}>{totalMoveInLabel}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Monthly fees</span><span style={{ color: TEXT }}>{totalMonthlyLabel}</span></div>
       </div>
 
       {!hasPrice(selectedPrice) ? (
@@ -624,8 +626,8 @@ export default function BuildingDetailPage() {
                 <h2 style={{ margin: 0, fontFamily: 'var(--font-archivo)', fontSize: 22, fontWeight: 700 }}>Building fees</h2>
                 <div style={{ marginTop: 7, color: AB_MUTED, fontSize: 15 }}>What to budget for at move-in and each month</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 40, marginTop: 22 }}>
-                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>DUE AT MOVE-IN</div>{(building.moveInFees ?? []).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total initial</span><span>{fmt(totalMoveIn)}</span></div></div>
-                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>RECURRING MONTHLY</div>{(building.monthlyCharges ?? []).filter(fee => !/(pet fee|parking)/i.test(fee.type)).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total monthly</span><span>{fmt(totalMonthly)}/mo</span></div></div>
+                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>DUE AT MOVE-IN</div>{(building.moveInFees ?? []).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total initial</span><span>{totalMoveInLabel}</span></div></div>
+                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>RECURRING MONTHLY</div>{(building.monthlyCharges ?? []).filter(fee => !/(pet fee|parking)/i.test(fee.type)).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total monthly</span><span>{totalMonthlyLabel}</span></div></div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 22, padding: '16px 22px', borderRadius: 12, background: 'linear-gradient(90deg,#0B7F7A,#0E9A93)', color: '#fff', fontSize: 16, fontWeight: 700 }}><span>True monthly cost — starting</span><strong style={{ fontSize: 18 }}>{startingKnown ? `${fmt(startingPrice + totalMonthly)}/mo` : PRICING_COMING_SOON}</strong></div>
                 {(building.moveInFees ?? []).some(fee => fee.type.toLowerCase().includes('deposit')) && <div style={{ marginTop: 12, color: AB_MUTED, fontSize: 14, fontStyle: 'italic' }}>Deposits are due on move-in or application, not upfront.</div>}
@@ -642,7 +644,7 @@ export default function BuildingDetailPage() {
               <button type="button" onClick={() => setShowLeasingForm(true)} style={{ width: '100%', height: 52, marginTop: 10, border: `1px solid ${TEAL}`, borderRadius: 10, background: '#fff', color: TEAL, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>Connect with leasing</button>
               <div style={{ marginTop: 14, textAlign: 'center', color: AB_MUTED, fontSize: 14 }}>You won&apos;t be charged — no credit impact</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 22, paddingBottom: 22, borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 15 }}><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ textDecoration: 'underline' }}>Income requirement</span><span>3× rent</span></div><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ textDecoration: 'underline' }}>Credit score</span><span>650+</span></div><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ textDecoration: 'underline' }}>Guarantor</span><span>Accepted</span></div></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 18, fontSize: 16, fontWeight: 700 }}><span>Monthly fees</span><span>{fmt(totalMonthly)}/mo</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 18, fontSize: 16, fontWeight: 700 }}><span>Monthly fees</span><span>{totalMonthlyLabel}</span></div>
               <div style={{ marginTop: 16, textAlign: 'center', color: AB_MUTED, fontSize: 14 }}>◈ &nbsp;Pre-qualify before you tour</div>
             </aside>
           </div>
