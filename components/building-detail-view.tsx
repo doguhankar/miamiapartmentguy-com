@@ -225,7 +225,7 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
         {/* Starting price */}
         <div style={{ display: "flex", alignItems: "baseline", gap: "6px", marginBottom: "16px" }}>
           <span style={{ fontSize: "12px", color: "#888" }}>Starting at</span>
-          <span style={{ fontSize: "22px", fontWeight: 500, color: "#185FA5" }}>${minPrice}/mo</span>
+          <span style={{ fontSize: "22px", fontWeight: 500, color: "#185FA5" }}>{minPrice > 0 ? `$${minPrice}/mo` : "Pricing coming soon"}</span>
           <span style={{ fontSize: "12px", color: "#aaa" }}>· {units.length} units available</span>
         </div>
 

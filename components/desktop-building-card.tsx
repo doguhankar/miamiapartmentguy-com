@@ -4,6 +4,7 @@ import { Building } from "@/lib/buildings"
 import { useMemo, useState } from "react"
 import { CommissionPill } from "@/components/commission-pill"
 import { getPriceRange } from "@/lib/price-range"
+import { hasPrice, PRICING_COMING_SOON } from "@/lib/price-display"
 import {
   type AvailableUnit,
   unitMatchesBedroomFilter,
@@ -24,6 +25,7 @@ interface DesktopBuildingCardProps {
   onHover?: (building: Building | null) => void
   onClick?: (building: Building) => void
   onStar?: (building: Building) => void
+  onRemove?: (building: Building) => void
   onViewDetails?: (building: Building) => void
 }
 
@@ -104,13 +106,14 @@ export function DesktopBuildingCard({
   onHover,
   onClick,
   onStar,
+  onRemove,
   onViewDetails,
 }: DesktopBuildingCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const cheapestOverall = useMemo(() => {
     const numericPrices = units
       .map((unit) => unit.price)
-      .filter((price): price is number => typeof price === "number")
+      .filter((price): price is number => hasPrice(price))
     return numericPrices.length > 0 ? Math.min(...numericPrices) : building.priceMin
   }, [units, building.priceMin])
 
@@ -153,7 +156,21 @@ export function DesktopBuildingCard({
           </span>
         )}
         {isAgentMode && (
-          <button
+          <>
+            {isStarred && onRemove && (
+              <button
+                type="button"
+                aria-label={`Remove ${building.name} from saved list`}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onRemove(building)
+                }}
+                className="absolute left-3 top-3 z-10 flex size-9 items-center justify-center rounded-full border border-white/80 bg-black/45 text-white transition-colors hover:bg-black/65"
+              >
+                <span aria-hidden="true" className="text-xl leading-none">×</span>
+              </button>
+            )}
+            <button
             type="button"
             aria-label={isStarred ? `Remove ${building.name} from saved buildings` : `Save ${building.name}`}
             aria-pressed={isStarred}
@@ -169,6 +186,7 @@ export function DesktopBuildingCard({
               <path d="M12 21C12 21 3 14.5 3 8.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 9 2.5C21 14.5 12 21 12 21z" />
             </svg>
           </button>
+          </>
         )}
       </div>
       <div className="flex flex-col gap-0.5 px-0.5 pt-3">
@@ -177,8 +195,14 @@ export function DesktopBuildingCard({
         </div>
         <div className="text-sm text-[#6B7280]">{building.neighborhood}</div>
         <div className="mt-0.5 text-[15px] font-semibold text-[#0A0F1C]">
-          From ${displayedPrice.toLocaleString("en-US")}
-          <span className="font-normal text-[#6B7280]">/mo</span>
+          {hasPrice(displayedPrice) ? (
+            <>
+              From ${displayedPrice.toLocaleString("en-US")}
+              <span className="font-normal text-[#6B7280]">/mo</span>
+            </>
+          ) : (
+            <span className="font-normal text-[#6B7280]">{PRICING_COMING_SOON}</span>
+          )}
         </div>
       </div>
     </article>

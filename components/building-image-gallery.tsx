@@ -40,7 +40,7 @@ export function BuildingImageGallery({ images, buildingName, height = 280, curre
     }
   }, [isOpen, total])
 
-  if (total === 0) return <div style={{ height, background: '#E5E7EB' }} aria-label="No building photos" />
+  if (total === 0) return <div role="img" style={{ height, background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B', fontSize: 13, fontWeight: 600 }} aria-label="No building photos">Photos coming soon</div>
 
   const previous = () => setCurrent((index) => (index - 1 + total) % total)
   const next = () => setCurrent((index) => (index + 1) % total)

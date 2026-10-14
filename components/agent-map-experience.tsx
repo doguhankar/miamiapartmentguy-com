@@ -21,6 +21,7 @@ import { useSaveList } from '@/components/save-list-provider';
 import { createClient } from '@/lib/supabase/client';
 import { buildings as BUILDING_CATALOG, type Building } from '@/lib/buildings';
 import { getPriceRange } from '@/lib/price-range';
+import { hasPrice, PRICING_COMING_SOON } from '@/lib/price-display';
 import { saveMapQuery, readMapQuery, clearMapQuery, saveBuildingOrigin } from '@/lib/map-return';
 import {
   type AvailableUnit,
@@ -541,20 +542,27 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       location.style.fontSize = '13px';
       content.appendChild(location);
 
-      const liveUnits = pricingData[building.id]?.units?.filter((unit) => typeof unit.price === 'number' && Number.isFinite(unit.price)) || [];
+      const liveUnits = pricingData[building.id]?.units?.filter((unit) => hasPrice(unit.price)) || [];
       const prices = liveUnits.map((unit) => unit.price as number);
       const lowestPrice = prices.length ? Math.min(...prices) : building.priceMin;
       const highestPrice = prices.length ? Math.max(...prices) : building.priceMax || building.priceMin;
       const formatPrice = (value: number) => `$${Math.round(value).toLocaleString()}`;
 
       const price = document.createElement('div');
-      price.textContent = lowestPrice === highestPrice
-        ? formatPrice(lowestPrice)
-        : `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice)}`;
+      if (!hasPrice(lowestPrice)) {
+        price.textContent = PRICING_COMING_SOON;
+        price.style.color = '#7B8799';
+        price.style.fontSize = '15px';
+        price.style.fontWeight = '600';
+      } else {
+        price.textContent = lowestPrice === highestPrice
+          ? formatPrice(lowestPrice)
+          : `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice)}`;
+        price.style.color = '#172033';
+        price.style.fontSize = '20px';
+        price.style.fontWeight = '750';
+      }
       price.style.marginTop = '12px';
-      price.style.color = '#172033';
-      price.style.fontSize = '20px';
-      price.style.fontWeight = '750';
       content.appendChild(price);
 
       const unitLabels = Array.from(new Set(liveUnits.map((unit) => {
@@ -707,14 +715,24 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
     markerMetaRef.current.forEach(({ building, el, media, placeholder, price }) => {
       el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
 
-      const liveUnits = pricingData[building.id]?.units?.filter((unit) => typeof unit.price === 'number' && Number.isFinite(unit.price)) || [];
+      const liveUnits = pricingData[building.id]?.units?.filter((unit) => hasPrice(unit.price)) || [];
       const prices = liveUnits.map((unit) => unit.price as number);
       const lowestPrice = prices.length ? Math.min(...prices) : building.priceMin;
       const highestPrice = prices.length ? Math.max(...prices) : building.priceMax || building.priceMin;
       const formatPrice = (value: number) => `$${Math.round(value).toLocaleString()}`;
-      price.textContent = lowestPrice === highestPrice
-        ? formatPrice(lowestPrice)
-        : `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice)}`;
+      if (!hasPrice(lowestPrice)) {
+        price.textContent = PRICING_COMING_SOON;
+        price.style.color = '#7B8799';
+        price.style.fontSize = '15px';
+        price.style.fontWeight = '600';
+      } else {
+        price.textContent = lowestPrice === highestPrice
+          ? formatPrice(lowestPrice)
+          : `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice)}`;
+        price.style.color = '#172033';
+        price.style.fontSize = '20px';
+        price.style.fontWeight = '750';
+      }
 
       const imageUrls = buildingImages[String(building.id)]?.length
         ? buildingImages[String(building.id)]
@@ -760,7 +778,7 @@ export interface AgentMapExperienceConfig {
 
 export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSelection, agentDisplayName = 'Don' }: AgentMapExperienceConfig) {
   const { hasAccess } = useAgentMode();
-  const { savedIds, toggleSave } = useSaveList();
+  const { savedIds, toggleSave, remove, clear } = useSaveList();
   const [visibleBuildings, setVisibleBuildings] = useState(BUILDING_CATALOG)
   const VISIBLE_BUILDINGS = visibleBuildings
   const [geocodedBuildings, setGeocodedBuildings] = useState(VISIBLE_BUILDINGS)
@@ -1289,6 +1307,25 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     setVisibleBuildingIds(matchingBuildingIds);
   };
 
+  const handleRemoveSavedBuilding = async (buildingId: string) => {
+    try {
+      await remove(buildingId)
+      showToast('Building removed from list', { type: 'success' })
+    } catch {
+      showToast('Failed to remove building', { type: 'error' })
+    }
+  }
+
+  const handleClearSavedList = async () => {
+    if (!savedIds.length || !window.confirm('Clear all buildings from this list?')) return
+    try {
+      await clear()
+      showToast('Saved list cleared', { type: 'success' })
+    } catch {
+      showToast('Failed to clear list', { type: 'error' })
+    }
+  }
+
   const handleSaveList = async () => {
     if (savedIds.length === 0) return;
 
@@ -1450,9 +1487,9 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
               </div>
             ) : (
               /* Count line */
-              <div style={{ padding: '5px 16px 10px', fontSize: 11.5, color: '#6B7280', fontWeight: 500 }}>
-  <b style={{ color: '#0A0F1C', fontWeight: 700 }}>{viewportBuildings.length > 0 ? viewportBuildings.length : filteredBuildings.length}</b>{' '}
-  in view
+              <div style={{ padding: '5px 16px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5, color: '#6B7280', fontWeight: 500 }}>
+                <span><b style={{ color: '#0A0F1C', fontWeight: 700 }}>{viewportBuildings.length > 0 ? viewportBuildings.length : filteredBuildings.length}</b>{' '}in view</span>
+                {savedIds.length > 0 && <button type="button" onClick={handleClearSavedList} style={{ border: '1px solid #FECACA', color: '#DC2626', background: '#FFF', borderRadius: 6, padding: '4px 8px', fontSize: 10, fontWeight: 700 }}>Clear saved</button>}
               </div>
             )}
           </div>
@@ -1483,12 +1520,25 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                   >
                     {/* Image area */}
                     <div style={{ position: 'relative', width: '100%', height: 176, background: '#F8F8FA' }}>
-                      {imageUrl && (
+                      {imageUrl ? (
                         <img
                           src={imageUrl}
                           alt={building.name}
+                          onError={(event) => { event.currentTarget.style.display = 'none'; }}
                           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                         />
+                      ) : (
+                        <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: '#64748B' }}>
+                          No photo
+                        </span>
+                      )}
+                      {savedIds.includes(String(building.id)) && (
+                        <button
+                          type="button"
+                          aria-label={`Remove ${building.name} from saved list`}
+                          onClick={(event) => { event.stopPropagation(); handleRemoveSavedBuilding(String(building.id)) }}
+                          style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, width: 32, height: 32, borderRadius: 999, border: '1px solid rgba(255,255,255,0.8)', background: 'rgba(10,15,28,0.72)', color: '#fff', fontSize: 21, lineHeight: 1, cursor: 'pointer' }}
+                        >×</button>
                       )}
                       {/* Neighborhood tag */}
                       <div style={{
@@ -1526,9 +1576,13 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                         {building.address}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ fontFamily: 'var(--font-archivo), Archivo, sans-serif', fontSize: 15, fontWeight: 700, color: '#0A0F1C' }}>
-                          ${building.priceMin?.toLocaleString()}+
-                        </div>
+                        {hasPrice(building.priceMin) ? (
+                          <div style={{ fontFamily: 'var(--font-archivo), Archivo, sans-serif', fontSize: 15, fontWeight: 700, color: '#0A0F1C' }}>
+                            ${building.priceMin.toLocaleString()}+
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#6B7280' }}>{PRICING_COMING_SOON}</div>
+                        )}
                         {hasSpecial && (
                           <span style={{
                             display: 'inline-flex', alignItems: 'center',
@@ -1704,7 +1758,13 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
         <div className="basis-[55%] bg-[#F8F9FB] border-r border-[#E8EBF0] overflow-hidden flex flex-col" style={{ position: 'relative', zIndex: 20, pointerEvents: 'auto', background: 'white' }}>
           {/* Save list button — only visible when buildings are starred */}
           {savedIds.length > 0 && (
-            <div className="px-4 pt-3 pb-0 flex justify-end">
+              <div className="px-4 pt-3 pb-0 flex justify-end gap-2">
+              <button
+                onClick={handleClearSavedList}
+                className="border border-red-200 text-red-600 hover:bg-red-50 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors"
+              >
+                Clear list
+              </button>
               <button
                 onClick={() => handleSaveList()}
                 disabled={isSavingList}
@@ -1733,8 +1793,9 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                                   isStarred={savedIds.includes(String(building.id))}
                   onHover={setHighlightedBuilding}
                   onClick={() => openBuilding(building.id)}
-                  onStar={() => toggleSave(String(building.id))}
-                                />
+  onStar={() => toggleSave(String(building.id))}
+  onRemove={() => handleRemoveSavedBuilding(String(building.id))}
+  />
               ))}
             </div>
           </div>

@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+export async function DELETE(request: Request, { params }: { params: Promise<{ user_id: string }> }) {
+  const { user_id } = await params
+  const buildingId = new URL(request.url).searchParams.get('buildingId')
+  const supabase = createAdminClient()
+  const query = supabase.from('saved_buildings').delete().eq('user_id', user_id)
+  const result = buildingId ? await query.eq('building_id', buildingId) : await query
+  if (result.error) return NextResponse.json({ error: result.error.message }, { status: 400 })
+  return NextResponse.json({ ok: true })
+}
+
 export async function GET(_: Request, { params }: { params: Promise<{ user_id: string }> }) {
   const { user_id } = await params
   const supabase = createAdminClient()

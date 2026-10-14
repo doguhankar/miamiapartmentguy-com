@@ -27,6 +27,7 @@ const NEIGHBORHOOD_PIN_COLORS: Record<string, string> = {
   Downtown: "#059669", // emerald-600
   Wynwood: "#DC2626", // red-600
   "Edgewater": "#7C3AED", // violet-600
+  "Allapattah": "#CA8A04", // yellow-600
   "Midtown": "#EA580C", // orange-600
   "Coral Gables": "#0891B2", // cyan-600
 }

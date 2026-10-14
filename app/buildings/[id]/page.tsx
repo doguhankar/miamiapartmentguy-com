@@ -16,6 +16,7 @@ import { useAgentMode } from '@/components/agent-mode-provider'
 import { useSaveList } from '@/components/save-list-provider'
 import { BuildingImageGallery } from '@/components/building-image-gallery'
 import { readBuildingOrigin, readMapQuery } from '@/lib/map-return'
+import { hasPrice, PRICING_COMING_SOON } from '@/lib/price-display'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface LiveUnit {
@@ -263,7 +264,7 @@ export default function BuildingDetailPage() {
     if (u.price && (!priceByType[k] || u.price < priceByType[k])) priceByType[k] = u.price
   })
   // Fallback from building static data
-  if (Object.keys(priceByType).length === 0) {
+  if (Object.keys(priceByType).length === 0 && hasPrice(building.priceMin)) {
     const unitMap: Record<string, string> = { 'Studio': 'Studio', '1B': '1BR', '2B': '2BR', '3B': '3BR' }
     building.units.forEach(u => { if (unitMap[u]) priceByType[unitMap[u]] = building.priceMin })
   }
@@ -279,6 +280,8 @@ export default function BuildingDetailPage() {
   const totalMonthly = (building.monthlyCharges ?? []).filter(f =>
     !/(pet fee|parking)/i.test(f.type)
   ).reduce((s, f) => s + f.amount, 0)
+  const totalMoveInLabel = (building.moveInFees ?? []).length > 0 ? fmt(totalMoveIn) : PRICING_COMING_SOON
+  const totalMonthlyLabel = (building.monthlyCharges ?? []).length > 0 ? `${fmt(totalMonthly)}/mo` : PRICING_COMING_SOON
   const trueMonthly = effectiveRent + totalMonthly
 
   // Calculator
@@ -293,9 +296,11 @@ export default function BuildingDetailPage() {
 
   const sqft = (u: LiveUnit) => u.sqft ?? u.square_feet
   const avail = (u: LiveUnit) => u.availableDate ?? u.available_date
-  const realMin = liveUnits.length
-    ? Math.min(...liveUnits.map((u) => u.price).filter((value): value is number => Boolean(value)))
-    : building.priceMin
+  const livePrices = liveUnits.map((u) => u.price).filter((value): value is number => hasPrice(value))
+  const realMin = livePrices.length ? Math.min(...livePrices) : building.priceMin
+  const priceKnown = hasPrice(realMin)
+  const startingPrice = hasPrice(building.priceMin) ? building.priceMin : realMin
+  const startingKnown = hasPrice(startingPrice)
 
   // ── Styling tokens ──────────────────────────────���────────���──────────────────
   const NAVY = '#0B1220'
@@ -347,7 +352,7 @@ export default function BuildingDetailPage() {
             <div style={{ flex: '1 1 220px', padding: '16px 18px', background: '#F8F9FB', border: '1px solid #E8EBF0', borderRadius: 14 }}>
               <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Due at move-in</div>
               {(building.moveInFees ?? []).map((f, i, arr) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12, borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : 'none' }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0 0', marginTop: 6, fontWeight: 800, fontSize: 13, borderTop: `2px solid ${BORDER}` }}><span>Total Initial</span><span>{fmt(totalMoveIn)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0 0', marginTop: 6, fontWeight: 800, fontSize: 13, borderTop: `2px solid ${BORDER}` }}><span>Total Initial</span><span>{totalMoveInLabel}</span></div>
             </div>
             <div style={{ flex: '1 1 220px', padding: '16px 18px', background: '#F8F9FB', border: '1px solid #E8EBF0', borderRadius: 14 }}>
               <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Recurring monthly</div>
@@ -387,16 +392,23 @@ export default function BuildingDetailPage() {
 
       <div style={{ background: '#fff', border: '1px solid #E5E3DC', borderRadius: 12, padding: 16, marginBottom: 14 }}>
         <div style={{ fontSize: 18, fontWeight: 600, color: '#0B1220', marginBottom: 10 }}>Move-in and monthly costs</div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Total upfront</span><span style={{ color: TEXT }}>{fmt(totalMoveIn)}</span></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Monthly fees</span><span style={{ color: TEXT }}>{fmt(totalMonthly)}/mo</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Total upfront</span><span style={{ color: TEXT }}>{totalMoveInLabel}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Monthly fees</span><span style={{ color: TEXT }}>{totalMonthlyLabel}</span></div>
       </div>
 
+      {!hasPrice(selectedPrice) ? (
+        <div style={{ background: '#0B1220', borderRadius: 12, padding: 20, marginBottom: 16 }}>
+          <p style={{ fontSize: 12, color: '#7A8296', margin: '0 0 3px' }}>True monthly cost</p>
+          <p style={{ fontSize: 20, fontWeight: 600, color: '#fff', margin: 0 }}>{PRICING_COMING_SOON}</p>
+        </div>
+      ) : (
       <div style={{ background: '#0B1220', borderRadius: 12, padding: 20, marginBottom: 16 }}>
         {monthsFree > 0 && <p style={{ fontSize: 12, color: '#19C6C0', margin: '0 0 7px' }}>With {monthsFree} month{monthsFree > 1 ? 's' : ''} free on a 12-month lease</p>}
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 13 }}><span style={{ fontSize: 14, color: '#7A8296', textDecoration: 'line-through' }}>{fmt(selectedPrice)}</span>{monthsFree > 0 && <span style={{ fontSize: 12, color: '#FFC24B' }}>Save {fmt(savingsPerMo * 12)}/yr</span>}</div>
         <p style={{ fontSize: 12, color: '#7A8296', margin: '0 0 3px' }}>True monthly cost</p>
         <p style={{ fontSize: 32, fontWeight: 600, color: '#fff', margin: 0 }}>{fmt(trueMonthly)}<span style={{ fontSize: 15, fontWeight: 400, color: '#7A8296' }}>/mo</span></p>
       </div>
+      )}
     </>
   )
 
@@ -516,7 +528,7 @@ export default function BuildingDetailPage() {
 
           {/* TOP INFO */}
           <div style={{ padding: '12px 20px 15px', background: '#fff', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}><span style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Starting at</span><div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 22, color: TEXT }}>{fmt(building.priceMin)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo</span></div></div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>{startingKnown ? <><span style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Starting at</span><div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 22, color: TEXT }}>{fmt(startingPrice)}</strong><span style={{ fontSize: 11, color: MUTED, marginLeft: 4 }}>/mo</span></div></> : <strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 18, color: MUTED }}>{PRICING_COMING_SOON}</strong>}</div>
             {building.tagline && <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.5, marginTop: 8 }}>{building.tagline}</div>}
             <div style={{ display: 'flex', gap: 7, marginTop: 9, flexWrap: 'wrap', alignItems: 'center' }}>
               {building.concession && <span style={{ display: 'inline-flex', alignItems: 'center', background: '#FFE3EE', color: '#A80F47', borderRadius: 999, padding: '7px 14px', fontSize: 12, fontWeight: 700 }}>{building.concession}</span>}
@@ -614,10 +626,10 @@ export default function BuildingDetailPage() {
                 <h2 style={{ margin: 0, fontFamily: 'var(--font-archivo)', fontSize: 22, fontWeight: 700 }}>Building fees</h2>
                 <div style={{ marginTop: 7, color: AB_MUTED, fontSize: 15 }}>What to budget for at move-in and each month</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 40, marginTop: 22 }}>
-                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>DUE AT MOVE-IN</div>{(building.moveInFees ?? []).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total initial</span><span>{fmt(totalMoveIn)}</span></div></div>
-                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>RECURRING MONTHLY</div>{(building.monthlyCharges ?? []).filter(fee => !/(pet fee|parking)/i.test(fee.type)).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total monthly</span><span>{fmt(totalMonthly)}/mo</span></div></div>
+                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>DUE AT MOVE-IN</div>{(building.moveInFees ?? []).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total initial</span><span>{totalMoveInLabel}</span></div></div>
+                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>RECURRING MONTHLY</div>{(building.monthlyCharges ?? []).filter(fee => !/(pet fee|parking)/i.test(fee.type)).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total monthly</span><span>{totalMonthlyLabel}</span></div></div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 22, padding: '16px 22px', borderRadius: 12, background: 'linear-gradient(90deg,#0B7F7A,#0E9A93)', color: '#fff', fontSize: 16, fontWeight: 700 }}><span>True monthly cost — starting</span><strong style={{ fontSize: 18 }}>{fmt(building.priceMin + totalMonthly)}/mo</strong></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 22, padding: '16px 22px', borderRadius: 12, background: 'linear-gradient(90deg,#0B7F7A,#0E9A93)', color: '#fff', fontSize: 16, fontWeight: 700 }}><span>True monthly cost — starting</span><strong style={{ fontSize: 18 }}>{startingKnown ? `${fmt(startingPrice + totalMonthly)}/mo` : PRICING_COMING_SOON}</strong></div>
                 {(building.moveInFees ?? []).some(fee => fee.type.toLowerCase().includes('deposit')) && <div style={{ marginTop: 12, color: AB_MUTED, fontSize: 14, fontStyle: 'italic' }}>Deposits are due on move-in or application, not upfront.</div>}
               </section>
 
@@ -625,14 +637,14 @@ export default function BuildingDetailPage() {
             </div>
 
             <aside style={{ flex: '0 0 372px', position: 'sticky', top: 24, padding: 24, border: `1px solid ${AB_BORDER}`, borderRadius: 12, boxShadow: '0 6px 16px rgba(0,0,0,0.12)', background: '#fff' }}>
-              <div><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 24, fontWeight: 800 }}>{fmt(realMin)}</strong> <span style={{ color: AB_MUTED, fontSize: 16 }}>/mo starting</span></div>
+              <div>{priceKnown ? <><strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 24, fontWeight: 800 }}>{fmt(realMin)}</strong> <span style={{ color: AB_MUTED, fontSize: 16 }}>/mo starting</span></> : <strong style={{ fontFamily: 'var(--font-archivo)', fontSize: 20, fontWeight: 800, color: AB_MUTED }}>{PRICING_COMING_SOON}</strong>}</div>
               {building.concession && <div style={{ display: 'inline-flex', marginTop: 12, padding: '7px 13px', borderRadius: 999, background: BADGE_BG, color: BADGE_TEXT, fontSize: 13, fontWeight: 700 }}>{building.concession}</div>}
               <div style={{ marginTop: 18, border: `1px solid ${AB_PANEL_BORDER}`, borderRadius: 10, overflow: 'hidden' }}><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}><div style={{ padding: 14 }}><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.06em' }}>HOLD PERIOD</div><div style={{ marginTop: 5, fontSize: 14 }}>{formatHoldPeriod(building.holdDays)}</div></div><div style={{ padding: 14, borderLeft: `1px solid ${AB_PANEL_BORDER}` }}><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.06em' }}>MOVE-IN</div><div style={{ marginTop: 5, color: AB_MUTED, fontSize: 14 }}>Add date</div></div></div><div style={{ display: 'flex', justifyContent: 'space-between', padding: 14, borderTop: `1px solid ${AB_PANEL_BORDER}`, fontSize: 14 }}><span><span style={{ display: 'block', fontSize: 10, fontWeight: 800, letterSpacing: '0.06em' }}>FLOOR PLAN</span><span style={{ display: 'block', marginTop: 5 }}>Any · Studio–3BR</span></span><span>⌄</span></div></div>
               <a href={`sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: 52, marginTop: 16, borderRadius: 10, background: 'linear-gradient(90deg,#E61E4D,#D70466)', color: '#fff', fontSize: 16, fontWeight: 700, textDecoration: 'none' }}>Text Don</a>
               <button type="button" onClick={() => setShowLeasingForm(true)} style={{ width: '100%', height: 52, marginTop: 10, border: `1px solid ${TEAL}`, borderRadius: 10, background: '#fff', color: TEAL, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>Connect with leasing</button>
               <div style={{ marginTop: 14, textAlign: 'center', color: AB_MUTED, fontSize: 14 }}>You won&apos;t be charged — no credit impact</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 22, paddingBottom: 22, borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 15 }}><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ textDecoration: 'underline' }}>Income requirement</span><span>3× rent</span></div><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ textDecoration: 'underline' }}>Credit score</span><span>650+</span></div><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ textDecoration: 'underline' }}>Guarantor</span><span>Accepted</span></div></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 18, fontSize: 16, fontWeight: 700 }}><span>Monthly fees</span><span>{fmt(totalMonthly)}/mo</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 18, fontSize: 16, fontWeight: 700 }}><span>Monthly fees</span><span>{totalMonthlyLabel}</span></div>
               <div style={{ marginTop: 16, textAlign: 'center', color: AB_MUTED, fontSize: 14 }}>◈ &nbsp;Pre-qualify before you tour</div>
             </aside>
           </div>

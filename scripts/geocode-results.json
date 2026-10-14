@@ -1,0 +1,290 @@
+[
+  {
+    "id": "flagler-on-the-river",
+    "name": "Flagler on the River",
+    "neighborhood": "Downtown",
+    "address": "340 W Flagler St, Miami, FL 33130",
+    "lat": 25.773657,
+    "lng": -80.19999,
+    "matched": "340 West Flagler Street, Miami, Florida 33130, United States",
+    "matchCode": "exact",
+    "accuracy": "rooftop",
+    "census": {
+      "lat": 25.773954444131,
+      "lng": -80.197926478548,
+      "matched": "340 W FLAGLER ST, MIAMI, FL, 33130"
+    },
+    "status": "PASS",
+    "reasons": []
+  },
+  {
+    "id": "central-tower",
+    "name": "Central Tower",
+    "neighborhood": "Downtown",
+    "address": "46 NE 6th St, Miami, FL 33132",
+    "lat": 25.779787,
+    "lng": -80.192861,
+    "matched": "46 Northeast 6th Street, Miami, Florida 33132, United States",
+    "matchCode": "exact",
+    "accuracy": "parcel",
+    "census": {
+      "lat": 25.7798739403,
+      "lng": -80.193052491034,
+      "matched": "46 NE 6TH ST, MIAMI, FL, 33132"
+    },
+    "status": "PASS",
+    "reasons": []
+  },
+  {
+    "id": "square-station",
+    "name": "Square Station",
+    "neighborhood": "Downtown",
+    "address": "1424 NE Miami Pl, Miami, FL 33132",
+    "lat": 25.788863,
+    "lng": -80.193346,
+    "matched": "1424 Northeast Miami Place, Miami, Florida 33132, United States",
+    "matchCode": "exact",
+    "accuracy": "rooftop",
+    "census": {
+      "lat": 25.788585701269,
+      "lng": -80.193120100559,
+      "matched": "1424 NE MIAMI PL, MIAMI, FL, 33132"
+    },
+    "status": "PASS",
+    "reasons": []
+  },
+  {
+    "id": "melody-tower",
+    "name": "Melody Tower",
+    "neighborhood": "Downtown",
+    "address": "245 NE 14th St, Miami, FL 33132",
+    "lat": 25.788463,
+    "lng": -80.190032,
+    "matched": "245 Northeast 14th Street, Miami, Florida 33132, United States",
+    "matchCode": "exact",
+    "accuracy": "rooftop",
+    "census": {
+      "lat": 25.788301338408,
+      "lng": -80.189972045995,
+      "matched": "245 NE 14TH ST, MIAMI, FL, 33132"
+    },
+    "status": "PASS",
+    "reasons": []
+  },
+  {
+    "id": "miami-plaza",
+    "name": "Miami Plaza",
+    "neighborhood": "Downtown",
+    "address": "1500 NE Miami Pl, Miami, FL 33132",
+    "lat": 25.789789,
+    "lng": -80.193523,
+    "matched": "1500 Northeast Miami Place, Miami, Florida 33132, United States",
+    "matchCode": "exact",
+    "accuracy": "rooftop",
+    "census": {
+      "lat": 25.789480397061,
+      "lng": -80.193157680939,
+      "matched": "1500 NE MIAMI PL, MIAMI, FL, 33132"
+    },
+    "status": "PASS",
+    "reasons": []
+  },
+  {
+    "id": "downtown-5th",
+    "name": "Downtown 5th",
+    "neighborhood": "Downtown",
+    "address": "55 NE 5th St, Miami, FL 33132",
+    "lat": 25.779243,
+    "lng": -80.19292,
+    "matched": "55 Northeast 5th Street, Miami, Florida 33132, United States",
+    "matchCode": "exact",
+    "accuracy": "rooftop",
+    "census": {
+      "lat": 25.779064991781,
+      "lng": -80.192876619344,
+      "matched": "55 NE 5TH ST, MIAMI, FL, 33132"
+    },
+    "status": "PASS",
+    "reasons": []
+  },
+  {
+    "id": "downtown-1st",
+    "name": "Downtown 1st",
+    "neighborhood": "Downtown",
+    "address": "30 SW 1st St, Miami, FL 33130",
+    "lat": 25.772993,
+    "lng": -80.194146,
+    "matched": "30 Southwest 1st Street, Miami, Florida 33130, United States",
+    "matchCode": "exact",
+    "accuracy": "rooftop",
+    "census": {
+      "lat": 25.773247082948,
+      "lng": -80.193925303527,
+      "matched": "30 SW 1ST ST, MIAMI, FL, 33130"
+    },
+    "status": "PASS",
+    "reasons": []
+  },
+  {
+    "id": "22-skyview",
+    "name": "22 Skyview",
+    "neighborhood": "Edgewater",
+    "address": "425 NE 22nd St, Miami, FL 33137",
+    "lat": 25.798509,
+    "lng": -80.187346,
+    "matched": "425 Northeast 22nd Street, Miami, Florida 33137, United States",
+    "matchCode": "exact",
+    "accuracy": "rooftop",
+    "census": {
+      "lat": 25.798192051017,
+      "lng": -80.187939000095,
+      "matched": "425 NE 22ND ST, MIAMI, FL, 33137"
+    },
+    "status": "PASS",
+    "reasons": []
+  },
+  {
+    "id": "23-biscayne-bay",
+    "name": "23 Biscayne Bay",
+    "neighborhood": "Edgewater",
+    "address": "601 NE 23rd St, Miami, FL 33137",
+    "lat": 25.799382,
+    "lng": -80.186358,
+    "matched": "601 Northeast 23rd Street, Miami, Florida 33137, United States",
+    "matchCode": "exact",
+    "accuracy": "rooftop",
+    "census": {
+      "lat": 25.799282953077,
+      "lng": -80.186791843086,
+      "matched": "601 NE 23RD ST, MIAMI, FL, 33137"
+    },
+    "status": "PASS",
+    "reasons": []
+  },
+  {
+    "id": "urban-22",
+    "name": "Urban 22",
+    "neighborhood": "Edgewater",
+    "address": "2220 NE 2nd Ave, Miami, FL 33137",
+    "lat": 25.798534,
+    "lng": -80.191082,
+    "matched": "2220 Northeast 2nd Avenue, Miami, Florida 33161, United States",
+    "matchCode": "high",
+    "accuracy": "rooftop",
+    "census": {
+      "lat": 25.798286113529,
+      "lng": -80.190936220967,
+      "matched": "2220 NE 2ND AVE, MIAMI, FL, 33137"
+    },
+    "status": "PASS",
+    "reasons": []
+  },
+  {
+    "id": "second-plaza",
+    "name": "Second Plaza",
+    "neighborhood": "Edgewater",
+    "address": "222 NE 25th St, Miami, FL 33137",
+    "lat": 25.800495,
+    "lng": -80.190638,
+    "matched": "222 Northeast 25th Street, Miami, Florida 33137, United States",
+    "matchCode": "exact",
+    "accuracy": "rooftop",
+    "census": {
+      "lat": 25.80081497981,
+      "lng": -80.190500447118,
+      "matched": "222 NE 25TH ST, MIAMI, FL, 33137"
+    },
+    "status": "PASS",
+    "reasons": []
+  },
+  {
+    "id": "25-biscayne-park",
+    "name": "25 Biscayne Park",
+    "neighborhood": "Edgewater",
+    "address": "250 NE 25th St, Miami, FL 33137",
+    "lat": 25.800714,
+    "lng": -80.189814,
+    "matched": "250 Northeast 25th Street, Miami, Florida 33137, United States",
+    "matchCode": "exact",
+    "accuracy": "rooftop",
+    "census": {
+      "lat": 25.800825074461,
+      "lng": -80.190013652731,
+      "matched": "250 NE 25TH ST, MIAMI, FL, 33137"
+    },
+    "status": "PASS",
+    "reasons": []
+  },
+  {
+    "id": "1800-biscayne-plaza",
+    "name": "1800 Biscayne Plaza",
+    "neighborhood": "Edgewater",
+    "address": "275 NE 18th St, Miami, FL 33132",
+    "lat": 25.793876,
+    "lng": -80.189501,
+    "matched": "275 Northeast 18th Street, Miami, Florida 33132, United States",
+    "matchCode": "exact",
+    "accuracy": "rooftop",
+    "census": {
+      "lat": 25.793637682882,
+      "lng": -80.189253625995,
+      "matched": "275 NE 18TH ST, MIAMI, FL, 33132"
+    },
+    "status": "PASS",
+    "reasons": []
+  },
+  {
+    "id": "25-mirage",
+    "name": "25 Mirage",
+    "neighborhood": "Edgewater",
+    "address": "162 NE 25th St, Miami, FL 33137",
+    "lat": 25.800627,
+    "lng": -80.191515,
+    "matched": "162 Northeast 25th Street, Miami, Florida 33137, United States",
+    "matchCode": "exact",
+    "accuracy": "rooftop",
+    "census": {
+      "lat": 25.800765297954,
+      "lng": -80.191770315347,
+      "matched": "162 NE 25TH ST, MIAMI, FL, 33137"
+    },
+    "status": "PASS",
+    "reasons": []
+  },
+  {
+    "id": "oak-plaza",
+    "name": "Oak Plaza",
+    "neighborhood": "Allapattah",
+    "address": "1415 NW 15th Ave, Miami, FL 33125",
+    "lat": 25.787867,
+    "lng": -80.220164,
+    "matched": "1415 Northwest 15th Avenue, Miami, Florida 33125, United States",
+    "matchCode": "exact",
+    "accuracy": "rooftop",
+    "census": {
+      "lat": 25.787581548025,
+      "lng": -80.220559344954,
+      "matched": "1415 NW 15TH AVE, MIAMI, FL, 33125"
+    },
+    "status": "PASS",
+    "reasons": []
+  },
+  {
+    "id": "one-plaza-west-brickell",
+    "name": "One Plaza West Brickell",
+    "neighborhood": "Brickell",
+    "address": "1800 SW 1st Ave, Miami, FL 33129",
+    "lat": 25.758244,
+    "lng": -80.19927,
+    "matched": "1800 Southwest 1st Avenue, Miami, Florida 33129, United States",
+    "matchCode": "exact",
+    "accuracy": "rooftop",
+    "census": {
+      "lat": 25.758438650052,
+      "lng": -80.198401459142,
+      "matched": "1800 SW 1ST AVE, MIAMI, FL, 33129"
+    },
+    "status": "PASS",
+    "reasons": []
+  }
+]

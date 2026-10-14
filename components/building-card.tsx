@@ -66,7 +66,7 @@ export function BuildingCard({ building }: BuildingCardProps) {
                 <div>
                   <p className="text-xs text-muted-foreground">Price</p>
                   <p className="font-medium text-foreground">
-                    From ${building.priceMin.toLocaleString()}
+                    {building.priceMin > 0 ? `From $${building.priceMin.toLocaleString()}` : 'Pricing coming soon'}
                   </p>
                 </div>
               </div>

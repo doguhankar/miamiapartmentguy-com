@@ -15,7 +15,7 @@ interface SimilarBuilding {
 }
 
 const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then((response) => response.json())
-const money = (value: number) => value ? `$${value.toLocaleString()}` : 'Contact for pricing'
+const money = (value: number) => value ? `$${value.toLocaleString()}` : 'Pricing coming soon'
 
 export function SimilarBuildings({ buildingId, variant = 'grid' }: { buildingId: string; variant?: 'grid' | 'carousel' }) {
   const { data } = useSWR<{ buildings: SimilarBuilding[] }>(`/api/buildings/${buildingId}/similar`, fetcher, {
