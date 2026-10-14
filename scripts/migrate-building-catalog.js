@@ -7,13 +7,18 @@ import { createClient } from '@supabase/supabase-js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const sourcePath = path.join(__dirname, '../lib/buildings.ts')
-const EXPECTED_SOURCE_COUNT = 108
+const EXPECTED_SOURCE_COUNT = 135
 const BOULEVARD_ID = 'the-boulevard'
+const NEW_BUILDING_IDS = [
+  'flagler-on-the-river', 'central-tower', 'square-station', 'melody-tower', 'miami-plaza',
+  'downtown-5th', 'downtown-1st', '22-skyview', '23-biscayne-bay', 'urban-22', 'second-plaza',
+  '25-biscayne-park', '1800-biscayne-plaza', '25-mirage', 'oak-plaza', 'one-plaza-west-brickell',
+]
 
 function loadLocalBuildings() {
   const source = fs.readFileSync(sourcePath, 'utf8')
   const startMarker = 'export const buildings: Building[] = ['
-  const endMarker = '\n]\n\nexport const neighborhoodColors'
+  const endMarker = '\n]\nexport const neighborhoodColors'
   const start = source.indexOf(startMarker)
   const end = source.indexOf(endMarker, start)
 
@@ -37,6 +42,10 @@ function normalizeBuildings(sourceBuildings) {
     name: String(building.name).trim(),
     neighborhood: building.neighborhood ? String(building.neighborhood).trim() : null,
     address: building.address ? String(building.address).trim() : null,
+    lat: building.lat,
+    lng: building.lng,
+    commission: building.commission ?? null,
+    is_archived: false,
   }))
 
   if (rows.some((row) => !row.id || !row.name)) {
@@ -59,24 +68,29 @@ async function main() {
     throw new Error('SUPABASE_URL/NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required')
   }
 
-  const rows = normalizeBuildings(loadLocalBuildings())
+  const allRows = normalizeBuildings(loadLocalBuildings())
+  const rows = allRows.filter((row) => NEW_BUILDING_IDS.includes(row.id))
+  if (rows.length !== NEW_BUILDING_IDS.length) {
+    throw new Error(`Expected ${NEW_BUILDING_IDS.length} new buildings in lib/buildings.ts, found ${rows.length}`)
+  }
   const supabase = createClient(url, serviceRoleKey, { auth: { autoRefreshToken: false, persistSession: false } })
 
-  console.log(`[v0] Upserting ${rows.length} building catalog rows...`)
-  const { error } = await supabase.from('buildings').upsert(rows, { onConflict: 'id' })
+  console.log(`[v0] Inserting ${rows.length} new building rows (existing rows are left untouched)...`)
+  const { error } = await supabase.from('buildings').upsert(rows, { onConflict: 'id', ignoreDuplicates: true })
   if (error) throw error
 
-  const { count, error: countError } = await supabase
+  const { data, error: verifyError } = await supabase
     .from('buildings')
-    .select('id', { count: 'exact', head: true })
-  if (countError) throw countError
+    .select('id, lat, lng, commission, is_archived')
+    .in('id', NEW_BUILDING_IDS)
+  if (verifyError) throw verifyError
 
-  if (count !== rows.length) {
-    throw new Error(`Verification failed: expected ${rows.length} rows, found ${count}`)
+  const missing = NEW_BUILDING_IDS.filter((id) => !data.some((row) => row.id === id))
+  if (missing.length > 0) {
+    throw new Error(`Verification failed: missing rows ${missing.join(', ')}`)
   }
 
-  console.log(`[v0] Verified public.buildings row count: ${count}`)
-  console.log(`[v0] The Boulevard remapped from duplicate id 36 to ${BOULEVARD_ID}`)
+  console.log(`[v0] Verified ${data.length} of ${NEW_BUILDING_IDS.length} new rows in public.buildings`)
 }
 
 main().catch((error) => {

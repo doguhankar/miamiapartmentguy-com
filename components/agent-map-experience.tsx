@@ -21,6 +21,7 @@ import { useSaveList } from '@/components/save-list-provider';
 import { createClient } from '@/lib/supabase/client';
 import { buildings as BUILDING_CATALOG, type Building } from '@/lib/buildings';
 import { getPriceRange } from '@/lib/price-range';
+import { hasPrice, PRICING_COMING_SOON } from '@/lib/price-display';
 import { saveMapQuery, readMapQuery, clearMapQuery, saveBuildingOrigin } from '@/lib/map-return';
 import {
   type AvailableUnit,
@@ -541,20 +542,27 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       location.style.fontSize = '13px';
       content.appendChild(location);
 
-      const liveUnits = pricingData[building.id]?.units?.filter((unit) => typeof unit.price === 'number' && Number.isFinite(unit.price)) || [];
+      const liveUnits = pricingData[building.id]?.units?.filter((unit) => hasPrice(unit.price)) || [];
       const prices = liveUnits.map((unit) => unit.price as number);
       const lowestPrice = prices.length ? Math.min(...prices) : building.priceMin;
       const highestPrice = prices.length ? Math.max(...prices) : building.priceMax || building.priceMin;
       const formatPrice = (value: number) => `$${Math.round(value).toLocaleString()}`;
 
       const price = document.createElement('div');
-      price.textContent = lowestPrice === highestPrice
-        ? formatPrice(lowestPrice)
-        : `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice)}`;
+      if (!hasPrice(lowestPrice)) {
+        price.textContent = PRICING_COMING_SOON;
+        price.style.color = '#7B8799';
+        price.style.fontSize = '15px';
+        price.style.fontWeight = '600';
+      } else {
+        price.textContent = lowestPrice === highestPrice
+          ? formatPrice(lowestPrice)
+          : `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice)}`;
+        price.style.color = '#172033';
+        price.style.fontSize = '20px';
+        price.style.fontWeight = '750';
+      }
       price.style.marginTop = '12px';
-      price.style.color = '#172033';
-      price.style.fontSize = '20px';
-      price.style.fontWeight = '750';
       content.appendChild(price);
 
       const unitLabels = Array.from(new Set(liveUnits.map((unit) => {
@@ -707,14 +715,24 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
     markerMetaRef.current.forEach(({ building, el, media, placeholder, price }) => {
       el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
 
-      const liveUnits = pricingData[building.id]?.units?.filter((unit) => typeof unit.price === 'number' && Number.isFinite(unit.price)) || [];
+      const liveUnits = pricingData[building.id]?.units?.filter((unit) => hasPrice(unit.price)) || [];
       const prices = liveUnits.map((unit) => unit.price as number);
       const lowestPrice = prices.length ? Math.min(...prices) : building.priceMin;
       const highestPrice = prices.length ? Math.max(...prices) : building.priceMax || building.priceMin;
       const formatPrice = (value: number) => `$${Math.round(value).toLocaleString()}`;
-      price.textContent = lowestPrice === highestPrice
-        ? formatPrice(lowestPrice)
-        : `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice)}`;
+      if (!hasPrice(lowestPrice)) {
+        price.textContent = PRICING_COMING_SOON;
+        price.style.color = '#7B8799';
+        price.style.fontSize = '15px';
+        price.style.fontWeight = '600';
+      } else {
+        price.textContent = lowestPrice === highestPrice
+          ? formatPrice(lowestPrice)
+          : `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice)}`;
+        price.style.color = '#172033';
+        price.style.fontSize = '20px';
+        price.style.fontWeight = '750';
+      }
 
       const imageUrls = buildingImages[String(building.id)]?.length
         ? buildingImages[String(building.id)]
@@ -1502,12 +1520,17 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                   >
                     {/* Image area */}
                     <div style={{ position: 'relative', width: '100%', height: 176, background: '#F8F8FA' }}>
-                      {imageUrl && (
+                      {imageUrl ? (
                         <img
                           src={imageUrl}
                           alt={building.name}
+                          onError={(event) => { event.currentTarget.style.display = 'none'; }}
                           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                         />
+                      ) : (
+                        <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: '#64748B' }}>
+                          No photo
+                        </span>
                       )}
                       {savedIds.includes(String(building.id)) && (
                         <button
@@ -1553,9 +1576,13 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                         {building.address}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ fontFamily: 'var(--font-archivo), Archivo, sans-serif', fontSize: 15, fontWeight: 700, color: '#0A0F1C' }}>
-                          ${building.priceMin?.toLocaleString()}+
-                        </div>
+                        {hasPrice(building.priceMin) ? (
+                          <div style={{ fontFamily: 'var(--font-archivo), Archivo, sans-serif', fontSize: 15, fontWeight: 700, color: '#0A0F1C' }}>
+                            ${building.priceMin.toLocaleString()}+
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#6B7280' }}>{PRICING_COMING_SOON}</div>
+                        )}
                         {hasSpecial && (
                           <span style={{
                             display: 'inline-flex', alignItems: 'center',

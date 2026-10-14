@@ -4,6 +4,7 @@ import { Building } from "@/lib/buildings"
 import { useMemo, useState } from "react"
 import { CommissionPill } from "@/components/commission-pill"
 import { getPriceRange } from "@/lib/price-range"
+import { hasPrice, PRICING_COMING_SOON } from "@/lib/price-display"
 import {
   type AvailableUnit,
   unitMatchesBedroomFilter,
@@ -112,7 +113,7 @@ export function DesktopBuildingCard({
   const cheapestOverall = useMemo(() => {
     const numericPrices = units
       .map((unit) => unit.price)
-      .filter((price): price is number => typeof price === "number")
+      .filter((price): price is number => hasPrice(price))
     return numericPrices.length > 0 ? Math.min(...numericPrices) : building.priceMin
   }, [units, building.priceMin])
 
@@ -194,8 +195,14 @@ export function DesktopBuildingCard({
         </div>
         <div className="text-sm text-[#6B7280]">{building.neighborhood}</div>
         <div className="mt-0.5 text-[15px] font-semibold text-[#0A0F1C]">
-          From ${displayedPrice.toLocaleString("en-US")}
-          <span className="font-normal text-[#6B7280]">/mo</span>
+          {hasPrice(displayedPrice) ? (
+            <>
+              From ${displayedPrice.toLocaleString("en-US")}
+              <span className="font-normal text-[#6B7280]">/mo</span>
+            </>
+          ) : (
+            <span className="font-normal text-[#6B7280]">{PRICING_COMING_SOON}</span>
+          )}
         </div>
       </div>
     </article>
