@@ -62,7 +62,7 @@ function bedTypeLabel(beds: number | null | undefined): string {
 }
 
 export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
-  const { showHearts, toggle, has } = useAgentList()
+  const { showHearts, requestToggle, has } = useAgentList()
   const [groups, setGroups] = useState<FloorPlanGroup[]>([])
   const [loading, setLoading] = useState(FLOOR_PLAN_CODE_ENABLED)
   const [activeTab, setActiveTab] = useState<string>('')
@@ -137,6 +137,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
 
   return (
     <div style={{ marginBottom: 20 }}>
+      <style>{`@media (max-width: 768px) { .aur-plan-expanded { grid-column: 1 / -1; } }`}</style>
       <div style={{ paddingTop: 14 }}>
       {groups.length > 0 && (
         <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
@@ -176,7 +177,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
           filteredGroups.map((group) => {
             const prices = group.units.map((u) => u.price).filter((v): v is number => typeof v === 'number')
             return (
-              <div key={group.code} style={{ position: 'relative', background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 14, overflow: 'hidden' }}>
+              <div key={group.code} className={expandedPlans[group.code] ? 'aur-plan-expanded' : undefined} style={{ position: 'relative', background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 14, overflow: 'hidden' }}>
                 <div
                   role="button"
                   tabIndex={0}
@@ -216,39 +217,41 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
                   </div>
                 </div>
                 {expandedPlans[group.code] && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, borderTop: `1px solid ${CARD_BORDER}`, paddingTop: 12 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', borderTop: `1px solid ${CARD_BORDER}`, padding: '6px 20px' }}>
                     {group.units.map((unit) => {
                       const availability = formatAvail(unit.availabilityDate)
                       const canHeart = showHearts && Boolean(buildingId) && Boolean(unit.unitNumber)
                       const saved = canHeart ? has(buildingId, unit.unitNumber as string) : false
                       return (
-                        <div key={unit.unitNumber ?? `${group.code}-${unit.price}-${unit.sqft}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, fontSize: 12, color: TEXT }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            {canHeart && (
-                              <button
-                                type="button"
-                                aria-label={saved ? `Remove unit ${unit.unitNumber} from list` : `Add unit ${unit.unitNumber} to list`}
-                                aria-pressed={saved}
-                                onClick={(event) => {
-                                  event.stopPropagation()
-                                  toggle({
-                                    building_id: buildingId,
-                                    unit_number: unit.unitNumber as string,
-                                    building_name: unit.buildingName ?? null,
-                                    unit_type: unit.unitType ?? null,
-                                    beds: unit.beds ?? null,
-                                    baths: unit.baths ?? null,
-                                    price: unit.price ?? null,
-                                  })
-                                }}
-                                style={{ display: 'grid', placeItems: 'center', width: 24, height: 24, padding: 0, border: 0, background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
-                              >
-                                <Heart size={16} aria-hidden="true" style={{ color: saved ? '#E5285A' : MUTED, fill: saved ? '#E5285A' : 'none' }} />
-                              </button>
-                            )}
-                            <span>{unit.unitNumber ? `Unit ${unit.unitNumber}` : 'Unit available'}</span>
+                        <div key={unit.unitNumber ?? `${group.code}-${unit.price}-${unit.sqft}`} style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 48, fontSize: 13, color: TEXT }}>
+                          <span style={{ flexShrink: 0, fontWeight: 600 }}>{unit.unitNumber ? `Unit ${unit.unitNumber}` : 'Unit available'}</span>
+                          <span style={{ display: 'flex', flex: 1, minWidth: 0, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', columnGap: 6, textAlign: 'right' }}>
+                            <span>{unit.price ? fmt(unit.price) : 'Contact'}</span>
+                            <span aria-hidden="true">·</span>
+                            <span style={{ color: availability.now ? AVAIL_NOW : AVAIL_LATER, whiteSpace: 'nowrap' }}>{availability.label}</span>
                           </span>
-                          <span>{unit.price ? fmt(unit.price) : 'Contact'} · <span style={{ color: availability.now ? AVAIL_NOW : AVAIL_LATER }}>{availability.label}</span></span>
+                          {canHeart && (
+                            <button
+                              type="button"
+                              aria-label={saved ? `Remove unit ${unit.unitNumber} from list` : `Add unit ${unit.unitNumber} to list`}
+                              aria-pressed={saved}
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                requestToggle({
+                                  building_id: buildingId,
+                                  unit_number: unit.unitNumber as string,
+                                  building_name: unit.buildingName ?? null,
+                                  unit_type: unit.unitType ?? null,
+                                  beds: unit.beds ?? null,
+                                  baths: unit.baths ?? null,
+                                  price: unit.price ?? null,
+                                })
+                              }}
+                              style={{ display: 'grid', placeItems: 'center', width: 40, height: 40, margin: '0 -10px 0 0', padding: 0, border: 0, background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
+                            >
+                              <Heart size={20} aria-hidden="true" style={{ color: saved ? '#E5285A' : MUTED, fill: saved ? '#E5285A' : 'none' }} />
+                            </button>
+                          )}
                         </div>
                       )
                     })}

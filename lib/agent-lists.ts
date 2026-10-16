@@ -28,23 +28,18 @@ export type UnitSnapshot = {
   captured_at: string
 }
 
-/** Returns the approved agent for the current request, or null. Server-side only. */
+/** Returns the signed-in user for the current request, or null. Server-side only. */
 export async function getVerifiedAgent(): Promise<Agent | null> {
   const supabase = await createClient()
   const { data, error } = await supabase.auth.getUser()
-  const email = data?.user?.email?.toLowerCase()
+  const user = data?.user
+  const email = user?.email?.trim().toLowerCase()
   if (error || !email) return null
 
-  const admin = createAdminClient()
-  const { data: rows } = await admin
-    .from("agent_allowlist")
-    .select("email, approved, display_name, phone")
-    .ilike("email", email)
-    .eq("approved", true)
-    .limit(1)
-  const row = rows?.[0]
-  if (!row) return null
-  return { email, name: row.display_name || "your agent", phone: row.phone ?? null }
+  const metadata = user.user_metadata as Record<string, unknown> | undefined
+  const displayName = typeof metadata?.display_name === "string" ? metadata.display_name.trim() : ""
+
+  return { email, name: displayName || email, phone: typeof metadata?.phone === "string" ? metadata.phone : null }
 }
 
 export function normalizeSlug(input: string): string {
