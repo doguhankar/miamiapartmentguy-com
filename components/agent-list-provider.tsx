@@ -36,15 +36,19 @@ type AgentListContextValue = {
 
 const AgentListContext = createContext<AgentListContextValue | null>(null)
 
-const STORAGE_KEY = "mag_agent_draft"
+const STORAGE_KEY_PREFIX = "mag_agent_draft"
+
+function storageKey(email: string) {
+  return `${STORAGE_KEY_PREFIX}:${encodeURIComponent(email.trim().toLowerCase())}`
+}
 
 function keyOf(buildingId: string, unitNumber: string) {
   return `${buildingId}::${unitNumber}`
 }
 
-function loadDraft(): DraftUnit[] {
+function loadDraft(email: string): DraftUnit[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(storageKey(email))
     if (!raw) return []
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
@@ -54,9 +58,9 @@ function loadDraft(): DraftUnit[] {
   }
 }
 
-function saveDraft(draft: DraftUnit[]) {
+function saveDraft(email: string, draft: DraftUnit[]) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(draft))
+    localStorage.setItem(storageKey(email), JSON.stringify(draft))
   } catch {
     // ignore quota / privacy-mode failures
   }
@@ -66,7 +70,7 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 const PENDING_KEY = "mag_agent_pending_save"
 const PENDING_TTL_MS = 15 * 60 * 1000
-const NOT_APPROVED_MESSAGE = "This account isn't an approved agent."
+const SIGN_IN_REQUIRED_MESSAGE = "Sign in to save units."
 
 type PendingSave = {
   unit: ToggleInput
@@ -132,20 +136,15 @@ export function AgentListProvider({ children }: { children: React.ReactNode }) {
   const [notice, setNotice] = useState<Notice | null>(null)
 
   useEffect(() => {
-    setDraft(loadDraft())
-    setHydrated(true)
-  }, [])
-
-  useEffect(() => {
-    if (hydrated) saveDraft(draft)
-  }, [draft, hydrated])
-
-  useEffect(() => {
     const sb = createClient()
+    let active = true
+    void sb.auth.getUser().then(({ data: { user } }) => {
+      if (active) setSignedInEmail(user?.email?.trim().toLowerCase() ?? null)
+    })
     const {
       data: { subscription },
     } = sb.auth.onAuthStateChange((event, session) => {
-      setSignedInEmail(session?.user?.email ?? null)
+      setSignedInEmail(session?.user?.email?.trim().toLowerCase() ?? null)
       if (event === "SIGNED_IN" || event === "SIGNED_OUT") mutate()
       // OAuth lands on the allowlisted /agent URL; send the user back to the unit they tapped.
       if (event === "SIGNED_IN" && session?.user && window.location.pathname === "/agent") {
@@ -156,10 +155,27 @@ export function AgentListProvider({ children }: { children: React.ReactNode }) {
         }
       }
     })
-    return () => subscription.unsubscribe()
+    return () => {
+      active = false
+      subscription.unsubscribe()
+    }
   }, [mutate, router])
 
-  // After the OAuth round trip: complete the tapped save for approved agents, otherwise explain.
+  useEffect(() => {
+    setHydrated(false)
+    if (!signedInEmail) {
+      setDraft([])
+      return
+    }
+    setDraft(loadDraft(signedInEmail))
+    setHydrated(true)
+  }, [signedInEmail])
+
+  useEffect(() => {
+    if (hydrated && signedInEmail) saveDraft(signedInEmail, draft)
+  }, [draft, hydrated, signedInEmail])
+
+  // After the OAuth round trip: complete the tapped save for signed-in users.
   useEffect(() => {
     if (!hydrated || data === undefined || pathname === "/agent") return
     const pending = readPending()
@@ -175,7 +191,7 @@ export function AgentListProvider({ children }: { children: React.ReactNode }) {
       )
       setNotice({ kind: "success", text: `Unit ${unit.unit_number} saved to your list.` })
     } else {
-      setNotice({ kind: "error", text: NOT_APPROVED_MESSAGE })
+      setNotice({ kind: "error", text: SIGN_IN_REQUIRED_MESSAGE })
     }
   }, [hydrated, data, pathname, unlockAgentMode])
 
@@ -357,8 +373,8 @@ export function AgentListProvider({ children }: { children: React.ReactNode }) {
             </h2>
             <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: "#6A6A6A" }}>
               {signedInNotApproved
-                ? `${signedInEmail} is signed in. ${NOT_APPROVED_MESSAGE}`
-                : `Sign in as an approved agent to save unit ${signInUnit.unit_number} to your list.`}
+                ? `${signedInEmail} is already signed in. Please continue with a different account if needed.`
+                : `Sign in to save unit ${signInUnit.unit_number} to your list.`}
             </p>
             {authError && (
               <p role="alert" style={{ margin: "10px 0 0", fontSize: 14, color: "#B42318" }}>
