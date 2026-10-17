@@ -49,8 +49,8 @@
   width: 100%;
   max-width: 1120px;
   margin: 0 auto;
-  padding-left: max(18px, env(safe-area-inset-left, 0px));
-  padding-right: max(18px, env(safe-area-inset-right, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
 
 .mh-eyebrow {
@@ -237,6 +237,7 @@
   position: relative;
   width: 100%;
   max-width: 340px;
+  margin-inline: auto;
   aspect-ratio: 4 / 4.6;
   overflow: hidden;
   border: 1px solid var(--line-2);
@@ -617,7 +618,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 11px;
-  margin-top: 16px;
+  margin: 16px auto 0;
 }
 
 .mh-field {
