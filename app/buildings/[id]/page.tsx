@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { FormEvent } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import useSWR from 'swr'
 import Link from 'next/link'
 import Image from 'next/image'
 import { buildings } from '@/lib/buildings'
@@ -201,6 +202,10 @@ export default function BuildingDetailPage() {
   const [liveUnits, setLiveUnits] = useState<LiveUnit[]>([])
   const [unitsLoaded, setUnitsLoaded] = useState(false)
   const approxPlans = useApproxPricing()[buildingId]
+  const { data: dealsData } = useSWR<{ items: { buildingId: string; monthsFree: number; moveInCredit: number }[] }>(
+    '/api/building-deals',
+    (url: string) => fetch(url).then(res => (res.ok ? res.json() : { items: [] })),
+  )
   const [showAllUnits, setShowAllUnits] = useState(false)
   const [selectedUnit, setSelectedUnit] = useState<LiveUnit | null>(null)
   const [activePriceType, setActivePriceType] = useState<string | null>('Studio')
@@ -302,7 +307,28 @@ export default function BuildingDetailPage() {
   const showApproxPricing = unitsLoaded && livePrices.length === 0 && approxLowest !== null
   const startingPrice = approxLowest ?? (hasPrice(building.priceMin) ? building.priceMin : realMin)
   const startingKnown = hasPrice(startingPrice)
-  const monthlyRecurringTotalLabel = startingKnown ? `${fmt(startingPrice + totalMonthly)}/mo` : PRICING_COMING_SOON
+  const monthlyRecurringTotal = startingKnown ? startingPrice + totalMonthly : null
+  const monthlyRecurringTotalLabel = monthlyRecurringTotal !== null ? `${fmt(monthlyRecurringTotal)}/mo` : PRICING_COMING_SOON
+
+  // Parking is an optional add-on: listed on its own line, never folded into the recurring total.
+  const parkingAmounts = (building.monthlyCharges ?? []).filter(f => /parking/i.test(f.type) && f.amount > 0).map(f => f.amount)
+  const parkingAmount = parkingAmounts.length > 0 ? Math.min(...parkingAmounts) : null
+  const parkingValueLabel = parkingAmount === null ? '' : parkingAmounts.length > 1 ? `from ${fmt(parkingAmount)}` : fmt(parkingAmount)
+  const parkingAddOnText = parkingAmount !== null ? `+ ${fmt(parkingAmount)}/mo if parking is needed` : null
+
+  // Concession line, driven by the building_deals view so every display uses the same source.
+  const deal = dealsData?.items?.find(item => item.buildingId === buildingId)
+  const dealMonthsFree = deal?.monthsFree ?? 0
+  const dealMoveInCredit = deal?.moveInCredit ?? 0
+  const dealMonthsLabel = `${Number(dealMonthsFree.toFixed(2))} ${dealMonthsFree === 1 ? 'month' : 'months'} free`
+  const concessionSavingsText =
+    dealMonthsFree > 0
+      ? monthlyRecurringTotal !== null
+        ? `${dealMonthsLabel} — save ${fmt(Math.round(monthlyRecurringTotal * dealMonthsFree))}/yr`
+        : dealMonthsLabel
+      : dealMoveInCredit > 0
+        ? `${fmt(dealMoveInCredit)} move-in credit`
+        : null
 
   // ── Styling tokens ──────────────────────────────���────────���──────────────────
   const NAVY = '#0B1220'
@@ -373,9 +399,12 @@ export default function BuildingDetailPage() {
             <div style={{ flex: '1 1 220px', padding: '16px 18px', background: '#F8F9FB', border: '1px solid #E8EBF0', borderRadius: 14 }}>
               <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Recurring monthly</div>
               {(building.monthlyCharges ?? []).filter(f => !/(pet fee|parking)/i.test(f.type)).map((f, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12 }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
+              {parkingAmount !== null && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12 }}><span>Parking (optional)</span><strong>{parkingValueLabel}</strong></div>}
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, width: '100%', boxSizing: 'border-box', padding: '16px 22px', borderRadius: 999, background: 'linear-gradient(135deg, #0B7F7A, #0E9A93)', color: '#fff', fontWeight: 700, fontSize: 13 }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }}><IconCard /></span>Monthly Recurring Total</span><span>{monthlyRecurringTotalLabel}</span></div>
+          {parkingAddOnText && <div style={{ textAlign: 'center', fontSize: 12, color: TEAL, fontWeight: 600 }}>{parkingAddOnText}</div>}
+          {concessionSavingsText && <div style={{ textAlign: 'center', fontSize: 12, color: PINK, fontWeight: 600 }}>{concessionSavingsText}</div>}
           <div style={{ margin: 0, textAlign: 'center', fontSize: 12, color: '#9AA1AC', fontStyle: 'italic' }}>This is what you&apos;ll pay every month — move-in costs are separate.</div>
         </div>
       )}
@@ -419,6 +448,8 @@ export default function BuildingDetailPage() {
         ) : (
           <p style={{ fontSize: 20, fontWeight: 600, color: '#fff', margin: 0 }}>{PRICING_COMING_SOON}</p>
         )}
+        {parkingAddOnText && <p style={{ fontSize: 12, color: '#19C6C0', margin: '8px 0 0' }}>{parkingAddOnText}</p>}
+        {concessionSavingsText && <p style={{ fontSize: 12, fontWeight: 600, color: '#FF6FA3', margin: parkingAddOnText ? '4px 0 0' : '8px 0 0' }}>{concessionSavingsText}</p>}
       </div>
     </>
   )
@@ -638,9 +669,11 @@ export default function BuildingDetailPage() {
                 <div style={{ marginTop: 7, color: AB_MUTED, fontSize: 15 }}>What to budget for at move-in and each month</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 40, marginTop: 22 }}>
                   <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>DUE AT MOVE-IN</div>{(building.moveInFees ?? []).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total initial</span><span>{totalMoveInLabel}</span></div></div>
-                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>RECURRING MONTHLY</div>{(building.monthlyCharges ?? []).filter(fee => !/(pet fee|parking)/i.test(fee.type)).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total monthly</span><span>{totalMonthlyLabel}</span></div></div>
+                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>RECURRING MONTHLY</div>{(building.monthlyCharges ?? []).filter(fee => !/(pet fee|parking)/i.test(fee.type)).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}{parkingAmount !== null && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>Parking (optional)</span><strong>{parkingValueLabel}</strong></div>}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total monthly</span><span>{totalMonthlyLabel}</span></div></div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 22, padding: '16px 22px', borderRadius: 12, background: 'linear-gradient(90deg,#0B7F7A,#0E9A93)', color: '#fff', fontSize: 16, fontWeight: 700 }}><span>Monthly Recurring Total — starting</span><strong style={{ fontSize: 18 }}>{monthlyRecurringTotalLabel}</strong></div>
+                {parkingAddOnText && <div style={{ marginTop: 10, color: TEAL, fontSize: 14, fontWeight: 600 }}>{parkingAddOnText}</div>}
+                {concessionSavingsText && <div style={{ marginTop: parkingAddOnText ? 4 : 10, color: PINK, fontSize: 14, fontWeight: 600 }}>{concessionSavingsText}</div>}
                 <div style={{ marginTop: 12, color: AB_MUTED, fontSize: 14, fontStyle: 'italic' }}>This is what you&apos;ll pay every month — move-in costs are separate.</div>
               </section>
 
