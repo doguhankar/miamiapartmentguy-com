@@ -206,6 +206,10 @@ export default function BuildingDetailPage() {
     '/api/building-deals',
     (url: string) => fetch(url).then(res => (res.ok ? res.json() : { items: [] })),
   )
+  const { data: parkingData } = useSWR<{ parking: Record<string, number[]> }>(
+    '/api/building-parking',
+    (url: string) => fetch(url).then(res => (res.ok ? res.json() : { parking: {} })),
+  )
   const [showAllUnits, setShowAllUnits] = useState(false)
   const [selectedUnit, setSelectedUnit] = useState<LiveUnit | null>(null)
   const [activePriceType, setActivePriceType] = useState<string | null>('Studio')
@@ -311,7 +315,8 @@ export default function BuildingDetailPage() {
   const monthlyRecurringTotalLabel = monthlyRecurringTotal !== null ? `${fmt(monthlyRecurringTotal)}/mo` : PRICING_COMING_SOON
 
   // Parking is an optional add-on: listed on its own line, never folded into the recurring total.
-  const parkingAmounts = (building.monthlyCharges ?? []).filter(f => /parking/i.test(f.type) && f.amount > 0).map(f => f.amount)
+  // It is shown only when building_fees.monthly_fees in Supabase has a real parking amount.
+  const parkingAmounts = parkingData?.parking?.[buildingId] ?? []
   const parkingAmount = parkingAmounts.length > 0 ? Math.min(...parkingAmounts) : null
   const parkingValueLabel = parkingAmount === null ? '' : parkingAmounts.length > 1 ? `from ${fmt(parkingAmount)}` : fmt(parkingAmount)
   const parkingAddOnText = parkingAmount !== null ? `+ ${fmt(parkingAmount)}/mo if parking is needed` : null
