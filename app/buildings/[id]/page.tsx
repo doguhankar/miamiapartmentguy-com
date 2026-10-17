@@ -275,10 +275,6 @@ export default function BuildingDetailPage() {
   const priceCards = ORDER.filter(k => priceByType[k])
 
   const selectedPrice = selectedUnit?.price ?? building.priceMin
-  const effectiveRent = monthsFree > 0
-    ? Math.round((selectedPrice * 12 - selectedPrice * monthsFree) / 12)
-    : selectedPrice
-  const savingsPerMo = selectedPrice - effectiveRent
 
   const totalMoveIn = (building.moveInFees ?? []).reduce((s, f) => s + f.amount, 0)
   const totalMonthly = (building.monthlyCharges ?? []).filter(f =>
@@ -286,7 +282,6 @@ export default function BuildingDetailPage() {
   ).reduce((s, f) => s + f.amount, 0)
   const totalMoveInLabel = (building.moveInFees ?? []).length > 0 ? fmt(totalMoveIn) : PRICING_COMING_SOON
   const totalMonthlyLabel = (building.monthlyCharges ?? []).length > 0 ? `${fmt(totalMonthly)}/mo` : PRICING_COMING_SOON
-  const trueMonthly = effectiveRent + totalMonthly
 
   // Calculator
   const maxRent = Math.floor((parseFloat(income) || 0) / 3)
@@ -307,6 +302,7 @@ export default function BuildingDetailPage() {
   const showApproxPricing = unitsLoaded && livePrices.length === 0 && approxLowest !== null
   const startingPrice = approxLowest ?? (hasPrice(building.priceMin) ? building.priceMin : realMin)
   const startingKnown = hasPrice(startingPrice)
+  const monthlyRecurringTotalLabel = startingKnown ? `${fmt(startingPrice + totalMonthly)}/mo` : PRICING_COMING_SOON
 
   // ── Styling tokens ──────────────────────────────���────────���──────────────────
   const NAVY = '#0B1220'
@@ -379,8 +375,8 @@ export default function BuildingDetailPage() {
               {(building.monthlyCharges ?? []).filter(f => !/(pet fee|parking)/i.test(f.type)).map((f, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12 }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, width: '100%', boxSizing: 'border-box', padding: '16px 22px', borderRadius: 999, background: 'linear-gradient(135deg, #0B7F7A, #0E9A93)', color: '#fff', fontWeight: 700, fontSize: 13 }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }}><IconCard /></span>Total Monthly Fees</span><span>{fmt(totalMonthly)}/mo</span></div>
-          {(building.moveInFees ?? []).some(f => f.type.toLowerCase().includes('deposit')) && <div style={{ margin: 0, textAlign: 'center', fontSize: 12, color: '#9AA1AC', fontStyle: 'italic' }}>Deposits are due on move-in or application, not upfront.</div>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, width: '100%', boxSizing: 'border-box', padding: '16px 22px', borderRadius: 999, background: 'linear-gradient(135deg, #0B7F7A, #0E9A93)', color: '#fff', fontWeight: 700, fontSize: 13 }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }}><IconCard /></span>Monthly Recurring Total</span><span>{monthlyRecurringTotalLabel}</span></div>
+          <div style={{ margin: 0, textAlign: 'center', fontSize: 12, color: '#9AA1AC', fontStyle: 'italic' }}>This is what you&apos;ll pay every month — move-in costs are separate.</div>
         </div>
       )}
     </div>
@@ -416,19 +412,14 @@ export default function BuildingDetailPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}><span style={{ color: MUTED }}>Monthly fees</span><span style={{ color: TEXT }}>{totalMonthlyLabel}</span></div>
       </div>
 
-      {!hasPrice(selectedPrice) ? (
-        <div style={{ background: '#0B1220', borderRadius: 12, padding: 20, marginBottom: 16 }}>
-          <p style={{ fontSize: 12, color: '#7A8296', margin: '0 0 3px' }}>True monthly cost</p>
-          <p style={{ fontSize: 20, fontWeight: 600, color: '#fff', margin: 0 }}>{PRICING_COMING_SOON}</p>
-        </div>
-      ) : (
       <div style={{ background: '#0B1220', borderRadius: 12, padding: 20, marginBottom: 16 }}>
-        {monthsFree > 0 && <p style={{ fontSize: 12, color: '#19C6C0', margin: '0 0 7px' }}>With {monthsFree} month{monthsFree > 1 ? 's' : ''} free on a 12-month lease</p>}
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 13 }}><span style={{ fontSize: 14, color: '#7A8296', textDecoration: 'line-through' }}>{fmt(selectedPrice)}</span>{monthsFree > 0 && <span style={{ fontSize: 12, color: '#FFC24B' }}>Save {fmt(savingsPerMo * 12)}/yr</span>}</div>
-        <p style={{ fontSize: 12, color: '#7A8296', margin: '0 0 3px' }}>True monthly cost</p>
-        <p style={{ fontSize: 32, fontWeight: 600, color: '#fff', margin: 0 }}>{fmt(trueMonthly)}<span style={{ fontSize: 15, fontWeight: 400, color: '#7A8296' }}>/mo</span></p>
+        <p style={{ fontSize: 12, color: '#7A8296', margin: '0 0 3px' }}>Monthly Recurring Total</p>
+        {startingKnown ? (
+          <p style={{ fontSize: 32, fontWeight: 600, color: '#fff', margin: 0 }}>{fmt(startingPrice + totalMonthly)}<span style={{ fontSize: 15, fontWeight: 400, color: '#7A8296' }}>/mo</span></p>
+        ) : (
+          <p style={{ fontSize: 20, fontWeight: 600, color: '#fff', margin: 0 }}>{PRICING_COMING_SOON}</p>
+        )}
       </div>
-      )}
     </>
   )
 
@@ -649,7 +640,7 @@ export default function BuildingDetailPage() {
                   <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>DUE AT MOVE-IN</div>{(building.moveInFees ?? []).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total initial</span><span>{totalMoveInLabel}</span></div></div>
                   <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>RECURRING MONTHLY</div>{(building.monthlyCharges ?? []).filter(fee => !/(pet fee|parking)/i.test(fee.type)).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total monthly</span><span>{totalMonthlyLabel}</span></div></div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 22, padding: '16px 22px', borderRadius: 12, background: 'linear-gradient(90deg,#0B7F7A,#0E9A93)', color: '#fff', fontSize: 16, fontWeight: 700 }}><span>Monthly Recurring Total — starting</span><strong style={{ fontSize: 18 }}>{startingKnown ? `${fmt(startingPrice + totalMonthly)}/mo` : PRICING_COMING_SOON}</strong></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 22, padding: '16px 22px', borderRadius: 12, background: 'linear-gradient(90deg,#0B7F7A,#0E9A93)', color: '#fff', fontSize: 16, fontWeight: 700 }}><span>Monthly Recurring Total — starting</span><strong style={{ fontSize: 18 }}>{monthlyRecurringTotalLabel}</strong></div>
                 <div style={{ marginTop: 12, color: AB_MUTED, fontSize: 14, fontStyle: 'italic' }}>This is what you&apos;ll pay every month — move-in costs are separate.</div>
               </section>
 
