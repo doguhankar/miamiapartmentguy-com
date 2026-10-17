@@ -938,6 +938,10 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (searchParams.get('deals') === '1') setDealsOnly(true);
+  }, [searchParams]);
+
   // Safety net (restore): on first mount, if this page has no filter params in
   // the URL but a filtered view was saved for it earlier in this tab, restore
   // that URL once. Guarded by a ref so it can never loop.
@@ -949,7 +953,8 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       searchParams.has('beds') ||
       searchParams.has('priceMin') ||
       searchParams.has('priceMax') ||
-      searchParams.has('moveInDate');
+      searchParams.has('moveInDate') ||
+      searchParams.has('deals');
     if (!hasFilterParams) {
       const saved = readMapQuery(pathname);
       if (saved) {
@@ -1712,7 +1717,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
           </button>
         )}
       </div>
-      {/* ── END MOBILE LAYOUT ─────────────────────────����───────────────────── */}
+      {/* ── END MOBILE LAYOUT ────────────────────────�������───────────────────── */}
 
       {/* Desktop Header - Fixed at Top */}
       <div className="hidden md:grid grid-cols-[1fr_auto_1fr] items-center px-8 py-7 bg-white flex-shrink-0 border-b border-[#E8EBF0]" style={{ height: '74px' }}>
