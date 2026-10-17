@@ -13,6 +13,13 @@ import { MoveWithDon } from '@/components/move-with-don';
 import { DesktopBuildingCard } from '@/components/desktop-building-card';
 import { AgentModeControl, useAgentMode } from '@/components/agent-mode-provider';
 import { CommissionPill } from '@/components/commission-pill';
+import { DealBadge, DEAL_PINK } from '@/components/deal-badge';
+import useSWR from 'swr';
+import type { BuildingDeal } from '@/app/api/building-deals/route';
+
+const EMPTY_DEALS: Record<string, BuildingDeal> = {};
+const fetchDeals = (url: string) =>
+  fetch(url).then((res) => (res.ok ? res.json() : { deals: {} })).then((json) => (json.deals ?? {}) as Record<string, BuildingDeal>);
 
 import { MapFilterCard, type MapFilterState } from '@/components/map-filter-card';
 import { copyToClipboard, showToast } from '@/lib/toast-utils';
@@ -204,7 +211,11 @@ const TalkTodonModal = ({ building, onClose }) => {
   );
 };
 
-const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, allBuildingIds, setSelectedBuilding, setInfoBuilding: setInfoBuildingFromMap, onMapReady, onPricingDataChange, onImageDataChange, onBuildingsInView }) => {
+const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuilding, onPinClick, geocodedBuildings, allBuildingIds, setSelectedBuilding, setInfoBuilding: setInfoBuildingFromMap, onMapReady, onPricingDataChange, onImageDataChange, onBuildingsInView, deals = EMPTY_DEALS }: any) => {
+  const dealsRef = useRef<Record<string, BuildingDeal>>(deals);
+  dealsRef.current = deals;
+  const pinColor = (building: any) =>
+    selectedBuilding?.id === building.id ? '#FF8C00' : dealsRef.current[String(building.id)]?.hasDeal ? DEAL_PINK : '#3B82F6';
   const mapContainer = useRef(null);
   const map = useRef(null);
   const mapReadyReportedRef = useRef(false);
@@ -437,7 +448,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
       el.style.width = '16px';
       el.style.height = '16px';
       el.style.borderRadius = '50%';
-      el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
+      el.style.backgroundColor = pinColor(building);
       el.style.border = '2px solid white';
       el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
       el.style.cursor = 'pointer';
@@ -747,7 +758,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
   // Update marker DOM in place as selection, pricing, or images change.
   useEffect(() => {
     markerMetaRef.current.forEach(({ building, el, media, placeholder, price }) => {
-      el.style.backgroundColor = selectedBuilding?.id === building.id ? '#FF8C00' : '#3B82F6';
+      el.style.backgroundColor = pinColor(building);
 
       const liveUnits = pricingData[building.id]?.units?.filter((unit) => hasPrice(unit.price)) || [];
       const resolvedPrice = resolvePinPrice(building, liveUnits, approxPricing[String(building.id)]);
@@ -787,7 +798,7 @@ const MapComponent = ({ expandedNeighborhoods, selectedBuilding, highlightedBuil
         placeholder.style.display = 'flex';
       }
     });
-  }, [selectedBuilding, pricingData, buildingImages, approxPricing]);
+  }, [selectedBuilding, pricingData, buildingImages, approxPricing, deals]);
 
   return <div ref={mapContainer} className="w-full h-full" />;
 };
@@ -875,6 +886,8 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   const [visibleBuildingIds, setVisibleBuildingIds] = useState<number[]>(VISIBLE_BUILDINGS.map(b => b.id));
 
   const [mapFilters, setMapFilters] = useState<MapFilterState>({ bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: [] });
+  const { data: deals = EMPTY_DEALS } = useSWR('/api/building-deals', fetchDeals, { revalidateOnFocus: false });
+  const [dealsOnly, setDealsOnly] = useState(false);
   const [mapInstance, setMapInstance] = useState<any>(null);
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
 
@@ -998,6 +1011,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
 
   const handleClearAllFilters = () => {
     setMapFilters({ bedrooms: [], bathrooms: [], price: [], moveInDate: [], neighborhood: [] });
+    setDealsOnly(false);
     clearMapQuery(pathname);
     router.replace(pathname, { scroll: false });
   };
@@ -1184,9 +1198,10 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   const filteredBuildings = useMemo(() => geocodedBuildings.filter(b =>
     visibleBuildingIds.includes(b.id) &&
     buildingMatchesMapFilters(b) &&
+    (!dealsOnly || deals[String(b.id)]?.hasDeal === true) &&
     (b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.neighborhood.toLowerCase().includes(searchQuery.toLowerCase()))
-  ), [geocodedBuildings, visibleBuildingIds, mapFilters, searchQuery]);
+  ), [geocodedBuildings, visibleBuildingIds, mapFilters, searchQuery, dealsOnly, deals]);
 
   // Keep map markers and both building lists in sync with every active filter.
   // Each active filter category must be satisfied by the SAME unit at once —
@@ -1421,6 +1436,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
   onPricingDataChange={setPricingInventory}
   onImageDataChange={setBuildingImages}
   onBuildingsInView={setViewportBuildings}
+  deals={deals}
   />
         </div>
 
@@ -1536,6 +1552,8 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                 const imageUrl = mobileBuildingImages[String(building.id)]?.[0] ?? building.images?.[0];
                 const imageCount = (mobileBuildingImages[String(building.id)]?.length ?? building.images?.length ?? 0);
                 const hasSpecial = !!(building.concession && building.concession !== 'None' && building.concession !== '');
+                const mobileDeal = deals[String(building.id)];
+                const mobileDealLabel = mobileDeal?.hasDeal ? mobileDeal.badgeLabel : null;
                 return (
                   <div
                     key={building.id}
@@ -1570,9 +1588,10 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                           style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, width: 32, height: 32, borderRadius: 999, border: '1px solid rgba(255,255,255,0.8)', background: 'rgba(10,15,28,0.72)', color: '#fff', fontSize: 21, lineHeight: 1, cursor: 'pointer' }}
                         >×</button>
                       )}
+                      {mobileDealLabel && <DealBadge label={mobileDealLabel} style={{ top: 10, left: 10 }} />}
                       {/* Neighborhood tag */}
                       <div style={{
-                        position: 'absolute', top: 10, left: 10,
+                        position: 'absolute', top: mobileDealLabel ? 40 : 10, left: 10,
                         background: 'rgba(10,15,28,0.75)', color: '#fff',
                         fontFamily: 'var(--font-archivo), Archivo, sans-serif',
                         fontSize: 9.5, fontWeight: 700, letterSpacing: '0.06em',
@@ -1777,6 +1796,8 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
           onNeighborhoodFlyTo={handleNeighborhoodFlyTo}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          dealsOnly={dealsOnly}
+          onDealsOnlyChange={setDealsOnly}
         />
       </div>
 
@@ -1823,6 +1844,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                   onClick={() => openBuilding(building.id)}
   onStar={() => toggleSave(String(building.id))}
   onRemove={() => handleRemoveSavedBuilding(String(building.id))}
+  dealBadgeLabel={deals[String(building.id)]?.hasDeal ? deals[String(building.id)]?.badgeLabel : null}
   />
               ))}
             </div>
@@ -1844,6 +1866,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
             onPricingDataChange={setPricingInventory}
             onImageDataChange={setBuildingImages}
             onBuildingsInView={setViewportBuildings}
+            deals={deals}
           />
         </div>
       </div>

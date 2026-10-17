@@ -3,6 +3,7 @@
 import { Building } from "@/lib/buildings"
 import { useMemo, useState } from "react"
 import { CommissionPill } from "@/components/commission-pill"
+import { DealBadge } from "@/components/deal-badge"
 import { getPriceRange } from "@/lib/price-range"
 import { hasPrice, PRICING_COMING_SOON } from "@/lib/price-display"
 import { lowestApproxPrice, useApproxPricing } from "@/lib/approx-pricing"
@@ -28,6 +29,7 @@ interface DesktopBuildingCardProps {
   onStar?: (building: Building) => void
   onRemove?: (building: Building) => void
   onViewDetails?: (building: Building) => void
+  dealBadgeLabel?: string | null
 }
 
 // Same "Available Month D" / "Available Now" convention used on the building
@@ -109,6 +111,7 @@ export function DesktopBuildingCard({
   onStar,
   onRemove,
   onViewDetails,
+  dealBadgeLabel,
 }: DesktopBuildingCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const approxPricing = useApproxPricing()
@@ -154,7 +157,12 @@ export function DesktopBuildingCard({
             No photo
           </span>
         )}
-        {building.concession && (
+        {dealBadgeLabel ? (
+          <DealBadge
+            label={dealBadgeLabel}
+            style={{ top: 12, left: isAgentMode && isStarred && onRemove ? 56 : 12 }}
+          />
+        ) : building.concession && (
           <span className="absolute left-3 top-3 max-w-[70%] truncate rounded-full bg-[#FFE3EE] px-3 py-1.5 text-xs font-bold text-[#A80F47]">
             {building.concession}
           </span>

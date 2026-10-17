@@ -22,6 +22,8 @@ interface MapFilterCardProps {
   onNeighborhoodFlyTo?: (neighborhood: string) => void;
   searchQuery?: string;
   onSearchChange?: (q: string) => void;
+  dealsOnly?: boolean;
+  onDealsOnlyChange?: (next: boolean) => void;
 }
 
 export function MapFilterCard({
@@ -32,6 +34,8 @@ export function MapFilterCard({
   onNeighborhoodFlyTo,
   searchQuery = '',
   onSearchChange,
+  dealsOnly = false,
+  onDealsOnlyChange,
 }: MapFilterCardProps) {
   const [openDropdown, setOpenDropdown] = useState<'neighborhood' | 'bedrooms' | 'price' | 'moveIn' | null>(null);
   const [priceDraft, setPriceDraft] = useState({ min: '', max: '' });
@@ -129,6 +133,7 @@ export function MapFilterCard({
     filters.bathrooms.length > 0 ||
     filters.price.length > 0 ||
     filters.moveInDate.length > 0 ||
+    dealsOnly ||
     searchQuery.trim().length > 0;
 
   const getSelectedLabel = (type: 'bedrooms' | 'price' | 'moveIn'): string => {
@@ -364,6 +369,17 @@ export function MapFilterCard({
           </div>
         )}
       </div>
+
+      {onDealsOnlyChange && (
+        <button
+          type="button"
+          aria-pressed={dealsOnly}
+          onClick={() => onDealsOnlyChange(!dealsOnly)}
+          style={{ flexShrink: 0, height: 36, border: 0, borderRadius: 999, padding: '0 16px', background: dealsOnly ? '#19C6C0' : '#0B1220', color: '#fff', fontSize: 14, fontWeight: 600, lineHeight: 1, cursor: 'pointer', whiteSpace: 'nowrap' }}
+        >
+          {'🔥 Deals'}
+        </button>
+      )}
 
       <div style={{ flexShrink: 0 }}>
         <AgentModeControl />
