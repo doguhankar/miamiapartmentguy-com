@@ -1,5 +1,5 @@
 import { scrapeApartmentsBuilding } from '@/lib/scrapers/apartments';
-import { storePricingData } from '@/lib/supabase/pricing';
+import { storePricingData, storeUnitConcessions } from '@/lib/supabase/pricing';
 
 // Shared scraper logic - Apartments.com with retry and rotating User-Agents
 async function executeScraper() {
@@ -29,7 +29,8 @@ async function executeScraper() {
           // Store the data
           console.log('[v0] Storing', apartmentsUnits.length, 'units to Supabase...');
           const stored = await storePricingData('flow-brickell', apartmentsUnits);
-          console.log('[v0] storePricingData returned:', stored);
+          const concessionsUpdated = await storeUnitConcessions('flow-brickell', apartmentsUnits);
+          console.log('[v0] storePricingData returned:', stored, 'concessions updated:', concessionsUpdated);
           
           if (!stored) {
             console.warn('[v0] Failed to store in Supabase, using memory cache');
