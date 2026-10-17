@@ -8,6 +8,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { buildings } from '@/lib/buildings'
 import { useSupabaseImages } from '@/hooks/use-supabase-images'
+import { useBuildingFees } from '@/hooks/use-building-fees'
 import { createClient } from '@/lib/supabase/client'
 import { AvailableUnitsRedesign } from '@/components/available-units-redesign'
 import { SimilarBuildings } from '@/components/similar-buildings'
@@ -210,6 +211,7 @@ export default function BuildingDetailPage() {
     '/api/building-parking',
     (url: string) => fetch(url).then(res => (res.ok ? res.json() : { parking: {} })),
   )
+  const { moveInFees, monthlyCharges } = useBuildingFees(buildingId)
   const [showAllUnits, setShowAllUnits] = useState(false)
   const [selectedUnit, setSelectedUnit] = useState<LiveUnit | null>(null)
   const [activePriceType, setActivePriceType] = useState<string | null>('Studio')
@@ -285,12 +287,12 @@ export default function BuildingDetailPage() {
 
   const selectedPrice = selectedUnit?.price ?? building.priceMin
 
-  const totalMoveIn = (building.moveInFees ?? []).reduce((s, f) => s + f.amount, 0)
-  const totalMonthly = (building.monthlyCharges ?? []).filter(f =>
+  const totalMoveIn = moveInFees.reduce((s, f) => s + f.amount, 0)
+  const totalMonthly = monthlyCharges.filter(f =>
     !/(pet fee|parking)/i.test(f.type)
   ).reduce((s, f) => s + f.amount, 0)
-  const totalMoveInLabel = (building.moveInFees ?? []).length > 0 ? fmt(totalMoveIn) : PRICING_COMING_SOON
-  const totalMonthlyLabel = (building.monthlyCharges ?? []).length > 0 ? `${fmt(totalMonthly)}/mo` : PRICING_COMING_SOON
+  const totalMoveInLabel = moveInFees.length > 0 ? fmt(totalMoveIn) : PRICING_COMING_SOON
+  const totalMonthlyLabel = monthlyCharges.length > 0 ? `${fmt(totalMonthly)}/mo` : PRICING_COMING_SOON
 
   // Calculator
   const maxRent = Math.floor((parseFloat(income) || 0) / 3)
@@ -398,12 +400,12 @@ export default function BuildingDetailPage() {
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'stretch' }}>
             <div style={{ flex: '1 1 220px', padding: '16px 18px', background: '#F8F9FB', border: '1px solid #E8EBF0', borderRadius: 14 }}>
               <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Due at move-in</div>
-              {(building.moveInFees ?? []).map((f, i, arr) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12, borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : 'none' }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
+              {moveInFees.map((f, i, arr) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12, borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : 'none' }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0 0', marginTop: 6, fontWeight: 800, fontSize: 13, borderTop: `2px solid ${BORDER}` }}><span>Total Initial</span><span>{totalMoveInLabel}</span></div>
             </div>
             <div style={{ flex: '1 1 220px', padding: '16px 18px', background: '#F8F9FB', border: '1px solid #E8EBF0', borderRadius: 14 }}>
               <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>Recurring monthly</div>
-              {(building.monthlyCharges ?? []).filter(f => !/(pet fee|parking)/i.test(f.type)).map((f, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12 }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
+              {monthlyCharges.filter(f => !/(pet fee|parking)/i.test(f.type)).map((f, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12 }}><span>{f.type}</span><strong>{fmt(f.amount)}</strong></div>)}
               {parkingAmount !== null && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 12 }}><span>Parking (optional)</span><strong>{parkingValueLabel}</strong></div>}
             </div>
           </div>
@@ -673,8 +675,8 @@ export default function BuildingDetailPage() {
                 <h2 style={{ margin: 0, fontFamily: 'var(--font-archivo)', fontSize: 22, fontWeight: 700 }}>Building fees</h2>
                 <div style={{ marginTop: 7, color: AB_MUTED, fontSize: 15 }}>What to budget for at move-in and each month</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 40, marginTop: 22 }}>
-                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>DUE AT MOVE-IN</div>{(building.moveInFees ?? []).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total initial</span><span>{totalMoveInLabel}</span></div></div>
-                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>RECURRING MONTHLY</div>{(building.monthlyCharges ?? []).filter(fee => !/(pet fee|parking)/i.test(fee.type)).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}{parkingAmount !== null && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>Parking (optional)</span><strong>{parkingValueLabel}</strong></div>}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total monthly</span><span>{totalMonthlyLabel}</span></div></div>
+                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>DUE AT MOVE-IN</div>{moveInFees.map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total initial</span><span>{totalMoveInLabel}</span></div></div>
+                  <div><div style={{ color: AB_MUTED, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>RECURRING MONTHLY</div>{monthlyCharges.filter(fee => !/(pet fee|parking)/i.test(fee.type)).map((fee, index) => <div key={index} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>{fee.type}</span><strong>{fmt(fee.amount)}</strong></div>)}{parkingAmount !== null && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 16 }}><span>Parking (optional)</span><strong>{parkingValueLabel}</strong></div>}<div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 13, fontSize: 16, fontWeight: 700 }}><span>Total monthly</span><span>{totalMonthlyLabel}</span></div></div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 22, padding: '16px 22px', borderRadius: 12, background: 'linear-gradient(90deg,#0B7F7A,#0E9A93)', color: '#fff', fontSize: 16, fontWeight: 700 }}><span>Monthly Recurring Total — starting</span><strong style={{ fontSize: 18 }}>{monthlyRecurringTotalLabel}</strong></div>
                 {parkingAddOnText && <div style={{ marginTop: 10, color: TEAL, fontSize: 14, fontWeight: 600 }}>{parkingAddOnText}</div>}

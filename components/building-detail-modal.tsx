@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useSupabaseImages } from '@/hooks/use-supabase-images'
+import { useBuildingFees } from '@/hooks/use-building-fees'
 import { Building } from '@/lib/buildings'
 
 interface BuildingDetailModalProps {
@@ -99,6 +100,7 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
   const [showAllUnits, setShowAllUnits] = useState(false)
   const [saved, setSaved] = useState(false)
   const { images: supabaseImages } = useSupabaseImages(building.id)
+  const { moveInFees, monthlyCharges } = useBuildingFees(building.id)
   const images = supabaseImages.length ? supabaseImages : building.images || []
 
   useEffect(() => {
@@ -117,7 +119,7 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
   const priceGroups = groupedUnits.length ? groupedUnits : building.units.map((label) => ({ label: unitLabel({ beds: label }), entries: [], price: building.priceMin }))
   const filteredUnits = activePriceType ? units.filter((unit) => unitLabel(unit) === activePriceType) : units
   const visibleUnits = showAllUnits ? filteredUnits : filteredUnits.slice(0, 3)
-  const allFees = [...(building.moveInFees || []), ...(building.monthlyCharges || [])]
+  const allFees = [...moveInFees, ...monthlyCharges]
   const deal = building.concession && building.concession.toLowerCase() !== 'tbd' ? building.concession : 'Ask about current specials'
   const image = images[currentImageIndex]
   const textHref = `sms:+14077657306?body=${encodeURIComponent(`Hi Don, I'm interested in ${building.name}`)}`

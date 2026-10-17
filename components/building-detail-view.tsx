@@ -5,6 +5,7 @@ import { Heart, Share2, ArrowLeft } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { Building } from "@/lib/buildings"
 import { ImageCarousel } from "@/components/image-carousel"
+import { useBuildingFees } from "@/hooks/use-building-fees"
 
 interface BuildingDetailViewProps {
   building: Building
@@ -26,6 +27,7 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
   const [error, setError] = useState<string | null>(null)
   const [selectedTab, setSelectedTab] = useState("all")
   const [isHearted, setIsHearted] = useState(false)
+  const { moveInFees, monthlyCharges } = useBuildingFees(building.id)
 
   useEffect(() => {
     let cancelled = false
@@ -252,12 +254,12 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
         <hr style={{ border: "none", borderTop: "1px solid #eee", margin: "16px 0" }} />
 
         {/* Move-In Fees */}
-        {building.moveInFees && building.moveInFees.length > 0 && (
+        {moveInFees.length > 0 && (
           <>
             <p style={{ fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
               Move-in fees
             </p>
-            {building.moveInFees.map((fee, idx) => (
+            {moveInFees.map((fee, idx) => (
               <div key={idx}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "8px 0", borderBottom: "1px solid #f0f0f0" }}>
                   <span style={{ color: "#555" }}>{fee.type}</span>
@@ -271,12 +273,12 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
         <hr style={{ border: "none", borderTop: "1px solid #eee", margin: "16px 0" }} />
 
         {/* Monthly Charges */}
-        {building.monthlyCharges && building.monthlyCharges.length > 0 && (
+        {monthlyCharges.length > 0 && (
           <>
             <p style={{ fontSize: "11px", fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
               Monthly charges
             </p>
-            {building.monthlyCharges.map((charge, idx) => (
+            {monthlyCharges.map((charge, idx) => (
               <div key={idx}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "8px 0", borderBottom: "1px solid #f0f0f0" }}>
                   <span style={{ color: "#555" }}>{charge.type}</span>

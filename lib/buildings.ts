@@ -22,8 +22,6 @@ export interface Building {
   email?: string
   commission?: string | null
   fees?: Record<string, number | string>
-  moveInFees?: Array<{ type: string; amount: number }>
-  monthlyCharges?: Array<{ type: string; amount: number }>
   requirements?: {
     income?: { label: string; value: string }
     creditScore?: { label: string; value: string }
@@ -42,8 +40,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: 'Above 650', guarantor: true, holdDays: [45],
     images: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f8-PjSUbS6yTrIBusqZ0XXyuU8h1qerGT.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f7-e8tHKaMeidxoV13PJgZNveLuE6ScPy.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f1-sC9oG9eD9DGGUwRRPP93yLIPgssB8r.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f3-Bw25PrMJlv7UYJ3bt5D5fmbz94yAMb.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f4-9VsnFpU86vEqyTuNQKYutuLUnX5dEi.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f5-XWNn2OspXHwINOXtaNPYMrIUhleUvP.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f6-OjhZIKj1vv611WQHgFm26OfY157Ijw.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f2-ICadR5CSOFH7p9F3OQtpdBs2CH5RlD.webp'],
     amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'],
-    moveInFees: [{ type: 'Application', amount: 150 }, { type: 'Deposit', amount: 1000 }, { type: 'Pet Deposit', amount: 500 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 45 }, { type: 'Pet Rent', amount: 50 }, { type: 'Pest Control', amount: 5 }],
     requirements: { income: { label: 'Income', value: '3x' }, creditScore: { label: 'Credit score', value: 'Above 650' }, guarantor: { label: 'Works with Guarantors Program?', value: 'Yes' }, holdDays: { label: 'Unit Hold Period', value: '45 days' } },
   },
   {
@@ -55,8 +51,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [60],
     images: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m10-eFibmVGaoLcW7F9yCC8Q0iDbnok5RQ.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m2-zljnlgeiWfRh7efeAOWUdv7n9CBRg8.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m1-N8n1gv8rO34iHYqY2A9ThD4bCBBCzS.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m3-P1DrJebzT4LXbuhgUfyEK4QfQbQaCP.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m4-5yw1QrHhTa6B3CsxKYhub7Jcd4t4bf.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m5-xn4hF7DSM3eovfOZ6Ye7TTXYVGzAoH.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m6-ha2rtnFYwLSD7UvP42a2mzkpntezAl.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m7-rrZzGBE3l6dBWHjRyvcwyOQILIa1Ia.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m8-4HBSHHVaB1e40ghxXO2pKUCZdfKyC9.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m9-TlKdeoYwon7uWYwzuhrVghOXxeGl6i.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m11-vjN4FXlPNBGbWxQE9r7L0htW8DKWG5.webp'],
     amenities: ['Pool', 'Gym', 'Parking'],
-    moveInFees: [{ type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }, { type: 'Deposit', amount: 300 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 50 }, { type: 'Bike Storage', amount: 10 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 25 }, { type: 'Parking 1st', amount: 100 }, { type: 'Parking 2nd', amount: 150 }, { type: 'EV Parking', amount: 200 }, { type: 'Motorcycle Parking', amount: 75 }, { type: 'Trash', amount: 25 }],
   },
   {
     id: "maizon", name: 'Maizon', neighborhood: 'Brickell',
@@ -67,8 +61,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60],
     images: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m7-jNaoQBZPgAJqewPoOFl1BQiCZi739k.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m1-OwMP8bOjwr28fKxPS2EvFerp4FObKU.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m2-VUZhXREXzNUnHLCBAYPlqf9rO8SbVb.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m3-VziIF3AXZaRjdkc5pVJu6Z4XxOBIOR.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m4-L5dcGBNxHNCp94mLqHuCWQcjSPLVQU.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m5-hSp80fmga9b4S2TD6Oq2dIjx13iwKa.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m6-zULNSdqRYyjTot5WJrOKRD1VMfqdKb.webp'],
     amenities: ['Pool', 'Gym', 'Lounge'],
-    moveInFees: [{ type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }, { type: 'Deposit', amount: 750 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 50 }, { type: 'Pet Fee 1st', amount: 585 }, { type: 'Pet Fee 2nd', amount: 335 }, { type: 'Pet Rent', amount: 25 }, { type: 'Parking 1st', amount: 100 }, { type: 'Parking 2nd+', amount: 175 }, { type: 'Valet Trash', amount: 25 }],
   },
   {
     id: "solitair", name: 'Solitair', neighborhood: 'Brickell',
@@ -79,8 +71,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [30, 60, 90],
     images: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/s1-Cq8HWNBmCuDUjzUnemNQ0LSL3oAyf9.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/s2-4FM6V9NJD00X1xWKnCvf5ICeRKZu6N.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/s3-8YSpCa6oqLwQQpE4d66WSS49eLmYD2.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/s4-8RiBxRFqfXyIBwKqkTMPV9KDpiLHr4.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/s5-TPlih6Zwm5nAHcfTwn3I6xVrWXBf2F.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/s6-xKXhykKd0cAB30Xh8EolJ7rx8FxQNd.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/s7-27mIhAPC9FgphoPVeL1Qzl4q4Y7fTY.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/s8-iGBISVwmfzNzCcAcxupX6P4GkzE26C.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/s9-eIA6KFaI9JDatCpAQMa2TgFDV83XRE.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/s10-ko4gZiBjUNLyg6V1dUlv9bxZ2hxJDn.webp'],
     amenities: ['Pool', 'Gym', 'Bar Lounge', 'Billiards'],
-    moveInFees: [{ type: 'Deposit', amount: 1000 }, { type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 55 }, { type: 'Pet Fee 1st', amount: 500 }, { type: 'Pet Fee 2 pets', amount: 750 }, { type: 'Pet Rent', amount: 25 }, { type: 'Parking 1st', amount: 100 }, { type: 'Parking 2nd+', amount: 175 }, { type: 'Valet Trash', amount: 25 }, { type: 'Pest Control', amount: 4 }],
   },
   {
     id: "miro-brickell", name: 'Miro Brickell', neighborhood: 'Brickell',
@@ -91,8 +81,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B'], incomeReq: '2.5x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60],
     images: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m1-EVGO5Tnuoa56uiQIXOy3hT9IcOEYUu.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m2-wuD1Aeh4mN9nF9xbbDQ9k11TChxsYv.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m3-sr2A1V5niMZrWtGbAGTPd4aEoAZ04b.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m4-yPkGymDnP7mXYalAEVLFJl96rkE5Dd.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m5-HQ3lSjEHqYmY2W1uW1lzXlDIMkmuR4.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m6-fXxRDyBBn2yz8AZfXae7zyNuucFTcQ.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m7-1Cq4dznXhyuUt4lrRIolmg1tLneTZ5.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/m8-fOgzc4WvWx8sykWi2lDdU5S47FYXOS.webp'],
     amenities: ['Pool', 'Gym', 'Dog Wash', 'Yoga Studio'],
-    moveInFees: [{ type: 'Deposit', amount: 1000 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 50 }, { type: 'Renters Insurance', amount: 19 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 40 }, { type: 'Parking 1st', amount: 100 }, { type: 'Parking 2nd+', amount: 150 }, { type: 'Water Connection Fee', amount: 35 }, { type: 'Trash/Pest', amount: 22 }],
   },
   {
     id: "brickell-first", name: 'Brickell First', neighborhood: 'Brickell',
@@ -103,8 +91,6 @@ export const buildings: Building[] = [
     units: ['1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [30, 60],
     images: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b1-O2FpSvYfF1LHICzaZvBrxtxAVbC0KC.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b2-Sm2CtHzLgcPrW6MLXcv1fLHW6XmFVy.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b3-FS8ZnMT2YPNi5qZSOx7QHMmLHMtS14.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b4-7wDXGyndKR7qe0aqfh75kJ95l3oyW5.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b5-sQnJdKQA02URpuWgrGmGoqVwHJ7Z1A.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b6-bi6UZdvOoBebqO5jvsLT1iD8BTFsGE.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b7-ZIUarO5HNZYHISSVJoiPFa1476TW8h.webp','https://hebbkx1anhila5yf.public.blob.vercel-storage.com/b8-teMZtibo9B29cVGnS1G3p2pcxs8IFj.webp'],
     amenities: ['Pool', 'Spa', 'Gym', 'Concierge', 'Valet'],
-    moveInFees: [{ type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }, { type: 'Deposit', amount: 99 }],
-    monthlyCharges: [{ type: 'Pet Fee 1st', amount: 500 }, { type: 'Pet Fee 2nd+', amount: 250 }, { type: 'Pet Rent', amount: 30 }, { type: 'Parking 1st', amount: 130 }],
   },
 
   // ── DOWNTOWN ──────────────────────────────────────────────────────────────
@@ -117,8 +103,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14, 30, 60, 90],
     images: ['/images/buildings/cmpnd-1.webp','/images/buildings/cmpnd-2.webp','/images/buildings/cmpnd-3.webp','/images/buildings/cmpnd-4.webp','/images/buildings/cmpnd-5.webp','/images/buildings/cmpnd-6.webp','/images/buildings/cmpnd-7.webp','/images/buildings/cmpnd-8.webp','/images/buildings/cmpnd-9.webp','/images/buildings/cmpnd-10.webp','/images/buildings/cmpnd-11.webp','/images/buildings/cmpnd-12.webp','/images/buildings/cmpnd-13.webp','/images/buildings/cmpnd-14.webp','/images/buildings/cmpnd-15.webp','/images/buildings/cmpnd-16.webp'],
     amenities: ['Pool', 'Gym', 'Pet-Friendly', 'Coworking'],
-    moveInFees: [{ type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }, { type: 'Deposit', amount: 500 }, { type: 'Utility Set Up Fee', amount: 25 }],
-    monthlyCharges: [{ type: 'Access Control', amount: 8 }, { type: 'Amenity Fee', amount: 45 }, { type: 'Parking', amount: 250 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 25 }, { type: 'Pest Control', amount: 5 }, { type: 'Trash', amount: 25 }],
   },
   {
     id: "miami-world-tower", name: 'Miami World Tower', neighborhood: 'Downtown',
@@ -129,8 +113,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: ['/images/buildings/miami-world-tower-1.webp','/images/buildings/miami-world-tower-2.webp','/images/buildings/miami-world-tower-3.webp','/images/buildings/miami-world-tower-4.webp','/images/buildings/miami-world-tower-5.webp','/images/buildings/miami-world-tower-6.webp','/images/buildings/miami-world-tower-7.webp','/images/buildings/miami-world-tower-8.webp','/images/buildings/miami-world-tower-9.webp','/images/buildings/miami-world-tower-10.webp','/images/buildings/miami-world-tower-11.webp','/images/buildings/miami-world-tower-12.webp'],
     amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'],
-    moveInFees: [{ type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }, { type: 'Deposit', amount: 1000 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 60 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 30 }, { type: 'Parking 1st', amount: 150 }, { type: 'Parking 2nd', amount: 225 }, { type: 'Valet Trash', amount: 25 }],
   },
   {
     id: "muze-at-met", name: 'Muze at Met', neighborhood: 'Downtown',
@@ -141,8 +123,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14],
     images: ['/images/buildings/muze-at-met-1.webp','/images/buildings/muze-at-met-2.webp','/images/buildings/muze-at-met-3.webp','/images/buildings/muze-at-met-4.webp','/images/buildings/muze-at-met-5.webp','/images/buildings/muze-at-met-6.webp','/images/buildings/muze-at-met-7.webp','/images/buildings/muze-at-met-8.webp','/images/buildings/muze-at-met-9.webp','/images/buildings/muze-at-met-10.webp'],
     amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'],
-    moveInFees: [{ type: 'Deposit', amount: 750 }, { type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }, { type: 'Resident Package', amount: 30 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 50 }, { type: 'Pet Fee 1st', amount: 585 }, { type: 'Pet Fee 2 pets', amount: 850 }, { type: 'Pet Rent', amount: 50 }, { type: 'Valet Parking 1st', amount: 125 }, { type: 'Valet Parking Add\'l', amount: 200 }, { type: 'Self-Parking', amount: 175 }, { type: 'Valet Trash', amount: 25 }],
   },
   {
     id: "monarc-at-met", name: 'Flow Miami World', neighborhood: 'Downtown',
@@ -153,8 +133,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: ['/images/buildings/flow-miami-world-1.webp','/images/buildings/flow-miami-world-2.webp','/images/buildings/flow-miami-world-3.webp','/images/buildings/flow-miami-world-4.webp','/images/buildings/flow-miami-world-5.webp','/images/buildings/flow-miami-world-6.webp','/images/buildings/flow-miami-world-7.webp','/images/buildings/flow-miami-world-8.webp','/images/buildings/flow-miami-world-9.webp'],
     amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop'],
-    moveInFees: [{ type: 'Deposit', amount: 1000 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 400 }],
-    monthlyCharges: [{ type: 'Resident Package', amount: 35 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 50 }, { type: 'Parking 1st', amount: 125 }, { type: 'Parking 2nd', amount: 150 }, { type: 'Parking 3rd+', amount: 175 }, { type: 'Parking Permit', amount: 50 }, { type: 'Valet Trash', amount: 25 }],
   },
   {
     id: "11", name: 'Monarc at Met', neighborhood: 'Downtown',
@@ -165,8 +143,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [14],
     images: ['/images/buildings/monarc-at-met-1.webp','/images/buildings/monarc-at-met-2.webp','/images/buildings/monarc-at-met-3.webp','/images/buildings/monarc-at-met-4.webp','/images/buildings/monarc-at-met-5.webp','/images/buildings/monarc-at-met-6.webp','/images/buildings/monarc-at-met-7.webp','/images/buildings/monarc-at-met-8.webp'],
     amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop', 'Sauna', 'Lounge'],
-    moveInFees: [{ type: 'Deposit', amount: 750 }, { type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 35 }, { type: 'Storage', amount: 75 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 50 }, { type: 'Parking 1st', amount: 100 }, { type: 'Parking 2nd', amount: 175 }, { type: 'Reserved Parking 1st', amount: 150 }, { type: 'Reserved Parking 2nd', amount: 200 }, { type: 'Valet Trash', amount: 25 }],
   },
   {
     id: "12", name: 'Parkline', neighborhood: 'Downtown',
@@ -177,7 +153,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: false, holdDays: [14],
     images: ['/images/buildings/parkline-1.webp','/images/buildings/parkline-2.webp','/images/buildings/parkline-3.webp','/images/buildings/parkline-4.webp','/images/buildings/parkline-5.webp','/images/buildings/parkline-6.webp','/images/buildings/parkline-7.webp','/images/buildings/parkline-8.webp'],
     amenities: ['Pool', 'Gym', 'Concierge', 'Parking', 'Rooftop', 'Fitness Center'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── EDGEWATER ─────────────────────────────────────────────────────────────
@@ -190,8 +165,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: ['/images/buildings/2000-biscayne-1.webp','/images/buildings/2000-biscayne-2.webp','/images/buildings/2000-biscayne-3.webp','/images/buildings/2000-biscayne-4.webp','/images/buildings/2000-biscayne-5.webp','/images/buildings/2000-biscayne-6.webp','/images/buildings/2000-biscayne-7.webp','/images/buildings/2000-biscayne-8.webp','/images/buildings/2000-biscayne-9.webp','/images/buildings/2000-biscayne-10.webp'],
     amenities: ['Pool', 'Gym', 'Parking', 'Sauna', 'Game Room', 'Rooftop Terrace'],
-    moveInFees: [{ type: 'Deposit', amount: 1000 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Parking', amount: 125 }, { type: 'Pet Fee', amount: 400 }, { type: 'Pet Rent', amount: 40 }, { type: 'Cable/Internet/Trash', amount: 150 }],
   },
   {
     id: "14", name: 'Modera Edgewater', neighborhood: 'Edgewater',
@@ -202,8 +175,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: ['/images/buildings/modera-edgewater-1.webp','/images/buildings/modera-edgewater-2.webp','/images/buildings/modera-edgewater-3.webp','/images/buildings/modera-edgewater-4.webp','/images/buildings/modera-edgewater-5.webp','/images/buildings/modera-edgewater-6.webp','/images/buildings/modera-edgewater-7.webp','/images/buildings/modera-edgewater-8.webp','/images/buildings/modera-edgewater-9.webp','/images/buildings/modera-edgewater-10.webp','/images/buildings/modera-edgewater-11.webp'],
     amenities: ['Pool', 'Gym', 'Parking', 'Fitness Center', 'Lobby Lounge'],
-    moveInFees: [{ type: 'Deposit', amount: 300 }, { type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Parking', amount: 125 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 20 }],
   },
   {
     id: "15", name: 'Blu 27 Edgewater', neighborhood: 'Edgewater',
@@ -213,8 +184,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Parking'],
-    moveInFees: [{ type: 'Deposit', amount: 750 }, { type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Parking', amount: 100 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 25 }, { type: 'Utility Package', amount: 81 }],
   },
   {
     id: "16", name: 'Metro Edgewater', neighborhood: 'Edgewater',
@@ -224,8 +193,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Parking'],
-    moveInFees: [{ type: 'Deposit', amount: 500 }, { type: 'Application', amount: 350 }, { type: 'Admin Fee', amount: 150 }],
-    monthlyCharges: [{ type: 'Parking', amount: 125 }],
   },
   {
     id: "17", name: 'The Hamilton', neighborhood: 'Edgewater',
@@ -235,8 +202,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Concierge', 'Parking'],
-    moveInFees: [{ type: 'Deposit', amount: 1000 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [],
   },
 
   // ── MIDTOWN ───────────────��───────────────────────────────────────────────
@@ -248,8 +213,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Parking'],
-    moveInFees: [{ type: 'Deposit', amount: 1000 }, { type: 'Application', amount: 100 }, { type: 'Admin Fee', amount: 250 }],
-    monthlyCharges: [{ type: 'Parking', amount: 75 }],
   },
   {
     id: "19", name: 'AMLI Midtown Miami', neighborhood: 'Midtown',
@@ -259,8 +222,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Parking'],
-    moveInFees: [{ type: 'Deposit', amount: 1000 }, { type: 'Application', amount: 100 }, { type: 'Admin Fee', amount: 250 }],
-    monthlyCharges: [{ type: 'Parking', amount: 75 }, { type: 'Pet Fee', amount: 400 }, { type: 'Pet Rent', amount: 20 }],
   },
   {
     id: "20", name: 'Eve at The District', neighborhood: 'Midtown',
@@ -270,8 +231,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Coworking'],
-    moveInFees: [{ type: 'Deposit', amount: 500 }, { type: 'Application', amount: 125 }],
-    monthlyCharges: [{ type: 'Parking', amount: 125 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 30 }],
   },
   {
     id: "21", name: 'Midtown Five', neighborhood: 'Midtown',
@@ -281,8 +240,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Rooftop', 'Concierge'],
-    moveInFees: [{ type: 'Admin Fee', amount: 350 }, { type: 'Application', amount: 150 }, { type: 'Deposit', amount: 500 }],
-    monthlyCharges: [{ type: 'Parking', amount: 100 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 25 }, { type: 'Pest Control', amount: 5 }, { type: 'Trash', amount: 20 }],
   },
   {
     id: "22", name: 'Gio Midtown', neighborhood: 'Midtown',
@@ -292,8 +249,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Rooftop'],
-    moveInFees: [{ type: 'Deposit', amount: 500 }, { type: 'Application', amount: 100 }],
-    monthlyCharges: [{ type: 'Parking', amount: 125 }, { type: 'Pet Fee Dog', amount: 500 }, { type: 'Pet Rent Dog', amount: 50 }, { type: 'Pet Fee Cat', amount: 375 }, { type: 'Pet Rent Cat', amount: 35 }, { type: 'Utility Package', amount: 40 }],
   },
   {
     id: "23", name: 'Cortland Midtown Miami', neighborhood: 'Midtown',
@@ -303,8 +258,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Parking'],
-    moveInFees: [{ type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 250 }, { type: 'Deposit', amount: 565 }],
-    monthlyCharges: [{ type: 'Parking', amount: 125 }, { type: 'Pet Fee', amount: 400 }, { type: 'Pet Rent', amount: 25 }, { type: 'Trash', amount: 20 }, { type: 'Pest Control', amount: 8 }],
   },
 
   // ── WYNWOOD ───────────────────────────────────────────────────────────────
@@ -316,8 +269,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 125 }, { type: 'Amenity Fee', amount: 350 }, { type: 'Deposit', amount: 500 }],
-    monthlyCharges: [{ type: 'Pet Fee 1st', amount: 500 }, { type: 'Pet Fee 2 pets', amount: 750 }, { type: 'Pet Rent', amount: 50 }, { type: 'Valet Parking', amount: 149 }, { type: 'EV Charging', amount: 80 }, { type: 'Off-Site Parking', amount: 125 }],
   },
   {
     id: "25", name: 'Amara Wynwood', neighborhood: 'Wynwood',
@@ -327,8 +278,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Parking'],
-    moveInFees: [],
-    monthlyCharges: [{ type: 'Parking 1st', amount: 125 }, { type: 'Parking 2nd', amount: 175 }, { type: 'Internet', amount: 85 }, { type: 'Trash', amount: 25 }, { type: 'Pest Control', amount: 5 }],
   },
   {
     id: "26", name: 'Wynwood Plaza Residences', neighborhood: 'Wynwood',
@@ -339,8 +288,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: ['/images/buildings/wynwood-plaza-residences-1.webp','/images/buildings/wynwood-plaza-residences-2.webp','/images/buildings/wynwood-plaza-residences-3.webp','/images/buildings/wynwood-plaza-residences-4.webp','/images/buildings/wynwood-plaza-residences-5.webp','/images/buildings/wynwood-plaza-residences-6.webp'],
     amenities: ['Pool', 'Gym', 'Rooftop', 'Lounge', 'Games Room'],
-    moveInFees: [{ type: 'Application', amount: 125 }, { type: 'Deposit', amount: 500 }],
-    monthlyCharges: [{ type: 'Parking', amount: 161 }, { type: 'Pet Fee', amount: 500 }, { type: 'Trash', amount: 26 }, { type: 'Cable/Internet', amount: 75 }, { type: 'Pest Control', amount: 5 }],
   },
   {
     id: "27", name: 'Flow Wynwood', neighborhood: 'Wynwood',
@@ -350,8 +297,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Parking'],
-    moveInFees: [{ type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 45 }, { type: 'Parking 1st', amount: 200 }, { type: 'Parking 2nd', amount: 350 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 30 }, { type: 'Trash', amount: 25 }, { type: 'Parcel Pending', amount: 35 }, { type: 'Cable/Internet', amount: 85 }],
   },
   {
     id: "28", name: 'The Highley House', neighborhood: 'Wynwood',
@@ -361,8 +306,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Parking'],
-    moveInFees: [{ type: 'Deposit', amount: 500 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Parking', amount: 150 }, { type: 'Cable/Internet', amount: 75 }],
   },
   {
     id: "29", name: 'Wynd 27 & Wynd 28', neighborhood: 'Wynwood',
@@ -372,8 +315,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Rooftop', 'Parking'],
-    moveInFees: [{ type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }, { type: 'Deposit', amount: 1000 }],
-    monthlyCharges: [{ type: 'Parking', amount: 125 }, { type: 'Pet Fee', amount: 350 }, { type: 'Pet Rent', amount: 50 }, { type: 'Tech Package', amount: 95 }, { type: 'Trash', amount: 20 }],
   },
   {
     id: "30", name: '29 WYN', neighborhood: 'Wynwood',
@@ -383,8 +324,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Deposit', amount: 500 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Parking', amount: 150 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 25 }],
   },
   {
     id: "31", name: 'AMLI Wynwood', neighborhood: 'Wynwood',
@@ -394,8 +333,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Parking'],
-    moveInFees: [{ type: 'Deposit', amount: 1000 }, { type: 'Application', amount: 100 }, { type: 'Admin Fee', amount: 250 }],
-    monthlyCharges: [{ type: 'Parking', amount: 75 }, { type: 'Pet Fee', amount: 400 }, { type: 'Pet Rent', amount: 20 }],
   },
   {
     id: "32", name: 'The Dorsey', neighborhood: 'Wynwood',
@@ -405,8 +342,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Deposit', amount: 500 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Parking', amount: 100 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 25 }, { type: 'Cable/Internet', amount: 70 }],
   },
   {
     id: "33", name: 'Artem', neighborhood: 'Wynwood',
@@ -416,8 +351,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Parking'],
-    moveInFees: [{ type: 'Deposit', amount: 500 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Parking', amount: 125 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 25 }],
   },
   {
     id: "34", name: 'Strata Wynwood', neighborhood: 'Wynwood',
@@ -427,8 +360,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Rooftop'],
-    moveInFees: [{ type: 'Application', amount: 125 }],
-    monthlyCharges: [{ type: 'Parking 1st', amount: 125 }, { type: 'Parking 2nd', amount: 185 }, { type: 'Trash', amount: 26 }],
   },
   {
     id: "35", name: 'Wynwood 25', neighborhood: 'Wynwood',
@@ -438,7 +369,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── NORTH MIAMI / NMB ─────────────────────────────────────────────────────
@@ -450,8 +380,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }, { type: 'Deposit', amount: 500 }],
-    monthlyCharges: [{ type: 'Pet Fee', amount: 500 }, { type: 'Parking', amount: 175 }, { type: 'Internet', amount: 80 }, { type: 'Trash', amount: 15 }, { type: 'Pest Control', amount: 3 }],
   },
   {
     id: "38", name: 'Aura North Miami Beach', neighborhood: 'North Miami Beach',
@@ -461,8 +389,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }, { type: 'Deposit', amount: 400 }],
-    monthlyCharges: [{ type: 'Rent Billing Fee', amount: 7 }, { type: 'Storage', amount: 75 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 30 }, { type: 'Parking', amount: 0 }, { type: 'Admin Billing Fee', amount: 1 }, { type: 'Bulk Technology', amount: 75 }, { type: 'Pest Control', amount: 5 }, { type: 'Trash', amount: 15 }],
   },
   {
     id: "39", name: 'Biscayne Shores', neighborhood: 'North Miami',
@@ -472,8 +398,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Deposit', amount: 500 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [],
   },
   {
     id: "40", name: 'The Gardens', neighborhood: 'North Miami',
@@ -483,8 +407,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Admin Fee', amount: 200 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 75 }, { type: 'Pet Fee 1st', amount: 500 }, { type: 'Pet Fee 2nd', amount: 250 }, { type: 'Pet Rent', amount: 30 }, { type: 'Cable/Internet', amount: 65 }],
   },
   {
     id: "41", name: 'Soleste Nomi Beach', neighborhood: 'North Miami Beach',
@@ -494,8 +416,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Deposit', amount: 500 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 35 }],
   },
   {
     id: "42", name: 'Villa Laguna', neighborhood: 'North Miami',
@@ -505,8 +425,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 150 }],
-    monthlyCharges: [{ type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 35 }, { type: 'Utility Package', amount: 53 }],
   },
   {
     id: "43", name: 'Biscayne 112', neighborhood: 'Downtown',
@@ -516,8 +434,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Deposit', amount: 1000 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 30 }],
   },
   {
     id: "44", name: 'The Shoreline at Sole Mia', neighborhood: 'North Miami Beach',
@@ -527,8 +443,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 150 }],
-    monthlyCharges: [{ type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 35 }, { type: 'Utility Package', amount: 53 }],
   },
 
   // ── AVENTURA ──────────────────────────────────────────────────────────────
@@ -540,8 +454,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 300 }, { type: 'Deposit', amount: 500 }],
-    monthlyCharges: [{ type: 'Lifestyle Fee', amount: 125 }, { type: 'Parking Add\'l', amount: 100 }, { type: 'Pet Fee', amount: 450 }, { type: 'Pet Rent', amount: 30 }],
   },
   {
     id: "46", name: 'Arvella', neighborhood: 'Aventura',
@@ -551,8 +463,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }, { type: 'Deposit', amount: 1000 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 35 }, { type: 'Storage', amount: 65 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 30 }, { type: 'Parking', amount: 175 }, { type: 'Trash', amount: 30 }, { type: 'Pest Control', amount: 5 }, { type: 'Internet', amount: 50 }],
   },
   {
     id: "47", name: 'Modera Aventura', neighborhood: 'Aventura',
@@ -562,8 +472,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }, { type: 'Deposit', amount: 300 }],
-    monthlyCharges: [{ type: 'Storage Cage', amount: 100 }, { type: 'Bike Storage', amount: 5 }, { type: 'EV Station', amount: 200 }, { type: 'Parking 1st', amount: 45 }, { type: 'Parking 2nd', amount: 75 }, { type: 'Pet Fee', amount: 350 }, { type: 'Pet Rent', amount: 30 }, { type: 'Trash', amount: 20 }, { type: 'Internet', amount: 60 }],
   },
   {
     id: "48", name: 'Avida Aventura', neighborhood: 'Aventura',
@@ -573,8 +481,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }, { type: 'Deposit', amount: 750 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 65 }, { type: 'Smart Technology Fee', amount: 60 }, { type: 'Package Lockers', amount: 2 }, { type: 'Pest Control', amount: 3 }, { type: 'Trash', amount: 25 }, { type: 'Gas', amount: 20 }],
   },
 
   // ── HOLLYWOOD ─────────────────────────────────────────────────────────────
@@ -586,7 +492,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "50", name: 'Revv', neighborhood: 'Hollywood',
@@ -596,7 +501,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "51", name: 'The Tropic', neighborhood: 'Hollywood',
@@ -606,7 +510,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "52", name: 'Town Hollywood', neighborhood: 'Hollywood',
@@ -616,8 +519,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Deposit', amount: 500 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [],
   },
   {
     id: "53", name: 'Hollywood Heights on The Boulevard', neighborhood: 'Hollywood',
@@ -627,8 +528,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Deposit', amount: 400 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 400 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 25 }, { type: 'Tandem Spot', amount: 200 }, { type: 'Reserved Parking', amount: 100 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 25 }, { type: 'Internet', amount: 65 }, { type: 'Trash', amount: 30 }],
   },
   {
     id: "54", name: '1818 Park', neighborhood: 'Hollywood',
@@ -638,7 +537,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "55", name: 'Circ Residences', neighborhood: 'Hollywood',
@@ -648,7 +546,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "56", name: 'Alvista Hollywood', neighborhood: 'Hollywood',
@@ -658,7 +555,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── DANIA BEACH ───────────────────────────────────────────────────────────
@@ -670,7 +566,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "58", name: 'Elevate Dania Beach', neighborhood: 'Dania Beach',
@@ -680,7 +575,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "59", name: 'Avery Dania Pointe East', neighborhood: 'Dania Beach',
@@ -690,7 +584,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "60", name: 'Soleste Seaside', neighborhood: 'Dania Beach',
@@ -700,7 +593,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── ALLAPATTAH ────────────────────────────────────────────────────────────
@@ -712,8 +604,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Deposit', amount: 500 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 30 }, { type: 'Parking Registration', amount: 60 }, { type: 'Pet Fee', amount: 500 }, { type: 'Trash', amount: 30 }, { type: 'Pest Control', amount: 5 }],
   },
   {
     id: "67", name: 'The Skylar', neighborhood: 'Allapattah',
@@ -723,7 +613,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "68", name: 'Lantower River Landing', neighborhood: 'Allapattah',
@@ -733,7 +622,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── LITTLE HAVANA ─────────────────────────────────────────────────────────
@@ -745,7 +633,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "70", name: 'Ram Miami River North/South', neighborhood: 'Little Havana',
@@ -755,7 +642,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "71", name: 'Reflections Rentals', neighborhood: 'Little Havana',
@@ -765,7 +651,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "72", name: '10x Miami River', neighborhood: 'Little Havana',
@@ -775,7 +660,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "73", name: 'Brickell West City Rentals', neighborhood: 'Little Havana',
@@ -785,7 +669,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "74", name: 'Tides at River Rapids', neighborhood: 'Little Havana',
@@ -795,7 +678,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "75", name: 'Riverview One', neighborhood: 'Little Havana',
@@ -805,7 +687,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── DORAL ─────────────────────────────────────────────────────────────────
@@ -817,8 +698,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Deposit', amount: 500 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 25 }, { type: 'Parking Registration', amount: 65 }, { type: 'Cable/Internet', amount: 60 }, { type: 'Trash', amount: 30 }],
   },
   {
     id: "77", name: 'Century Town Center', neighborhood: 'Doral',
@@ -828,7 +707,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "78", name: 'Casero', neighborhood: 'Doral',
@@ -838,8 +716,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Deposit', amount: 500 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Parking', amount: 94 }],
   },
   {
     id: "79", name: 'Palmera', neighborhood: 'Doral',
@@ -849,7 +725,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "80", name: 'Sanctuary Doral', neighborhood: 'Doral',
@@ -859,7 +734,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "81", name: 'Palma', neighborhood: 'Doral',
@@ -869,7 +743,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "82", name: 'The Landmark South', neighborhood: 'Doral',
@@ -879,7 +752,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "83", name: 'AMLI 8800', neighborhood: 'Doral',
@@ -889,8 +761,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Deposit', amount: 1000 }, { type: 'Application', amount: 100 }, { type: 'Admin Fee', amount: 250 }],
-    monthlyCharges: [{ type: 'Pet Fee', amount: 400 }, { type: 'Pet Rent', amount: 20 }, { type: 'Parking', amount: 75 }, { type: 'Trash', amount: 20 }, { type: 'Water', amount: 25 }],
   },
   {
     id: "84", name: 'Gran Vista at Doral', neighborhood: 'Doral',
@@ -900,7 +770,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "85", name: 'Cordoba', neighborhood: 'Doral',
@@ -910,8 +779,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Deposit', amount: 500 }, { type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Parking Add\'l', amount: 100 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 25 }, { type: 'Trash', amount: 28 }, { type: 'Pest Control', amount: 5 }],
   },
   {
     id: "86", name: 'Palms of Doral', neighborhood: 'Doral',
@@ -921,7 +788,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "87", name: '275 Fontaine Parc', neighborhood: 'Doral',
@@ -931,7 +797,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── COCONUT GROVE / CORAL GABLES ──────────────────────────────────────────
@@ -943,8 +808,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 145 }, { type: 'Admin Fee', amount: 400 }, { type: 'Deposit', amount: 2500 }],
-    monthlyCharges: [{ type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 30 }, { type: 'Parking', amount: 150 }, { type: 'Trash', amount: 30 }, { type: 'Pest Control', amount: 5 }, { type: 'Internet', amount: 95 }],
   },
   {
     id: "89", name: 'Grove Central Residences', neighborhood: 'Coconut Grove',
@@ -954,8 +817,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 340 }],
-    monthlyCharges: [{ type: 'Parking', amount: 125 }],
   },
   {
     id: "90", name: 'Cascade Link at Douglas', neighborhood: 'Coconut Grove',
@@ -965,8 +826,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 25 }, { type: 'Parking', amount: 175 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Fee 2 pets', amount: 750 }, { type: 'Pet Rent', amount: 20 }],
   },
   {
     id: "91", name: 'Platform 3750', neighborhood: 'Coconut Grove',
@@ -976,8 +835,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 85 }, { type: 'Deposit', amount: 500 }],
-    monthlyCharges: [],
   },
   {
     id: "92", name: 'Life Time Living Gables Station', neighborhood: 'Coconut Grove',
@@ -987,7 +844,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "93", name: 'Core at Link', neighborhood: 'Coconut Grove',
@@ -997,8 +853,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Amenity Fee', amount: 35 }, { type: 'Pet Fee', amount: 500 }, { type: 'Pet Fee 2 pets', amount: 750 }, { type: 'Pet Rent', amount: 20 }, { type: 'Valet Parking 1st', amount: 125 }, { type: 'Valet Parking 2nd', amount: 175 }, { type: 'Valet Trash', amount: 25 }, { type: 'Pest Control', amount: 5 }],
   },
   {
     id: "94", name: 'Zoi House Grove', neighborhood: 'Coconut Grove',
@@ -1008,7 +862,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "95", name: 'MB Station', neighborhood: 'Coconut Grove',
@@ -1018,8 +871,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Deposit', amount: 1000 }, { type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [],
   },
   {
     id: "96", name: 'The Mile Coral Gables', neighborhood: 'Coconut Grove',
@@ -1029,7 +880,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "97", name: 'Grove Station Tower', neighborhood: 'Coconut Grove',
@@ -1039,8 +889,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 35 }, { type: 'Utility Package', amount: 96 }],
   },
   {
     id: "98", name: 'Modera Douglas Station', neighborhood: 'Coconut Grove',
@@ -1050,8 +898,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Application', amount: 150 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [{ type: 'Pet Fee', amount: 500 }, { type: 'Pet Rent', amount: 30 }],
   },
   {
     id: "99", name: 'Berkshire Coral Gables', neighborhood: 'Coconut Grove',
@@ -1061,7 +907,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── LAS OLAS / FORT LAUDERDALE ────────────────────────────────────────────
@@ -1073,7 +918,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "101", name: 'Flow Fort Lauderdale', neighborhood: 'Las Olas',
@@ -1083,7 +927,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "102", name: '10x Riverwalk', neighborhood: 'Las Olas',
@@ -1093,7 +936,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "103", name: 'Gables Riverwalk', neighborhood: 'Las Olas',
@@ -1103,7 +945,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "104", name: 'Hanover Riverwalk', neighborhood: 'Las Olas',
@@ -1113,7 +954,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "105", name: 'Veneto Las Olas', neighborhood: 'Las Olas',
@@ -1123,7 +963,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "106", name: 'Icon Las Olas', neighborhood: 'Las Olas',
@@ -1133,7 +972,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "107", name: 'The Registry', neighborhood: 'Las Olas',
@@ -1143,7 +981,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "108", name: 'Coasterra', neighborhood: 'Las Olas',
@@ -1153,7 +990,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "109", name: 'Alluvion', neighborhood: 'Las Olas',
@@ -1163,7 +999,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "110", name: 'Novo Las Olas', neighborhood: 'Las Olas',
@@ -1173,7 +1008,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "111", name: '10x Las Olas Walk', neighborhood: 'Las Olas',
@@ -1183,7 +1017,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "112", name: 'Rivr Lofts', neighborhood: 'Las Olas',
@@ -1193,8 +1026,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [{ type: 'Deposit', amount: 1000 }, { type: 'Application', amount: 125 }, { type: 'Admin Fee', amount: 350 }],
-    monthlyCharges: [],
   },
   {
     id: "113", name: 'Harbour at New River', neighborhood: 'Las Olas',
@@ -1204,7 +1035,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── MIAMI DESIGN DISTRICT ─────────────────────────────────────────────────
@@ -1216,7 +1046,6 @@ export const buildings: Building[] = [
     concession: 'TBD',
     units: ['1B', '2B', '3B'], incomeReq: '3x', creditReq: '>700', guarantor: false, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Concierge', 'Valet', 'Rooftop'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── NORTH BAY VILLAGE ────────────────────────────────────────────────────
@@ -1228,7 +1057,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "moda", name: 'Moda', neighborhood: 'North Bay Village',
@@ -1238,7 +1066,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── MIAMI BEACH ──────────────────────────────────────────────────────────
@@ -1250,7 +1077,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Concierge'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── BRICKELL ─────────────────────────────────────────────────────────────
@@ -1262,7 +1088,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B', '3B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym', 'Concierge'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── EDGEWATER ────────────────────────────────────────────────────────────
@@ -1274,7 +1099,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── DOWNTOWN (NEW) ───────────────────────────────────────────────────────
@@ -1286,7 +1110,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "miami-plaza", name: 'Miami Plaza', neighborhood: 'Downtown',
@@ -1297,7 +1120,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "downtown-5th", name: 'Downtown 5th', neighborhood: 'Downtown',
@@ -1308,7 +1130,6 @@ export const buildings: Building[] = [
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "uni-tower", name: 'Uni Tower', neighborhood: 'Downtown',
@@ -1318,7 +1139,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "bezel-miami-worldcenter", name: 'Bezel Miami Worldcenter', neighborhood: 'Downtown',
@@ -1328,7 +1148,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "filling-station", name: 'Filling Station', neighborhood: 'Downtown',
@@ -1338,7 +1157,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── PINECREST ────────────────────────────────────────────────────────────
@@ -1350,7 +1168,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── NORTH MIAMI (NEW) ────────────────────────────────────────────────────
@@ -1362,7 +1179,6 @@ export const buildings: Building[] = [
     concession: 'Contact for current offers',
     units: ['Studio', '1B', '2B'], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: ['Pool', 'Gym'],
-    moveInFees: [], monthlyCharges: [],
   },
 
   // ── DOWNTOWN (NEW) ────────────────────────────────────────────────
@@ -1373,7 +1189,6 @@ export const buildings: Building[] = [
     units: [], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: [],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "central-tower", name: 'Central Tower', neighborhood: 'Downtown',
@@ -1382,7 +1197,6 @@ export const buildings: Building[] = [
     units: [], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: [],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "square-station", name: 'Square Station', neighborhood: 'Downtown',
@@ -1391,7 +1205,6 @@ export const buildings: Building[] = [
     units: [], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: [],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "melody-tower", name: 'Melody Tower', neighborhood: 'Downtown',
@@ -1400,7 +1213,6 @@ export const buildings: Building[] = [
     units: [], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: [],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "downtown-1st", name: 'Downtown 1st', neighborhood: 'Downtown',
@@ -1409,7 +1221,6 @@ export const buildings: Building[] = [
     units: [], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: [],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
   // ── EDGEWATER (NEW) ────────────────────────────────────────────────
   {
@@ -1419,7 +1230,6 @@ export const buildings: Building[] = [
     units: [], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: [],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "23-biscayne-bay", name: '23 Biscayne Bay', neighborhood: 'Edgewater',
@@ -1428,7 +1238,6 @@ export const buildings: Building[] = [
     units: [], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: [],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "urban-22", name: 'Urban 22', neighborhood: 'Edgewater',
@@ -1437,7 +1246,6 @@ export const buildings: Building[] = [
     units: [], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: [],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "second-plaza", name: 'Second Plaza', neighborhood: 'Edgewater',
@@ -1446,7 +1254,6 @@ export const buildings: Building[] = [
     units: [], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: [],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "25-biscayne-park", name: '25 Biscayne Park', neighborhood: 'Edgewater',
@@ -1455,7 +1262,6 @@ export const buildings: Building[] = [
     units: [], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: [],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "1800-biscayne-plaza", name: '1800 Biscayne Plaza', neighborhood: 'Edgewater',
@@ -1464,7 +1270,6 @@ export const buildings: Building[] = [
     units: [], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: [],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
   {
     id: "25-mirage", name: '25 Mirage', neighborhood: 'Edgewater',
@@ -1473,7 +1278,6 @@ export const buildings: Building[] = [
     units: [], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: [],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
   // ── ALLAPATTAH (NEW) ────────────────────────────────────────────────
   {
@@ -1483,7 +1287,6 @@ export const buildings: Building[] = [
     units: [], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: [],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
   // ── BRICKELL (NEW) ────────────────────────────────────────────────
   {
@@ -1493,7 +1296,6 @@ export const buildings: Building[] = [
     units: [], incomeReq: '3x', creditReq: '>650', guarantor: true, holdDays: [30],
     images: [], amenities: [],
     commission: '50%',
-    moveInFees: [], monthlyCharges: [],
   },
 ]
 export const neighborhoodColors: Record<string, string> = {
