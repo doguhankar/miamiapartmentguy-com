@@ -3,7 +3,7 @@ import { neighborhoodCenters } from '@/lib/neighborhood-centers'
 
 export const START_NEIGHBORHOODS = Object.keys(neighborhoodCenters).sort() as [string, ...string[]]
 export const START_BEDS = ['Studio', '1', '2', '3+'] as const
-export const START_MUST_HAVES = ['Pet friendly', 'Parking', 'In-unit laundry', 'Gym', 'Balcony'] as const
+export const START_NOT_SURE = 'Not sure yet'
 export const START_SOURCES = ['instagram', 'tiktok', 'fb', 'dm'] as const
 export type StartSource = (typeof START_SOURCES)[number]
 
@@ -37,12 +37,7 @@ export function oneYearOutIso() {
   return new Date(date.getTime() - offsetMs).toISOString().slice(0, 10)
 }
 
-const money = (label: string) =>
-  z.coerce
-    .number({ invalid_type_error: `${label} is required` })
-    .int(`${label} must be a whole dollar amount`)
-    .min(500, `${label} must be at least $500`)
-    .max(25000, `${label} must be $25,000 or less`)
+const BUDGET_REQUIRED = 'Enter your monthly budget'
 
 export const startLeadSchema = z
   .object({
@@ -54,31 +49,38 @@ export const startLeadSchema = z
       .refine(value => value >= todayIso(), 'Move-in date must be today or later')
       .refine(value => value <= oneYearOutIso(), 'Move-in date must be within the next year'),
     beds: z.enum(START_BEDS, { errorMap: () => ({ message: 'Choose an apartment size' }) }),
-    budgetMin: money('Minimum budget'),
-    budgetMax: money('Maximum budget'),
+    budget: z.preprocess(
+      value => {
+        if (typeof value !== 'string') return value
+        const cleaned = value.replace(/[$,\s]/g, '')
+        return cleaned === '' ? undefined : cleaned
+      },
+      z.coerce
+        .number({ required_error: BUDGET_REQUIRED, invalid_type_error: BUDGET_REQUIRED })
+        .int('Budget must be a whole dollar amount')
+        .gt(0, 'Budget must be greater than 0')
+        .max(1_000_000, 'Enter a realistic monthly budget'),
+    ),
     creditScore: z.preprocess(
       value => (value === '' || value === null || value === undefined ? undefined : value),
       z.coerce.number().int('Credit score must be a whole number').min(300, 'Credit score must be 300–850').max(850, 'Credit score must be 300–850').optional(),
     ),
-    neighborhoods: z.array(z.enum(START_NEIGHBORHOODS)).min(1, 'Pick at least one neighborhood').max(START_NEIGHBORHOODS.length),
-    mustHaves: z.array(z.enum(START_MUST_HAVES)).max(START_MUST_HAVES.length).default([]),
+    neighborhood: z.preprocess(
+      value => (value === '' || value === null || value === undefined ? START_NOT_SURE : value),
+      z.enum([START_NOT_SURE, ...START_NEIGHBORHOODS], { errorMap: () => ({ message: 'Choose a neighborhood from the list' }) }),
+    ),
     notes: z.string().trim().max(500, 'Keep notes under 500 characters').optional(),
     source: z.string().optional(),
     website: z.string().optional(),
-  })
-  .refine(value => value.budgetMax >= value.budgetMin, {
-    message: 'Maximum budget must be at least the minimum',
-    path: ['budgetMax'],
   })
 
 export type StartLeadInput = z.input<typeof startLeadSchema>
 export type StartLeadParsed = z.output<typeof startLeadSchema>
 
-export function bedsLabel(beds: string) {
-  return beds === 'Studio' ? 'Studio' : `${beds}BR`
+export function sizeLabel(beds: string) {
+  return beds === 'Studio' ? 'Studio' : `${beds} BR`
 }
 
-export function formatBudgetRange(min: number, max: number) {
-  const fmt = (n: number) => `$${n.toLocaleString('en-US')}`
-  return `${fmt(min)}-${fmt(max)}`
+export function formatBudget(amount: number) {
+  return `$${amount.toLocaleString('en-US')}`
 }

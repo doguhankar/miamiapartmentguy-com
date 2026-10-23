@@ -1,5 +1,5 @@
 import { Resend } from 'resend'
-import { bedsLabel, formatBudgetRange } from '@/lib/start-lead'
+import { formatBudget, sizeLabel } from '@/lib/start-lead'
 
 export interface StartLeadNotification {
   leadId: number | string
@@ -8,11 +8,9 @@ export interface StartLeadNotification {
   phoneDigits: string
   moveDate: string
   beds: string
-  budgetMin: number
-  budgetMax: number
+  budget: number
   creditScore?: number
-  neighborhoods: string[]
-  mustHaves: string[]
+  neighborhood: string
   notes?: string
   source: string
 }
@@ -28,7 +26,7 @@ function singleLine(value: string) {
 }
 
 export function buildStartLeadSubject(lead: StartLeadNotification) {
-  return singleLine(`New Lead — ${lead.name} — ${bedsLabel(lead.beds)} — ${formatBudgetRange(lead.budgetMin, lead.budgetMax)} — via ${lead.source}`)
+  return singleLine(`New Lead — ${lead.name} — ${sizeLabel(lead.beds)} — ${formatBudget(lead.budget)}/mo — via ${lead.source}`)
 }
 
 export async function sendStartLeadEmail(lead: StartLeadNotification): Promise<{ sent: boolean; error?: string }> {
@@ -43,11 +41,10 @@ export async function sendStartLeadEmail(lead: StartLeadNotification): Promise<{
     ['Name', escapeHtml(lead.name)],
     ['Phone', `<a href="${telHref}" style="color:#0a8f86;">${escapeHtml(lead.phoneDisplay)}</a>`],
     ['Move-in date', escapeHtml(lead.moveDate)],
-    ['Apartment size', escapeHtml(bedsLabel(lead.beds))],
-    ['Budget', escapeHtml(formatBudgetRange(lead.budgetMin, lead.budgetMax))],
+    ['Apartment size', escapeHtml(sizeLabel(lead.beds))],
+    ['Budget', `${escapeHtml(formatBudget(lead.budget))}/mo`],
+    ['Neighborhood', escapeHtml(lead.neighborhood)],
     ['Credit score', lead.creditScore ? String(lead.creditScore) : '<span style="color:#8a8a98;">Not provided</span>'],
-    ['Neighborhoods', escapeHtml(lead.neighborhoods.join(', '))],
-    ['Must-haves', lead.mustHaves.length ? escapeHtml(lead.mustHaves.join(', ')) : '<span style="color:#8a8a98;">None selected</span>'],
     ['Notes', lead.notes ? escapeHtml(lead.notes).replace(/\n/g, '<br>') : '<span style="color:#8a8a98;">None</span>'],
     ['Source', escapeHtml(lead.source)],
     ['Lead ID', escapeHtml(String(lead.leadId))],

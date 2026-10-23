@@ -4,8 +4,8 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import {
   DON_SMS_HREF,
   START_BEDS,
-  START_MUST_HAVES,
   START_NEIGHBORHOODS,
+  START_NOT_SURE,
   oneYearOutIso,
   startLeadSchema,
   todayIso,
@@ -19,11 +19,9 @@ interface FormState {
   phone: string
   moveDate: string
   beds: string
-  budgetMin: string
-  budgetMax: string
+  budget: string
+  neighborhood: string
   creditScore: string
-  neighborhoods: string[]
-  mustHaves: string[]
   notes: string
   website: string
 }
@@ -33,20 +31,20 @@ const INITIAL_STATE: FormState = {
   phone: '',
   moveDate: '',
   beds: '',
-  budgetMin: '',
-  budgetMax: '',
+  budget: '',
+  neighborhood: START_NOT_SURE,
   creditScore: '',
-  neighborhoods: [],
-  mustHaves: [],
   notes: '',
   website: '',
 }
 
-const FIELD_ORDER = ['name', 'phone', 'moveDate', 'beds', 'budgetMin', 'budgetMax', 'creditScore', 'neighborhoods', 'mustHaves', 'notes']
+const FIELD_ORDER = ['name', 'phone', 'moveDate', 'beds', 'budget', 'neighborhood', 'creditScore', 'notes']
 
-function toggle(list: string[], value: string) {
-  return list.includes(value) ? list.filter(item => item !== value) : [...list, value]
-}
+const REQUIRED_MARK = (
+  <span className="st-req" aria-hidden="true">
+    *
+  </span>
+)
 
 export function StartForm({ source }: { source: StartSource }) {
   const [state, setState] = useState<FormState>(INITIAL_STATE)
@@ -70,7 +68,7 @@ export function StartForm({ source }: { source: StartSource }) {
     if (!key) return
     const target = document.getElementById(`st-${key}`)
     target?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-    const focusable = target?.matches('input, textarea') ? target : target?.querySelector<HTMLElement>('input, textarea')
+    const focusable = target?.matches('input, textarea, select') ? target : target?.querySelector<HTMLElement>('input, textarea, select')
     focusable?.focus({ preventScroll: true })
   }
 
@@ -142,26 +140,28 @@ export function StartForm({ source }: { source: StartSource }) {
       <p className="st-sub">{"Tell me what you're looking for. I'll text you a short list that fits."}</p>
 
       <form className="st-form" onSubmit={submit} noValidate>
+        <p className="st-required-note">{REQUIRED_MARK} Required</p>
+
         <div className="st-field">
-          <label className="st-label" htmlFor="st-name">Your name</label>
-          <input id="st-name" className="st-input" type="text" autoComplete="name" autoCapitalize="words" enterKeyHint="next" placeholder="Jane Smith" value={state.name} onChange={event => set('name', event.target.value)} aria-invalid={!!errors.name?.length} aria-describedby={errorId('name')} />
+          <label className="st-label" htmlFor="st-name">Your name {REQUIRED_MARK}</label>
+          <input id="st-name" className="st-input" type="text" autoComplete="name" autoCapitalize="words" enterKeyHint="next" placeholder="Jane Smith" value={state.name} onChange={event => set('name', event.target.value)} aria-required="true" aria-invalid={!!errors.name?.length} aria-describedby={errorId('name')} />
           {fieldError('name')}
         </div>
 
         <div className="st-field">
-          <label className="st-label" htmlFor="st-phone">Phone number <span className="st-hint">(so I can text you)</span></label>
-          <input id="st-phone" className="st-input" type="tel" inputMode="tel" autoComplete="tel" enterKeyHint="next" placeholder="(305) 555-0123" value={state.phone} onChange={event => set('phone', event.target.value)} aria-invalid={!!errors.phone?.length} aria-describedby={errorId('phone')} />
+          <label className="st-label" htmlFor="st-phone">Phone number {REQUIRED_MARK} <span className="st-hint">(so I can text you)</span></label>
+          <input id="st-phone" className="st-input" type="tel" inputMode="tel" autoComplete="tel" enterKeyHint="next" placeholder="(305) 555-0123" value={state.phone} onChange={event => set('phone', event.target.value)} aria-required="true" aria-invalid={!!errors.phone?.length} aria-describedby={errorId('phone')} />
           {fieldError('phone')}
         </div>
 
         <div className="st-field">
-          <label className="st-label" htmlFor="st-moveDate">Move-in date</label>
-          <input id="st-moveDate" className="st-input" type="date" min={todayIso()} max={oneYearOutIso()} value={state.moveDate} onChange={event => set('moveDate', event.target.value)} aria-invalid={!!errors.moveDate?.length} aria-describedby={errorId('moveDate')} />
+          <label className="st-label" htmlFor="st-moveDate">Move-in date {REQUIRED_MARK}</label>
+          <input id="st-moveDate" className="st-input" type="date" min={todayIso()} max={oneYearOutIso()} value={state.moveDate} onChange={event => set('moveDate', event.target.value)} aria-required="true" aria-invalid={!!errors.moveDate?.length} aria-describedby={errorId('moveDate')} />
           {fieldError('moveDate')}
         </div>
 
         <fieldset className="st-field" id="st-beds">
-          <legend className="st-legend">Apartment size</legend>
+          <legend className="st-legend">Apartment size {REQUIRED_MARK}</legend>
           <div className="st-beds" role="radiogroup" aria-label="Apartment size" aria-describedby={errorId('beds')}>
             {START_BEDS.map(option => (
               <label className="st-chip" key={option}>
@@ -173,58 +173,28 @@ export function StartForm({ source }: { source: StartSource }) {
           {fieldError('beds')}
         </fieldset>
 
-        <fieldset className="st-field">
-          <legend className="st-legend">Monthly budget</legend>
-          <div className="st-row">
-            <div className="st-field">
-              <label className="st-label st-hint" htmlFor="st-budgetMin">Min</label>
-              <div className="st-money">
-                <span aria-hidden="true">$</span>
-                <input id="st-budgetMin" className="st-input" type="text" inputMode="numeric" pattern="[0-9]*" placeholder="2,000" value={state.budgetMin} onChange={event => set('budgetMin', event.target.value.replace(/[^\d]/g, ''))} aria-invalid={!!errors.budgetMin?.length} aria-describedby={errorId('budgetMin')} />
-              </div>
-              {fieldError('budgetMin')}
-            </div>
-            <div className="st-field">
-              <label className="st-label st-hint" htmlFor="st-budgetMax">Max</label>
-              <div className="st-money">
-                <span aria-hidden="true">$</span>
-                <input id="st-budgetMax" className="st-input" type="text" inputMode="numeric" pattern="[0-9]*" placeholder="3,000" value={state.budgetMax} onChange={event => set('budgetMax', event.target.value.replace(/[^\d]/g, ''))} aria-invalid={!!errors.budgetMax?.length} aria-describedby={errorId('budgetMax')} />
-              </div>
-              {fieldError('budgetMax')}
-            </div>
-          </div>
-        </fieldset>
+        <div className="st-field">
+          <label className="st-label" htmlFor="st-budget">Monthly budget {REQUIRED_MARK}</label>
+          <input id="st-budget" className="st-input" type="text" inputMode="numeric" pattern="[0-9]*" maxLength={9} placeholder="$2,500" value={state.budget ? `$${Number(state.budget).toLocaleString('en-US')}` : ''} onChange={event => set('budget', event.target.value.replace(/[^\d]/g, '').slice(0, 7))} aria-required="true" aria-invalid={!!errors.budget?.length} aria-describedby={errorId('budget')} />
+          {fieldError('budget')}
+        </div>
+
+        <div className="st-field">
+          <label className="st-label" htmlFor="st-neighborhood">Neighborhood <span className="st-hint">(optional)</span></label>
+          <select id="st-neighborhood" className="st-input st-select" value={state.neighborhood} onChange={event => set('neighborhood', event.target.value)} aria-invalid={!!errors.neighborhood?.length} aria-describedby={errorId('neighborhood')}>
+            <option value={START_NOT_SURE}>{START_NOT_SURE}</option>
+            {START_NEIGHBORHOODS.map(option => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+          {fieldError('neighborhood')}
+        </div>
 
         <div className="st-field">
           <label className="st-label" htmlFor="st-creditScore">Credit score <span className="st-hint">(optional, 300–850)</span></label>
           <input id="st-creditScore" className="st-input" type="text" inputMode="numeric" pattern="[0-9]*" maxLength={3} placeholder="720" value={state.creditScore} onChange={event => set('creditScore', event.target.value.replace(/[^\d]/g, ''))} aria-invalid={!!errors.creditScore?.length} aria-describedby={errorId('creditScore')} />
           {fieldError('creditScore')}
         </div>
-
-        <fieldset className="st-field" id="st-neighborhoods">
-          <legend className="st-legend">Neighborhoods <span className="st-hint">(pick any)</span></legend>
-          <div className="st-chips" aria-describedby={errorId('neighborhoods')}>
-            {START_NEIGHBORHOODS.map(option => (
-              <label className="st-chip" key={option}>
-                <input type="checkbox" value={option} checked={state.neighborhoods.includes(option)} onChange={() => set('neighborhoods', toggle(state.neighborhoods, option))} />
-                <span>{option}</span>
-              </label>
-            ))}
-          </div>
-          {fieldError('neighborhoods')}
-        </fieldset>
-
-        <fieldset className="st-field" id="st-mustHaves">
-          <legend className="st-legend">Must-haves <span className="st-hint">(optional)</span></legend>
-          <div className="st-chips">
-            {START_MUST_HAVES.map(option => (
-              <label className="st-chip" key={option}>
-                <input type="checkbox" value={option} checked={state.mustHaves.includes(option)} onChange={() => set('mustHaves', toggle(state.mustHaves, option))} />
-                <span>{option}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
 
         <div className="st-field">
           <label className="st-label" htmlFor="st-notes">Anything else? <span className="st-hint">(optional)</span></label>

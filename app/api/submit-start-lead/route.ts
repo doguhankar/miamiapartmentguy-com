@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { formatUsPhone, normalizeUsPhone, resolveStartSource, startLeadSchema, bedsLabel, formatBudgetRange } from '@/lib/start-lead'
+import { formatUsPhone, normalizeUsPhone, resolveStartSource, startLeadSchema, formatBudget, sizeLabel } from '@/lib/start-lead'
 import { sendStartLeadEmail } from '@/lib/start-lead-email'
 
 export const maxDuration = 30
@@ -89,11 +89,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: "We already got your request. I'll text you shortly." }, { status: 429 })
   }
 
-  const noteLines = [
-    input.mustHaves.length ? `Must-haves: ${input.mustHaves.join(', ')}` : null,
-    input.notes ? `Notes: ${input.notes}` : null,
-  ].filter((line): line is string => line !== null)
-
   const { data: lead, error: insertError } = await supabase
     .from('leads')
     .insert([
@@ -102,12 +97,12 @@ export async function POST(request: NextRequest) {
         phone: phoneDisplay,
         move_in_timing: input.moveDate,
         beds: input.beds,
-        budget: `$${input.budgetMin.toLocaleString('en-US')}–$${input.budgetMax.toLocaleString('en-US')}`,
-        area: input.neighborhoods.join(', '),
+        budget: formatBudget(input.budget),
+        area: input.neighborhood,
         credit_range: input.creditScore ? String(input.creditScore) : null,
         stage: 'New Lead',
         source,
-        notes: noteLines.length ? noteLines.join('\n') : null,
+        notes: input.notes || null,
       },
     ])
     .select('id')
@@ -126,15 +121,13 @@ export async function POST(request: NextRequest) {
       phoneDigits,
       moveDate: input.moveDate,
       beds: input.beds,
-      budgetMin: input.budgetMin,
-      budgetMax: input.budgetMax,
+      budget: input.budget,
       creditScore: input.creditScore,
-      neighborhoods: input.neighborhoods,
-      mustHaves: input.mustHaves,
+      neighborhood: input.neighborhood,
       notes: input.notes,
       source,
     }),
-    notifySlack(`New lead via ${source}: ${input.name} · ${phoneDisplay} · ${bedsLabel(input.beds)} · ${formatBudgetRange(input.budgetMin, input.budgetMax)} · ${input.neighborhoods.join(', ')}`),
+    notifySlack(`New lead via ${source}: ${input.name} · ${phoneDisplay} · ${sizeLabel(input.beds)} · ${formatBudget(input.budget)}/mo · ${input.neighborhood}`),
   ])
 
   if (!emailResult.sent) console.error('[start-lead] notification email failed for lead', lead.id, emailResult.error)
