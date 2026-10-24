@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { computeCommission } from '@/lib/lead-commission'
 
 export type DossierLead = {
   id: string
@@ -18,7 +19,36 @@ export type DossierLead = {
   guestCard: { status: 'idle' | 'sending' | 'sent' | 'error'; sentAt: string | null; error: string | null }
 }
 
-type Building = { id: string; name: string; neighborhood: string | null; contact_emails: string[] | null }
+type Building = { id: string; name: string; neighborhood: string | null; contact_emails: string[] | null; commission: string | null }
+
+type Deal = DossierLead['deal']
+type DealKey = 'building' | 'unit' | 'tour' | 'leaseStart' | 'leaseTerm' | 'marketRent'
+
+const DEAL_FIELDS: { key: DealKey; label: string; column: string; type: 'text' | 'date' | 'number'; placeholder?: string; required?: boolean }[] = [
+  { key: 'building', label: 'Building', column: 'building_name', type: 'text', placeholder: 'Building name', required: true },
+  { key: 'unit', label: 'Unit', column: 'unit', type: 'text', placeholder: 'e.g. 1204' },
+  { key: 'tour', label: 'First Tour', column: 'first_tour', type: 'date' },
+  { key: 'leaseStart', label: 'Lease Start', column: 'lease_start', type: 'date' },
+  { key: 'leaseTerm', label: 'Term (months)', column: 'lease_term_months', type: 'number', placeholder: '12' },
+  { key: 'marketRent', label: 'Market Rent', column: 'market_rent', type: 'text', placeholder: '$2,500', required: true },
+]
+
+function parseDealField(key: DealKey, raw: string): { value: string | number | null; error: string | null } {
+  const text = raw.trim()
+  if (key === 'building' || key === 'unit') return { value: text || null, error: null }
+  if (key === 'tour' || key === 'leaseStart') {
+    if (!text) return { value: null, error: null }
+    return /^\d{4}-\d{2}-\d{2}$/.test(text) ? { value: text, error: null } : { value: null, error: 'Enter a valid date' }
+  }
+  if (key === 'leaseTerm') {
+    if (!text) return { value: null, error: null }
+    const months = Number(text)
+    return Number.isInteger(months) && months >= 1 && months <= 120 ? { value: months, error: null } : { value: null, error: 'Enter whole months, 1 to 120' }
+  }
+  if (!text) return { value: null, error: null }
+  const rent = Number(text.replace(/[$,\s]/g, ''))
+  return Number.isFinite(rent) && rent > 0 ? { value: rent, error: null } : { value: null, error: 'Enter a rent above $0' }
+}
 
 const ARCHIVE_REASONS = [
   'Ghosted / stopped responding',
@@ -56,6 +86,8 @@ export default function AgentLeadDossier({
   onArchiveNotesChange,
   onArchiveCancel,
   onArchiveConfirm,
+  onDealChange,
+  onLeadClosed,
   onGenerateInvoice,
 }: {
   lead: DossierLead
@@ -72,6 +104,8 @@ export default function AgentLeadDossier({
   onArchiveNotesChange: (value: string) => void
   onArchiveCancel: () => void
   onArchiveConfirm: () => void
+  onDealChange: (deal: Deal) => void
+  onLeadClosed: (deal: Deal) => void
   onGenerateInvoice: () => void
 }) {
   const [buildings, setBuildings] = useState<Building[]>([])
@@ -80,9 +114,83 @@ export default function AgentLeadDossier({
   const [statuses, setStatuses] = useState<Record<string, 'sent' | 'missing' | 'error'>>({})
   const [sentAtByBuilding, setSentAtByBuilding] = useState<Record<string, string>>({})
   const [sending, setSending] = useState(false)
+  const [deal, setDeal] = useState<Deal>(lead.deal)
+  const [dealErrors, setDealErrors] = useState<Partial<Record<DealKey, string>>>({})
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [closeNotice, setCloseNotice] = useState<string | null>(null)
+  const [closing, setClosing] = useState(false)
+
+  useEffect(() => {
+    setDeal(lead.deal)
+    setDealErrors({})
+    setSaveError(null)
+    setCloseNotice(null)
+  }, [lead.id])
+
+  const saveDealField = async (key: DealKey) => {
+    const field = DEAL_FIELDS.find(f => f.key === key)!
+    const { value, error } = parseDealField(key, deal[key])
+    setDealErrors(current => ({ ...current, [key]: error ?? undefined }))
+    if (error || deal[key] === lead.deal[key]) return
+    setSaveError(null)
+    const { data, error: dbError } = await createClient().from('leads').update({ [field.column]: value }).eq('id', Number(lead.id)).select('id')
+    if (dbError || !data?.length) {
+      setSaveError(dbError ? `Couldn't save ${field.label}: ${dbError.message}` : `Couldn't save ${field.label}: no rows were updated (check permissions).`)
+      return
+    }
+    onDealChange(deal)
+  }
+
+  const closeLead = async () => {
+    if (closing) return
+    setSaveError(null)
+    setCloseNotice(null)
+    const errors: Partial<Record<DealKey, string>> = {}
+    const values = {} as Record<DealKey, string | number | null>
+    for (const field of DEAL_FIELDS) {
+      const result = parseDealField(field.key, deal[field.key])
+      values[field.key] = result.value
+      if (result.error) errors[field.key] = result.error
+      else if (field.required && result.value == null) errors[field.key] = 'Required to close'
+    }
+    setDealErrors(errors)
+    if (Object.keys(errors).length) return
+
+    const rent = values.marketRent as number
+    const term = values.leaseTerm as number | null
+    const buildingName = values.building as string
+    const match = buildings.find(b => b.name.trim().toLowerCase() === buildingName.toLowerCase())
+    const commission = match
+      ? computeCommission(match.commission, rent, term)
+      : { amount: null, reason: `"${buildingName}" isn't in the buildings list, so commission wasn't calculated` }
+
+    setClosing(true)
+    const { data, error } = await createClient().from('leads').update({
+      building_name: values.building,
+      unit: values.unit,
+      first_tour: values.tour,
+      lease_start: values.leaseStart,
+      lease_term_months: term,
+      market_rent: rent,
+      stage: 'Closed Won',
+      closed_at: new Date().toISOString(),
+      lease_rent: rent,
+      commission_actual: commission.amount,
+    }).eq('id', Number(lead.id)).select('id')
+    setClosing(false)
+
+    if (error || !data?.length) {
+      setSaveError(error ? `Couldn't close lead: ${error.message}` : "Couldn't close lead: no rows were updated (check permissions).")
+      return
+    }
+    if (commission.reason) setCloseNotice(`Lead closed. ${commission.reason}; commission_actual was left empty.`)
+    onLeadClosed(deal)
+    onGenerateInvoice()
+  }
+
   useEffect(() => {
     let cancelled = false
-    createClient().from('buildings').select('id,name,neighborhood,contact_emails,is_archived').eq('is_archived', false).order('name').then(({ data }) => {
+    createClient().from('buildings').select('id,name,neighborhood,contact_emails,commission,is_archived').eq('is_archived', false).order('name').then(({ data }) => {
       if (!cancelled) setBuildings((data ?? []) as Building[])
     })
     fetch(`/api/guest-card/send?leadId=${lead.id}`).then(response => response.json()).then(payload => {
@@ -313,37 +421,50 @@ export default function AgentLeadDossier({
         {/* DEAL INFO */}
         <section style={{ background: '#fff', borderRadius: 20, padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
           <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#222222', display: 'flex', alignItems: 'center', gap: 8 }}>🤝 Deal Info</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 16 }}>
-            {[
-              ['Building', lead.deal.building],
-              ['Unit', lead.deal.unit],
-              ['First Tour', lead.deal.tour],
-              ['Lease Start', lead.deal.leaseStart],
-              ['Term', lead.deal.leaseTerm],
-              ['Market Rent', lead.deal.marketRent],
-            ].map(([label, value]) => (
-              <div
-                key={label}
-                style={{
-                  borderRadius: 12,
-                  padding: '12px 13px',
-                  background: value ? '#FFF0F4' : '#F7F7F5',
-                  color: value ? '#C93868' : '#B0B0B0',
-                  fontWeight: value ? 700 : 400,
-                  fontStyle: value ? 'normal' : 'italic',
-                  fontSize: 12,
-                }}
-              >
-                {label}
-                <div style={{ marginTop: 4 }}>{value || 'Not specified'}</div>
-              </div>
-            ))}
+          <datalist id="deal-building-options">
+            {buildings.map(b => <option key={b.id} value={b.name} />)}
+          </datalist>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
+            {DEAL_FIELDS.map(field => {
+              const error = dealErrors[field.key]
+              const inputId = `deal-${field.key}`
+              return (
+                <div key={field.key} style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
+                  <label htmlFor={inputId} style={{ color: '#717171', fontSize: 12, fontWeight: 600 }}>
+                    {field.label}{field.required && <span aria-hidden style={{ color: '#E0447B' }}> *</span>}
+                  </label>
+                  <input
+                    id={inputId}
+                    type={field.type}
+                    inputMode={field.key === 'marketRent' ? 'decimal' : undefined}
+                    min={field.type === 'number' ? 1 : undefined}
+                    max={field.type === 'number' ? 120 : undefined}
+                    list={field.key === 'building' ? 'deal-building-options' : undefined}
+                    value={deal[field.key]}
+                    placeholder={field.placeholder}
+                    aria-invalid={Boolean(error)}
+                    aria-describedby={error ? `${inputId}-error` : undefined}
+                    onChange={e => setDeal(current => ({ ...current, [field.key]: e.target.value }))}
+                    onBlur={() => saveDealField(field.key)}
+                    style={{ width: '100%', boxSizing: 'border-box', background: '#F7F7F5', border: `1px solid ${error ? '#D9534F' : '#EBEBEB'}`, borderRadius: 10, padding: '10px 12px', fontSize: 14, color: '#222222', outline: 'none' }}
+                  />
+                  {error && <span id={`${inputId}-error`} role="alert" style={{ color: '#D9534F', fontSize: 12 }}>{error}</span>}
+                </div>
+              )
+            })}
           </div>
+          {saveError && (
+            <div role="alert" style={{ marginTop: 14, borderRadius: 10, padding: '10px 12px', background: '#FDECEC', color: '#D9534F', fontSize: 12.5, fontWeight: 600 }}>{saveError}</div>
+          )}
+          {closeNotice && (
+            <div role="status" style={{ marginTop: 14, borderRadius: 10, padding: '10px 12px', background: '#FDF3E3', color: '#B8790A', fontSize: 12.5, fontWeight: 600 }}>{closeNotice}</div>
+          )}
           <button
-            onClick={onGenerateInvoice}
-            style={{ width: '100%', marginTop: 18, border: 0, borderRadius: 12, padding: 13, background: '#211c1e', color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 14 }}
+            onClick={closeLead}
+            disabled={closing}
+            style={{ width: '100%', marginTop: 18, border: 0, borderRadius: 12, padding: 13, background: '#211c1e', color: '#fff', fontWeight: 800, cursor: closing ? 'wait' : 'pointer', fontSize: 14, opacity: closing ? 0.6 : 1 }}
           >
-            Close Lead &amp; Generate Invoice
+            {closing ? 'Closing…' : 'Close Lead & Generate Invoice'}
           </button>
         </section>
       </div>

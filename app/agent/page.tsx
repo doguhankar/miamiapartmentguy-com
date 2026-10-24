@@ -61,12 +61,19 @@ interface DbLead {
   archive_reason: string | null
   archive_notes: string | null
   building_id: string | null
+  building_name: string | null
+  unit: string | null
+  first_tour: string | null
+  lease_start: string | null
+  lease_term_months: number | null
+  market_rent: number | null
 }
 
 // Map DB stage value → COLUMNS key
 function stageToColumnKey(stage: string | null): string {
   if (!stage) return 'newlead'
   const s = stage.toLowerCase().replace(/[\s\/]+/g, '')
+  if (s === 'closedwon') return 'applied'
   if (s.includes('new') || s.includes('newlead')) return 'newlead'
   if (s.includes('discovery') || s.includes('call')) return 'discoverycall'
   if (s.includes('option') || s.includes('sent')) return 'optionssent'
@@ -110,7 +117,15 @@ function dbLeadToLead(row: DbLead): Lead {
     favorited: [],
     building_id: row.building_id ?? '',
     guestCard: { status: 'idle', sentAt: null, error: null },
-    deal: { building: '', unit: '', tour: '', leaseStart: '', leaseTerm: '', marketRent: '', invoiceEst: '' },
+    deal: {
+      building: row.building_name ?? '',
+      unit: row.unit ?? '',
+      tour: row.first_tour ?? '',
+      leaseStart: row.lease_start ?? '',
+      leaseTerm: row.lease_term_months != null ? String(row.lease_term_months) : '',
+      marketRent: row.market_rent != null ? String(row.market_rent) : '',
+      invoiceEst: '',
+    },
   }
 }
 
@@ -1264,6 +1279,8 @@ export default function AgentPage() {
             onArchiveNotesChange={setArchiveNotes}
             onArchiveCancel={() => { setArchivePopupOpen(false); setArchiveReason(''); setArchiveNotes('') }}
             onArchiveConfirm={handleArchiveLead}
+            onDealChange={(deal) => updateLead(selectedLead.id, { deal })}
+            onLeadClosed={(deal) => updateLead(selectedLead.id, { deal, column: 'applied' })}
             onGenerateInvoice={() => generateInvoice(selectedLead.id)}
           />
         )}
