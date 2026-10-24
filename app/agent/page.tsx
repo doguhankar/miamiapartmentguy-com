@@ -246,6 +246,9 @@ export default function AgentPage() {
   const blankCardNameRef = useRef<HTMLInputElement>(null)
   const [spokeWithLoading, setSpokeWithLoading] = useState(false)
   const [spokeWithError, setSpokeWithError] = useState('')
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteErrors, setDeleteErrors] = useState<Record<string, string>>({})
 
   // Null until hydrated in useEffect — prevents createClient() from running
   // during SSR/build prerender where NEXT_PUBLIC env vars are unavailable.
@@ -525,6 +528,38 @@ export default function AgentPage() {
     } catch (err) {
       console.error('[v0] handleArchiveLead exception:', err)
       showToast('Failed to archive lead')
+    }
+  }
+
+  const handleDeleteLead = async (leadId: string) => {
+    setDeletingId(leadId)
+    setDeleteErrors(prev => {
+      const next = { ...prev }
+      delete next[leadId]
+      return next
+    })
+    try {
+      const sb = supabaseRef.current ?? createClient()
+      const { data } = await sb.auth.getSession()
+      const response = await fetch('/api/leads/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token ?? ''}` },
+        body: JSON.stringify({ leadId }),
+      })
+      const result = await response.json().catch(() => null)
+      if (!response.ok || !result?.ok) {
+        throw new Error(result?.error || `Delete failed (${response.status})`)
+      }
+      setLeads(prev => prev.filter(l => l.id !== leadId))
+      setSelectedLead(prev => (prev?.id === leadId ? null : prev))
+      setDeleteConfirmId(null)
+      showToast('Lead deleted')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Delete failed'
+      console.error('[leads/delete] failed:', message)
+      setDeleteErrors(prev => ({ ...prev, [leadId]: message }))
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -1163,6 +1198,90 @@ export default function AgentPage() {
                               paddingTop: '6px',
                             }}>
                               {lead.quick_note}
+                            </div>
+                          )}
+                          {isArchive && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              style={{ marginTop: '10px', borderTop: '1px dashed #EBEBEB', paddingTop: '8px' }}
+                            >
+                              {deleteConfirmId === lead.id ? (
+                                <div role="alertdialog" aria-label={`Confirm delete ${lead.first} ${lead.last}`}>
+                                  <p style={{ fontSize: '12px', color: '#444444', margin: '0 0 8px', lineHeight: 1.4 }}>
+                                    Permanently delete <strong>{lead.first} {lead.last}</strong>? This can&apos;t be undone.
+                                  </p>
+                                  <div style={{ display: 'flex', gap: '6px' }}>
+                                    <button
+                                      type="button"
+                                      disabled={deletingId === lead.id}
+                                      onClick={() => handleDeleteLead(lead.id)}
+                                      style={{
+                                        flex: 1,
+                                        background: '#C0392B',
+                                        color: '#FFFFFF',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        padding: '7px 8px',
+                                        fontSize: '11px',
+                                        fontWeight: 700,
+                                        cursor: deletingId === lead.id ? 'default' : 'pointer',
+                                        opacity: deletingId === lead.id ? 0.6 : 1,
+                                        fontFamily: 'inherit',
+                                      }}
+                                    >
+                                      {deletingId === lead.id ? 'Deleting...' : 'Delete permanently'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={deletingId === lead.id}
+                                      onClick={() => {
+                                        setDeleteConfirmId(null)
+                                        setDeleteErrors(prev => {
+                                          const next = { ...prev }
+                                          delete next[lead.id]
+                                          return next
+                                        })
+                                      }}
+                                      style={{
+                                        background: '#F5F5F3',
+                                        color: '#444444',
+                                        border: '1px solid #EBEBEB',
+                                        borderRadius: '8px',
+                                        padding: '7px 10px',
+                                        fontSize: '11px',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        fontFamily: 'inherit',
+                                      }}
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setDeleteConfirmId(lead.id)}
+                                  style={{
+                                    background: 'transparent',
+                                    color: '#C0392B',
+                                    border: '1px solid #F0D2CE',
+                                    borderRadius: '8px',
+                                    padding: '5px 10px',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    fontFamily: 'inherit',
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                              {deleteErrors[lead.id] && (
+                                <p role="alert" style={{ fontSize: '11px', color: '#C0392B', margin: '8px 0 0', lineHeight: 1.4 }}>
+                                  Delete failed: {deleteErrors[lead.id]}
+                                </p>
+                              )}
                             </div>
                           )}
                         </div>
