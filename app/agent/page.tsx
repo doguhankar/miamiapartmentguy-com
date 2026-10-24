@@ -71,17 +71,22 @@ interface DbLead {
 
 // Map DB stage value → COLUMNS key
 function stageToColumnKey(stage: string | null): string {
-  if (!stage) return 'newlead'
-  const s = stage.toLowerCase().replace(/[\s\/]+/g, '')
-  if (s === 'closedwon') return 'applied'
-  if (s.includes('new') || s.includes('newlead')) return 'newlead'
-  if (s.includes('discovery') || s.includes('call')) return 'discoverycall'
-  if (s.includes('option') || s.includes('sent')) return 'optionssent'
-  if (s.includes('follow') || s.includes('followup')) return 'followup'
-  if (s.includes('tour')) return 'tourscheduled'
-  if (s.includes('applied') || s.includes('signed') || s.includes('lease')) return 'applied'
-  if (s.includes('archive')) return 'archive'
-  return 'newlead'
+  const normalized = (stage ?? '').trim().toLowerCase().replace(/[^a-z0-9]/g, '')
+  if (!normalized) return 'newlead'
+
+  const stageMap: Record<string, string> = {
+    newlead: 'newlead',
+    discoverycallmade: 'discoverycall',
+    discoverycall: 'discoverycall',
+    optionssent: 'optionssent',
+    followup: 'followup',
+    tourscheduled: 'tourscheduled',
+    appliedsignedlease: 'applied',
+    closedwon: 'applied',
+    archive: 'archive',
+  }
+
+  return stageMap[normalized] ?? 'newlead'
 }
 
 function dbLeadToLead(row: DbLead): Lead {
