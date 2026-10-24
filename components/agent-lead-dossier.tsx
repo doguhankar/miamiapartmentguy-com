@@ -282,7 +282,7 @@ export default function AgentLeadDossier({
 
         {/* HEADER + DETAILS */}
         <section style={{ background: '#fff', borderRadius: 20, padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', paddingRight: 44 }}>
             <div style={{ display: 'flex', gap: 14, alignItems: 'center', paddingRight: 28 }}>
               <div style={{ width: 52, height: 52, flexShrink: 0, borderRadius: '50%', background: '#FFF0F4', color: '#E0447B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16 }}>
                 {initials(lead)}
