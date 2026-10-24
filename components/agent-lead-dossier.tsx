@@ -50,6 +50,25 @@ function parseDealField(key: DealKey, raw: string): { value: string | number | n
   return Number.isFinite(rent) && rent > 0 ? { value: rent, error: null } : { value: null, error: 'Enter a rent above $0' }
 }
 
+// Slack posts and the invoice PDF run server-side after the lead is saved. A failure here is
+// logged and never blocks or reverts the close.
+async function notifyClosed(leadId: string) {
+  try {
+    const { data } = await createClient().auth.getSession()
+    const response = await fetch('/api/leads/close-notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token ?? ''}` },
+      body: JSON.stringify({ leadId }),
+    })
+    const result = await response.json().catch(() => null)
+    if (!response.ok || result?.closes?.ok === false || result?.invoice?.ok === false) {
+      console.error('[close-notify] post-close automation reported a problem:', response.status, result)
+    }
+  } catch (error) {
+    console.error('[close-notify] post-close automation failed:', error)
+  }
+}
+
 const ARCHIVE_REASONS = [
   'Ghosted / stopped responding',
   'Went with another agent/competitor',
@@ -105,7 +124,7 @@ export default function AgentLeadDossier({
   onArchiveCancel: () => void
   onArchiveConfirm: () => void
   onDealChange: (deal: Deal) => void
-  onLeadClosed: (deal: Deal) => void
+  onLeadClosed: (deal: Deal, closed: { commission_actual: number | null; closed_at: string }) => void
   onGenerateInvoice: () => void
 }) {
   const [buildings, setBuildings] = useState<Building[]>([])
@@ -165,6 +184,7 @@ export default function AgentLeadDossier({
       : { amount: null, reason: `"${buildingName}" isn't in the buildings list, so commission wasn't calculated` }
 
     setClosing(true)
+    const closedAt = new Date().toISOString()
     const { data, error } = await createClient().from('leads').update({
       building_name: values.building,
       unit: values.unit,
@@ -173,7 +193,7 @@ export default function AgentLeadDossier({
       lease_term_months: term,
       market_rent: rent,
       stage: 'Closed Won',
-      closed_at: new Date().toISOString(),
+      closed_at: closedAt,
       lease_rent: rent,
       commission_actual: commission.amount,
     }).eq('id', Number(lead.id)).select('id')
@@ -184,8 +204,9 @@ export default function AgentLeadDossier({
       return
     }
     if (commission.reason) setCloseNotice(`Lead closed. ${commission.reason}; commission_actual was left empty.`)
-    onLeadClosed(deal)
+    onLeadClosed(deal, { commission_actual: commission.amount, closed_at: closedAt })
     onGenerateInvoice()
+    void notifyClosed(lead.id)
   }
 
   useEffect(() => {

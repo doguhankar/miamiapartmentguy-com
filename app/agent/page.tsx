@@ -22,6 +22,9 @@ interface Lead {
   notes: string
   quick_note: string
   deal_value: number
+  stage: string
+  commission_actual: number
+  closed_at: string | null
   archive_reason: string
   archive_notes: string
   buildings: string[]
@@ -58,6 +61,8 @@ interface DbLead {
   source: string | null
   quick_note: string | null
   deal_value: number | null
+  commission_actual: number | string | null
+  closed_at: string | null
   archive_reason: string | null
   archive_notes: string | null
   building_id: string | null
@@ -116,6 +121,9 @@ function dbLeadToLead(row: DbLead): Lead {
     notes: row.notes ?? '',
     quick_note: row.quick_note ?? '',
     deal_value: row.deal_value ?? 0,
+    stage: row.stage ?? '',
+    commission_actual: Number(row.commission_actual ?? 0) || 0,
+    closed_at: row.closed_at,
     archive_reason: row.archive_reason ?? '',
     archive_notes: row.archive_notes ?? '',
     buildings: [],
@@ -1171,11 +1179,11 @@ export default function AgentPage() {
             const now = new Date()
             const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
 
-            // GCI: sum of deal_value for closed leads this calendar month
+            // GCI: sum of commission_actual for Closed Won leads closed this calendar month
             const closedThisMonth = leads.filter(l =>
-              l.column === 'applied' && l.lastContacted >= monthStart
+              l.stage === 'Closed Won' && l.closed_at !== null && new Date(l.closed_at) >= monthStart
             )
-            const gci = closedThisMonth.reduce((sum, l) => sum + (l.deal_value ?? 0), 0)
+            const gci = closedThisMonth.reduce((sum, l) => sum + l.commission_actual, 0)
 
             // PPV: sum of budget midpoints across active (non-archive, non-closed) leads
             const activeLeads = leads.filter(l => l.column !== 'archive' && l.column !== 'applied')
@@ -1285,7 +1293,7 @@ export default function AgentPage() {
             onArchiveCancel={() => { setArchivePopupOpen(false); setArchiveReason(''); setArchiveNotes('') }}
             onArchiveConfirm={handleArchiveLead}
             onDealChange={(deal) => updateLead(selectedLead.id, { deal })}
-            onLeadClosed={(deal) => updateLead(selectedLead.id, { deal, column: 'applied' })}
+            onLeadClosed={(deal, closed) => updateLead(selectedLead.id, { deal, column: 'applied', stage: 'Closed Won', commission_actual: closed.commission_actual ?? 0, closed_at: closed.closed_at })}
             onGenerateInvoice={() => generateInvoice(selectedLead.id)}
           />
         )}
