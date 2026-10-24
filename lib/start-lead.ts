@@ -71,6 +71,7 @@ export const startLeadSchema = z
     ),
     notes: z.string().trim().max(500, 'Keep notes under 500 characters').optional(),
     source: z.string().optional(),
+    agentSlug: z.string().trim().max(80).optional(),
     website: z.string().optional(),
   })
 

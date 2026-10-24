@@ -46,7 +46,7 @@ const REQUIRED_MARK = (
   </span>
 )
 
-export function StartForm({ source }: { source: StartSource }) {
+export function StartForm({ source, agent }: { source: StartSource; agent?: { slug: string; displayName: string; phone: string | null } }) {
   const [state, setState] = useState<FormState>(INITIAL_STATE)
   const [errors, setErrors] = useState<FieldErrors>({})
   const [formError, setFormError] = useState('')
@@ -77,7 +77,7 @@ export function StartForm({ source }: { source: StartSource }) {
     if (submitting) return
     setFormError('')
 
-    const payload = { ...state, source }
+    const payload = { ...state, source, agentSlug: agent?.slug }
     const parsed = startLeadSchema.safeParse(payload)
     if (!parsed.success) {
       const found = parsed.error.flatten().fieldErrors as FieldErrors
@@ -119,8 +119,8 @@ export function StartForm({ source }: { source: StartSource }) {
           {`Got it, ${firstName}. I'll text you within the hour.`}
         </h1>
         <p>Keep an eye on your messages. A short list that fits is on its way.</p>
-        <a className="st-btn st-btn-teal" href={DON_SMS_HREF}>
-          Text Don now
+        <a className="st-btn st-btn-teal" href={agent?.phone ? `sms:${agent.phone}` : DON_SMS_HREF}>
+          {agent ? `Text ${agent.displayName} now` : 'Text Don now'}
         </a>
       </section>
     )
@@ -209,7 +209,7 @@ export function StartForm({ source }: { source: StartSource }) {
 
         {formError && (
           <div className="st-banner" role="alert">
-            {formError} <a href={DON_SMS_HREF}>Text Don</a>
+            {formError} <a href={DON_SMS_HREF}>{agent ? `Text ${agent.displayName}` : 'Text Don'}</a>
           </div>
         )}
 

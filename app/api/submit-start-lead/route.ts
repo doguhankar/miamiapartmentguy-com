@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatUsPhone, normalizeUsPhone, resolveStartSource, startLeadSchema, formatBudget, sizeLabel } from '@/lib/start-lead'
 import { sendStartLeadEmail } from '@/lib/start-lead-email'
+import { resolveAgentStart } from '@/lib/agent-start'
 
 export const maxDuration = 30
 
@@ -69,13 +70,14 @@ export async function POST(request: NextRequest) {
   }
 
   const input = parsed.data
+  const agent = input.agentSlug ? await resolveAgentStart(input.agentSlug) : null
   const phoneDigits = normalizeUsPhone(input.phone)
   if (!phoneDigits) {
     return NextResponse.json({ success: false, error: 'Please fix the highlighted fields.', fieldErrors: { phone: ['Enter a valid 10-digit US phone number'] } }, { status: 400 })
   }
 
   const phoneDisplay = formatUsPhone(phoneDigits)
-  const source = resolveStartSource(input.source)
+  const source = agent ? `${agent.displayName} Start Page` : resolveStartSource(input.source)
   const supabase = createAdminClient()
 
   const { count: recentDuplicates, error: duplicateError } = await supabase
@@ -103,6 +105,7 @@ export async function POST(request: NextRequest) {
         stage: 'New Lead',
         source,
         notes: input.notes || null,
+        agent_id: agent?.email ?? null,
       },
     ])
     .select('id')
