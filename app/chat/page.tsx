@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const GPT_URL =
   'https://chatgpt.com/g/g-6ade3c11ef6481918474f972e62bd642-miami-apartment-guy-concierge'
@@ -19,6 +19,11 @@ function trackGptClick() {
 
 export default function ChatPage() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isInstagramBrowser, setIsInstagramBrowser] = useState(false)
+
+  useEffect(() => {
+    setIsInstagramBrowser(/Instagram/i.test(navigator.userAgent))
+  }, [])
 
   function openModal() {
     trackGptClick()
@@ -107,15 +112,33 @@ export default function ChatPage() {
             <p className="mt-5 text-base leading-relaxed text-neutral-600">
               Tap below to open the free concierge in the ChatGPT app
             </p>
+            <p className="mt-4 text-sm leading-relaxed text-neutral-700">
+              {isInstagramBrowser
+                ? "Instagram blocks ChatGPT links. Tap the ··· menu (bottom right) → ‘Open in Safari’, then tap the button."
+                : "Tap → then tap ‘Open in Safari’ if prompted"}
+            </p>
 
             <div className="mt-7 flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={openChatGPTApp}
-                className="flex min-h-14 w-full items-center justify-center rounded-2xl bg-black px-5 text-base font-semibold text-white transition-transform active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#ff1f6b]"
-              >
-                Open ChatGPT App
-              </button>
+              {isInstagramBrowser ? (
+                <a
+                  href={GPT_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-safarivc="true"
+                  onClick={trackGptClick}
+                  className="flex min-h-14 w-full items-center justify-center rounded-2xl bg-black px-5 text-base font-semibold text-white transition-transform active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#ff1f6b]"
+                >
+                  Open ChatGPT App
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={openChatGPTApp}
+                  className="flex min-h-14 w-full items-center justify-center rounded-2xl bg-black px-5 text-base font-semibold text-white transition-transform active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#ff1f6b]"
+                >
+                  Open ChatGPT App
+                </button>
+              )}
               <button
                 type="button"
                 onClick={openBrowser}
