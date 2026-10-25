@@ -8,8 +8,6 @@ export const runtime = 'nodejs'
 
 const GPT_TOOL_LIMIT = 10
 const MAX_NEIGHBORHOOD_LENGTH = 80
-const MAX_AMENITIES = 12
-const MAX_AMENITY_LENGTH = 60
 const rateBuckets = new Map<string, { count: number; resetAt: number }>()
 
 const GPT_URL = 'https://miamiapartmentguy.com'
@@ -71,7 +69,6 @@ function buildServer() {
         neighborhood: z.string().max(MAX_NEIGHBORHOOD_LENGTH).optional(),
         max_budget: z.number().finite().positive().max(30_000).optional(),
         bedrooms: z.number().int().min(0).max(5).optional(),
-        amenities: z.array(z.string().max(MAX_AMENITY_LENGTH)).max(MAX_AMENITIES).optional(),
       },
       annotations: {
         readOnlyHint: true,
@@ -80,10 +77,9 @@ function buildServer() {
         openWorldHint: false,
       },
     },
-    async ({ neighborhood, max_budget, bedrooms, amenities }) => {
+    async ({ neighborhood, max_budget, bedrooms }) => {
       const supabase = getSupabase()
       const normalizedNeighborhood = neighborhood?.trim().toLowerCase()
-      const normalizedAmenities = (amenities ?? []).map((item) => item.trim().toLowerCase()).filter(Boolean)
 
       const buildingQuery = supabase
         .from('buildings')
@@ -95,10 +91,6 @@ function buildServer() {
 
       const buildings = (buildingRows ?? []).filter((building) => {
         if (normalizedNeighborhood && !String(building.neighborhood ?? '').toLowerCase().includes(normalizedNeighborhood)) return false
-        if (normalizedAmenities.length) {
-          const haystack = JSON.stringify(building.amenities ?? '').toLowerCase()
-          if (!normalizedAmenities.every((item) => haystack.includes(item))) return false
-        }
         return true
       }) as Building[]
       if (!buildings.length) return { content: [{ type: 'text' as const, text: 'No apartments match those filters.' }] }
