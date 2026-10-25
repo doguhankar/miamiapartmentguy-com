@@ -4,7 +4,6 @@ import { useState } from 'react'
 
 const GPT_URL =
   'https://chatgpt.com/g/g-6ade3c11ef6481918474f972e62bd642-miami-apartment-guy-concierge'
-const GPT_APP_URL = 'chatgpt://g/g-6ade3c11ef6481918474f972e62bd642-miami-apartment-guy-concierge'
 
 type Gtag = (command: 'event', eventName: string, params: Record<string, string>) => void
 
@@ -33,10 +32,7 @@ export default function ChatPage() {
 
   function openChatGPTApp() {
     trackGptClick()
-    window.location.href = GPT_APP_URL
-    window.setTimeout(() => {
-      window.location.href = GPT_URL
-    }, 1500)
+    window.location.href = GPT_URL
   }
 
   function openBrowser() {
