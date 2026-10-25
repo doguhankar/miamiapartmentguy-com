@@ -1,4 +1,24 @@
-export default function LinksPage() {
+import { headers } from 'next/headers'
+
+export const dynamic = 'force-dynamic'
+
+const GPT_URL = 'https://chatgpt.com/g/g-6ade3c11ef6481918474f972e62bd642-miami-apartment-guy-concierge'
+
+export default async function LinksPage() {
+  const userAgent = (await headers()).get('user-agent') ?? ''
+  const isIos = /iPhone|iPad/i.test(userAgent)
+  const isInstagramOrFacebook = /Instagram|FBAN|FBAV/i.test(userAgent)
+  const isAndroid = /Android/i.test(userAgent)
+  const isInAppBrowser = isInstagramOrFacebook
+  const gptHref = isInstagramOrFacebook && isIos
+    ? `x-safari-${GPT_URL}`
+    : isInAppBrowser && isAndroid
+      ? `intent://chatgpt.com/g/g-6ade3c11ef6481918474f972e62bd642-miami-apartment-guy-concierge#Intent;scheme=https;package=com.openai.chatgpt;S.browser_fallback_url=${encodeURIComponent(GPT_URL)};end`
+      : GPT_URL
+  const gptLinkProps = gptHref === GPT_URL
+    ? { target: '_blank' as const, rel: 'noopener noreferrer' }
+    : {}
+
   return (
     <main className="links-page">
       <style>{`
@@ -128,7 +148,7 @@ export default function LinksPage() {
         <p className="profile-subtext">Free apartment help · Miami &amp; South Florida</p>
 
         <nav className="links-list" aria-label="Miami Apartment Guy links">
-          <a className="link-card link-card--pink" href="https://chatgpt.com/g/g-6ade3c11ef6481918474f972e62bd642-miami-apartment-guy-concierge" target="_blank" rel="noopener noreferrer">
+          <a className="link-card link-card--pink" href={gptHref} {...gptLinkProps}>
             <span className="icon-box" aria-hidden="true">✦</span>
             <span className="link-copy">
               <span className="link-label">Open in ChatGPT</span>
