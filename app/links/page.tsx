@@ -128,10 +128,10 @@ export default function LinksPage() {
         <p className="profile-subtext">Free apartment help · Miami &amp; South Florida</p>
 
         <nav className="links-list" aria-label="Miami Apartment Guy links">
-          <a className="link-card link-card--pink" href="https://miamiapartmentguy.com/chat" target="_blank" rel="noopener noreferrer">
+          <a className="link-card link-card--pink" href="https://chatgpt.com/g/g-6ade3c11ef6481918474f972e62bd642-miami-apartment-guy-concierge" target="_blank" rel="noopener noreferrer">
             <span className="icon-box" aria-hidden="true">✦</span>
             <span className="link-copy">
-              <span className="link-label">Chat with Concierge</span>
+              <span className="link-label">Open in ChatGPT</span>
               <span className="link-subtext">24/7 help — if you&apos;re not ready to reach out yet</span>
             </span>
             <span className="link-arrow" aria-hidden="true">›</span>
