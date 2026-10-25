@@ -5,6 +5,7 @@ import { Heart, Share2, ArrowLeft } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { Building } from "@/lib/buildings"
 import { ImageCarousel } from "@/components/image-carousel"
+import { buildingAlt } from "@/lib/building-alt"
 import { useBuildingFees } from "@/hooks/use-building-fees"
 
 interface BuildingDetailViewProps {
@@ -156,7 +157,7 @@ export function BuildingDetailView({ building, onBack }: BuildingDetailViewProps
     <div style={{ display: "flex", flexDirection: "column", height: "100%", backgroundColor: "#fff" }}>
       {/* Photo carousel */}
       <div style={{ position: "relative", height: "220px" }}>
-        <ImageCarousel images={building.images} />
+        <ImageCarousel images={building.images} alt={buildingAlt(building.name, building.neighborhood)} />
         {/* Back button overlay */}
         <button
           onClick={onBack}

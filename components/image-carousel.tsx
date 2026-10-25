@@ -9,9 +9,11 @@ interface ImageCarouselProps {
   /** When provided, images are fetched from Supabase building_images table.
    *  Falls back to the `images` prop if no DB rows exist yet. */
   buildingId?: string
+  /** Full descriptive alt text, e.g. "Flow Brickell — Brickell apartment photo". */
+  alt?: string
 }
 
-export function ImageCarousel({ images: fallbackImages, buildingId }: ImageCarouselProps) {
+export function ImageCarousel({ images: fallbackImages, buildingId, alt }: ImageCarouselProps) {
   const [current, setCurrent] = useState(0)
   const { images: supabaseImages } = useSupabaseImages(buildingId)
 
@@ -25,7 +27,7 @@ export function ImageCarousel({ images: fallbackImages, buildingId }: ImageCarou
     <div className="relative w-full h-64 bg-muted rounded-lg overflow-hidden group">
       <img
         src={images[current]}
-        alt={`Building image ${current + 1}`}
+        alt={alt ?? `Building image ${current + 1}`}
         className="w-full h-full object-cover"
         loading="lazy"
         decoding="async"

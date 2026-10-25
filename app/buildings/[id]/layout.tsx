@@ -1,30 +1,72 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import type { Metadata } from 'next'
+import { notFound, redirect } from 'next/navigation'
+import { buildingAlt } from '@/lib/building-alt'
+import {
+  DEFAULT_OG_IMAGE,
+  SITE_NAME,
+  absoluteUrl,
+  buildingDescription,
+  buildingJsonLd,
+  buildingTitle,
+  getBuildingById,
+  getBuildingImages,
+  getLiveBuildingRows,
+  getLivePricingMap,
+  serializeJsonLd,
+  summarizePrice,
+} from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 
-async function isArchived(id: string): Promise<boolean> {
-  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) return false
+type LayoutProps = {
+  children: React.ReactNode
+  params: Promise<{ id: string }>
+}
 
-  try {
-    const supabase = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } })
-    const { data } = await supabase.from('buildings').select('is_archived').eq('id', id).maybeSingle()
-    return data?.is_archived === true
-  } catch {
-    return false
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const building = getBuildingById(id)
+  if (!building) return { title: 'Building not found', robots: { index: false, follow: false } }
+
+  const [pricing, images] = await Promise.all([getLivePricingMap(), getBuildingImages(building)])
+  const price = summarizePrice(building, pricing.get(building.id))
+  const title = buildingTitle(building, price)
+  const description = buildingDescription(building, price)
+  const path = `/buildings/${building.id}`
+  const image = images[0] ?? DEFAULT_OG_IMAGE
+
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      type: 'website',
+      url: path,
+      siteName: SITE_NAME,
+      title,
+      description,
+      images: [{ url: absoluteUrl(image), alt: buildingAlt(building.name, building.neighborhood) }],
+    },
+    twitter: { card: 'summary_large_image', title, description, images: [absoluteUrl(image)] },
   }
 }
 
-export default async function BuildingLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode
-  params: Promise<{ id: string }>
-}) {
+export default async function BuildingLayout({ children, params }: LayoutProps) {
   const { id } = await params
-  if (await isArchived(id)) redirect('/map')
-  return children
+  const building = getBuildingById(id)
+  if (!building) notFound()
+
+  const rows = await getLiveBuildingRows()
+  if (rows.get(id)?.archived) redirect('/map')
+
+  const [pricing, images] = await Promise.all([getLivePricingMap(), getBuildingImages(building)])
+  const price = summarizePrice(building, pricing.get(building.id))
+  const jsonLd = buildingJsonLd(building, price, images.map(absoluteUrl))
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
+      {children}
+    </>
+  )
 }

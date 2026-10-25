@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://www.miamiapartmentguy.com'),
   title: TITLE,
   description: DESCRIPTION,
+  alternates: { canonical: '/start' },
+  robots: { index: false, follow: true },
   openGraph: {
     type: 'website',
     url: '/start',

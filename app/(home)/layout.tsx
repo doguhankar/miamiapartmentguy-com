@@ -20,6 +20,22 @@ export const metadata: Metadata = {
   title: 'Miami Apartment Guy — Miami apartments, the right way',
   description:
     'Real prices, real deals, real locator. See this week\'s Miami apartment deals and the true monthly cost of 131 tracked buildings. Free for renters.',
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    url: '/',
+    siteName: 'Miami Apartment Guy',
+    title: 'Miami Apartment Guy — Miami apartments, the right way',
+    description:
+      'Real prices, real deals, real locator. See this week\'s Miami apartment deals and the true monthly cost of tracked buildings. Free for renters.',
+    images: [{ url: '/og-start.jpg', width: 1200, height: 630, alt: 'A Miami high-rise apartment building' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Miami Apartment Guy — Miami apartments, the right way',
+    description: 'Real prices, real deals, real locator. Free for renters.',
+    images: ['/og-start.jpg'],
+  },
   icons: {
     icon: '/favicon.svg',
   },

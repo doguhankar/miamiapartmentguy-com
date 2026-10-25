@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSupabaseImages } from '@/hooks/use-supabase-images'
 import { useBuildingFees } from '@/hooks/use-building-fees'
 import { Building } from '@/lib/buildings'
+import { buildingAlt } from '@/lib/building-alt'
 
 interface BuildingDetailModalProps {
   building: Building
@@ -131,7 +132,7 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
       <div className="h-full overflow-y-auto" style={{ paddingBottom: '108px', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
         <div className="px-4 pt-3">
           <div className="relative h-[280px] w-full overflow-hidden rounded-2xl" style={{ background: COLORS.panel }}>
-            {image ? <img src={image} alt={`${building.name} photo ${currentImageIndex + 1}`} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-sm" style={{ color: COLORS.muted }}>No photos available</div>}
+            {image ? <img src={image} alt={`${buildingAlt(building.name, building.neighborhood)} ${currentImageIndex + 1}`} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-sm" style={{ color: COLORS.muted }}>No photos available</div>}
 
             <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold text-white" style={{ background: '#19C6C0' }}>
               <span className="inline-block rounded-full" style={{ width: 7, height: 7, background: '#FFFFFF' }} />

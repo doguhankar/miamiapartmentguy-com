@@ -6,6 +6,7 @@ import { Building, neighborhoodColors } from "@/lib/buildings"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ImageCarousel } from "@/components/image-carousel"
+import { buildingAlt } from "@/lib/building-alt"
 import { QualifyModal } from "@/components/qualify-modal"
 import { BuildingDetailModal } from "@/components/building-detail-modal"
 import { useSaveList } from "@/components/save-list-provider"
@@ -36,7 +37,7 @@ export function BuildingCard({ building }: BuildingCardProps) {
             }
           }}
         >
-          <ImageCarousel images={building.images} />
+          <ImageCarousel images={building.images} alt={buildingAlt(building.name, building.neighborhood)} />
 
           <div>
             <div className="flex items-start justify-between mb-2">

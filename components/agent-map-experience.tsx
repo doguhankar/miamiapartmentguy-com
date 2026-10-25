@@ -1417,7 +1417,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
       agentDisplayName={agentDisplayName}
     />
 
-      {/* ── MOBILE LAYOUT (< md) ──────────────────────���─────────────────── */}
+      {/* ── MOBILE LAYOUT (< md) ──────────────���───────���─────────────────── */}
       <div
         className="md:hidden"
         style={{
@@ -1724,9 +1724,9 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
         {/* Wordmark */}
         <Link href="/" style={{ textDecoration: 'none', cursor: 'pointer' }}>
           <div className="flex items-center gap-1">
-            <h1 className="font-black tracking-tighter uppercase text-[#0A0F1C]" style={{ fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '20px', lineHeight: '1' }}>
+            <div className="font-black tracking-tighter uppercase text-[#0A0F1C]" style={{ fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '20px', lineHeight: '1' }}>
               Miami Apartment
-            </h1>
+            </div>
             <span className="font-black uppercase" style={{ color: '#FF4D8D', fontFamily: 'Archivo', letterSpacing: '-0.02em', fontSize: '20px', lineHeight: '1' }}>
               Guy<sup className="align-top relative" style={{ fontSize: '11px', top: '-3px', marginLeft: '2px' }}>™</sup>
             </span>

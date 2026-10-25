@@ -759,6 +759,27 @@
   background: var(--band);
 }
 
+.mh-footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding-top: 24px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.mh-footer-nav a {
+  color: var(--faint);
+  text-decoration: none;
+}
+
+.mh-footer-nav a:hover,
+.mh-footer-nav a:focus-visible {
+  color: var(--ink, currentColor);
+  text-decoration: underline;
+}
+
 .mh-footer-in {
   display: flex;
   align-items: center;

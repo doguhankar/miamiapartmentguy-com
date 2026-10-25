@@ -12,6 +12,8 @@ import { useBuildingFees } from '@/hooks/use-building-fees'
 import { createClient } from '@/lib/supabase/client'
 import { AvailableUnitsRedesign } from '@/components/available-units-redesign'
 import { SimilarBuildings } from '@/components/similar-buildings'
+import { RelatedBuildings } from '@/components/related-buildings'
+import { buildingAlt } from '@/lib/building-alt'
 import { CommissionPill } from '@/components/commission-pill'
 import { SaveBuildingButton } from '@/components/save-building-button'
 import { useAgentMode } from '@/components/agent-mode-provider'
@@ -643,7 +645,7 @@ export default function BuildingDetailPage() {
             {Array.from({ length: 5 }).map((_, index) => {
               const photo = allImages[index]
               const tileStyle = index === 0 ? { gridColumn: '1 / 3', gridRow: '1 / 3', borderRadius: '12px 0 0 12px' } : index === 1 ? { gridColumn: 3, gridRow: 1, borderRadius: 0 } : index === 2 ? { gridColumn: 4, gridRow: 1, borderRadius: '0 12px 0 0' } : index === 3 ? { gridColumn: 3, gridRow: 2, borderRadius: 0 } : { gridColumn: 4, gridRow: 2, borderRadius: '0 0 12px 0' }
-              return <div key={index} style={{ position: 'relative', overflow: 'hidden', background: '#E8ECF2', ...tileStyle }}>{photo && <Image src={photo} alt={`${building.name} photo ${index + 1}`} fill sizes="25vw" style={{ objectFit: 'cover' }} />}</div>
+              return <div key={index} style={{ position: 'relative', overflow: 'hidden', background: '#E8ECF2', ...tileStyle }}>{photo && <Image src={photo} alt={`${buildingAlt(building.name, building.neighborhood)} ${index + 1}`} fill sizes="25vw" style={{ objectFit: 'cover' }} />}</div>
             })}
             <button type="button" onClick={() => document.querySelector<HTMLButtonElement>(`button[aria-label="Open ${building.name} photo gallery"]`)?.click()} style={{ position: 'absolute', right: 24, bottom: 24, height: 40, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0 14px', border: '1px solid #222222', borderRadius: 8, background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}><span aria-hidden="true">▦</span> Show all photos</button>
           </div>
@@ -700,7 +702,8 @@ export default function BuildingDetailPage() {
             </aside>
           </div>
 
-          <div style={{ marginTop: 40, paddingTop: 30, borderTop: `1px solid ${AB_HAIRLINE}`, paddingBottom: 40 }}><SimilarBuildings buildingId={buildingId} variant="carousel" /></div>
+          <div style={{ marginTop: 40, paddingTop: 30, borderTop: `1px solid ${AB_HAIRLINE}` }}><RelatedBuildings building={building} /></div>
+          <div style={{ marginTop: 30, paddingTop: 30, borderTop: `1px solid ${AB_HAIRLINE}`, paddingBottom: 40 }}><SimilarBuildings buildingId={buildingId} variant="carousel" /></div>
         </div>
       </div>
 

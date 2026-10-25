@@ -1,6 +1,7 @@
 "use client"
 
 import { Building } from "@/lib/buildings"
+import { buildingAlt } from "@/lib/building-alt"
 import { useMemo, useState } from "react"
 import { CommissionPill } from "@/components/commission-pill"
 import { DealBadge } from "@/components/deal-badge"
@@ -146,7 +147,7 @@ export function DesktopBuildingCard({
         {cardImage ? (
           <img
             src={cardImage}
-            alt={building.name}
+            alt={buildingAlt(building.name, building.neighborhood)}
             onError={(event) => {
               event.currentTarget.style.display = "none"
             }}

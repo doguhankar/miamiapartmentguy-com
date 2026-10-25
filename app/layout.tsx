@@ -18,6 +18,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.miamiapartmentguy.com'),
   title: 'Miami Apartment Guy — Every Building. Every Deal. One Text.',
   description: 'Free apartment locating across Greater Miami. Live pricing on 108+ buildings from Brickell to Edgewater. Text your budget, get real quotes same day.',
   generator: 'v0.app',
