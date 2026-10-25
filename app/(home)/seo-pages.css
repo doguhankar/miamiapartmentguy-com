@@ -1,5 +1,51 @@
-.mh-root .sp-main {
+.mh-root .sp-main,
+.sp-main {
   padding: 40px 0 72px;
+}
+
+.sp-article {
+  width: min(100% - 32px, 760px);
+  margin: 0 auto;
+  color: var(--fg, #16161c);
+}
+
+.sp-article h1 {
+  margin: 0 0 14px;
+  font-size: clamp(34px, 7vw, 58px);
+  letter-spacing: -0.04em;
+}
+
+.sp-article h2 {
+  margin: 36px 0 10px;
+  font-size: clamp(21px, 4vw, 28px);
+}
+
+.sp-article p {
+  margin: 0 0 16px;
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--muted, #5d626d);
+}
+
+.sp-article a {
+  color: var(--teal-ink, #087f77);
+  font-weight: 700;
+}
+
+.sp-kicker {
+  margin-bottom: 10px !important;
+  color: var(--teal-ink, #087f77) !important;
+  font-family: var(--mono, monospace);
+  font-size: 12px !important;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.sp-article .sp-updated {
+  margin-bottom: 34px;
+  font-size: 14px;
+  color: var(--muted, #5d626d);
 }
 
 .mh-root .sp-crumbs ol {
