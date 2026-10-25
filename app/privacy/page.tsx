@@ -26,7 +26,7 @@ export default function PrivacyPage() {
         <p>Service providers that host our site and database, including Vercel and Supabase, and analytics providers such as Google Analytics, process data on our behalf. We never sell personal data.</p>
 
         <h2>How long we keep data</h2>
-        <p>Lead form submissions are kept for up to 24 months after last contact so we can help with future moves, then deleted. Analytics data follows Google Analytics&apos; standard retention settings. Anyone can request earlier deletion by contacting us.</p>
+        <p>We retain apartment inquiry and lead information for as long as reasonably necessary to provide our services and manage related business records. We do not currently have a fixed automatic deletion schedule. You may contact us to request deletion of your personal information, subject to applicable legal or recordkeeping requirements. Analytics data is retained according to our configured Google Analytics settings.</p>
 
         <h2>Miami Apartment Guy in ChatGPT</h2>
         <p>When you use our ChatGPT apartment search tool, it receives only the search filters you ask about: neighborhood, budget, and bedroom count. It does not receive your name, contact details, chat history, or precise location, and we do not use these searches to build a profile of you.</p>
