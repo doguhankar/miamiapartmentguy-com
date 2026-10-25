@@ -46,8 +46,18 @@ const REQUIRED_MARK = (
   </span>
 )
 
-export function StartForm({ source, agent }: { source: StartSource; agent?: { slug: string; displayName: string; phone: string | null } }) {
-  const [state, setState] = useState<FormState>(INITIAL_STATE)
+export type StartPrefill = Partial<Pick<FormState, 'beds' | 'budget' | 'neighborhood' | 'notes'>>
+
+export function StartForm({
+  source,
+  agent,
+  prefill,
+}: {
+  source: StartSource
+  agent?: { slug: string; displayName: string; phone: string | null }
+  prefill?: StartPrefill
+}) {
+  const [state, setState] = useState<FormState>(() => ({ ...INITIAL_STATE, ...prefill }))
   const [errors, setErrors] = useState<FieldErrors>({})
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)

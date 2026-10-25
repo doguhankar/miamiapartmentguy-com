@@ -4,7 +4,7 @@ import { neighborhoodCenters } from '@/lib/neighborhood-centers'
 export const START_NEIGHBORHOODS = Object.keys(neighborhoodCenters).sort() as [string, ...string[]]
 export const START_BEDS = ['Studio', '1', '2', '3+'] as const
 export const START_NOT_SURE = 'Not sure yet'
-export const START_SOURCES = ['instagram', 'tiktok', 'fb', 'dm'] as const
+export const START_SOURCES = ['instagram', 'tiktok', 'fb', 'dm', 'calculator'] as const
 export type StartSource = (typeof START_SOURCES)[number]
 
 export const DON_SMS_HREF = 'sms:+14077657306'

@@ -287,6 +287,7 @@ export function HomePageClient({ neighborhoods }: { neighborhoods: { slug: strin
       <footer className="mh-footer">
         <nav className="mh-wrap mh-footer-nav" aria-label="Miami apartments by neighborhood">
           <Link href="/miami-apartment-locator">Miami apartment locator</Link>
+          <Link href="/miami-affordability-calculator">Can I afford Miami? Rent calculator</Link>
           <Link href="/map">Apartment map</Link>
           {neighborhoods.map((hood) => (
             <Link key={hood.slug} href={`/neighborhoods/${hood.slug}`}>

@@ -111,6 +111,7 @@ export default async function MiamiApartmentLocatorPage() {
           <a className="mh-btn mh-btn-pink" href={SMS_HREF}>Text Don now</a>
           <Link className="mh-btn" href="/start">Tell me what you need</Link>
           <Link className="mh-btn" href="/map">Browse the map</Link>
+          <Link className="mh-btn" href="/miami-affordability-calculator">Can I afford Miami?</Link>
         </div>
 
         <section className="sp-section" aria-labelledby="how-it-works">
