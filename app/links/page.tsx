@@ -1,4 +1,5 @@
 import { headers } from 'next/headers'
+import { ChatGPTButton } from '@/components/chatgpt-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,10 +16,6 @@ export default async function LinksPage() {
     : isInAppBrowser && isAndroid
       ? `intent://chatgpt.com/g/g-6ade3c11ef6481918474f972e62bd642-miami-apartment-guy-concierge#Intent;scheme=https;package=com.openai.chatgpt;S.browser_fallback_url=${encodeURIComponent(GPT_URL)};end`
       : GPT_URL
-  const gptLinkProps = gptHref === GPT_URL
-    ? { target: '_blank' as const, rel: 'noopener noreferrer' }
-    : {}
-
   return (
     <main className="links-page">
       <style>{`
@@ -148,14 +145,7 @@ export default async function LinksPage() {
         <p className="profile-subtext">Free apartment help · Miami &amp; South Florida</p>
 
         <nav className="links-list" aria-label="Miami Apartment Guy links">
-          <a className="link-card link-card--pink" href={gptHref} {...gptLinkProps}>
-            <span className="icon-box" aria-hidden="true">✦</span>
-            <span className="link-copy">
-              <span className="link-label">Open in ChatGPT</span>
-              <span className="link-subtext">24/7 help — if you&apos;re not ready to reach out yet</span>
-            </span>
-            <span className="link-arrow" aria-hidden="true">›</span>
-          </a>
+          <ChatGPTButton href={gptHref} inApp={gptHref !== GPT_URL} />
           <a className="link-card link-card--teal" href="https://miamiapartmentguy.com/start?utm_source=ig&amp;utm_content=links-page" target="_blank" rel="noopener noreferrer">
             <span className="icon-box" aria-hidden="true">↗</span>
             <span className="link-copy">
