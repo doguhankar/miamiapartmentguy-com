@@ -11,6 +11,7 @@ const links = [
   ['C', 'instagram://extbrowser/?url=https%3A%2F%2Fchatgpt.com%2Fplugins%2Fplugin_0d4b79690ce4819188570bb5b74cd272'],
   ['D', 'instagram://extbrowser/?url=https%3A%2F%2Fmiamiapartmentguy.com%2Flinks'],
   ['E', 'googlechromes://chatgpt.com/plugins/plugin_0d4b79690ce4819188570bb5b74cd272'],
+  ['F', 'instagram://extbrowser/?url=https%3A%2F%2Fmiamiapartmentguy.com%2Fgo'],
 ] as const
 
 export default function LinkTestPage() {
