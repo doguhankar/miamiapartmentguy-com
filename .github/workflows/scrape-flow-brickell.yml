@@ -1,0 +1,53 @@
+name: Flow Brickell read-only scrape pilot
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install --prefer-offline
+      - name: Scrape Flow Brickell without writes
+        id: scrape
+        continue-on-error: true
+        run: |
+          node --input-type=module <<'EOF'
+          import { writeFileSync } from 'node:fs'
+
+          const output = { building_id: 'flow-brickell', retrieved_at: new Date().toISOString() }
+          try {
+            const { scrapeApartmentsWithPuppeteer } = await import('./lib/scrapers/puppeteer-apartments.js')
+            const units = await scrapeApartmentsWithPuppeteer()
+            if (!Array.isArray(units) || units.length === 0) throw new Error('validated inventory is empty')
+            if (units.some((unit) => !Number.isFinite(unit.price) || unit.price <= 0)) throw new Error('inventory contains an invalid unit')
+            output.status = 'success'
+            output.units_count = units.length
+            output.sample_units = units.slice(0, 5)
+          } catch (error) {
+            output.status = 'failed'
+            output.error = error instanceof Error ? error.message : String(error)
+          }
+          writeFileSync('flow-brickell-scrape.json', `${JSON.stringify(output, null, 2)}\n`)
+          if (output.status !== 'success') process.exitCode = 1
+          EOF
+      - name: Upload diagnostic artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flow-brickell-scrape-${{ github.run_id }}
+          path: flow-brickell-scrape.json
+          if-no-files-found: error
