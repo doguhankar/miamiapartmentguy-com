@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { HomeDealsStrip } from '@/components/home-deals-strip'
 
@@ -33,7 +33,7 @@ function Stars({ label }: { label?: string }) {
   )
 }
 
-export function HomePageClient({ neighborhoods }: { neighborhoods: { slug: string; name: string }[] }) {
+export function HomePageClient({ neighborhoods, inventory }: { neighborhoods: { slug: string; name: string }[]; inventory?: ReactNode }) {
   const [activeChip, setActiveChip] = useState('Downtown')
   const [budget, setBudget] = useState('')
   const [fullName, setFullName] = useState('')
@@ -282,6 +282,7 @@ export function HomePageClient({ neighborhoods }: { neighborhoods: { slug: strin
             </div>
           </div>
         </section>
+        {inventory}
       </main>
 
       <footer className="mh-footer">
