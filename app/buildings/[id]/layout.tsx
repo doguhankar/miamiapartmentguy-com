@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { buildingAlt } from '@/lib/building-alt'
+import { getBuildingPricing } from '@/lib/pricing/building-pricing'
 import {
   DEFAULT_OG_IMAGE,
   SITE_NAME,
@@ -28,8 +29,16 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const building = getBuildingById(id)
   if (!building) return { title: 'Building not found', robots: { index: false, follow: false } }
 
-  const [pricing, images] = await Promise.all([getLivePricingMap(), getBuildingImages(building)])
-  const price = summarizePrice(building, pricing.get(building.id))
+  const [pricing, images, buildingPricing] = await Promise.all([
+    getLivePricingMap(),
+    getBuildingImages(building),
+    getBuildingPricing(building.id),
+  ])
+  const summary = summarizePrice(building, pricing.get(building.id))
+  const price =
+    buildingPricing.base !== null
+      ? { ...summary, min: buildingPricing.base, max: summary.max && summary.max > buildingPricing.base ? summary.max : null }
+      : summary
   const title = buildingTitle(building, price)
   const description = buildingDescription(building, price)
   const path = `/buildings/${building.id}`

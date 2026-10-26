@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getBuildingPricings } from '@/lib/pricing/building-pricing'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,13 +60,15 @@ export async function GET() {
     }
   }
 
+  const pricing = await getBuildingPricings(dealRows.map((row) => String(row.building_id)))
+
   const items: DealListing[] = dealRows
     .map((row) => ({
       buildingId: String(row.building_id),
       name: String(row.name ?? ''),
       neighborhood: row.neighborhood ?? null,
-      startingPrice: toNumber(row.starting_price),
-      trueMonthlyStart: toNumber(row.true_monthly_start),
+      startingPrice: pricing.get(String(row.building_id))?.base ?? toNumber(row.starting_price),
+      trueMonthlyStart: pricing.get(String(row.building_id))?.trueMonthly ?? null,
       monthsFree: toNumber(row.months_free) ?? 0,
       moveInCredit: toNumber(row.move_in_credit) ?? 0,
       concessionText: row.concession_text ?? null,
