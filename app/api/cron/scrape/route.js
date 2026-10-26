@@ -84,7 +84,12 @@ export async function POST(req) {
 
 // GET handler for Vercel Cron (6 AM UTC daily). Always 200 so the cron run is acknowledged;
 // per-building failures are in the body and in scrape_logs.
-export async function GET() {
+export async function GET(req) {
+  const authHeader = req.headers.get('authorization');
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const result = await executeScraper();
     return Response.json(result);
