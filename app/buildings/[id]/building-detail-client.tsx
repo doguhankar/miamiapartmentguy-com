@@ -260,7 +260,7 @@ function PriceBlock({ pricing, tone, concessionText }: { pricing: BuildingPricin
         <>
           {row('Required monthly fees', `${fmt(pricing.requiredMonthly)}/mo`)}
           {row('True monthly (before deal)', pricing.trueMonthly !== null ? `${fmt(pricing.trueMonthly)}/mo` : PRICING_COMING_SOON, !pricing.hasDeal)}
-          {pricing.hasDeal && row('Net monthly with deal', pricing.netMonthly !== null ? `${fmt(pricing.netMonthly)}/mo` : PRICING_COMING_SOON, true)}
+          {pricing.hasDeal && row('Estimated net monthly, if eligible', pricing.netMonthly !== null ? `${fmt(pricing.netMonthly)}/mo` : PRICING_COMING_SOON, true)}
           {pricing.hasDeal && dealNote && <div style={{ padding: '6px 0 0', fontSize: 12, fontWeight: 600, color: deal }}>{dealNote}</div>}
           {pricing.petMonthly > 0 && <div style={{ padding: '8px 0 0', fontSize: 12, fontWeight: 600, color: accent }}>{`+ ${fmt(pricing.petMonthly)}/mo if you have a pet`}</div>}
           {pricing.optionalCharges.length > 0 && (
@@ -270,7 +270,7 @@ function PriceBlock({ pricing, tone, concessionText }: { pricing: BuildingPricin
           )}
         </>
       )}
-      {checked && <div style={{ padding: '10px 0 0', fontSize: 11, color: muted }}>{`Prices last updated ${checked}`}</div>}
+      {checked && <div style={{ padding: '10px 0 0', fontSize: 11, color: muted }}>{pricing.isStale ? `Pricing last updated ${checked}. Prices may have changed — confirm current availability.` : `Prices last updated ${checked}`}</div>}
     </div>
   )
 }

@@ -13,6 +13,7 @@ export type BuildingPricing = {
   base: number | null
   baseSource: 'units' | 'pricing_units' | 'static' | null
   lastUpdated: string | null
+  isStale: boolean
   monthsFree: number
   moveInCredit: number
   leaseMonths: number
@@ -143,6 +144,10 @@ export async function getBuildingPricings(ids: string[]): Promise<Map<string, Bu
     const nonPetMoveIn = moveIn.filter((charge) => classifyCharge(charge.type) !== 'pet')
     const petMoveInFees = moveIn.filter((charge) => classifyCharge(charge.type) === 'pet')
 
+    const lastUpdatedTime = lastUpdated
+      ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(lastUpdated) ? `${lastUpdated}T00:00:00Z` : lastUpdated).getTime()
+      : Number.NaN
+    const isStale = Number.isFinite(lastUpdatedTime) && Date.now() - lastUpdatedTime > 14 * 24 * 60 * 60 * 1000
     const annualSavings = base !== null ? Math.round(base * monthsFree + moveInCredit) : 0
     const netRent = base !== null ? Math.round(base - (base * monthsFree + moveInCredit) / LEASE_MONTHS) : null
     const trueMonthly = base !== null && feesKnown ? base + requiredMonthly : null
@@ -153,6 +158,7 @@ export async function getBuildingPricings(ids: string[]): Promise<Map<string, Bu
       base,
       baseSource,
       lastUpdated,
+      isStale,
       monthsFree,
       moveInCredit,
       leaseMonths: LEASE_MONTHS,
