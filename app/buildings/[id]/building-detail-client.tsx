@@ -2,12 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import type { FormEvent } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { buildings } from '@/lib/buildings'
-import { useSupabaseImages } from '@/hooks/use-supabase-images'
-import { createClient } from '@/lib/supabase/client'
 import { AvailableUnitsRedesign } from '@/components/available-units-redesign'
 import { SimilarBuildings } from '@/components/similar-buildings'
 import { RelatedBuildings } from '@/components/related-buildings'
@@ -276,10 +274,18 @@ function PriceBlock({ pricing, tone, concessionText }: { pricing: BuildingPricin
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function BuildingDetailClient({ pricing }: { pricing: BuildingPricing }) {
-  const params = useParams()
+export default function BuildingDetailClient({
+  buildingId,
+  initialUnits,
+  initialImages,
+  pricing,
+}: {
+  buildingId: string
+  initialUnits: Array<Record<string, unknown>>
+  initialImages: string[]
+  pricing: BuildingPricing
+}) {
   const router = useRouter()
-  const buildingId = params.id as string
   const { hasAccess } = useAgentMode()
   const { savedIds, toggleSave } = useSaveList()
 
@@ -298,13 +304,20 @@ export default function BuildingDetailClient({ pricing }: { pricing: BuildingPri
   }, [router])
 
   const building = buildings.find(b => b.id === buildingId)
-  const { images: supabaseImages } = useSupabaseImages(buildingId)
 
-  const allImages = supabaseImages.length > 0 ? supabaseImages : (building?.images ?? [])
+  const allImages = initialImages.length > 0 ? initialImages : (building?.images ?? [])
   const [imgIdx, setImgIdx] = useState(0)
 
-  const [liveUnits, setLiveUnits] = useState<LiveUnit[]>([])
-  const [unitsLoaded, setUnitsLoaded] = useState(false)
+  const [liveUnits] = useState<LiveUnit[]>(initialUnits.map(unit => ({
+    unit: typeof unit.unitnumber === 'string' ? unit.unitnumber : undefined,
+    floorPlanType: typeof unit.unittype === 'string' ? unit.unittype : undefined,
+    price: typeof unit.price === 'number' ? unit.price : undefined,
+    beds: typeof unit.beds === 'number' || typeof unit.beds === 'string' ? unit.beds : undefined,
+    baths: typeof unit.baths === 'number' ? unit.baths : undefined,
+    sqft: typeof unit.sqft === 'number' ? unit.sqft : undefined,
+    availabilityDate: typeof unit.availabilitydate === 'string' ? unit.availabilitydate : null,
+  })))
+  const unitsLoaded = true
   const approxPlans = useApproxPricing()[buildingId]
   const [showAllUnits, setShowAllUnits] = useState(false)
   const [selectedUnit, setSelectedUnit] = useState<LiveUnit | null>(null)
@@ -315,37 +328,6 @@ export default function BuildingDetailClient({ pricing }: { pricing: BuildingPri
   const [income, setIncome] = useState<string>('9000')
   const [showLeasingForm, setShowLeasingForm] = useState(false)
   const [feesOpen, setFeesOpen] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-
-    async function loadLiveUnits() {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from('units')
-        .select('price, beds, baths, sqft, unitnumber, availabilitydate, unittype')
-        .eq('building_id', buildingId)
-
-      if (cancelled) return
-
-      setLiveUnits((data ?? []).map(unit => ({
-        unit: unit.unitnumber ?? undefined,
-        floorPlanType: unit.unittype ?? undefined,
-        price: typeof unit.price === 'number' ? unit.price : undefined,
-        beds: unit.beds ?? undefined,
-        baths: typeof unit.baths === 'number' ? unit.baths : undefined,
-        sqft: typeof unit.sqft === 'number' ? unit.sqft : undefined,
-        availabilityDate: unit.availabilitydate ?? null,
-      })))
-      setUnitsLoaded(true)
-    }
-
-    loadLiveUnits()
-
-    return () => {
-      cancelled = true
-    }
-  }, [buildingId])
 
   // Auto-select first unit of active price type
   useEffect(() => {

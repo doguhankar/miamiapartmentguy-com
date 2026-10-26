@@ -10,6 +10,12 @@ export type Charge = { type: string; amount: number }
 
 export type BuildingPricing = {
   buildingId: string
+  baseRent: number | null
+  requiredFees: Charge[]
+  trueMonthly: number | null
+  petFee: number
+  optionalFees: Charge[]
+  dealSavings: number
   base: number | null
   baseSource: 'units' | 'pricing_units' | 'static' | null
   lastUpdated: string | null
@@ -27,7 +33,6 @@ export type BuildingPricing = {
   moveInFees: Charge[]
   petMoveInFees: Charge[]
   moveInDue: number
-  trueMonthly: number | null
   netRent: number | null
   netMonthly: number | null
   annualSavings: number
@@ -155,6 +160,12 @@ export async function getBuildingPricings(ids: string[]): Promise<Map<string, Bu
 
     result.set(id, {
       buildingId: id,
+      baseRent: base,
+      requiredFees: requiredCharges,
+      trueMonthly,
+      petFee: petMonthly,
+      optionalFees: optionalCharges,
+      dealSavings: annualSavings,
       base,
       baseSource,
       lastUpdated,
@@ -172,7 +183,6 @@ export async function getBuildingPricings(ids: string[]): Promise<Map<string, Bu
       moveInFees: nonPetMoveIn,
       petMoveInFees,
       moveInDue: sum(nonPetMoveIn),
-      trueMonthly,
       netRent,
       netMonthly,
       annualSavings,

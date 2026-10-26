@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install --prefer-offline
+        run: npm install --legacy-peer-deps
       - name: Scrape Flow Brickell without writes
         id: scrape
         continue-on-error: true
