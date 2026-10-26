@@ -229,7 +229,7 @@ function MonthlyRows({ pricing, size, pad, border }: FeeRowsProps) {
   )
 }
 
-function PriceBlock({ pricing, tone }: { pricing: BuildingPricing; tone: 'dark' | 'light' }) {
+function PriceBlock({ pricing, tone, concessionText }: { pricing: BuildingPricing; tone: 'dark' | 'light'; concessionText?: string }) {
   const dark = tone === 'dark'
   const text = dark ? '#FFFFFF' : '#222222'
   const muted = dark ? '#7A8296' : '#6A6A6A'
@@ -246,7 +246,7 @@ function PriceBlock({ pricing, tone }: { pricing: BuildingPricing; tone: 'dark' 
 
   const dealNote =
     pricing.monthsFree > 0
-      ? `${Number(pricing.monthsFree.toFixed(2))} ${pricing.monthsFree === 1 ? 'month' : 'months'} free — save ${fmt(pricing.annualSavings)}/yr`
+      ? `${Number(pricing.monthsFree.toFixed(2))} ${pricing.monthsFree === 1 ? 'month' : 'months'} free — save up to ${fmt(pricing.annualSavings)}/yr${concessionText ? ` (${concessionText})` : ''}`
       : pricing.moveInCredit > 0
         ? `${fmt(pricing.moveInCredit)} move-in credit`
         : null
@@ -270,7 +270,7 @@ function PriceBlock({ pricing, tone }: { pricing: BuildingPricing; tone: 'dark' 
           )}
         </>
       )}
-      {checked && <div style={{ padding: '10px 0 0', fontSize: 11, color: muted }}>{`Prices last checked ${checked}`}</div>}
+      {checked && <div style={{ padding: '10px 0 0', fontSize: 11, color: muted }}>{`Prices last updated ${checked}`}</div>}
     </div>
   )
 }
@@ -504,7 +504,7 @@ export default function BuildingDetailClient({ pricing }: { pricing: BuildingPri
       </div>
 
       <div style={{ background: '#0B1220', borderRadius: 12, padding: 20, marginBottom: 16 }}>
-        <PriceBlock pricing={pricing} tone="dark" />
+        <PriceBlock pricing={pricing} tone="dark" concessionText={building.concession} />
       </div>
     </>
   )
@@ -739,7 +739,7 @@ export default function BuildingDetailClient({ pricing }: { pricing: BuildingPri
               <button type="button" onClick={() => setShowLeasingForm(true)} style={{ width: '100%', height: 52, marginTop: 10, border: `1px solid ${TEAL}`, borderRadius: 10, background: '#fff', color: TEAL, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>Connect with leasing</button>
               <div style={{ marginTop: 14, textAlign: 'center', color: AB_MUTED, fontSize: 14 }}>You won&apos;t be charged — no credit impact</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 22, paddingBottom: 22, borderBottom: `1px solid ${AB_HAIRLINE}`, fontSize: 15 }}><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ textDecoration: 'underline' }}>Income requirement</span><span>3× rent</span></div><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ textDecoration: 'underline' }}>Credit score</span><span>650+</span></div><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ textDecoration: 'underline' }}>Guarantor</span><span>Accepted</span></div></div>
-              <div style={{ marginTop: 18 }}><PriceBlock pricing={pricing} tone="light" /></div>
+              <div style={{ marginTop: 18 }}><PriceBlock pricing={pricing} tone="light" concessionText={building.concession} /></div>
               <div style={{ marginTop: 16, textAlign: 'center', color: AB_MUTED, fontSize: 14 }}>◈ &nbsp;Pre-qualify before you tour</div>
             </aside>
           </div>
