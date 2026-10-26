@@ -1,6 +1,9 @@
 import type { MetadataRoute } from 'next'
 import { buildings } from '@/lib/buildings'
 import { SITE_URL, getLiveBuildingRows, groupByNeighborhood } from '@/lib/seo'
+import { BLOG_ARTICLES } from '@/lib/blog'
+
+const BLOG_ARTICLE_PATHS = BLOG_ARTICLES.map((article) => `/blog/${article.slug}`)
 
 export const revalidate = 3600
 
@@ -34,6 +37,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/map`, lastModified: now, changeFrequency: 'hourly', priority: 0.9 },
     ...neighborhoodPages,
     { url: `${SITE_URL}/join-team`, lastModified: now, changeFrequency: 'weekly', priority: 0.5 },
+    { url: `${SITE_URL}/blog`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    ...BLOG_ARTICLE_PATHS.map((path) => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.65 })),
     ...buildingPages,
   ]
 }
