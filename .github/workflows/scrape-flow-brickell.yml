@@ -18,20 +18,20 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
           cache: npm
       - name: Install dependencies
-        run: npm ci
+        run: npm install --prefer-offline
       - name: Scrape Flow Brickell without writes
         id: scrape
         continue-on-error: true
         run: |
           node --input-type=module <<'EOF'
           import { writeFileSync } from 'node:fs'
-          import { scrapeApartmentsWithPuppeteer } from './lib/scrapers/puppeteer-apartments.js'
 
           const output = { building_id: 'flow-brickell', retrieved_at: new Date().toISOString() }
           try {
+            const { scrapeApartmentsWithPuppeteer } = await import('./lib/scrapers/puppeteer-apartments.js')
             const units = await scrapeApartmentsWithPuppeteer()
             if (!Array.isArray(units) || units.length === 0) throw new Error('validated inventory is empty')
             if (units.some((unit) => !Number.isFinite(unit.price) || unit.price <= 0)) throw new Error('inventory contains an invalid unit')
