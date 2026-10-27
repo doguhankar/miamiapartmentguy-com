@@ -138,6 +138,7 @@ function dbLeadToLead(row: DbLead): Lead {
       leaseTerm: row.lease_term_months != null ? String(row.lease_term_months) : '',
       marketRent: row.market_rent != null ? String(row.market_rent) : '',
       invoiceEst: '',
+      commissionOverride: '',
     },
   }
 }

@@ -15,7 +15,7 @@ export type DossierLead = {
   move: string
   area: string
   lastContacted: Date
-  deal: { building: string; unit: string; tour: string; leaseStart: string; leaseTerm: string; marketRent: string; invoiceEst: string }
+  deal: { building: string; unit: string; tour: string; leaseStart: string; leaseTerm: string; marketRent: string; invoiceEst: string; commissionOverride: string }
   guestCard: { status: 'idle' | 'sending' | 'sent' | 'error'; sentAt: string | null; error: string | null }
 }
 
@@ -179,9 +179,15 @@ export default function AgentLeadDossier({
     const term = values.leaseTerm as number | null
     const buildingName = values.building as string
     const match = buildings.find(b => b.name.trim().toLowerCase() === buildingName.toLowerCase())
-    const commission = match
-      ? computeCommission(match.commission, rent, term)
-      : { amount: null, reason: `"${buildingName}" isn't in the buildings list, so commission wasn't calculated` }
+
+    // If Don entered a manual commission override, use it. Otherwise auto-compute.
+    const overrideRaw = deal.commissionOverride.trim()
+    const overrideNum = overrideRaw ? Number(overrideRaw.replace(/[$,\s]/g, '')) : NaN
+    const commission = Number.isFinite(overrideNum) && overrideNum >= 0
+      ? { amount: overrideNum, reason: null }
+      : match
+        ? computeCommission(match.commission, rent, term)
+        : { amount: null, reason: `"${buildingName}" isn't in the buildings list, so commission wasn't calculated` }
 
     setClosing(true)
     const closedAt = new Date().toISOString()
@@ -473,6 +479,23 @@ export default function AgentLeadDossier({
                 </div>
               )
             })}
+            {/* Commission $ — manual override; auto-computed if left blank */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
+              <label htmlFor="deal-commission" style={{ color: '#717171', fontSize: 12, fontWeight: 600 }}>
+                Commission $
+                <span style={{ fontWeight: 400, marginLeft: 4 }}>(override)</span>
+              </label>
+              <input
+                id="deal-commission"
+                type="text"
+                inputMode="decimal"
+                placeholder="Auto from rule"
+                value={deal.commissionOverride}
+                onChange={e => setDeal(current => ({ ...current, commissionOverride: e.target.value }))}
+                style={{ width: '100%', boxSizing: 'border-box', background: '#F7F7F5', border: '1px solid #EBEBEB', borderRadius: 10, padding: '10px 12px', fontSize: 14, color: '#222222', outline: 'none' }}
+              />
+              <span style={{ color: '#717171', fontSize: 11 }}>Leave blank to auto-compute from building rule</span>
+            </div>
           </div>
           {saveError && (
             <div role="alert" style={{ marginTop: 14, borderRadius: 10, padding: '10px 12px', background: '#FDECEC', color: '#D9534F', fontSize: 12.5, fontWeight: 600 }}>{saveError}</div>
