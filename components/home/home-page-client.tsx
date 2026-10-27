@@ -116,7 +116,8 @@ export function HomePageClient({ neighborhoods, inventory }: { neighborhoods: { 
             MAG<span className="mh-pink">.</span>
           </Link>
           <div className="mh-nav-links">
-            <Link href="/join-team">Join the Team</Link>
+            <Link href="/blog">Guides</Link>
+ <Link href="/join-team">Join the Team</Link>
             <a href="https://miamiapartmentguy.com/agent">Agent Login</a>
           </div>
         </div>
