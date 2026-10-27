@@ -17,9 +17,9 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Miami Apartment Guy — Miami apartments, the right way',
+  title: 'Miami Apartments for Rent | Miami Apartment Guy',
   description:
-    'Real prices, real deals, real locator. See this week\'s Miami apartment deals and the true monthly cost of 131 tracked buildings. Free for renters.',
+    'Compare Miami apartments for rent by neighborhood, bedrooms, real monthly cost, and current move-in deals. Free help from Miami Apartment Guy.',
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',

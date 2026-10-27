@@ -8,6 +8,9 @@ export default function Topbar() {
           MAG<span className="logo-dot">.</span>
         </span>
         <div className="nav-links">
+          <a href="/blog" className="nav-link">
+            Guides
+          </a>
           <a href="/join-team" className="nav-link">
             Join the Team
           </a>
