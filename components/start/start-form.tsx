@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { sendGAEvent } from '@next/third-parties/google'
 import {
   DON_SMS_HREF,
   START_BEDS,
@@ -107,6 +108,7 @@ export function StartForm({
       const result = (await response.json().catch(() => null)) as { success?: boolean; error?: string; fieldErrors?: FieldErrors } | null
 
       if (response.ok && result?.success) {
+        sendGAEvent('event', 'form_submit', { form_id: 'start_lead', source })
         setFirstName(state.name.trim().split(/\s+/)[0])
         return
       }
@@ -129,7 +131,7 @@ export function StartForm({
           {`Got it, ${firstName}. I'll text you within the hour.`}
         </h1>
         <p>Keep an eye on your messages. A short list that fits is on its way.</p>
-        <a className="st-btn st-btn-teal" href={agent?.phone ? `sms:${agent.phone}` : DON_SMS_HREF}>
+        <a className="st-btn st-btn-teal" href={agent?.phone ? `sms:${agent.phone}` : DON_SMS_HREF} onClick={() => sendGAEvent('event', 'lead_clicked', { type: 'sms_post_submit', source })}>
           {agent ? `Text ${agent.displayName} now` : 'Text Don now'}
         </a>
       </section>

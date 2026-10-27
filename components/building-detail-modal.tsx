@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { sendGAEvent } from '@next/third-parties/google'
 import { useSupabaseImages } from '@/hooks/use-supabase-images'
 import { useBuildingFees } from '@/hooks/use-building-fees'
 import { Building } from '@/lib/buildings'
@@ -193,7 +194,7 @@ export function BuildingDetailModal({ building, onClose }: BuildingDetailModalPr
         </main>
       </div>
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[520px] bg-gradient-to-t from-white via-white/95 to-transparent px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-9"><a href={textHref} onClick={(event) => event.stopPropagation()} className="pointer-events-auto block rounded-[14px] py-[15px] text-center text-sm font-bold text-white shadow-[0_8px_24px_rgba(255,61,130,.35)]" style={{ background: COLORS.pink }}>Text Don about this building</a></div>
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[520px] bg-gradient-to-t from-white via-white/95 to-transparent px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-9"><a href={textHref} onClick={(event) => { event.stopPropagation(); sendGAEvent('event', 'lead_clicked', { type: 'text_don_building', building: building.name }) }} className="pointer-events-auto block rounded-[14px] py-[15px] text-center text-sm font-bold text-white shadow-[0_8px_24px_rgba(255,61,130,.35)]" style={{ background: COLORS.pink }}>Text Don about this building</a></div>
     </div>
   )
 }

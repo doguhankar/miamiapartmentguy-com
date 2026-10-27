@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { sendGAEvent } from '@next/third-parties/google'
 import { X } from "lucide-react"
 import { Building } from "@/lib/buildings"
 import { Button } from "@/components/ui/button"
@@ -53,7 +54,7 @@ export function QualifyModal({ building, onClose }: QualifyModalProps) {
       timestamp: new Date().toISOString(),
     }
 
-    console.log("[v0] Lead captured:", leadData)
+    sendGAEvent('event', 'form_submit', { form_id: 'qualify_modal', building: building.name, qualification_status: result })
     setStep("contact")
   }
 

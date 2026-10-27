@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, type ReactNode } from 'react'
+import { sendGAEvent } from '@next/third-parties/google'
 import Link from 'next/link'
 import { HomeDealsStrip } from '@/components/home-deals-strip'
 
@@ -139,7 +140,7 @@ export function HomePageClient({ neighborhoods, inventory }: { neighborhoods: { 
                 <span className="mh-dot" aria-hidden="true" /> Responds in minutes
               </div>
               <div className="mh-cta-row">
-                <a className="mh-btn mh-btn-pink" href={SMS_HREF}>
+                <a className="mh-btn mh-btn-pink" href={SMS_HREF} onClick={() => sendGAEvent('event', 'lead_clicked', { type: 'text_don_homepage' })}>
                   Text Don now
                 </a>
                 <Link className="mh-btn mh-btn-teal" href="/map">
