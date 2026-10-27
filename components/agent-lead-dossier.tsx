@@ -15,7 +15,10 @@ export type DossierLead = {
   move: string
   area: string
   lastContacted: Date
-  deal: { building: string; unit: string; tour: string; leaseStart: string; leaseTerm: string; marketRent: string; invoiceEst: string; commissionOverride: string }
+  notes: string
+  notesUpdatedAt: string | null
+  linkedWith: string | null
+  deal: { building: string; unit: string; tour: string; leaseStart: string; leaseTerm: string; marketRent: string; invoiceEst: string; commissionOverride: string; closeNotes: string }
   guestCard: { status: 'idle' | 'sending' | 'sent' | 'error'; sentAt: string | null; error: string | null }
 }
 
@@ -108,6 +111,7 @@ export default function AgentLeadDossier({
   onDealChange,
   onLeadClosed,
   onGenerateInvoice,
+  onNotesSaved,
 }: {
   lead: DossierLead
   onClose: () => void
@@ -126,6 +130,7 @@ export default function AgentLeadDossier({
   onDealChange: (deal: Deal) => void
   onLeadClosed: (deal: Deal, closed: { commission_actual: number | null; closed_at: string }) => void
   onGenerateInvoice: () => void
+  onNotesSaved: (notes: string, updatedAt: string) => void
 }) {
   const [buildings, setBuildings] = useState<Building[]>([])
   const [query, setQuery] = useState('')
@@ -138,13 +143,34 @@ export default function AgentLeadDossier({
   const [saveError, setSaveError] = useState<string | null>(null)
   const [closeNotice, setCloseNotice] = useState<string | null>(null)
   const [closing, setClosing] = useState(false)
+  const [notes, setNotes] = useState(lead.notes)
+  const [notesStatus, setNotesStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [notesError, setNotesError] = useState<string | null>(null)
 
   useEffect(() => {
     setDeal(lead.deal)
     setDealErrors({})
     setSaveError(null)
     setCloseNotice(null)
+    setNotes(lead.notes)
+    setNotesStatus('idle')
+    setNotesError(null)
   }, [lead.id])
+
+  const saveNotes = async () => {
+    if (notes === lead.notes) return
+    setNotesStatus('saving')
+    setNotesError(null)
+    const updatedAt = new Date().toISOString()
+    const { data, error: dbError } = await createClient().from('leads').update({ notes: notes.trim() ? notes : null, notes_updated_at: updatedAt }).eq('id', Number(lead.id)).select('id')
+    if (dbError || !data?.length) {
+      setNotesStatus('error')
+      setNotesError(dbError ? `Couldn't save notes: ${dbError.message}` : "Couldn't save notes: no rows were updated (check permissions).")
+      return
+    }
+    setNotesStatus('saved')
+    onNotesSaved(notes, updatedAt)
+  }
 
   const saveDealField = async (key: DealKey) => {
     const field = DEAL_FIELDS.find(f => f.key === key)!
@@ -202,6 +228,7 @@ export default function AgentLeadDossier({
       closed_at: closedAt,
       lease_rent: rent,
       commission_actual: commission.amount,
+      close_notes: deal.closeNotes.trim() || null,
     }).eq('id', Number(lead.id)).select('id')
     setClosing(false)
 
@@ -296,6 +323,11 @@ export default function AgentLeadDossier({
               <div>
                 <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#111111', letterSpacing: '-0.01em' }}>{lead.first} {lead.last}</h2>
                 <div style={{ color: '#717171', fontSize: 13, marginTop: 4 }}>Contacted {ago(lead.lastContacted)}</div>
+                {lead.linkedWith && (
+                  <span style={{ display: 'inline-block', marginTop: 6, borderRadius: 999, padding: '3px 9px', background: '#EEF2FF', color: '#4256C9', fontSize: 11.5, fontWeight: 700 }}>
+                    Linked with {lead.linkedWith}
+                  </span>
+                )}
                 {spokeWithError && <div style={{ color: '#D9534F', fontSize: 12, marginTop: 4 }}>{spokeWithError}</div>}
               </div>
             </div>
@@ -354,6 +386,31 @@ export default function AgentLeadDossier({
             {field('Area', '📍', lead.area, 'Not specified')}
             {field('Beds', '🛏️', lead.beds, 'Not specified')}
           </div>
+        </section>
+
+        {/* NOTES */}
+        <section style={{ background: '#fff', borderRadius: 20, padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: 20 }}>
+          <label htmlFor="lead-notes" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 15, fontWeight: 700, color: '#222222' }}>📝 Notes</label>
+          <textarea
+            id="lead-notes"
+            value={notes}
+            placeholder="Add notes about this lead..."
+            aria-invalid={notesStatus === 'error'}
+            aria-describedby={notesError ? 'lead-notes-error' : undefined}
+            onChange={e => { setNotes(e.target.value); if (notesStatus !== 'idle') setNotesStatus('idle') }}
+            onBlur={saveNotes}
+            rows={5}
+            style={{ width: '100%', boxSizing: 'border-box', marginTop: 12, background: '#F7F7F5', border: `1px solid ${notesStatus === 'error' ? '#D9534F' : '#EBEBEB'}`, borderRadius: 10, padding: '10px 12px', fontSize: 14, lineHeight: 1.5, color: '#222222', outline: 'none', resize: 'vertical', fontFamily: 'inherit' }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 8, fontSize: 12, color: '#717171' }}>
+            <span>{lead.notesUpdatedAt ? `Last updated ${new Date(lead.notesUpdatedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}` : 'Not edited yet'}</span>
+            <span role="status" style={{ fontWeight: 600, color: notesStatus === 'saved' ? '#0F6E56' : '#717171' }}>
+              {notesStatus === 'saving' ? 'Saving…' : notesStatus === 'saved' ? 'Saved' : ''}
+            </span>
+          </div>
+          {notesError && (
+            <div id="lead-notes-error" role="alert" style={{ marginTop: 10, borderRadius: 10, padding: '10px 12px', background: '#FDECEC', color: '#D9534F', fontSize: 12.5, fontWeight: 600 }}>{notesError}</div>
+          )}
         </section>
 
         {/* GUEST CARD */}
@@ -495,6 +552,17 @@ export default function AgentLeadDossier({
                 style={{ width: '100%', boxSizing: 'border-box', background: '#F7F7F5', border: '1px solid #EBEBEB', borderRadius: 10, padding: '10px 12px', fontSize: 14, color: '#222222', outline: 'none' }}
               />
               <span style={{ color: '#717171', fontSize: 11 }}>Leave blank to auto-compute from building rule</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0, gridColumn: '1 / -1' }}>
+              <label htmlFor="deal-close-notes" style={{ color: '#717171', fontSize: 12, fontWeight: 600 }}>Close notes</label>
+              <textarea
+                id="deal-close-notes"
+                rows={3}
+                placeholder="Anything worth recording about this close (shown on the invoice and in Slack)"
+                value={deal.closeNotes}
+                onChange={e => setDeal(current => ({ ...current, closeNotes: e.target.value }))}
+                style={{ width: '100%', boxSizing: 'border-box', background: '#F7F7F5', border: '1px solid #EBEBEB', borderRadius: 10, padding: '10px 12px', fontSize: 14, lineHeight: 1.5, color: '#222222', outline: 'none', resize: 'vertical', fontFamily: 'inherit' }}
+              />
             </div>
           </div>
           {saveError && (

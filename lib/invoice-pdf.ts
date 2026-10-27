@@ -10,6 +10,7 @@ export type InvoiceData = {
   leaseTermMonths: number | null
   leaseRent: number
   commissionOwed: number
+  notes?: string | null
 }
 
 export const INVOICE_AGENT = {
@@ -91,6 +92,29 @@ export async function buildInvoicePdf(data: InvoiceData): Promise<Uint8Array> {
   page.drawRectangle({ x: left, y: y - 22, width: right - left, height: 48, color: rgb(0.97, 0.95, 0.96) })
   text('COMMISSION OWED', left + 16, y + 2, 10, bold, muted)
   textRight(usd(data.commissionOwed), y - 12, 20, bold, accent)
+
+  const notes = safe((data.notes ?? '').replace(/\s+/g, ' ').trim())
+  if (notes) {
+    y -= 56
+    text('NOTES', left, y, 9, bold, muted)
+    const maxWidth = right - left
+    const lines: string[] = []
+    let current = ''
+    for (const word of notes.split(' ')) {
+      const next = current ? `${current} ${word}` : word
+      if (regular.widthOfTextAtSize(next, 10) > maxWidth && current) {
+        lines.push(current)
+        current = word
+      } else {
+        current = next
+      }
+    }
+    if (current) lines.push(current)
+    for (const noteLine of lines.slice(0, 6)) {
+      y -= 15
+      page.drawText(noteLine, { x: left, y, size: 10, font: regular, color: ink })
+    }
+  }
 
   text('Please remit payment to Miami Apartment Guy. Questions: ' + INVOICE_AGENT.email + ' or ' + INVOICE_AGENT.phone + '.', left, 72, 9, regular, muted)
 

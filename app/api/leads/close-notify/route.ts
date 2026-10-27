@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
   const { data: lead, error: leadError } = await admin
     .from('leads')
-    .select('id,name,agent_id,stage,building_name,unit,lease_start,lease_term_months,lease_rent,commission_actual,closed_at,invoice_number,invoice_sent_at')
+    .select('id,name,agent_id,stage,building_name,unit,lease_start,lease_term_months,lease_rent,commission_actual,closed_at,invoice_number,invoice_sent_at,close_notes')
     .eq('id', leadId)
     .maybeSingle()
   if (leadError || !lead) return NextResponse.json({ error: 'Lead not found' }, { status: 404 })
@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
   const rent = lead.lease_rent != null ? Number(lead.lease_rent) : null
   const commission = lead.commission_actual != null ? Number(lead.commission_actual) : null
   const agent = lead.agent_id ?? 'unassigned'
+  const closeNotes = lead.close_notes?.trim() || null
 
   let closes: Step
   try {
@@ -53,6 +54,7 @@ export async function POST(request: NextRequest) {
       `Building: ${slackEscape(building)}  |  Unit: ${slackEscape(unit)}`,
       `Lease rent: ${rent != null ? usd(rent) : 'n/a'}/mo  |  Commission: ${commission != null ? usd(commission) : 'not calculated'}`,
       `Closed by: ${slackEscape(agent)}`,
+      ...(closeNotes ? [`Close notes: ${slackEscape(closeNotes)}`] : []),
     ].join('\n'))
     closes = { ok: true }
   } catch (error) {
@@ -77,6 +79,7 @@ export async function POST(request: NextRequest) {
         leaseTermMonths: lead.lease_term_months,
         leaseRent: rent,
         commissionOwed: commission,
+        notes: closeNotes,
       })
       if (!lead.invoice_number) await admin.from('leads').update({ invoice_number: invoiceNumber }).eq('id', leadId)
 
@@ -91,6 +94,7 @@ export async function POST(request: NextRequest) {
           `Building: ${slackEscape(building)}  |  Unit: ${slackEscape(unit)}`,
           `Tenant: ${slackEscape(name)}  |  Lease start: ${formatIsoDate(lead.lease_start)}`,
           `Lease rent: ${usd(rent)}/mo  |  Commission owed: ${usd(commission)}`,
+          ...(closeNotes ? [`Close notes: ${slackEscape(closeNotes)}`] : []),
         ].join('\n'),
       })
       const { error: stampError } = await admin.from('leads').update({ invoice_sent_at: new Date().toISOString() }).eq('id', leadId)

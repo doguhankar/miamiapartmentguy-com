@@ -20,6 +20,8 @@ interface Lead {
   lastContacted: Date
   area: string
   notes: string
+  notesUpdatedAt: string | null
+  linkedWith: string | null
   quick_note: string
   deal_value: number
   stage: string
@@ -39,6 +41,8 @@ interface Lead {
     leaseTerm: string
     marketRent: string
     invoiceEst: string
+    commissionOverride: string
+    closeNotes: string
   }
 }
 
@@ -72,6 +76,16 @@ interface DbLead {
   lease_start: string | null
   lease_term_months: number | null
   market_rent: number | null
+  notes_updated_at: string | null
+  close_notes: string | null
+  linked_lead_group: string | null
+}
+
+function agentDisplayName(identifier: string | null | undefined) {
+  const local = (identifier ?? '').split('@')[0].toLowerCase()
+  if (local.startsWith('seb')) return 'Seb'
+  if (local.startsWith('doguhankar') || local === 'don') return 'Don'
+  return local || 'another agent'
 }
 
 // Map DB stage value → COLUMNS key
@@ -94,7 +108,7 @@ function stageToColumnKey(stage: string | null): string {
   return stageMap[normalized] ?? 'newlead'
 }
 
-function dbLeadToLead(row: DbLead): Lead {
+function dbLeadToLead(row: DbLead, linkedWith: string | null = null): Lead {
   const nameParts = (row.name ?? 'Unknown').trim().split(' ')
   const first = nameParts[0] ?? 'Unknown'
   const last = nameParts.slice(1).join(' ') || ''
@@ -119,6 +133,8 @@ function dbLeadToLead(row: DbLead): Lead {
     lastContacted,
     area: row.area ?? '',
     notes: row.notes ?? '',
+    notesUpdatedAt: row.notes_updated_at ?? null,
+    linkedWith,
     quick_note: row.quick_note ?? '',
     deal_value: row.deal_value ?? 0,
     stage: row.stage ?? '',
@@ -139,6 +155,7 @@ function dbLeadToLead(row: DbLead): Lead {
       marketRent: row.market_rent != null ? String(row.market_rent) : '',
       invoiceEst: '',
       commissionOverride: '',
+      closeNotes: row.close_notes ?? '',
     },
   }
 }
@@ -271,7 +288,16 @@ export default function AgentPage() {
         .select('*')
         .order('created_at', { ascending: false })
       if (!error && data) {
-    const mapped = (data as DbLead[]).map(dbLeadToLead)
+    const rows = data as DbLead[]
+    const mapped = rows.map(row => {
+      if (!row.linked_lead_group) return dbLeadToLead(row)
+      const others = Array.from(new Set(
+        rows
+          .filter(other => other.linked_lead_group === row.linked_lead_group && other.id !== row.id)
+          .map(other => agentDisplayName(other.agent_id)),
+      ))
+      return dbLeadToLead(row, others.length ? others.join(', ') : 'another agent')
+    })
     const withStatuses = await Promise.all(mapped.map(async lead => {
       try {
         const response = await fetch(`/api/guest-card/send?leadId=${lead.id}`)
@@ -407,6 +433,21 @@ export default function AgentPage() {
     }
   }
 
+  const syncLinkedStage = async (leadId: string) => {
+    try {
+      const sb = supabaseRef.current ?? createClient()
+      const { data } = await sb.auth.getSession()
+      const response = await fetch('/api/leads/sync-stage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token ?? ''}` },
+        body: JSON.stringify({ leadId }),
+      })
+      if (!response.ok) console.error('[sync-stage] failed with status', response.status)
+    } catch (err) {
+      console.error('[sync-stage] request failed:', err)
+    }
+  }
+
   const saveLead = async (leadId: string, updates: Partial<Lead>) => {
     const lead = leads.find(l => l.id === leadId)
     if (!lead || !supabaseRef.current) return
@@ -446,7 +487,10 @@ export default function AgentPage() {
     if (error) {
       console.error('[supabase] saveLead error:', error.message, 'updates:', dbUpdates)
       showToast('Failed to save changes')
+      return
     }
+
+    if (dbUpdates.stage !== undefined) void syncLinkedStage(leadId)
   }
 
   const updateLead = (leadId: string, updates: Partial<Lead>) => {
@@ -723,6 +767,7 @@ export default function AgentPage() {
           showToast('Failed to move lead — changes reverted')
         } else {
           showToast(`Lead moved to ${newStage}`)
+          void syncLinkedStage(draggedId)
         }
       }
     } catch (err) {
@@ -1413,8 +1458,12 @@ export default function AgentPage() {
             onArchiveCancel={() => { setArchivePopupOpen(false); setArchiveReason(''); setArchiveNotes('') }}
             onArchiveConfirm={handleArchiveLead}
             onDealChange={(deal) => updateLead(selectedLead.id, { deal })}
-            onLeadClosed={(deal, closed) => updateLead(selectedLead.id, { deal, column: 'applied', stage: 'Closed Won', commission_actual: closed.commission_actual ?? 0, closed_at: closed.closed_at })}
+            onLeadClosed={(deal, closed) => {
+              updateLead(selectedLead.id, { deal, column: 'applied', stage: 'Closed Won', commission_actual: closed.commission_actual ?? 0, closed_at: closed.closed_at })
+              void syncLinkedStage(selectedLead.id)
+            }}
             onGenerateInvoice={() => generateInvoice(selectedLead.id)}
+            onNotesSaved={(notes, updatedAt) => updateLead(selectedLead.id, { notes, notesUpdatedAt: updatedAt })}
           />
         )}
       </div>
