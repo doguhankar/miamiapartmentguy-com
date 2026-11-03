@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { sendGAEvent } from '@next/third-parties/google'
 import Link from 'next/link'
 import { HomeDealsStrip } from '@/components/home-deals-strip'
+import { FEATURED_NEIGHBORHOOD_SLUGS } from '@/lib/neighborhood-content'
 
 const SMS_HREF = 'sms:+14077657306?body=Hi%20Don%2C%20I%27m%20looking%20for%20an%20apartment%20in%20Miami'
 const HOODS = ['Downtown', 'Midtown', 'Edgewater', 'Wynwood', 'Just exploring']
@@ -129,7 +130,7 @@ export function HomePageClient({ neighborhoods, inventory }: { neighborhoods: { 
         <header className="mh-hero">
           <div className="mh-wrap mh-hero-grid">
             <div>
-              <div className="mh-eyebrow">Miami Real Estate Advisor · 305 International</div>
+              <div className="mh-eyebrow">Free Miami Apartment Finder · Licensed Realtor</div>
               <h1>
                 Miami apartments,
                 <br />
@@ -192,6 +193,25 @@ export function HomePageClient({ neighborhoods, inventory }: { neighborhoods: { 
               131 buildings tracked · 10,000+ units · <span className="mh-proof-live">updated daily</span>
             </div>
           </div>
+        </section>
+
+        {/* NEIGHBORHOOD GUIDES (internal links for SEO) */}
+        <section className="mh-wrap mh-hoodlinks" aria-labelledby="mh-hoodlinks-title">
+          <h2 id="mh-hoodlinks-title">Find apartments by neighborhood</h2>
+          <p>
+            Miami Apartment Guy is a free Miami apartment finder run by a licensed Miami realtor. Pick a neighborhood to see every
+            building we track, live pricing and current move-in deals, or{' '}
+            <Link href="/miami-apartment-locator">see how our apartment locator service works</Link>.
+          </p>
+          <ul>
+            {FEATURED_NEIGHBORHOOD_SLUGS.map((slug) => neighborhoods.find((hood) => hood.slug === slug))
+              .filter((hood): hood is { slug: string; name: string } => Boolean(hood))
+              .map((hood) => (
+                <li key={hood.slug}>
+                  <Link href={`/neighborhoods/${hood.slug}`}>Apartments in {hood.name}</Link>
+                </li>
+              ))}
+          </ul>
         </section>
 
         {/* THIS WEEK'S DEALS */}

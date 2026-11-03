@@ -124,6 +124,34 @@
   color: var(--muted);
 }
 
+.mh-root .sp-prose a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.mh-root .sp-highlights {
+  max-width: 720px;
+  margin: 18px 0 18px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.mh-root .sp-highlights li {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.035);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--fg);
+}
+
+.mh-root .sp-highlights strong {
+  font-weight: 700;
+}
+
 .mh-root .sp-steps {
   display: grid;
   gap: 14px;

@@ -145,20 +145,31 @@ export function realConcession(building: Building): string | null {
 }
 
 export function buildingTitle(building: Building, price: PriceSummary): string {
-  const tail = price.min > 0 ? `Starting at ${formatPrice(price.min)}` : 'Live Pricing & Deals'
-  return `${building.name} Apartments — ${building.neighborhood}, Miami | ${tail}`
+  const tail = price.min > 0 ? `From ${formatPrice(price.min)}` : 'Live Pricing & Deals'
+  const place = /miami/i.test(building.neighborhood) ? building.neighborhood : `${building.neighborhood}, Miami`
+  return `${building.name} Apartments for Rent, ${place} | ${tail}`
 }
 
+/**
+ * Meta description for building pages. Google shows ~155–160 chars, so the
+ * click-driving facts (price, deal, free help) come first and the address,
+ * floor plans and amenities only fill whatever room is left.
+ */
 export function buildingDescription(building: Building, price: PriceSummary): string {
-  const parts: string[] = []
-  const priceText = price.min > 0 ? `from ${formatPrice(price.min)}/mo${price.max ? ` to ${formatPrice(price.max)}/mo` : ''}` : 'with live pricing'
-  parts.push(`${building.name} apartments in ${building.neighborhood}, Miami (${building.address}) ${priceText}.`)
-  if (building.units.length) parts.push(`Floor plans: ${building.units.join(', ')}.`)
+  const priceText = price.min > 0 ? `from ${formatPrice(price.min)}/mo` : 'with live pricing'
   const deal = realConcession(building)
-  if (deal) parts.push(`Current deal: ${deal}.`)
-  if (building.amenities.length) parts.push(`Amenities: ${building.amenities.slice(0, 5).join(', ')}.`)
-  parts.push('Free locator help from Miami Apartment Guy.')
-  return truncate(parts.join(' '), 300)
+  const lead = `${building.name} apartments for rent in ${building.neighborhood}, Miami ${priceText}.`
+  const parts: string[] = [lead]
+  if (deal) parts.push(`Deal: ${deal}.`)
+  parts.push('Free tours and pricing from a licensed Miami realtor.')
+  const optional: string[] = []
+  if (building.units.length) optional.push(`Floor plans: ${building.units.join(', ')}.`)
+  if (building.amenities.length) optional.push(`Amenities: ${building.amenities.slice(0, 3).join(', ')}.`)
+  let text = parts.join(' ')
+  for (const extra of optional) {
+    if (`${text} ${extra}`.length <= 160) text = `${text} ${extra}`
+  }
+  return truncate(text, 160)
 }
 
 function parseAddress(address: string) {

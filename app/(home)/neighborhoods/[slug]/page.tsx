@@ -20,6 +20,7 @@ import {
   summarizePrice,
   truncate,
 } from '@/lib/seo'
+import { getNeighborhoodContent } from '@/lib/neighborhood-content'
 
 export const revalidate = 3600
 
@@ -54,11 +55,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!data) return { title: 'Neighborhood not found', robots: { index: false, follow: false } }
 
   const { group, items, lowest } = data
-  const title = `${group.name} Apartments, Miami — ${items.length} Buildings & Current Deals | ${SITE_NAME}`
-  const names = items.slice(0, 4).map((item) => item.building.name).join(', ')
+  const content = getNeighborhoodContent(group.slug)
+  const buildingWord = items.length === 1 ? 'Building' : 'Buildings'
+  // Matches the real query shape ("apartments in north miami") and stays under ~60 chars for most names.
+  const title = `Apartments for Rent in ${group.name}, Miami FL | ${items.length} ${buildingWord} & Deals`
+  const priceText = lowest ? ` from ${formatPrice(lowest)}/mo` : ''
   const description = truncate(
-    `Compare ${items.length} ${group.name} apartment buildings in Miami${lowest ? `, from ${formatPrice(lowest)}/mo` : ''}, including ${names}. Live pricing and move-in deals. Free locator help.`,
-    300,
+    content
+      ? `${group.name} apartments for rent${priceText}: ${content.hook}. Live pricing, move-in deals and free help from a licensed Miami realtor.`
+      : `Compare ${items.length} ${group.name} apartment ${buildingWord.toLowerCase()}${priceText}. Live pricing, move-in deals and free help from a licensed Miami realtor.`,
+    160,
   )
   const path = `/neighborhoods/${group.slug}`
   const image = items.find((item) => item.building.images[0])?.building.images[0] ?? DEFAULT_OG_IMAGE
@@ -85,6 +91,21 @@ export default async function NeighborhoodPage({ params }: PageProps) {
   if (!data) notFound()
   const { group, items, others, lowest, highest, dealCount } = data
   const path = `/neighborhoods/${group.slug}`
+  const content = getNeighborhoodContent(group.slug)
+
+  const faqJsonLd = content
+    ? [
+        {
+          '@type': 'FAQPage',
+          '@id': `${SITE_URL}${path}#faq`,
+          mainEntity: content.faqs.map((item) => ({
+            '@type': 'Question',
+            name: item.q,
+            acceptedAnswer: { '@type': 'Answer', text: item.a },
+          })),
+        },
+      ]
+    : []
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -113,6 +134,7 @@ export default async function NeighborhoodPage({ params }: PageProps) {
         { name: 'Home', path: '/' },
         { name: `${group.name} apartments`, path },
       ]),
+      ...faqJsonLd,
     ],
   }
 
@@ -128,17 +150,42 @@ export default async function NeighborhoodPage({ params }: PageProps) {
         </nav>
 
         <p className="sp-eyebrow">Miami neighborhood guide</p>
-        <h1 className="sp-title">{group.name} apartments in Miami</h1>
+        <h1 className="sp-title">Apartments for rent in {group.name}, Miami</h1>
         <p className="sp-answer">
-          There are <strong>{items.length} apartment buildings</strong> tracked in {group.name}
+          There {items.length === 1 ? 'is' : 'are'} <strong>{items.length} apartment {items.length === 1 ? 'building' : 'buildings'}</strong> tracked in {group.name}
           {lowest && highest ? <>, with rents from <strong>{formatPrice(lowest)}</strong> up to {formatPrice(highest)} a month</> : null}.
           {dealCount > 0 ? <> {dealCount} currently advertise a move-in deal.</> : null} Pricing updates as leasing offices change it, and
-          locating help from Miami Apartment Guy is free for renters.
+          help from Miami Apartment Guy, a free Miami apartment finder, costs renters nothing.
         </p>
+        {content?.placedRenters && (
+          <p className="sp-answer">
+            <strong>We have placed renters in the {group.name} buildings on this page</strong>, so we know the leasing teams, the real fees
+            and which deals are worth taking.
+          </p>
+        )}
         <div className="sp-cta">
           <a className="mh-btn mh-btn-pink" href={SMS_HREF}>Text Don your budget</a>
           <Link className="mh-btn" href="/map">Browse the map</Link>
         </div>
+
+        {content && (
+          <section className="sp-section" aria-labelledby="hood-guide">
+            <h2 id="hood-guide">Living in {group.name}</h2>
+            {content.intro.map((paragraph) => (
+              <p key={paragraph.slice(0, 32)} className="sp-prose">{paragraph}</p>
+            ))}
+            <ul className="sp-highlights">
+              {content.highlights.map((item) => (
+                <li key={item.label}>
+                  <strong>{item.label}:</strong> {item.text}
+                </li>
+              ))}
+            </ul>
+            <p className="sp-prose">
+              <strong>Best for:</strong> {content.goodFor}
+            </p>
+          </section>
+        )}
 
         <section className="sp-section" aria-labelledby="hood-buildings">
           <h2 id="hood-buildings">{group.name} apartment buildings</h2>
@@ -173,6 +220,25 @@ export default async function NeighborhoodPage({ params }: PageProps) {
             })}
           </ul>
         </section>
+
+        {content && (
+          <section className="sp-section" aria-labelledby="hood-faq">
+            <h2 id="hood-faq">{group.name} apartment questions</h2>
+            <div className="sp-faq">
+              {content.faqs.map((item) => (
+                <details key={item.q}>
+                  <summary>{item.q}</summary>
+                  <p>{item.a}</p>
+                </details>
+              ))}
+            </div>
+            <p className="sp-prose">
+              Want a short list?{' '}
+              <Link href="/miami-apartment-locator">See how our free Miami apartment locator service works</Link> or{' '}
+              <a href={SMS_HREF}>text Don your budget and move-in date</a>.
+            </p>
+          </section>
+        )}
 
         <section className="sp-section" aria-labelledby="other-hoods">
           <h2 id="other-hoods">Other Miami neighborhoods</h2>

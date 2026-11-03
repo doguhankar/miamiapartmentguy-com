@@ -19,9 +19,9 @@ import {
 
 export const revalidate = 3600
 
-const TITLE = `Miami Apartment Locator — Free Apartment Finder | ${SITE_NAME}`
+const TITLE = `Miami Apartment Locator & Apartment Finder | Free Miami Realtor`
 const DESCRIPTION =
-  'Miami Apartment Guy is a free Miami apartment locator. A licensed Florida agent compares live pricing and move-in deals across hundreds of buildings and texts you a short list that fits your budget.'
+  'Free Miami apartment locator service. A licensed Miami realtor compares live pricing and move-in deals and texts you a short list that fits your budget.'
 
 export const metadata: Metadata = {
   title: TITLE,
