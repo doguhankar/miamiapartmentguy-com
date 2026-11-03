@@ -62,8 +62,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const priceText = lowest ? ` from ${formatPrice(lowest)}/mo` : ''
   const description = truncate(
     content
-      ? `${group.name} apartments for rent${priceText}: ${content.hook}. Live pricing, move-in deals and free help from a licensed Miami realtor.`
-      : `Compare ${items.length} ${group.name} apartment ${buildingWord.toLowerCase()}${priceText}. Live pricing, move-in deals and free help from a licensed Miami realtor.`,
+      ? `${group.name} apartments for rent${priceText}: ${content.hook}. Live pricing, deals & free help from a Miami realtor.`
+      : `Compare ${items.length} ${group.name} apartment ${buildingWord.toLowerCase()}${priceText}. Live pricing, deals & free help from a Miami realtor.`,
     160,
   )
   const path = `/neighborhoods/${group.slug}`
