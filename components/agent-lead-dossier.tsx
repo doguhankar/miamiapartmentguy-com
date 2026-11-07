@@ -53,25 +53,6 @@ function parseDealField(key: DealKey, raw: string): { value: string | number | n
   return Number.isFinite(rent) && rent > 0 ? { value: rent, error: null } : { value: null, error: 'Enter a rent above $0' }
 }
 
-// Slack posts and the invoice PDF run server-side after the lead is saved. A failure here is
-// logged and never blocks or reverts the close.
-async function notifyClosed(leadId: string) {
-  try {
-    const { data } = await createClient().auth.getSession()
-    const response = await fetch('/api/leads/close-notify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token ?? ''}` },
-      body: JSON.stringify({ leadId }),
-    })
-    const result = await response.json().catch(() => null)
-    if (!response.ok || result?.closes?.ok === false || result?.invoice?.ok === false) {
-      console.error('[close-notify] post-close automation reported a problem:', response.status, result)
-    }
-  } catch (error) {
-    console.error('[close-notify] post-close automation failed:', error)
-  }
-}
-
 const ARCHIVE_REASONS = [
   'Ghosted / stopped responding',
   'Went with another agent/competitor',
@@ -239,7 +220,7 @@ export default function AgentLeadDossier({
     if (commission.reason) setCloseNotice(`Lead closed. ${commission.reason}; commission_actual was left empty.`)
     onLeadClosed(deal, { commission_actual: commission.amount, closed_at: closedAt })
     onGenerateInvoice()
-    void notifyClosed(lead.id)
+
   }
 
   useEffect(() => {
