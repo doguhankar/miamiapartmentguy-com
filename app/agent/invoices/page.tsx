@@ -74,7 +74,8 @@ const C = {
 }
 
 const usd = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
-const usdShort = (n: number) => (n >= 1000 ? '$' + (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + 'k' : usd(n))
+const usdWhole = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+const usdShort =(n: number) => (n >= 1000 ? '$' + (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + 'k' : usd(n))
 
 function todayEastern() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date())
@@ -103,7 +104,7 @@ function isOverdue(inv: Invoice, today: string) {
   return (inv.status === 'sent' || inv.status === 'acknowledged' || inv.status === 'escalated') && today > inv.due_date
 }
 function agingTone(inv: Invoice, today: string): 'green' | 'amber' | 'red' | 'gray' {
-  if (inv.status === 'paid' || inv.status === 'void') return 'gray'
+  if (inv.status === 'paid' || inv.status === 'void' || inv.status === 'draft') return 'gray'
   if (isOverdue(inv, today)) return 'red'
   const age = ageOf(inv, today)
   if (age <= 7) return 'green'
@@ -425,10 +426,10 @@ export default function InvoicesPage() {
         </div>
 
         <section className="ar-tiles">
-          <Tile label="Billed" value={usd(totalBilled)} sub={`${billed.length} invoice${billed.length === 1 ? '' : 's'} sent`} />
-          <Tile label="Collected" value={usd(collected)} sub={`${paid.length} paid`} color={C.green} bar={totalBilled ? collected / totalBilled : 0} />
-          <Tile label="Outstanding" value={usd(outstanding)} sub={`${open.length} open`} color={outstanding ? C.amber : C.ink} />
-          <Tile label="Overdue" value={String(overdue.length)} sub={overdue.length ? usd(overdue.reduce((s, i) => s + i.amount, 0)) + ' past due' : 'None past due'} color={overdue.length ? C.red : C.ink} />
+          <Tile label="Billed" value={usdWhole(totalBilled)} sub={`${billed.length} invoice${billed.length === 1 ? '' : 's'} sent`} />
+          <Tile label="Collected" value={usdWhole(collected)} sub={`${paid.length} paid`} color={C.green} bar={totalBilled ? collected / totalBilled : 0} />
+          <Tile label="Outstanding" value={usdWhole(outstanding)} sub={`${open.length} open`} color={outstanding ? C.amber : C.ink} />
+          <Tile label="Overdue" value={String(overdue.length)} sub={overdue.length ? usdWhole(overdue.reduce((s, i) => s + i.amount, 0)) + ' past due' : 'None past due'} color={overdue.length ? C.red : C.ink} />
         </section>
 
         <section className="ar-w9">
@@ -706,10 +707,12 @@ function InvoiceDetail(props: {
             <p>Paid {usd(inv.paid_amount ?? inv.amount)} on {shortDate(toEasternDate(inv.paid_at))}.{inv.paid_amount != null && inv.paid_amount < inv.amount ? <span className="bad-text"> Short {usd(inv.amount - inv.paid_amount)}.</span> : null}</p>
           )}
 
-          <label style={{ display: 'block', marginTop: 14 }} className="form">
-            Notes
-            <textarea id={`notes-${inv.id}`} rows={2} value={notes} onChange={e => setNotes(e.target.value)} onBlur={() => notes !== (inv.notes ?? '') && props.onPatch(inv.id, { notes }, 'Note saved')} placeholder="Who you spoke with, what they said" />
-          </label>
+          <div className="form" style={{ marginTop: 14 }}>
+            <label>
+              Notes
+              <textarea id={`notes-${inv.id}`} rows={2} value={notes} onChange={e => setNotes(e.target.value)} onBlur={() => notes !== (inv.notes ?? '') && props.onPatch(inv.id, { notes }, 'Note saved')} placeholder="Who you spoke with, what they said" />
+            </label>
+          </div>
 
           <h3 style={{ marginTop: 16 }}>Email history</h3>
           {emails.length === 0
@@ -771,7 +774,12 @@ body { margin:0; }
 .ar-tabs-nav a:hover { color:${C.ink}; }
 .ar-user { display:flex; align-items:center; gap:8px; padding:6px 12px 6px 6px; border-radius:100px; background:${C.bg}; border:1px solid ${C.border}; font-size:13.5px; font-weight:600; }
 .ar-avatar { width:30px; height:30px; border-radius:50%; background:${C.greenSoft}; color:${C.green}; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
-@media (max-width:640px){ .ar-user span { display:none; } .ar-user { padding:4px; } .ar-top-left { gap:10px; } }
+@media (max-width:640px){
+  .ar-user span { display:none; } .ar-user { padding:4px; }
+  .ar-top-left { flex-direction:column; align-items:flex-start; gap:6px; }
+  .ar-tabs-nav a { padding:4px 8px; }
+  .ar .tile { padding:.85rem 1rem; } .ar .tile .val { font-size:22px; }
+}
 
 .ar-main { max-width:1180px; margin:0 auto; padding:20px max(16px, env(safe-area-inset-right,0px)) 40px max(16px, env(safe-area-inset-left,0px)); display:flex; flex-direction:column; gap:14px; }
 @media (min-width:768px){ .ar-main { padding-left:24px; padding-right:24px; } }
@@ -855,6 +863,7 @@ body { margin:0; }
 .form input, .form textarea { font:14px "Inter",sans-serif; color:${C.ink}; background:#fff; border:1px solid ${C.border}; border-radius:8px; padding:9px 10px; outline:none; width:100%; }
 .form input:focus, .form textarea:focus { border-color:${C.pink}; }
 .form .toggle { flex-direction:row; font-weight:500; color:${C.text}; }
+.ar input[type="checkbox"] { width:16px; height:16px; flex:none; padding:0; }
 .two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 @media (max-width:420px){ .two { grid-template-columns:1fr; } }
 .log { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; font-size:12.5px; }
