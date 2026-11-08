@@ -836,6 +836,7 @@ export default function AgentPage() {
           <span style={{ fontFamily: '"Archivo", sans-serif', fontWeight: 900, fontSize: '17px', letterSpacing: '-0.01em', color: '#111111' }}>MIAMI APARTMENT</span>
           <span style={{ fontFamily: '"Archivo", sans-serif', fontWeight: 900, fontSize: '17px', letterSpacing: '-0.01em', color: '#E0447B' }}>GUY</span>
           <span style={{ fontSize: '11px', color: '#B0B0B0', marginLeft: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>Your Pipeline</span>
+          <a href="/agent/invoices" style={{ fontSize: '11px', color: '#E0447B', marginLeft: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700, textDecoration: 'none' }}>Invoices →</a>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <input
