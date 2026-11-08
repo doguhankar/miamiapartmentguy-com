@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { postMessage, resolveChannelId, slackEscape, uploadFile } from '@/lib/slack-bot'
-import { buildInvoicePdf, formatIsoDate, usd } from '@/lib/invoice-pdf'
+import { formatIsoDate, usd } from '@/lib/invoice-pdf'
+import { createInvoiceFromLead } from '@/lib/ar-invoices'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
 
   const { data: lead, error: leadError } = await admin
     .from('leads')
-    .select('id,name,agent_id,stage,building_name,unit,lease_start,lease_term_months,lease_rent,commission_actual,closed_at,invoice_number,invoice_sent_at')
+    .select('id,name,agent_id,stage,building_id,building_name,unit,lease_start,lease_term_months,lease_rent,commission_actual,closed_at,invoice_number,invoice_sent_at')
     .eq('id', leadId)
     .maybeSingle()
   if (leadError || !lead) return NextResponse.json({ error: 'Lead not found' }, { status: 404 })
@@ -65,20 +66,9 @@ export async function POST(request: NextRequest) {
     console.error(`[close-notify] invoice skipped for lead ${leadId}: commission_actual or lease_rent is empty`)
   } else {
     try {
-      const closedAt = lead.closed_at ? new Date(lead.closed_at) : new Date()
-      const invoiceNumber = lead.invoice_number || `MAG-${closedAt.toISOString().slice(0, 7).replace('-', '')}-${String(lead.id).padStart(4, '0')}`
-      const pdf = await buildInvoicePdf({
-        invoiceNumber,
-        issuedOn: new Date(),
-        leadName: name,
-        buildingName: building,
-        unit: lead.unit ?? '',
-        leaseStart: lead.lease_start,
-        leaseTermMonths: lead.lease_term_months,
-        leaseRent: rent,
-        commissionOwed: commission,
-      })
-      if (!lead.invoice_number) await admin.from('leads').update({ invoice_number: invoiceNumber }).eq('id', leadId)
+      // Creates the draft in /agent/invoices (MAG-MMDDYYYY-###) and stores the PDF. Sends nothing to the building.
+      const { invoiceNumber, pdf } = await createInvoiceFromLead(admin, lead)
+      if (lead.invoice_number !== invoiceNumber) await admin.from('leads').update({ invoice_number: invoiceNumber }).eq('id', leadId)
 
       const channelId = await resolveChannelId('invoices', process.env.SLACK_INVOICES_CHANNEL_ID)
       await uploadFile({
