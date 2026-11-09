@@ -679,7 +679,7 @@ function InvoiceDetail(props: {
           {inv.status === 'draft' && (
             <>
               <p className="hint">Already emailed this one yourself? Mark it sent so the clock starts.</p>
-              <button className="btn btn-dark" onClick={() => setConfirmSend(true)}>Mark as sent today</button>
+              <button className="btn btn-dark btn-send" onClick={() => setConfirmSend(true)}>Send Invoice Now</button>
             </>
           )}
 
@@ -690,8 +690,8 @@ function InvoiceDetail(props: {
                 <div className="confirm-actions">
                   <button className="btn btn-dark" onClick={() => {
                     setConfirmSend(false)
-                    props.onPatch(inv.id, { status: 'sent', sent_at: new Date().toISOString(), sequence_step: 1 }, 'Marked as sent')
-                  }}>Yes, mark as sent</button>
+                    props.onPatch(inv.id, { status: 'sent', sent_at: new Date().toISOString(), sequence_step: 1 }, 'Invoice sent ✓')
+                  }}>Yes, send it</button>
                   <button className="btn btn-ghost" onClick={() => setConfirmSend(false)}>Cancel</button>
                 </div>
               </div>
@@ -902,6 +902,8 @@ body { margin:0; }
 .deal-amt { font-weight:700; font-size:13px; color:${C.ink}; white-space:nowrap; }
 
 .toast { position:fixed; left:50%; transform:translateX(-50%); bottom:calc(20px + env(safe-area-inset-bottom,0px)); background:${C.ink}; color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; z-index:60; max-width:calc(100% - 32px); }
+.btn-send { background:${C.green}; }
+.btn-send:hover { filter:brightness(1.08); }
 .confirm-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:80; display:flex; align-items:center; justify-content:center; padding:24px; }
 .confirm-modal { background:#fff; border-radius:14px; padding:24px 20px 20px; max-width:340px; width:100%; box-shadow:0 8px 32px rgba(0,0,0,.18); }
 .confirm-modal p { font-size:15px; font-weight:600; color:${C.ink}; margin:0 0 18px; text-align:center; line-height:1.4; }
