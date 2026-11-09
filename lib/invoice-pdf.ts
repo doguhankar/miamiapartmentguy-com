@@ -34,17 +34,20 @@ export const BROKERAGE = {
   oneLine: '848 Brickell Ave Ste 620, Miami FL 33131',
 }
 
-// Known agents. Anyone else on the allowlist falls back to their allowlist name/phone/email.
-export const INVOICE_AGENTS: Record<string, InvoiceAgent> = {
-  'don@miamiapartmentguy.com': {
-    name: 'Doguhan Karahan',
-    title: 'Real Estate Associate / Team Lead',
-    license: 'SL3581300',
-    phone: '+1 (407) 765-7306',
-    email: 'Don@MiamiApartmentGuy.com',
-  },
+// Known agents, keyed by the email they sign in to /agent with.
+// Anyone else on the allowlist falls back to their allowlist name/phone/email.
+const DON: InvoiceAgent = {
+  name: 'Doguhan Karahan',
+  title: 'Real Estate Associate / Team Lead',
+  license: 'SL3581300',
+  phone: '+1 (407) 765-7306',
+  email: 'Don@MiamiApartmentGuy.com',
 }
-export const INVOICE_AGENT = INVOICE_AGENTS['don@miamiapartmentguy.com']
+export const INVOICE_AGENTS: Record<string, InvoiceAgent> = {
+  'doguhankar1@gmail.com': DON, // Don's /agent login
+  'don@miamiapartmentguy.com': DON,
+}
+export const INVOICE_AGENT = DON
 
 export const usd = (value: number) => value.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 
