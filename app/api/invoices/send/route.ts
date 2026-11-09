@@ -131,7 +131,11 @@ export async function POST(request: NextRequest) {
   }
 
   const toList = [inv.ap_email as string]
-  const ccList: string[] = Array.isArray(inv.ap_cc_emails) ? (inv.ap_cc_emails as string[]) : []
+  // Don (team lead) is CC'd on every invoice another agent sends
+  const TEAM_LEAD_CC = 'don@miamiapartmentguy.com'
+  const ccList: string[] = Array.isArray(inv.ap_cc_emails) ? [...(inv.ap_cc_emails as string[])] : []
+  const sender = agent.email.toLowerCase()
+  if (sender !== TEAM_LEAD_CC && !ccList.some(e => e.toLowerCase() === TEAM_LEAD_CC)) ccList.push(TEAM_LEAD_CC)
 
   // --- Send from the agent's own Gmail so it lands in Sent and threads with replies ---
   let messageId: string | null = null
