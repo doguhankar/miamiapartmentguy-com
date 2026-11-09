@@ -341,6 +341,30 @@ export default function InvoicesPage() {
     showToast('Removed')
   }
 
+  const sendInvoice = async (inv: Invoice) => {
+    const sb = sbRef.current
+    if (!sb) return
+    setBusy(`send-${inv.id}`)
+    const { data: { session } } = await sb.auth.getSession()
+    const token = session?.access_token
+    if (!token) { showToast('Not signed in'); setBusy(null); return }
+    try {
+      const res = await fetch('/api/invoices/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ invoiceId: inv.id }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? 'Failed')
+      showToast(`Invoice sent to ${inv.ap_email} ✓`)
+      window.location.reload()
+    } catch (e) {
+      showToast(`Send failed: ${e instanceof Error ? e.message : 'unknown error'}`)
+    } finally {
+      setBusy(null)
+    }
+  }
+
   const regenPdf = async (inv: Invoice) => {
     const sb = sbRef.current
     if (!sb) return
@@ -543,6 +567,7 @@ export default function InvoicesPage() {
                     onOpenFile={openFile}
                     onRemove={removeAttachment}
                     onRegen={regenPdf}
+                    onSend={sendInvoice}
                   />
                 )}
               </article>
@@ -602,6 +627,7 @@ function InvoiceDetail(props: {
   onOpenFile: (path: string) => void
   onRemove: (att: Attachment) => void
   onRegen: (inv: Invoice) => void
+  onSend: (inv: Invoice) => void
 }) {
   const { inv, today, checks, ready, attachments, emails, apContact, busy } = props
   const [ap, setAp] = useState({
@@ -704,8 +730,11 @@ function InvoiceDetail(props: {
           <h3>Status</h3>
           {inv.status === 'draft' && (
             <>
-              <p className="hint">Already emailed this one yourself? Mark it sent so the clock starts.</p>
-              <button className="btn btn-dark btn-send" onClick={() => setConfirmSend(true)}>Send Invoice Now</button>
+              <p className="hint">Emails the AP contact with the invoice, W-9, and broker registration attached.</p>
+              <button className="btn btn-dark btn-send" disabled={busy === `send-${inv.id}` || !inv.ap_email} onClick={() => setConfirmSend(true)}>
+                {busy === `send-${inv.id}` ? 'Sending…' : 'Send Invoice Now'}
+              </button>
+              <button className="linkish" style={{ marginTop: 8 }} onClick={() => props.onPatch(inv.id, { status: 'sent', sent_at: new Date().toISOString(), sequence_step: 1 }, 'Marked sent')}>Already emailed it yourself? Mark sent</button>
             </>
           )}
 
@@ -716,7 +745,7 @@ function InvoiceDetail(props: {
                 <div className="confirm-actions">
                   <button className="btn btn-dark" onClick={() => {
                     setConfirmSend(false)
-                    props.onPatch(inv.id, { status: 'sent', sent_at: new Date().toISOString(), sequence_step: 1 }, 'Invoice sent ✓')
+                    props.onSend(inv)
                   }}>Yes, send it</button>
                   <button className="btn btn-ghost" onClick={() => setConfirmSend(false)}>Cancel</button>
                 </div>
