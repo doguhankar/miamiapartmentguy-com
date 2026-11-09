@@ -1298,13 +1298,19 @@ export default function AgentPage() {
           {/* METRICS ROW */}
           {(() => {
             const now = new Date()
+            const yearStart = new Date(now.getFullYear(), 0, 1)
             const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
 
-            // GCI: sum of commission_actual for Closed Won leads closed this calendar month
+            // GCI: sum of commission_actual for Closed Won leads closed this calendar year (YTD)
+            const closedThisYear = leads.filter(l =>
+              l.stage === 'Closed Won' && l.closed_at !== null && new Date(l.closed_at) >= yearStart
+            )
+            const gci = closedThisYear.reduce((sum, l) => sum + l.commission_actual, 0)
+
+            // Closed this month (for the subtitle line)
             const closedThisMonth = leads.filter(l =>
               l.stage === 'Closed Won' && l.closed_at !== null && new Date(l.closed_at) >= monthStart
             )
-            const gci = closedThisMonth.reduce((sum, l) => sum + l.commission_actual, 0)
 
             // PPV: sum of budget midpoints across active (non-archive, non-closed) leads
             const activeLeads = leads.filter(l => l.column !== 'archive' && l.column !== 'applied')
@@ -1346,7 +1352,7 @@ export default function AgentPage() {
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E0447B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12"/>
                     </svg>
-                    <p style={{ fontSize: '12px', color: '#717171', margin: 0 }}>{closedThisMonth.length} deals closed this month</p>
+                    <p style={{ fontSize: '12px', color: '#717171', margin: 0 }}>{closedThisYear.length} deals YTD · {closedThisMonth.length} this month</p>
                   </div>
                 </div>
 
