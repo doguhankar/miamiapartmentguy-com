@@ -341,6 +341,29 @@ export default function InvoicesPage() {
     showToast('Removed')
   }
 
+  const regenPdf = async (inv: Invoice) => {
+    const sb = sbRef.current
+    if (!sb) return
+    setBusy(`regen-${inv.id}`)
+    const { data: { session } } = await sb.auth.getSession()
+    const token = session?.access_token
+    if (!token) { showToast('Not signed in'); setBusy(null); return }
+    try {
+      const res = await fetch('/api/invoices/regenerate-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ invoiceId: inv.id }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? 'Failed')
+      showToast('PDF regenerated ✓')
+    } catch (e) {
+      showToast(`Regen failed: ${e instanceof Error ? e.message : 'unknown error'}`)
+    } finally {
+      setBusy(null)
+    }
+  }
+
   const openNew = async () => {
     const sb = sbRef.current
     if (!sb) return
@@ -519,6 +542,7 @@ export default function InvoicesPage() {
                     onUpload={upload}
                     onOpenFile={openFile}
                     onRemove={removeAttachment}
+                    onRegen={regenPdf}
                   />
                 )}
               </article>
@@ -577,6 +601,7 @@ function InvoiceDetail(props: {
   onUpload: (inv: Invoice, file: File, kind: 'broker_reg' | 'other') => void
   onOpenFile: (path: string) => void
   onRemove: (att: Attachment) => void
+  onRegen: (inv: Invoice) => void
 }) {
   const { inv, today, checks, ready, attachments, emails, apContact, busy } = props
   const [ap, setAp] = useState({
@@ -613,6 +638,7 @@ function InvoiceDetail(props: {
             <dt>Due</dt><dd>{shortDate(inv.due_date)}</dd>
           </dl>
           {pdf && <button className="btn btn-ghost" onClick={() => props.onOpenFile(pdf.storage_path)}>View invoice PDF</button>}
+          {pdf && <button className="btn btn-ghost" onClick={() => props.onRegen(inv)}>Regenerate PDF</button>}
         </div>
 
         {/* Send checklist */}
