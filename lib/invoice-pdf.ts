@@ -43,9 +43,17 @@ const DON: InvoiceAgent = {
   phone: '+1 (407) 765-7306',
   email: 'Don@MiamiApartmentGuy.com',
 }
+const SEB: InvoiceAgent = {
+  name: 'Sebastian Shajari',
+  title: 'Real Estate Associate',
+  license: 'SL3620257',
+  phone: '+1 (949) 346-6945',
+  email: 'seb@miamiapartmentguy.com',
+}
 export const INVOICE_AGENTS: Record<string, InvoiceAgent> = {
   'doguhankar1@gmail.com': DON, // Don's /agent login
   'don@miamiapartmentguy.com': DON,
+  'seb@miamiapartmentguy.com': SEB,
 }
 export const INVOICE_AGENT = DON
 
