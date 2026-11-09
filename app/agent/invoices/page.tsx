@@ -590,6 +590,7 @@ function InvoiceDetail(props: {
   const [paidDate, setPaidDate] = useState(today)
   const [eta, setEta] = useState(inv.payment_eta ?? '')
   const [notes, setNotes] = useState(inv.notes ?? '')
+  const [confirmSend, setConfirmSend] = useState(false)
 
   const pdf = attachments.find(a => a.kind === 'invoice_pdf')
   const others = attachments.filter(a => a.kind !== 'invoice_pdf')
@@ -678,8 +679,23 @@ function InvoiceDetail(props: {
           {inv.status === 'draft' && (
             <>
               <p className="hint">Already emailed this one yourself? Mark it sent so the clock starts.</p>
-              <button className="btn btn-dark" onClick={() => props.onPatch(inv.id, { status: 'sent', sent_at: new Date().toISOString(), sequence_step: 1 }, 'Marked as sent')}>Mark as sent today</button>
+              <button className="btn btn-dark" onClick={() => setConfirmSend(true)}>Mark as sent today</button>
             </>
+          )}
+
+          {confirmSend && (
+            <div className="confirm-overlay" onClick={() => setConfirmSend(false)}>
+              <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+                <p>Are you sure you want to send this invoice?</p>
+                <div className="confirm-actions">
+                  <button className="btn btn-dark" onClick={() => {
+                    setConfirmSend(false)
+                    props.onPatch(inv.id, { status: 'sent', sent_at: new Date().toISOString(), sequence_step: 1 }, 'Marked as sent')
+                  }}>Yes, mark as sent</button>
+                  <button className="btn btn-ghost" onClick={() => setConfirmSend(false)}>Cancel</button>
+                </div>
+              </div>
+            </div>
           )}
           {(inv.status === 'sent' || inv.status === 'acknowledged' || inv.status === 'escalated') && (
             <>
@@ -886,5 +902,9 @@ body { margin:0; }
 .deal-amt { font-weight:700; font-size:13px; color:${C.ink}; white-space:nowrap; }
 
 .toast { position:fixed; left:50%; transform:translateX(-50%); bottom:calc(20px + env(safe-area-inset-bottom,0px)); background:${C.ink}; color:#fff; padding:10px 16px; border-radius:10px; font-size:13px; z-index:60; max-width:calc(100% - 32px); }
+.confirm-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:80; display:flex; align-items:center; justify-content:center; padding:24px; }
+.confirm-modal { background:#fff; border-radius:14px; padding:24px 20px 20px; max-width:340px; width:100%; box-shadow:0 8px 32px rgba(0,0,0,.18); }
+.confirm-modal p { font-size:15px; font-weight:600; color:${C.ink}; margin:0 0 18px; text-align:center; line-height:1.4; }
+.confirm-actions { display:flex; flex-direction:column; gap:8px; }
 @media (prefers-reduced-motion: no-preference){ .inv, .btn { transition: box-shadow .15s, filter .12s, background .12s; } }
 `
