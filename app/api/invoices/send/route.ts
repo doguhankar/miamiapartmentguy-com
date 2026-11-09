@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Resend } from 'resend'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendGmail, gmailConfigured } from '@/lib/gmail-send'
 import { buildInvoicePdf } from '@/lib/invoice-pdf'
 import { resolveInvoiceAgent, invoicePdfPath, AR_BUCKET } from '@/lib/ar-invoices'
 
@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
   if ((inv.agent_id ?? '').toLowerCase() !== email) return NextResponse.json({ error: 'That invoice belongs to another agent' }, { status: 403 })
   if (!inv.ap_email) return NextResponse.json({ error: 'No AP email on this invoice — add one first' }, { status: 409 })
   if (inv.status !== 'draft') return NextResponse.json({ error: `Invoice already ${inv.status}` }, { status: 409 })
+  if (!gmailConfigured()) return NextResponse.json({ error: 'Gmail sending not connected yet' }, { status: 503 })
 
   // --- Agent ---
   const agent = await resolveInvoiceAgent(admin, inv.agent_id)
@@ -132,26 +133,25 @@ export async function POST(request: NextRequest) {
   const toList = [inv.ap_email as string]
   const ccList: string[] = Array.isArray(inv.ap_cc_emails) ? (inv.ap_cc_emails as string[]) : []
 
-  // --- Send via Resend ---
-  const resend = new Resend(process.env.RESEND_API_KEY)
-  let resendId: string | null = null
+  // --- Send from the agent's own Gmail so it lands in Sent and threads with replies ---
+  let messageId: string | null = null
+  let threadId: string | null = null
   let sendError: string | null = null
 
   try {
-    const result = await resend.emails.send({
-      from: `${agent.name} <${agent.email.toLowerCase()}>`,
+    const sent = await sendGmail({
+      fromName: agent.name,
+      fromEmail: agent.email.toLowerCase(),
       to: toList,
-      cc: ccList.length ? ccList : undefined,
-      bcc: [agent.email.toLowerCase()], // agent keeps a copy in their inbox
-      replyTo: agent.email.toLowerCase(),
+      cc: ccList,
       subject,
       text: bodyText,
       attachments,
     })
-    resendId = result.data?.id ?? null
-    if (result.error) throw new Error(result.error.message)
+    messageId = sent.id
+    threadId = sent.threadId
   } catch (err) {
-    sendError = err instanceof Error ? err.message : 'Resend failed'
+    sendError = err instanceof Error ? err.message : 'Gmail send failed'
   }
 
   // --- Log to invoice_emails ---
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
     cc_emails: ccList,
     subject,
     body: bodyText,
-    gmail_message_id: resendId,
+    gmail_message_id: messageId,
     status: sendError ? 'error' : 'sent',
     error_message: sendError ?? null,
     sent_at: sendError ? null : new Date().toISOString(),
@@ -180,9 +180,10 @@ export async function POST(request: NextRequest) {
       sent_at: new Date().toISOString(),
       sequence_step: 1,
       last_email_at: new Date().toISOString(),
+      gmail_thread_id: threadId,
       building_address: buildingAddress,
     })
     .eq('id', invoiceId)
 
-  return NextResponse.json({ ok: true, invoiceNumber, resendId })
+  return NextResponse.json({ ok: true, invoiceNumber, messageId, threadId })
 }
