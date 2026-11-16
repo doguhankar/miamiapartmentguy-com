@@ -143,7 +143,7 @@ function dbLeadToLead(row: DbLead): Lead {
   }
 }
 
-// Parse a budget string into a midpoint dollar value for PPV calculation
+// Parse a budget string into a midpoint dollar value for POV (Pipeline Opportunity Value) calculation
 function parseBudgetMidpoint(budget: string): number {
   if (!budget) return 0
   const nums = budget.replace(/[,$]/g, '').match(/\d+/g)?.map(Number) ?? []
@@ -1312,9 +1312,9 @@ export default function AgentPage() {
               l.stage === 'Closed Won' && l.closed_at !== null && new Date(l.closed_at) >= monthStart
             )
 
-            // PPV: sum of budget midpoints across active (non-archive, non-closed) leads
+            // POV (Pipeline Opportunity Value): sum of budget midpoints across active (non-archive, non-closed) leads
             const activeLeads = leads.filter(l => l.column !== 'archive' && l.column !== 'applied')
-            const ppv = activeLeads.reduce((sum, l) => sum + parseBudgetMidpoint(l.budget), 0)
+            const pov = activeLeads.reduce((sum, l) => sum + parseBudgetMidpoint(l.budget), 0)
 
             // Conversion rate: closed ÷ total
             const totalLeads = leads.length
@@ -1356,7 +1356,7 @@ export default function AgentPage() {
                   </div>
                 </div>
 
-                {/* PPV */}
+                {/* POV */}
                 <div style={{
                   background: '#FFFFFF',
                   borderRadius: '16px',
@@ -1364,12 +1364,12 @@ export default function AgentPage() {
                   padding: '1rem 1.25rem',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 600, color: '#B0B0B0', letterSpacing: '0.05em', margin: 0, textTransform: 'uppercase' }}>PPV</p>
+                    <p style={{ fontSize: '11px', fontWeight: 600, color: '#B0B0B0', letterSpacing: '0.05em', margin: 0, textTransform: 'uppercase' }} title="Pipeline Opportunity Value">POV</p>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
                     </svg>
                   </div>
-                  <p style={{ fontSize: '28px', fontWeight: 700, color: '#111111', margin: 0 }}>{fmt(ppv)}</p>
+                  <p style={{ fontSize: '28px', fontWeight: 700, color: '#111111', margin: 0 }}>{fmt(pov)}</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
