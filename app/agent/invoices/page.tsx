@@ -450,6 +450,7 @@ export default function InvoicesPage() {
           <Wordmark />
           <nav className="ar-tabs-nav">
             <a href="/agent">Pipeline</a>
+            <a href="/agent/inbox">Inbox</a>
             <a href="/agent/invoices" aria-current="page">Invoices</a>
           </nav>
         </div>
