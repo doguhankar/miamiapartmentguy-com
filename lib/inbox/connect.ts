@@ -82,6 +82,7 @@ export type SaveConnectionInput = {
   scopes: string[]
   capabilities: Capabilities
   accessToken: string
+  clientBusinessId?: string | null
   tokenExpiresAt: Date | null
 }
 
@@ -134,6 +135,7 @@ export async function saveConnection(
       account_id: id,
       access_token_enc: encryptSecret(input.accessToken, key),
       token_expires_at: input.tokenExpiresAt?.toISOString() ?? null,
+      client_business_id: input.clientBusinessId ?? null,
       key_version: 1,
       updated_at: new Date().toISOString(),
     },

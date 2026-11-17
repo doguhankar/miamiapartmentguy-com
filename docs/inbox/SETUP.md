@@ -22,17 +22,20 @@ Status: built and tested locally on `feat/social-inbox`. NOT pushed, deployed, c
 TikTok portal pages render client-side, so scheme/payload details could not be fully confirmed; the webhook is disabled rather than guessed.
 
 ## Credentials / approvals needed (nothing below has been requested or created)
-**Instagram (Don and Sebastian)**
-- Each IG account must be Business or Creator.
-- Meta developer app with the Instagram product; Don and Seb added as app roles (Standard Access is enough for accounts you own).
-- Env: `IG_APP_ID`, `IG_APP_SECRET`, `IG_VERIFY_TOKEN` (you choose), `INBOX_PUBLIC_ORIGIN`.
-- Meta app dashboard: webhook callback `https://<domain>/api/inbox/webhooks/instagram`, verify token, fields `messages`, `messaging_seen`; OAuth redirect `https://<domain>/api/inbox/connect/instagram/callback`.
+**Instagram (Don and Sebastian), Instagram API with Unified Login**
+- Each IG account must be Business or Creator. Clients log in with Instagram or Facebook; no Facebook Page needed; the app must belong to a business portfolio.
+- Meta app "MAG Inbox" (Instagram use case). In the dashboard (Unified login tab) create a **configuration** with `instagram_basic` + `instagram_manage_messages`; copy its `config_id` (not secret).
+- Add Don and Seb as Instagram Testers (App roles); each accepts in Instagram web (Settings > Website permissions > Apps and websites > Tester Invites). Standard Access is enough for role-holders; Advanced Access (App Review) only to connect other clients.
+- Env (Vercel only): `META_APP_ID`, `META_APP_SECRET` (the Meta app's, not an Instagram app id), `IG_CONFIG_ID`, `IG_VERIFY_TOKEN` (you choose), `INBOX_PUBLIC_ORIGIN`.
+- Meta dashboard: valid OAuth redirect `https://<domain>/api/inbox/connect/instagram/callback`; webhook callback `https://<domain>/api/inbox/webhooks/instagram` + verify token; fields `messages`, `messaging_seen`. Each shared account is subscribed automatically after connect (`/<IG_ID>/subscribed_apps`).
+- Token: one Business Integration System User token per client business; `client_business_id` is stored for later refresh.
+- Unverified until the first live test: exact send endpoint for Unified Login (we use `POST graph.facebook.com/v27.0/<IG_ID>/messages`), whether Development mode delivers webhooks to role-holders (Meta says app must be Live), echo events.
 **Shared**: `INBOX_CRED_KEY` (32 random bytes, base64) and `INBOX_STATE_SECRET` (random string), set in Vercel env only.
 **TikTok**: TikTok developer app + approval for the Business Messaging API; both accounts must be eligible Business Accounts. Until approved, slots show "Waiting on platform approval".
 **Sebastian**: no access beyond an ordinary agent until Don runs `grant-team-lead.example.sql`. Reassign and send are separate opt-ins.
 
 ## Tests
-- `pnpm test`: 60 unit/route tests (crypto, signatures, adapters, authz matrix incl. revoked access, reconnect, dedupe, webhook routes, lead routes, dashboard views).
+- `pnpm test`: 76 unit/route tests (crypto, signatures, adapters, authz matrix incl. revoked access, reconnect, dedupe, webhook routes, lead routes, dashboard views).
 - `pnpm test:inbox-db`: runs migrations twice on a throwaway Postgres and ~60 RLS/trigger/dedupe/out-of-order checks (cross-agent isolation, no client writes to messages, revoked approval/grant).
 - Typecheck of all new files is clean. Two pre-existing TS errors exist in `app/agent/page.tsx` (also on main).
 - BLOCKED here: full `next build` fails only because the sandbox cannot reach Google Fonts (`next/font` fetch in root layouts). Run `pnpm build` on a networked machine / Vercel preview before release. A live Supabase/webhook test was also impossible (sandbox proxy blocks it).

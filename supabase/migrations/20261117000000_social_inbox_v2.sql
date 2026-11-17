@@ -105,8 +105,10 @@ create table if not exists public.social_account_credentials (
   webhook_secret_enc text,
   token_expires_at timestamptz,
   key_version integer not null default 1,
+  client_business_id text, -- Unified Login: needed to refresh/fetch the system-user token later
   updated_at timestamptz not null default now()
 );
+alter table public.social_account_credentials add column if not exists client_business_id text;
 alter table public.social_account_credentials enable row level security;
 revoke all on public.social_account_credentials from anon, authenticated;
 

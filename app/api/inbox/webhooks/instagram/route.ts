@@ -16,10 +16,10 @@ export async function GET(request: NextRequest) {
 
 // Events. Signature is checked against the RAW body before anything is parsed.
 export async function POST(request: NextRequest) {
-  if (!process.env.IG_APP_SECRET) return NextResponse.json({ error: 'Instagram webhook is not configured' }, { status: 503 })
+  if (!process.env.META_APP_SECRET) return NextResponse.json({ error: 'Instagram webhook is not configured' }, { status: 503 })
 
   const raw = await request.text()
-  if (!verifyMetaSignature(raw, request.headers.get('x-hub-signature-256'), process.env.IG_APP_SECRET)) {
+  if (!verifyMetaSignature(raw, request.headers.get('x-hub-signature-256'), process.env.META_APP_SECRET)) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 

@@ -18,6 +18,7 @@ const CONNECT_MSG: Record<string, string> = {
   state: 'That connection link expired or was invalid. Start again.',
   config: 'Instagram is not configured on the server yet (see docs/inbox/SETUP.md).',
   forbidden: 'Your agent approval is not active, so the connection was not saved.',
+  no_accounts: 'No Instagram account was shared. Reconnect and select your professional account.',
   not_professional: 'That Instagram account is not a professional account. Switch it to Business or Creator in Instagram, then reconnect.',
   missing_permission: 'The messaging permission was not granted. Reconnect and accept the messaging permission.',
   owned_by_other: 'That Instagram account is already connected by another agent.',

@@ -16,17 +16,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!actor.approved) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   if (provider === 'instagram') {
-    const clientId = process.env.IG_APP_ID
+    const clientId = process.env.META_APP_ID
+    const configId = process.env.IG_CONFIG_ID
     const stateSecret = process.env.INBOX_STATE_SECRET
-    if (!clientId || !stateSecret || !process.env.IG_APP_SECRET) {
+    if (!clientId || !configId || !stateSecret || !process.env.META_APP_SECRET) {
       return NextResponse.json(
-        { error: 'Instagram is not configured on the server yet (IG_APP_ID, IG_APP_SECRET, INBOX_STATE_SECRET). See docs/inbox/SETUP.md.' },
+        { error: 'Instagram is not configured on the server yet (META_APP_ID, META_APP_SECRET, IG_CONFIG_ID, INBOX_STATE_SECRET). See docs/inbox/SETUP.md.' },
         { status: 503 },
       )
     }
     const origin = process.env.INBOX_PUBLIC_ORIGIN ?? new URL(request.url).origin
     const url = authorizeUrl({
       clientId,
+      configId,
       redirectUri: `${origin}/api/inbox/connect/instagram/callback`,
       state: signState({ email: actor.email, provider: 'instagram' }, stateSecret),
     })

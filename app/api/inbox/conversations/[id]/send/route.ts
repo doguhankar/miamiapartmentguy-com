@@ -52,7 +52,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   let mid: string
   try {
-    mid = await sendTextMessage(decryptSecret(cred.access_token_enc), convo.external_thread_id, v.text)
+    mid = await sendTextMessage(decryptSecret(cred.access_token_enc), acc.external_account_id!, convo.external_thread_id, v.text)
   } catch (e) {
     if (e instanceof IgSendError) {
       if (e.authFailure) await recordAccountError(admin, acc.id, e.message, 'needs_reconnect')

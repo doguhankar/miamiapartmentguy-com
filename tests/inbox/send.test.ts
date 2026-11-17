@@ -47,22 +47,22 @@ describe('who may send', () => {
 describe('Instagram Send API client', () => {
   it('posts JSON with a bearer token and returns the message id', async () => {
     const f = vi.fn(async () => new Response(JSON.stringify({ message_id: 'mid.1' }), { status: 200 }))
-    expect(await sendTextMessage('TOK', 'C1', 'hello', f as any)).toBe('mid.1')
+    expect(await sendTextMessage('TOK', 'IG1', 'C1', 'hello', f as any)).toBe('mid.1')
     const [url, init] = f.mock.calls[0] as any
-    expect(String(url)).toContain('/me/messages')
+    expect(String(url)).toBe('https://graph.facebook.com/v27.0/IG1/messages')
     expect(init.headers.authorization).toBe('Bearer TOK')
     expect(JSON.parse(init.body)).toEqual({ recipient: { id: 'C1' }, message: { text: 'hello' } })
   })
   it('flags auth failures and never leaks the token in errors', async () => {
     const f = async () => new Response(JSON.stringify({ error: { code: 190, message: 'bad TOK' } }), { status: 400 })
-    const e = await sendTextMessage('TOK', 'C1', 'x', f as any).catch(x => x)
+    const e = await sendTextMessage('TOK', 'IG1', 'C1', 'x', f as any).catch(x => x)
     expect(e).toBeInstanceOf(IgSendError)
     expect(e.authFailure).toBe(true)
     expect(e.message).not.toContain('TOK')
   })
   it('treats a 200 without an id as a failure', async () => {
     const f = async () => new Response('{}', { status: 200 })
-    await expect(sendTextMessage('T', 'C', 'x', f as any)).rejects.toBeInstanceOf(IgSendError)
+    await expect(sendTextMessage('T', 'IG1', 'C', 'x', f as any)).rejects.toBeInstanceOf(IgSendError)
   })
 })
 
@@ -116,6 +116,7 @@ describe('POST /api/inbox/conversations/[id]/send', () => {
     const [, init] = fetchMock.mock.calls[0]
     expect(init.headers.authorization).toBe('Bearer PLAIN-IG-TOKEN')
     expect(JSON.parse(init.body).recipient.id).toBe('CLIENT1')
+    expect(String(fetchMock.mock.calls[0][0])).toContain('/IG_DON/messages')
     expect(m.calls.rpc[0]).toMatchObject({ name: 'inbox_ingest', args: { p_event_id: 'ig:mid.9', p_direction: 'outbound', p_external_message_id: 'mid.9' } })
     // our own send must not count as proof the platform delivers echoes
     expect(m.tables.social_accounts[0].capabilities).toEqual({ send_replies: true })

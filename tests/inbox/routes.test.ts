@@ -25,9 +25,10 @@ const igBody = (mid: string, dir: 'in' | 'out' = 'in') =>
   })
 
 beforeEach(() => {
-  process.env.IG_APP_SECRET = APP_SECRET
+  process.env.META_APP_SECRET = APP_SECRET
   process.env.IG_VERIFY_TOKEN = 'verify-me'
-  process.env.IG_APP_ID = 'app-id'
+  process.env.META_APP_ID = 'app-id'
+  process.env.IG_CONFIG_ID = 'cfg-123'
   process.env.INBOX_STATE_SECRET = 'state-secret'
   process.env.INBOX_CRED_KEY = randomBytes(32).toString('base64')
   holder.admin = makeAdmin({
@@ -77,7 +78,7 @@ describe('POST /api/inbox/webhooks/instagram', () => {
     expect(ign.status).toBe(200)
   })
   it('is unavailable (503) when the app secret is not configured', async () => {
-    delete process.env.IG_APP_SECRET
+    delete process.env.META_APP_SECRET
     const res = await igPost(req('/api/inbox/webhooks/instagram', { method: 'POST', body: '{}' }))
     expect(res.status).toBe(503)
   })
@@ -115,13 +116,15 @@ describe('connect routes', () => {
     const res = await startPost(req('/x', { method: 'POST', headers: { authorization: 'Bearer good' } }), { params: Promise.resolve({ provider: 'instagram' }) })
     const { url } = await res.json()
     const u = new URL(url)
-    expect(u.origin + u.pathname).toBe('https://www.instagram.com/oauth/authorize')
-    expect(u.searchParams.get('scope')).toBe('instagram_business_basic,instagram_business_manage_messages')
+    expect(u.origin + u.pathname).toBe('https://www.facebook.com/dialog/oauth')
+    expect(u.searchParams.get('config_id')).toBe('cfg-123')
+    expect(u.searchParams.get('client_id')).toBe('app-id')
+    expect(u.searchParams.get('response_type')).toBe('code')
     expect(u.searchParams.get('state')).toBeTruthy()
   })
   it('start is honest when unconfigured or unavailable', async () => {
     approvedAdmin()
-    delete process.env.IG_APP_ID
+    delete process.env.META_APP_ID
     expect((await startPost(req('/x', { method: 'POST', headers: { authorization: 'Bearer good' } }), { params: Promise.resolve({ provider: 'instagram' }) })).status).toBe(503)
     expect((await startPost(req('/x', { method: 'POST', headers: { authorization: 'Bearer good' } }), { params: Promise.resolve({ provider: 'tiktok' }) })).status).toBe(501)
   })

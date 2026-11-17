@@ -1,122 +1,87 @@
 import type { NormalizedEvent } from '../types'
 import type { ProviderAdapter } from './adapter'
 
-// Instagram API with Instagram Login (no Facebook Page needed).
-// Official docs (verified 2026-11-16):
-//   Business Login:  https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login
-//   Messaging API:   https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/messaging-api
-//   Webhooks:        https://developers.facebook.com/docs/instagram-platform/webhooks
+// Instagram API with UNIFIED LOGIN (the setup Meta gives new apps; built on Facebook Login for Business).
+// Clients log in with Instagram or Facebook, no Facebook Page needed, business portfolio required.
+// One Business Integration System User Access Token covers every Instagram account the client shared.
+// Official docs (read 2026-11-16):
+//   https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-unified-login/get-started
+//   https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-unified-login/authentication
+//   https://developers.facebook.com/documentation/instagram-platform/webhooks/setup
+// NOT confirmed by an official Unified Login page: the exact send endpoint. The Instagram Login messaging guide
+// documents POST /<IG_ID>/messages; we call the same path on graph.facebook.com with the system-user token.
+// The first live send is the verification, and failures are reported honestly.
 
-export const IG_SCOPES = ['instagram_business_basic', 'instagram_business_manage_messages']
-
-const AUTHORIZE_URL = 'https://www.instagram.com/oauth/authorize'
-const SHORT_TOKEN_URL = 'https://api.instagram.com/oauth/access_token'
-const LONG_TOKEN_URL = 'https://graph.instagram.com/access_token'
-const REFRESH_URL = 'https://graph.instagram.com/refresh_access_token'
-const GRAPH = 'https://graph.instagram.com/v21.0'
+const AUTHORIZE_URL = 'https://www.facebook.com/dialog/oauth'
+const GRAPH = 'https://graph.facebook.com/v27.0'
+export const WEBHOOK_FIELDS = 'messages,messaging_seen'
 
 type FetchLike = typeof fetch
 
-export function authorizeUrl(p: { clientId: string; redirectUri: string; state: string }): string {
+/** Facebook Login for Business dialog URL for a configuration. config_id is not a secret. */
+export function authorizeUrl(p: { clientId: string; configId: string; redirectUri: string; state: string }): string {
   const u = new URL(AUTHORIZE_URL)
   u.searchParams.set('client_id', p.clientId)
+  u.searchParams.set('config_id', p.configId)
   u.searchParams.set('redirect_uri', p.redirectUri)
   u.searchParams.set('response_type', 'code')
-  u.searchParams.set('scope', IG_SCOPES.join(','))
   u.searchParams.set('state', p.state)
   return u.toString()
 }
 
-export type TokenSet = { accessToken: string; userId: string; permissions: string[]; expiresInSec: number | null }
+export type TokenSet = { accessToken: string; expiresInSec: number | null }
 
-/** Step 2 + 3 of Business Login: code -> short-lived -> long-lived (~60 days). Server-side only (needs the app secret). */
-export async function exchangeCode(
-  p: { clientId: string; clientSecret: string; redirectUri: string; code: string },
-  f: FetchLike = fetch,
-): Promise<TokenSet> {
-  const code = p.code.replace(/#_$/, '') // docs: strip the trailing "#_"
-  const shortRes = await f(SHORT_TOKEN_URL, {
-    method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: p.clientId,
-      client_secret: p.clientSecret,
-      grant_type: 'authorization_code',
-      redirect_uri: p.redirectUri,
-      code,
-    }),
-  })
-  if (!shortRes.ok) throw new Error(`Instagram rejected the authorization code (${shortRes.status}). Start the connection again.`)
-  const shortJson = (await shortRes.json()) as any
-  const short = Array.isArray(shortJson?.data) ? shortJson.data[0] : shortJson
-  if (!short?.access_token || !short?.user_id) throw new Error('Instagram did not return an access token.')
+/** Server-side only: uses the META app id + secret (not an Instagram app id). */
+export async function exchangeCode(p: { clientId: string; clientSecret: string; code: string }, f: FetchLike = fetch): Promise<TokenSet> {
+  const u = new URL(`${GRAPH}/oauth/access_token`)
+  u.searchParams.set('client_id', p.clientId)
+  u.searchParams.set('client_secret', p.clientSecret)
+  u.searchParams.set('code', p.code)
+  const res = await f(u)
+  if (!res.ok) throw new Error(`Meta rejected the authorization code (${res.status}). Start the connection again.`)
+  const j = (await res.json()) as any
+  if (!j?.access_token) throw new Error('Meta did not return an access token.')
+  return { accessToken: String(j.access_token), expiresInSec: typeof j.expires_in === 'number' ? j.expires_in : null }
+}
 
-  const longUrl = new URL(LONG_TOKEN_URL)
-  longUrl.searchParams.set('grant_type', 'ig_exchange_token')
-  longUrl.searchParams.set('client_secret', p.clientSecret)
-  longUrl.searchParams.set('access_token', short.access_token)
-  const longRes = await f(longUrl)
-  if (!longRes.ok) throw new Error(`Could not get a long-lived Instagram token (${longRes.status}).`)
-  const long = (await longRes.json()) as any
-  if (!long?.access_token) throw new Error('Instagram did not return a long-lived token.')
+export type SharedAccount = { id: string; username: string | null }
 
-  const perms = typeof short.permissions === 'string' ? short.permissions.split(',') : (short.permissions ?? [])
-  return {
-    accessToken: long.access_token,
-    userId: String(short.user_id),
-    permissions: perms.map((x: string) => x.trim()).filter(Boolean),
-    expiresInSec: typeof long.expires_in === 'number' ? long.expires_in : null,
+/** With this token type /me is the system user, so the shared Instagram accounts come from assigned_instagram_accounts. */
+export async function fetchSharedAccounts(accessToken: string, f: FetchLike = fetch): Promise<SharedAccount[]> {
+  const u = new URL(`${GRAPH}/me/assigned_instagram_accounts`)
+  u.searchParams.set('fields', 'id,username')
+  const res = await f(u, { headers: { authorization: `Bearer ${accessToken}` } })
+  if (!res.ok) throw new Error(`Could not read the shared Instagram accounts (${res.status}).`)
+  const j = (await res.json()) as any
+  const data = Array.isArray(j?.data) ? j.data : []
+  return data.filter((a: any) => a?.id).map((a: any) => ({ id: String(a.id), username: a.username ?? null }))
+}
+
+/** Needed later to refresh/fetch this client's token via the Business Integration System User Token Management API. */
+export async function fetchClientBusinessId(accessToken: string, f: FetchLike = fetch): Promise<string | null> {
+  try {
+    const u = new URL(`${GRAPH}/me`)
+    u.searchParams.set('fields', 'client_business_id')
+    const res = await f(u, { headers: { authorization: `Bearer ${accessToken}` } })
+    if (!res.ok) return null
+    const j = (await res.json()) as any
+    return j?.client_business_id ? String(j.client_business_id) : null
+  } catch {
+    return null
   }
 }
 
-/** Refresh a long-lived token (must be >= 24h old and unexpired; each refresh adds ~60 days). */
-export async function refreshToken(accessToken: string, f: FetchLike = fetch): Promise<{ accessToken: string; expiresInSec: number | null }> {
-  const u = new URL(REFRESH_URL)
-  u.searchParams.set('grant_type', 'ig_refresh_token')
-  u.searchParams.set('access_token', accessToken)
-  const res = await f(u)
-  if (!res.ok) throw new Error(`Instagram token refresh failed (${res.status}). The owner must reconnect.`)
-  const j = (await res.json()) as any
-  if (!j?.access_token) throw new Error('Instagram token refresh returned no token.')
-  return { accessToken: j.access_token, expiresInSec: typeof j.expires_in === 'number' ? j.expires_in : null }
-}
-
-export type IgProfile = { id: string; username: string | null; accountType: string | null }
-
-/**
- * The webhook `entry.id` is the Instagram professional account id. We read both `user_id` and `id`
- * and prefer `user_id`; VERIFY on the first real connection that this matches entry.id
- * (the Connections screen shows the stored id so it is easy to compare).
- */
-export async function fetchProfile(accessToken: string, f: FetchLike = fetch): Promise<IgProfile> {
-  const u = new URL(`${GRAPH}/me`)
-  u.searchParams.set('fields', 'user_id,username,account_type')
-  u.searchParams.set('access_token', accessToken)
-  const res = await f(u)
-  if (!res.ok) throw new Error(`Could not read the Instagram profile (${res.status}).`)
-  const j = (await res.json()) as any
-  const id = j?.user_id ?? j?.id
-  if (!id) throw new Error('Instagram did not return an account id.')
-  return { id: String(id), username: j?.username ?? null, accountType: j?.account_type ?? null }
-}
-
-export function isProfessional(accountType: string | null): boolean {
-  // Business and Creator accounts only. Personal accounts cannot use the messaging API.
-  return !!accountType && /business|creator|media_creator/i.test(accountType)
-}
-
-/**
- * Best-effort per-account webhook subscription. The exact endpoint is not in the docs pages we could read,
- * so a failure is reported (webhooks=false) instead of assumed; the app-level webhook in the Meta dashboard
- * is the documented path.
- */
-export async function subscribeWebhooks(accessToken: string, f: FetchLike = fetch): Promise<boolean> {
+/** After a client connects, each shared account must be subscribed to the app's webhook fields (documented step). */
+export async function subscribeWebhooks(accessToken: string, igAccountId: string, f: FetchLike = fetch): Promise<boolean> {
   try {
-    const u = new URL(`${GRAPH}/me/subscribed_apps`)
-    u.searchParams.set('subscribed_fields', 'messages,messaging_seen')
-    u.searchParams.set('access_token', accessToken)
-    const res = await f(u, { method: 'POST' })
-    return res.ok
+    const res = await f(`${GRAPH}/${encodeURIComponent(igAccountId)}/subscribed_apps`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded', authorization: `Bearer ${accessToken}` },
+      body: new URLSearchParams({ subscribed_fields: WEBHOOK_FIELDS }),
+    })
+    if (!res.ok) return false
+    const j = (await res.json().catch(() => ({}))) as any
+    return j?.success === true
   } catch {
     return false
   }
@@ -134,8 +99,8 @@ export class IgSendError extends Error {
  * inside the 24-hour window (the route enforces the window before calling this). Max 1000 bytes of text.
  * Returns the message id; the same id later arrives as an echo webhook, which dedupes against it.
  */
-export async function sendTextMessage(accessToken: string, recipientId: string, text: string, f: FetchLike = fetch): Promise<string> {
-  const res = await f(`${GRAPH}/me/messages`, {
+export async function sendTextMessage(accessToken: string, igAccountId: string, recipientId: string, text: string, f: FetchLike = fetch): Promise<string> {
+  const res = await f(`${GRAPH}/${encodeURIComponent(igAccountId)}/messages`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${accessToken}` },
     body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
