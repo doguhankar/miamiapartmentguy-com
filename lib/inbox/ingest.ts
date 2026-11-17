@@ -48,24 +48,16 @@ export async function ingestEvents(
   admin: SupabaseClient,
   provider: ProviderId,
   events: NormalizedEvent[],
-  /** for providers where the account is known from the request, not the payload */
-  forcedAccountId?: string,
+  /** observe=false: events we produced ourselves (a send) must not count as evidence of what the platform delivers */
+  opts: { observe?: boolean } = {},
 ): Promise<IngestSummary> {
+  const observe = opts.observe !== false
   const summary: IngestSummary = { ok: 0, duplicate: 0, skipped: 0, failed: 0 }
   const cache = new Map<string, AccountRow | null>()
 
   for (const ev of events) {
-    let acc: AccountRow | null
-    if (forcedAccountId) {
-      if (!cache.has(forcedAccountId)) {
-        const { data } = await admin.from('social_accounts').select('id,status,capabilities').eq('id', forcedAccountId).maybeSingle()
-        cache.set(forcedAccountId, (data as AccountRow | null) ?? null)
-      }
-      acc = cache.get(forcedAccountId) ?? null
-    } else {
-      if (!cache.has(ev.externalAccountId)) cache.set(ev.externalAccountId, await findAccount(admin, provider, ev.externalAccountId))
-      acc = cache.get(ev.externalAccountId) ?? null
-    }
+    if (!cache.has(ev.externalAccountId)) cache.set(ev.externalAccountId, await findAccount(admin, provider, ev.externalAccountId))
+    const acc = cache.get(ev.externalAccountId) ?? null
     if (!acc || acc.status === 'not_connected') {
       summary.skipped++
       continue
@@ -73,7 +65,7 @@ export async function ingestEvents(
 
     try {
       if (ev.kind === 'message') {
-        await observeCapability(admin, acc, ev.direction === 'inbound' ? 'receive_messages' : 'outbound_events')
+        if (observe) await observeCapability(admin, acc, ev.direction === 'inbound' ? 'receive_messages' : 'outbound_events')
         const { data, error } = await admin.rpc('inbox_ingest', {
           p_account_id: acc.id,
           p_event_id: ev.eventId,

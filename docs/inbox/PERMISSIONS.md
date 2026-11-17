@@ -4,10 +4,10 @@ Foundation (unchanged): a user needs a CURRENT `agent_allowlist.approved = true`
 
 | Who | Sees | Can change |
 |---|---|---|
-| Approved agent | conversations they own or are assigned; their own accounts | notes, next action, follow-up, resolve; claim an unassigned conversation; release their own; link/create a lead in their own pipeline |
+| Approved agent | conversations they own or are assigned; their own accounts | send Instagram replies on those conversations; notes, next action, follow-up, resolve; claim an unassigned conversation; release their own; link/create a lead in their own pipeline |
 | Team lead with `can_view_team` | all conversations (read) | same as an agent, only on conversations they own/are assigned |
 | + `can_reassign` | | move conversations between approved agents |
-| + `can_send_client_messages` | | reserved. MAG sends nothing in this release |
+| + `can_send_client_messages` | | send Instagram replies on conversations they can see but do not own |
 | Anyone | | never: messages (server-written only), reply status, contact fields, another agent's account/credentials |
 
 Rules:

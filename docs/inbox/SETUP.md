@@ -15,7 +15,7 @@ Status: built and tested locally on `feat/social-inbox`. NOT pushed, deployed, c
 | Receive messages | Supported (webhook) | Unverified, approval-gated |
 | See our own sent messages | Supported (echo events; only trusted once observed) | Unverified |
 | Past history | Unverified, not built | Documented, unverified |
-| Reply from MAG | Documented, not built | Documented, not built |
+| Reply from MAG | Built (24h window; untested live) | Documented, not built |
 | Lead data | Supported | n/a |
 | Conversation link | Not available | Not available |
 | Both of Don's + Seb's accounts | Yes (professional accounts, each owner authorizes) | Unconfirmed: needs TikTok approval; Business Accounts only; not EEA/CH/UK |
@@ -48,3 +48,6 @@ Rollback: v2 only adds tables/columns/policies; revert the deploy first, DB chan
 
 ## Group-text handoff (future)
 `lib/inbox/handoff.ts` defines the boundary only (types + a disabled provider). Nothing sends or provisions. Apple Business Register is not a group-chat service and is not used.
+
+## Sending (Instagram)
+Composer in the conversation pane; `POST /api/inbox/conversations/[id]/send`. Owner or assignee may send; anyone else needs the explicit send grant. Locked with a reason when: window closed (24h from the client's last message), no inbound message, account needs reconnect, or not Instagram. Failures store nothing and keep the draft. Stored under the same id the echo webhook uses, so no duplicates. No delivered/read status is shown. Later: request the human-agent tag (7-day window) in Meta app review.

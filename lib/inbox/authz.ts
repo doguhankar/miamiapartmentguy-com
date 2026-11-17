@@ -59,6 +59,15 @@ export function canSendClientMessages(actor: Actor | null): boolean {
   return !!actor?.approved && !!actor.grant?.send
 }
 
+/**
+ * Sending on a conversation: the owner or current assignee may reply; anyone else needs the explicit
+ * "send client messages" grant (and must be able to see the conversation). Viewing alone never allows sending.
+ */
+export function canSendOn(actor: Actor | null, c: ConvoRef): boolean {
+  if (!canViewConversation(actor, c) || !actor) return false
+  return eq(c.agent_id, actor.email) || eq(c.assigned_to, actor.email) || !!actor.grant?.send
+}
+
 /** Resolve the caller from a Supabase access token. Re-checked on every request (no caching), so revocation is immediate. */
 export async function resolveActor(admin: SupabaseClient, accessToken: string | null | undefined): Promise<Actor | null> {
   if (!accessToken) return null

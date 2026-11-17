@@ -37,7 +37,7 @@ export const CAPABILITY_MATRIX: ProviderMatrix[] = [
       receive: { state: 'supported', note: 'messages webhook. Conversations start only when the Instagram user messages first.' },
       outboundEvents: { state: 'supported', note: 'Echo events are documented. MAG only marks this capability after it actually observes one for the account, so reply status stays "unavailable" until then.' },
       history: { state: 'unverified', note: 'No conversation/history listing endpoint appears in the Instagram Login messaging docs we read. No backfill is built; only events received after connecting are stored.' },
-      reply: { state: 'documented-not-built', note: 'Send API exists with a 24-hour window (human-agent tag for longer). Not built: sending needs Don\'s explicit approval.' },
+      reply: { state: 'supported', note: 'Send API with a 24-hour window from the client\'s last message (human-agent tag for up to 7 days is not requested yet). Built: owner/assignee, or an explicit send grant. Untested against a live account.' },
       webhooks: { state: 'supported', note: 'Verification handshake + X-Hub-Signature-256 (HMAC-SHA256 with app secret). Retries for up to 36 hours, so dedupe is required.' },
       leadSync: { state: 'supported', note: 'Handle and display name from webhook payload; profile lookup optional.' },
       link: { state: 'not-available', note: 'No documented deep link to a thread; MAG stores a link only when one is supplied.' },

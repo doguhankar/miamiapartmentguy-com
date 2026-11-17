@@ -122,6 +122,40 @@ export async function subscribeWebhooks(accessToken: string, f: FetchLike = fetc
   }
 }
 
+export class IgSendError extends Error {
+  constructor(message: string, public status: number, public authFailure: boolean) {
+    super(message)
+    this.name = 'IgSendError'
+  }
+}
+
+/**
+ * Send a text reply (Send API). Rules from the docs: the client must have messaged first, and the reply must be
+ * inside the 24-hour window (the route enforces the window before calling this). Max 1000 bytes of text.
+ * Returns the message id; the same id later arrives as an echo webhook, which dedupes against it.
+ */
+export async function sendTextMessage(accessToken: string, recipientId: string, text: string, f: FetchLike = fetch): Promise<string> {
+  const res = await f(`${GRAPH}/me/messages`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
+  })
+  const j = (await res.json().catch(() => ({}))) as any
+  if (!res.ok) {
+    const code = j?.error?.code
+    const auth = res.status === 401 || code === 190 || code === 102
+    const msg = auth
+      ? 'Instagram rejected this account\'s authorization. The account owner needs to reconnect.'
+      : code === 10 || code === 551 || /window|24/i.test(String(j?.error?.message ?? ''))
+        ? 'Instagram says this conversation is outside its reply window.'
+        : 'Instagram could not send this message.'
+    throw new IgSendError(msg, res.status, auth)
+  }
+  const id = j?.message_id
+  if (!id) throw new IgSendError('Instagram accepted the request but returned no message id.', 502, false)
+  return String(id)
+}
+
 const attachmentsText = (n: number) => `[${n} attachment${n > 1 ? 's' : ''}]`
 
 export const instagramAdapter: ProviderAdapter = {

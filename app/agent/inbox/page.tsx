@@ -6,6 +6,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Conversation, Message, Note, SocialAccount } from '@/lib/inbox/types'
+import { formatLeft, replyWindow } from '@/lib/inbox/send'
 import { countViews, inView, replyStatusLabel, VIEW_LABELS, type ViewKey } from '@/lib/inbox/views'
 import { DEMO_ACCOUNTS, DEMO_CONVERSATIONS, DEMO_ME, DEMO_MESSAGES, DEMO_NOTES } from '@/lib/inbox/demo-data'
 
@@ -75,6 +76,10 @@ function Inbox() {
   const [noteText, setNoteText] = useState('')
   const [leadDraft, setLeadDraft] = useState({ name: '', phone: '' })
   const [leadPick, setLeadPick] = useState('')
+  const [draft, setDraft] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState<string | null>(null)
+  const [, setTick] = useState(0)
 
   const sbRef = useRef<ReturnType<typeof createClient> | null>(null)
   const openIdRef = useRef<string | null>(null)
@@ -176,6 +181,11 @@ function Inbox() {
     }
   }, [demo, authStatus, loadAll, loadThread])
 
+  useEffect(() => {
+    const t = setInterval(() => setTick(x => x + 1), 60_000)
+    return () => clearInterval(t)
+  }, [])
+
   const open = convos.find(c => c.id === openId) ?? null
   const openLead = open?.lead_id ? leads[open.lead_id] : undefined
   const openAccount = open ? accounts.find(a => a.id === open.account_id) : undefined
@@ -185,6 +195,8 @@ function Inbox() {
     setMobile('thread')
     setLeadDraft({ name: c.contact_name ?? '', phone: c.contact_phone ?? '' })
     setLeadPick('')
+    setDraft('')
+    setSendError(null)
     if (demo) {
       setMessages(DEMO_MESSAGES[c.id] ?? [])
       setNotes(DEMO_NOTES[c.id] ?? [])
@@ -237,6 +249,36 @@ function Inbox() {
     if (!res.ok) return showToast(j.error ?? 'Could not update the lead')
     showToast(j.created ? 'Lead created and linked' : 'Lead linked')
     loadAll()
+  }
+
+  const sendMessage = async () => {
+    const text = draft.trim()
+    if (!open || !text || sending) return
+    setSending(true)
+    setSendError(null)
+    if (demo) {
+      setMessages(p => [...p, { id: `dm-${Date.now()}`, conversation_id: open.id, direction: 'outbound', body: text, sender_name: null, sent_at: new Date().toISOString() }])
+      setDraft('')
+      setSending(false)
+      return showToast('Sent (demo only, nothing was sent)')
+    }
+    try {
+      const { data: s } = await sbRef.current!.auth.getSession()
+      const res = await fetch(`/api/inbox/conversations/${open.id}/send`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${s.session?.access_token ?? ''}` },
+        body: JSON.stringify({ text }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) return setSendError(j.error ?? 'Could not send. Nothing was sent.') // draft is kept so it can be retried
+      setDraft('')
+      loadThread(open.id)
+      loadAll()
+    } catch {
+      setSendError('Could not reach the server. Nothing was sent; your message is still here.')
+    } finally {
+      setSending(false)
+    }
   }
 
   const accountOf = (c: Conversation) => accounts.find(a => a.id === c.account_id)
@@ -389,10 +431,40 @@ function Inbox() {
                   <button className="ib-btn" onClick={addNote} disabled={!noteText.trim()}>Add note</button>
                 </div>
               </div>
-              <div className="ib-foot">
-                {grant?.send ? 'Replying from MAG is not enabled in this release.' : 'Reply from Instagram / TikTok directly. MAG does not send client messages.'}
-                {open.conversation_url && <> · <a href={open.conversation_url} target="_blank" rel="noopener noreferrer">Open native conversation</a></>}
-              </div>
+              {(() => {
+                const win = replyWindow(open.last_inbound_at)
+                const mineConvo = open.agent_id.toLowerCase() === me?.email || open.assigned_to?.toLowerCase() === me?.email
+                const permitted = mineConvo || !!grant?.send
+                const isIg = (openAccount?.provider ?? open.channel) === 'instagram'
+                const connected = demo || openAccount?.status === 'connected'
+                const reason = !isIg
+                  ? 'Sending is only available for Instagram right now. Reply in TikTok directly.'
+                  : !permitted
+                    ? 'You can view this conversation but do not have permission to send on it.'
+                    : !connected
+                      ? 'This Instagram account needs to be reconnected before you can send.'
+                      : !open.last_inbound_at
+                        ? 'No client message to reply to yet. Instagram does not allow starting a conversation.'
+                        : !win.open
+                          ? 'The 24-hour reply window has closed. You can reply after the client messages again.'
+                          : null
+                return (
+                  <div className="ib-composer">
+                    {reason ? (
+                      <div className="ib-locked">{reason}{open.conversation_url && <> <a href={open.conversation_url} target="_blank" rel="noopener noreferrer">Open native conversation</a></>}</div>
+                    ) : (
+                      <>
+                        <div className="ib-win">Reply window: {formatLeft(win.msLeft)}</div>
+                        <div className="ib-note-add">
+                          <textarea value={draft} rows={2} maxLength={1000} onChange={e => setDraft(e.target.value)} placeholder={`Message ${nm(open)}…`} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }} />
+                          <button className="ib-btn pri" style={{ width: 'auto' }} onClick={sendMessage} disabled={!draft.trim() || sending}>{sending ? 'Sending…' : 'Send'}</button>
+                        </div>
+                      </>
+                    )}
+                    {sendError && <div className="ib-senderr" role="alert">{sendError}</div>}
+                  </div>
+                )
+              })()}
             </>
           )}
         </section>
@@ -543,6 +615,11 @@ const css = `
 .ib-notes-h { font-size: 11px; font-weight: 800; color: ${C.amber}; text-transform: uppercase; margin-bottom: 6px; } .ib-notes-h span { text-transform: none; font-weight: 600; }
 .ib-notecard { background: #fff; border: 1px solid #F5D9AC; border-radius: 8px; padding: 8px 10px; font-size: 13px; margin-bottom: 6px; } .ib-notecard small { color: ${C.muted}; }
 .ib-note-add { display: flex; gap: 6px; } .ib-note-add input { margin: 0; }
+.ib-composer { padding: 10px 14px; background: ${C.surface}; border-top: 1px solid ${C.border}; }
+.ib-win { font-size: 11px; color: ${C.muted}; margin-bottom: 6px; font-weight: 600; }
+.ib-locked { font-size: 12px; color: ${C.muted}; text-align: center; }
+.ib-senderr { margin-top: 8px; background: ${C.redSoft}; color: ${C.red}; border-radius: 8px; padding: 8px 10px; font-size: 12px; }
+.ib-note-add textarea { flex: 1; width: 100%; background: ${C.bg}; border: 1px solid ${C.border}; border-radius: 10px; padding: 9px 12px; font-size: 14px; outline: none; resize: none; font-family: inherit; }
 .ib-foot { padding: 10px 16px; background: ${C.surface}; border-top: 1px solid ${C.border}; font-size: 12px; color: ${C.muted}; text-align: center; }
 .ib-kv { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 4px 0; } .ib-kv span { color: ${C.muted}; } .ib-kv b { text-align: right; }
 .ib-leadbox { background: ${C.greenSoft}; color: ${C.green}; border-radius: 10px; padding: 10px; font-size: 13px; }
