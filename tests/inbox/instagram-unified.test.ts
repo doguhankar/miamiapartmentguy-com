@@ -11,16 +11,18 @@ describe('Instagram Unified Login client', () => {
   })
   it('exchanges the code with the META app id/secret on graph.facebook.com', async () => {
     const f = vi.fn(async () => json({ access_token: 'SUAT', expires_in: 5000 }))
-    expect(await exchangeCode({ clientId: 'A', clientSecret: 'SEC', code: 'CODE' }, f as any)).toEqual({ accessToken: 'SUAT', expiresInSec: 5000 })
+    expect(await exchangeCode({ clientId: 'A', clientSecret: 'SEC', code: 'CODE', redirectUri: 'https://x.test/cb' }, f as any)).toEqual({ accessToken: 'SUAT', expiresInSec: 5000 })
     const url = new URL(String((f.mock.calls[0] as any)[0]))
     expect(url.origin + url.pathname).toBe('https://graph.facebook.com/v27.0/oauth/access_token')
     expect(url.searchParams.get('code')).toBe('CODE')
+    expect(url.searchParams.get('redirect_uri')).toBe('https://x.test/cb')
   })
   it('fails clearly (without leaking secrets) when Meta rejects the code', async () => {
     const f = async () => json({ error: { message: 'bad SEC' } }, 400)
     const e = await exchangeCode({ clientId: 'A', clientSecret: 'SEC', code: 'C' }, f as any).catch(x => x)
     expect(e).toBeInstanceOf(Error)
     expect(e.message).not.toContain('SEC')
+    expect(e.message).toContain('bad ***')
   })
   it('lists every shared Instagram account from assigned_instagram_accounts', async () => {
     const f = vi.fn(async () => json({ data: [{ id: '1', username: 'don' }, { id: '2', username: 'seb' }, {}] }))

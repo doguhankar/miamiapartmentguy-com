@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
   if (!allowed?.length) return back(request, 'error=forbidden')
 
   try {
-    const tokens = await exchangeCode({ clientId, clientSecret, code })
+    const origin = process.env.INBOX_PUBLIC_ORIGIN ?? new URL(request.url).origin
+    const tokens = await exchangeCode({ clientId, clientSecret, code, redirectUri: `${origin}/api/inbox/connect/instagram/callback` })
     const accounts = await fetchSharedAccounts(tokens.accessToken)
     if (!accounts.length) return back(request, 'error=no_accounts')
     const businessId = await fetchClientBusinessId(tokens.accessToken)

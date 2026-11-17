@@ -32,13 +32,23 @@ export function authorizeUrl(p: { clientId: string; configId: string; redirectUr
 export type TokenSet = { accessToken: string; expiresInSec: number | null }
 
 /** Server-side only: uses the META app id + secret (not an Instagram app id). */
-export async function exchangeCode(p: { clientId: string; clientSecret: string; code: string }, f: FetchLike = fetch): Promise<TokenSet> {
+export async function exchangeCode(p: { clientId: string; clientSecret: string; code: string; redirectUri?: string }, f: FetchLike = fetch): Promise<TokenSet> {
   const u = new URL(`${GRAPH}/oauth/access_token`)
   u.searchParams.set('client_id', p.clientId)
   u.searchParams.set('client_secret', p.clientSecret)
   u.searchParams.set('code', p.code)
+  // Meta requires the exact redirect_uri that the login dialog used
+  if (p.redirectUri) u.searchParams.set('redirect_uri', p.redirectUri)
   const res = await f(u)
-  if (!res.ok) throw new Error(`Meta rejected the authorization code (${res.status}). Start the connection again.`)
+  if (!res.ok) {
+    let why = ''
+    try {
+      const e = ((await res.json()) as any)?.error
+      // Meta's own reason only (code/type/message); never echo secrets
+      why = [e?.code, e?.error_subcode, e?.type, e?.message].filter(Boolean).join(' / ').split(p.clientSecret).join('***')
+    } catch {}
+    throw new Error(`Meta rejected the authorization code (${res.status})${why ? `: ${why}` : ''}. Start the connection again.`)
+  }
   const j = (await res.json()) as any
   if (!j?.access_token) throw new Error('Meta did not return an access token.')
   return { accessToken: String(j.access_token), expiresInSec: typeof j.expires_in === 'number' ? j.expires_in : null }
