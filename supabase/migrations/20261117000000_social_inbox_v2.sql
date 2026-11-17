@@ -68,7 +68,7 @@ $$;
 
 create table if not exists public.social_accounts (
   id uuid primary key default gen_random_uuid(),
-  provider text not null check (provider in ('instagram', 'tiktok', 'manychat')),
+  provider text not null check (provider in ('instagram', 'tiktok')),
   owner_email text not null,
   label text not null,
   external_account_id text,
@@ -442,7 +442,7 @@ begin
 end;
 $$;
 
--- contact/lead-data sync with NO message (Manychat interim mode, conversation links)
+-- contact/lead-data sync with NO message (conversation links)
 create or replace function public.inbox_upsert_contact(
   p_account_id uuid,
   p_external_thread_id text,

@@ -1,6 +1,6 @@
 // Shared types for the social inbox. Mirrors supabase/migrations/20261117000000_social_inbox_v2.sql
 
-export type ProviderId = 'instagram' | 'tiktok' | 'manychat'
+export type ProviderId = 'instagram' | 'tiktok'
 
 export type AccountStatus = 'not_connected' | 'pending_approval' | 'connected' | 'needs_reconnect' | 'error'
 

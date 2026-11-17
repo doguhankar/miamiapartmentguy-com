@@ -74,29 +74,6 @@ export const CAPABILITY_MATRIX: ProviderMatrix[] = [
       'https://business-api.tiktok.com/portal/docs/direct-messages/v1.3',
     ],
   },
-  {
-    provider: 'manychat',
-    title: 'Manychat (interim: lead data + conversation link)',
-    accountTypes: 'One Manychat account (API key) per workspace. Don and Sebastian need separate keys if they use separate accounts.',
-    supportsAllFour: 'Only as a data bridge. Account switching in Manychat is not a unified inbox.',
-    access: [
-      'Paid Manychat plan for External Request / Dynamic Block',
-      'Public API key per account (Settings → API)',
-      'A Manychat flow with an External Request block that POSTs contact data to MAG with a shared secret header',
-    ],
-    cells: {
-      receive: { state: 'not-available', note: 'Manychat documents outbound requests from flows and a Public API for contact state and sending. No inbound message-event feed or inbox read API is documented.' },
-      outboundEvents: { state: 'not-available', note: 'Not documented.' },
-      history: { state: 'not-available', note: 'No conversation history API documented.' },
-      reply: { state: 'documented-not-built', note: 'Send Content exists in the Public API. Not built.' },
-      webhooks: { state: 'not-available', note: 'No event subscriptions documented; MAG receives External Request calls instead.' },
-      leadSync: { state: 'supported', note: 'Contact name, handle and subscriber id via External Request. MAG creates a contact thread with NO messages.' },
-      link: { state: 'supported', note: 'MAG stores a conversation link if the flow supplies one.' },
-    },
-    sources: [
-      'https://help.manychat.com/hc/en-us/articles/14281252007580-Dev-Tools-Basics',
-    ],
-  },
 ]
 
 export const CAPABILITY_LABELS: Record<CapabilityKey, string> = {

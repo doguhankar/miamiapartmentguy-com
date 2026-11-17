@@ -46,7 +46,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const name = (body.name ?? convo.contact_name ?? convo.contact_handle ?? '').trim()
   if (!name) return NextResponse.json({ error: 'A name is required' }, { status: 400 })
-  const sourceLabel: Record<string, string> = { instagram: 'Instagram DM', tiktok: 'TikTok DM', other: 'Manychat' }
+  const sourceLabel: Record<string, string> = { instagram: 'Instagram DM', tiktok: 'TikTok DM' }
 
   const { data: lead, error } = await admin
     .from('leads')

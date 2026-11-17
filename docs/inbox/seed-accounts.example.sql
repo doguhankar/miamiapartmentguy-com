@@ -7,6 +7,3 @@ insert into public.social_accounts (provider, owner_email, label, handle, status
   ('tiktok',    'seb@REPLACE.me',  'Seb TikTok',     null, 'pending_approval')
 on conflict do nothing;
 
--- Optional Manychat slot per owner (contact + link sync only):
--- insert into public.social_accounts (provider, owner_email, label, status)
--- values ('manychat', 'don@REPLACE.me', 'Don Manychat', 'not_connected');

@@ -7,13 +7,10 @@ const holder = vi.hoisted(() => ({ admin: null as any }))
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => holder.admin }))
 
 import { GET as igGet, POST as igPost } from '@/app/api/inbox/webhooks/instagram/route'
-import { POST as mcPost } from '@/app/api/inbox/webhooks/manychat/route'
 import { GET as ttGet, POST as ttPost } from '@/app/api/inbox/webhooks/tiktok/route'
 import { POST as startPost } from '@/app/api/inbox/connect/[provider]/start/route'
 import { GET as callbackGet } from '@/app/api/inbox/connect/instagram/callback/route'
 import { POST as leadPost } from '@/app/api/inbox/conversations/[id]/lead/route'
-import { POST as secretPost } from '@/app/api/inbox/accounts/[id]/webhook-secret/route'
-import { encryptSecret } from '@/lib/inbox/crypto'
 import { signState } from '@/lib/inbox/connect'
 
 const APP_SECRET = 'meta-app-secret'
@@ -100,34 +97,6 @@ describe('TikTok webhook', () => {
   })
 })
 
-describe('POST /api/inbox/webhooks/manychat', () => {
-  const setup = () => {
-    const m = makeAdmin({
-      social_accounts: [{ id: '11111111-1111-1111-1111-111111111111', provider: 'manychat', owner_email: 'seb@mag.test', status: 'connected' }],
-      social_account_credentials: [{ account_id: '11111111-1111-1111-1111-111111111111', webhook_secret_enc: encryptSecret('right-secret') }],
-    })
-    holder.admin = m.admin
-    return m
-  }
-  const call = (headers: Record<string, string>, body: unknown = { subscriber_id: 7, first_name: 'Zoe' }) =>
-    mcPost(req('/api/inbox/webhooks/manychat', { method: 'POST', body: JSON.stringify(body), headers: { 'content-type': 'application/json', ...headers } }))
-
-  it('rejects wrong or missing secrets identically (no account probing)', async () => {
-    setup()
-    const id = '11111111-1111-1111-1111-111111111111'
-    expect((await call({ 'x-mag-account': id, 'x-mag-secret': 'wrong' })).status).toBe(401)
-    expect((await call({ 'x-mag-account': id })).status).toBe(401)
-    expect((await call({ 'x-mag-account': '22222222-2222-2222-2222-222222222222', 'x-mag-secret': 'right-secret' })).status).toBe(401)
-    expect((await call({ 'x-mag-account': 'not-a-uuid', 'x-mag-secret': 'right-secret' })).status).toBe(401)
-  })
-  it('creates a contact thread (and no messages) with the right secret', async () => {
-    const m = setup()
-    const res = await call({ 'x-mag-account': '11111111-1111-1111-1111-111111111111', 'x-mag-secret': 'right-secret' })
-    expect(res.status).toBe(200)
-    expect(m.calls.rpc.map(c => c.name)).toEqual(['inbox_upsert_contact'])
-  })
-})
-
 describe('connect routes', () => {
   const approvedAdmin = () => {
     const m = makeAdmin({ agent_allowlist: [{ email: 'don@mag.test', approved: true }] }, { users: { good: 'don@mag.test' } })
@@ -155,7 +124,6 @@ describe('connect routes', () => {
     delete process.env.IG_APP_ID
     expect((await startPost(req('/x', { method: 'POST', headers: { authorization: 'Bearer good' } }), { params: Promise.resolve({ provider: 'instagram' }) })).status).toBe(503)
     expect((await startPost(req('/x', { method: 'POST', headers: { authorization: 'Bearer good' } }), { params: Promise.resolve({ provider: 'tiktok' }) })).status).toBe(501)
-    expect((await startPost(req('/x', { method: 'POST', headers: { authorization: 'Bearer good' } }), { params: Promise.resolve({ provider: 'manychat' }) })).status).toBe(400)
   })
   it('callback rejects forged or expired state and stores nothing', async () => {
     const m = approvedAdmin()
@@ -220,22 +188,3 @@ describe('POST /api/inbox/conversations/[id]/lead', () => {
   })
 })
 
-describe('POST /api/inbox/accounts/[id]/webhook-secret', () => {
-  it('only the owner can mint a secret; it is stored encrypted and returned once', async () => {
-    const m = makeAdmin(
-      {
-        agent_allowlist: [{ email: 'seb@mag.test', approved: true }, { email: 'don@mag.test', approved: true }],
-        social_accounts: [{ id: 'mc1', provider: 'manychat', owner_email: 'seb@mag.test', status: 'not_connected' }],
-      },
-      { users: { seb: 'seb@mag.test', don: 'don@mag.test' } },
-    )
-    holder.admin = m.admin
-    const call = (t: string) => secretPost(req('/x', { method: 'POST', headers: { authorization: `Bearer ${t}` } }), { params: Promise.resolve({ id: 'mc1' }) })
-    expect((await call('don')).status).toBe(404)
-    const ok = await call('seb')
-    expect(ok.status).toBe(200)
-    const { secret } = await ok.json()
-    expect(JSON.stringify(m.tables.social_account_credentials)).not.toContain(secret)
-    expect(m.tables.social_accounts[0].status).toBe('connected')
-  })
-})

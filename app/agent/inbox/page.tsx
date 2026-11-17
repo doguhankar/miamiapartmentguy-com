@@ -21,7 +21,7 @@ type Grant = { viewTeam: boolean; reassign: boolean; send: boolean }
 type Mobile = 'filters' | 'list' | 'thread' | 'details'
 
 const C = { bg: '#F7F7F5', surface: '#FFFFFF', border: '#EBEBEB', ink: '#111111', text: '#222222', muted: '#717171', faint: '#B0B0B0', pink: '#E0447B', pinkSoft: '#FDEEF3', green: '#0F6E56', greenSoft: '#E7F7F1', blue: '#2F80ED', amber: '#B45309', amberSoft: '#FEF3E2', red: '#B42318', redSoft: '#FEECEB' }
-const PROVIDER_LABEL: Record<string, string> = { instagram: 'Instagram', tiktok: 'TikTok', manychat: 'Manychat' }
+const PROVIDER_LABEL: Record<string, string> = { instagram: 'Instagram', tiktok: 'TikTok' }
 const VIEWS = Object.keys(VIEW_LABELS) as ViewKey[]
 
 function timeAgo(iso: string | null) {

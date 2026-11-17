@@ -40,12 +40,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     )
   }
 
-  if (provider === 'manychat') {
-    return NextResponse.json(
-      { error: 'Manychat does not use a login flow. Create the account slot, generate its webhook secret, then add an External Request block in your flow (see docs/inbox/SETUP.md).' },
-      { status: 400 },
-    )
-  }
 
   return NextResponse.json({ error: 'Unknown provider' }, { status: 404 })
 }

@@ -48,7 +48,7 @@ export async function ingestEvents(
   admin: SupabaseClient,
   provider: ProviderId,
   events: NormalizedEvent[],
-  /** for providers (Manychat) where the account is known from the request, not the payload */
+  /** for providers where the account is known from the request, not the payload */
   forcedAccountId?: string,
 ): Promise<IngestSummary> {
   const summary: IngestSummary = { ok: 0, duplicate: 0, skipped: 0, failed: 0 }

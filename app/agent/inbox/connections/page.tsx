@@ -51,7 +51,6 @@ function Connections() {
   const [email, setEmail] = useState('')
   const [accounts, setAccounts] = useState<SocialAccount[]>([])
   const [msg, setMsg] = useState<string | null>(null)
-  const [secret, setSecret] = useState<{ id: string; value: string } | null>(null)
   const sbRef = useRef<ReturnType<typeof createClient> | null>(null)
 
   const load = useCallback(async () => {
@@ -100,14 +99,6 @@ function Connections() {
     window.location.href = j.url
   }
 
-  const makeSecret = async (id: string) => {
-    if (demo) return setMsg('Demo mode: nothing is generated.')
-    const res = await fetch(`/api/inbox/accounts/${id}/webhook-secret`, { method: 'POST', headers: { authorization: `Bearer ${await token()}` } })
-    const j = await res.json().catch(() => ({}))
-    if (!res.ok) return setMsg(j.error ?? 'Could not create the secret.')
-    setSecret({ id, value: j.secret })
-    load()
-  }
 
   if (ready !== 'ok') {
     return (
@@ -146,18 +137,10 @@ function Connections() {
                 </div>
                 {a.last_error && <div style={{ background: '#FEECEB', color: '#B42318', borderRadius: 8, padding: '8px 10px', fontSize: 13, margin: '8px 0' }}>{a.last_error} <small>({ago(a.last_error_at)})</small></div>}
                 {a.status === 'pending_approval' && <div style={{ fontSize: 13, color: '#B45309' }}>Waiting for {a.provider === 'tiktok' ? 'TikTok Business Messaging API approval' : 'platform approval'}. Message sync is not active.</div>}
-                {a.provider === 'manychat' && <div style={{ fontSize: 13, color: '#717171' }}>Lead and conversation-link sync only. This is not message sync.</div>}
                 <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {mine && a.provider === 'instagram' && <button style={btn} onClick={() => connect('instagram')}>{a.status === 'connected' ? 'Reconnect' : a.status === 'needs_reconnect' ? 'Reconnect now' : 'Connect Instagram'}</button>}
-                  {mine && a.provider === 'manychat' && <button style={btn} onClick={() => makeSecret(a.id)}>{a.status === 'connected' ? 'Rotate webhook secret' : 'Generate webhook secret'}</button>}
                   {!mine && <span style={{ fontSize: 12, color: '#717171' }}>Only the owner can connect or reconnect this account.</span>}
                 </div>
-                {secret?.id === a.id && (
-                  <div style={{ marginTop: 10, background: '#F7F7F5', borderRadius: 8, padding: 10, fontSize: 12, wordBreak: 'break-all' }}>
-                    Shown once. Copy it into your Manychat External Request header <code>x-mag-secret</code> (and <code>x-mag-account: {a.id}</code>):<br />
-                    <code style={{ fontWeight: 700 }}>{secret.value}</code>
-                  </div>
-                )}
               </div>
             )
           })}

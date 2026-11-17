@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import { decryptSecret, encryptSecret } from '@/lib/inbox/crypto'
 import { metaVerifyChallenge, verifyMetaSignature, verifySharedSecret } from '@/lib/inbox/webhook-verify'
 import { instagramAdapter } from '@/lib/inbox/providers/instagram'
-import { manychatAdapter } from '@/lib/inbox/providers/manychat'
 import { tiktokAdapter } from '@/lib/inbox/providers/tiktok'
 import { canAssign, canManageAccount, canSendClientMessages, canViewConversation, canWriteLeadFor, resolveActor } from '@/lib/inbox/authz'
 import { decideConnection, saveConnection, signState, verifyState } from '@/lib/inbox/connect'
@@ -95,16 +94,7 @@ describe('instagram adapter', () => {
   })
 })
 
-describe('manychat + tiktok adapters', () => {
-  it('manychat produces a contact event and never a message', () => {
-    const [e] = manychatAdapter.normalizeWebhook({ subscriber_id: 42, first_name: 'Zoe', last_name: 'K', username: '@zoek', conversation_url: 'https://manychat.example/c/42' })
-    expect(e).toMatchObject({ kind: 'contact', userName: 'Zoe K', userHandle: '@zoek', conversationUrl: 'https://manychat.example/c/42' })
-  })
-  it('manychat drops non-https links and empty payloads', () => {
-    const [e] = manychatAdapter.normalizeWebhook({ subscriber_id: 1, conversation_url: 'javascript:alert(1)' })
-    expect(e.kind === 'contact' && e.conversationUrl).toBeNull()
-    expect(manychatAdapter.normalizeWebhook({})).toEqual([])
-  })
+describe('tiktok adapter', () => {
   it('tiktok refuses to parse anything until it is properly enabled', () => {
     expect(tiktokAdapter.enabled).toBe(false)
     expect(() => tiktokAdapter.normalizeWebhook({ any: 'thing' })).toThrow(/not enabled/i)

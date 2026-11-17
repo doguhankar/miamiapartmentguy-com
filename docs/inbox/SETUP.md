@@ -5,20 +5,20 @@ Status: built and tested locally on `feat/social-inbox`. NOT pushed, deployed, c
 ## What exists
 - `/agent/inbox`: 4-pane dashboard (account filter, views, list, conversation, details). Mobile = stacked tabs. Add `?demo=1` for a labeled synthetic-data demo (never touches the DB).
 - `/agent/inbox/connections`: state, observed capabilities, last sync, errors, reconnect, capability matrix.
-- Routes under `/api/inbox/*`: Instagram webhook (verified), Manychat webhook (shared secret), TikTok (501, disabled), Instagram OAuth start/callback, lead link/create, Manychat secret.
+- Routes under `/api/inbox/*`: Instagram webhook (verified), TikTok (501, disabled), Instagram OAuth start/callback, lead link/create.
 - Migration `20261117000000_social_inbox_v2.sql` (+ two reconciliation copies of what already runs in prod).
-- Honesty rules: "waiting" views only when inbound AND outbound events were both observed; otherwise "reply status unavailable". No read/delivery receipts, no invented history. Manychat/TikTok-without-approval is shown as lead/link data, never as message sync.
+- Honesty rules: "waiting" views only when inbound AND outbound events were both observed; otherwise "reply status unavailable". No read/delivery receipts, no invented history. TikTok without approval is shown as waiting on approval, never as message sync.
 
 ## Capability matrix (official docs checked 2026-11-16; full detail on the Connections screen)
-| | Instagram (Login API) | TikTok Business Messaging | Manychat |
-|---|---|---|---|
-| Receive messages | Supported (webhook) | Unverified, approval-gated | Not available |
-| See our own sent messages | Supported (echo events; only trusted once observed) | Unverified | Not available |
-| Past history | Unverified, not built | Documented, unverified | Not available |
-| Reply from MAG | Documented, not built | Documented, not built | Documented, not built |
-| Lead data | Supported | n/a | Supported (contact only) |
-| Conversation link | Not available | Not available | Supported if flow supplies one |
-| Both of Don's + Seb's accounts | Yes (professional accounts, each owner authorizes) | Unconfirmed: needs TikTok approval; Business Accounts only; not EEA/CH/UK | Data bridge only |
+| | Instagram (Login API) | TikTok Business Messaging |
+|---|---|---|
+| Receive messages | Supported (webhook) | Unverified, approval-gated |
+| See our own sent messages | Supported (echo events; only trusted once observed) | Unverified |
+| Past history | Unverified, not built | Documented, unverified |
+| Reply from MAG | Documented, not built | Documented, not built |
+| Lead data | Supported | n/a |
+| Conversation link | Not available | Not available |
+| Both of Don's + Seb's accounts | Yes (professional accounts, each owner authorizes) | Unconfirmed: needs TikTok approval; Business Accounts only; not EEA/CH/UK |
 TikTok portal pages render client-side, so scheme/payload details could not be fully confirmed; the webhook is disabled rather than guessed.
 
 ## Credentials / approvals needed (nothing below has been requested or created)
@@ -29,7 +29,6 @@ TikTok portal pages render client-side, so scheme/payload details could not be f
 - Meta app dashboard: webhook callback `https://<domain>/api/inbox/webhooks/instagram`, verify token, fields `messages`, `messaging_seen`; OAuth redirect `https://<domain>/api/inbox/connect/instagram/callback`.
 **Shared**: `INBOX_CRED_KEY` (32 random bytes, base64) and `INBOX_STATE_SECRET` (random string), set in Vercel env only.
 **TikTok**: TikTok developer app + approval for the Business Messaging API; both accounts must be eligible Business Accounts. Until approved, slots show "Waiting on platform approval".
-**Manychat**: paid plan (External Request), one account/API key per person, a flow POSTing to `/api/inbox/webhooks/manychat` with headers `x-mag-account` and `x-mag-secret` (generated on the Connections screen).
 **Sebastian**: no access beyond an ordinary agent until Don runs `grant-team-lead.example.sql`. Reassign and send are separate opt-ins.
 
 ## Tests
