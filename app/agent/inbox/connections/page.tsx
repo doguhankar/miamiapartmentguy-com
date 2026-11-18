@@ -53,6 +53,7 @@ function Connections() {
   const [accounts, setAccounts] = useState<SocialAccount[]>([])
   const [msg, setMsg] = useState<string | null>(null)
   const sbRef = useRef<ReturnType<typeof createClient> | null>(null)
+  const [syncing, setSyncing] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     const { data } = await sbRef.current!.from('social_accounts').select('id,provider,owner_email,label,external_account_id,handle,status,capabilities,granted_scopes,last_sync_at,last_success_at,last_error,last_error_at').order('provider')
@@ -101,6 +102,40 @@ function Connections() {
   }
 
 
+  // Imports past Instagram conversations in short batches until Instagram has nothing more to give.
+  const syncHistory = async (accountId: string) => {
+    if (demo) return setMsg('Demo mode: nothing is imported.')
+    setSyncing(accountId)
+    let cursor: string | null = null
+    let convos = 0
+    let imported = 0
+    let seen = 0
+    try {
+      for (let i = 0; i < 200; i++) {
+        setMsg(`Importing history… ${convos} conversations, ${imported} messages so far.`)
+        const res: Response = await fetch(`/api/inbox/accounts/${accountId}/sync`, {
+          method: 'POST',
+          headers: { authorization: `Bearer ${await token()}`, 'content-type': 'application/json' },
+          body: JSON.stringify({ cursor }),
+        })
+        const j = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          setMsg(`${j.error ?? 'Import failed.'} (${convos} conversations, ${imported} messages imported before it stopped.)`)
+          return
+        }
+        convos += j.conversations ?? 0
+        imported += j.imported ?? 0
+        seen += j.messages ?? 0
+        cursor = j.nextCursor ?? null
+        if (!cursor) break
+      }
+      setMsg(`History import finished: ${convos} conversations, ${seen} messages returned by Instagram, ${imported} new.`)
+      load()
+    } finally {
+      setSyncing(null)
+    }
+  }
+
   if (ready !== 'ok') {
     return (
       <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#F7F7F5', fontFamily: '"Inter", sans-serif', color: '#717171' }}>
@@ -140,6 +175,7 @@ function Connections() {
                 {a.status === 'pending_approval' && <div style={{ fontSize: 13, color: '#B45309' }}>Waiting for {a.provider === 'tiktok' ? 'TikTok Business Messaging API approval' : 'platform approval'}. Message sync is not active.</div>}
                 <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {mine && a.provider === 'instagram' && <button style={btn} onClick={() => connect('instagram')}>{a.status === 'connected' ? 'Reconnect' : a.status === 'needs_reconnect' ? 'Reconnect now' : 'Connect Instagram'}</button>}
+                  {mine && a.provider === 'instagram' && a.status === 'connected' && <button style={btn} disabled={syncing === a.id} onClick={() => syncHistory(a.id)}>{syncing === a.id ? 'Importing…' : 'Import past messages'}</button>}
                   {!mine && <span style={{ fontSize: 12, color: '#717171' }}>Only the owner can connect or reconnect this account.</span>}
                 </div>
               </div>

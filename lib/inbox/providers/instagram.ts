@@ -131,6 +131,103 @@ export async function sendTextMessage(accessToken: string, igAccountId: string, 
   return String(id)
 }
 
+export class IgHistoryError extends Error {
+  constructor(message: string, public status: number, public authFailure: boolean) {
+    super(message)
+    this.name = 'IgHistoryError'
+  }
+}
+
+export type HistoryPage = { events: NormalizedEvent[]; nextCursor: string | null; conversations: number }
+
+const isoTime = (t: unknown): string => {
+  // Graph returns e.g. 2026-11-18T15:20:00+0000; normalise the offset so every JS runtime parses it
+  const d = new Date(typeof t === 'string' ? t.replace(/([+-]\d{2})(\d{2})$/, '$1:$2') : NaN)
+  return Number.isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString()
+}
+
+async function graphGet(accessToken: string, url: URL, f: FetchLike): Promise<any> {
+  const res = await f(url.toString(), { headers: { authorization: `Bearer ${accessToken}` } })
+  const j = (await res.json().catch(() => ({}))) as any
+  if (!res.ok) {
+    const code = j?.error?.code
+    const auth = res.status === 401 || code === 190 || code === 102
+    const detail = [code, j?.error?.error_subcode, j?.error?.type, j?.error?.message].filter((x) => x != null && x !== '').join(' / ')
+    throw new IgHistoryError(auth ? 'Instagram rejected this account\'s authorization. The account owner needs to reconnect.' : `Instagram refused the history request (${res.status}): ${detail || 'no reason given'}`, res.status, auth)
+  }
+  return j
+}
+
+/**
+ * Backfill one page of past conversations (Conversations API). Read-only: nothing is sent.
+ * Each call covers `convoLimit` conversations and returns a cursor so the caller can loop in short requests.
+ * Message ids are used as event ids exactly like the webhook (`ig:<id>`), so a message seen both ways dedupes.
+ * Meta limits how much history it returns; whatever it returns is what we store, nothing is invented.
+ */
+export async function fetchHistoryPage(
+  accessToken: string,
+  igAccountId: string,
+  cursor: string | null,
+  f: FetchLike = fetch,
+  opts: { convoLimit?: number; messagesPerConvo?: number } = {},
+): Promise<HistoryPage> {
+  const convoLimit = opts.convoLimit ?? 8
+  const maxMessages = opts.messagesPerConvo ?? 200
+  const list = new URL(`${GRAPH}/${encodeURIComponent(igAccountId)}/conversations`)
+  list.searchParams.set('platform', 'instagram')
+  list.searchParams.set('fields', 'id,updated_time')
+  list.searchParams.set('limit', String(convoLimit))
+  if (cursor) list.searchParams.set('after', cursor)
+  const page = await graphGet(accessToken, list, f)
+  const convos: any[] = Array.isArray(page?.data) ? page.data : []
+
+  const events: NormalizedEvent[] = []
+  for (const c of convos) {
+    if (!c?.id) continue
+    let after: string | null = null
+    let fetched = 0
+    do {
+      const mu = new URL(`${GRAPH}/${encodeURIComponent(String(c.id))}/messages`)
+      mu.searchParams.set('fields', 'id,created_time,from,to,message,attachments')
+      mu.searchParams.set('limit', '50')
+      if (after) mu.searchParams.set('after', after)
+      const mp = await graphGet(accessToken, mu, f)
+      const msgs: any[] = Array.isArray(mp?.data) ? mp.data : []
+      for (const m of msgs) {
+        fetched++
+        if (!m?.id) continue
+        const fromId = m.from?.id != null ? String(m.from.id) : null
+        const toUser = Array.isArray(m.to?.data) ? m.to.data[0] : null
+        const outbound = fromId === igAccountId
+        const contact = outbound ? toUser : m.from
+        if (contact?.id == null) continue
+        const attachments = Array.isArray(m.attachments?.data) ? m.attachments.data.length : 0
+        const text = typeof m.message === 'string' ? m.message : ''
+        const bodyText = text || (attachments ? attachmentsText(attachments) : '')
+        if (!bodyText) continue
+        events.push({
+          kind: 'message',
+          eventId: `ig:${m.id}`,
+          externalAccountId: igAccountId,
+          threadId: String(contact.id),
+          externalUserId: String(contact.id),
+          userHandle: typeof contact.username === 'string' ? contact.username : null,
+          userName: null,
+          direction: outbound ? 'outbound' : 'inbound',
+          body: bodyText,
+          messageId: String(m.id),
+          sentAt: isoTime(m.created_time),
+          conversationUrl: null,
+        })
+      }
+      after = mp?.paging?.next ? (mp?.paging?.cursors?.after ?? null) : null
+    } while (after && fetched < maxMessages)
+  }
+
+  const next = page?.paging?.next ? (page?.paging?.cursors?.after ?? null) : null
+  return { events, nextCursor: next, conversations: convos.length }
+}
+
 const attachmentsText = (n: number) => `[${n} attachment${n > 1 ? 's' : ''}]`
 
 export const instagramAdapter: ProviderAdapter = {
