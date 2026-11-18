@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
 
   const raw = await request.text()
   if (!verifyMetaSignature(raw, request.headers.get('x-hub-signature-256'), process.env.META_APP_SECRET)) {
+    console.warn('[inbox/webhook] instagram: signature check FAILED (bytes=%d, hasHeader=%s)', raw.length, !!request.headers.get('x-hub-signature-256'))
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
@@ -31,6 +32,8 @@ export async function POST(request: NextRequest) {
   }
 
   const events = instagramAdapter.normalizeWebhook(body)
+  const b = body as { object?: unknown; entry?: unknown[] }
+  console.log('[inbox/webhook] instagram: verified delivery object=%s entries=%d normalized=%d', String(b?.object), Array.isArray(b?.entry) ? b.entry.length : 0, events.length)
   if (!events.length) return NextResponse.json({ ok: true, ignored: true })
 
   const summary = await ingestEvents(createAdminClient(), 'instagram', events)
