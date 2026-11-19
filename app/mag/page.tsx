@@ -5,19 +5,50 @@ import { createClient } from '@/lib/supabase/client'
 import { MagShell } from '@/components/mag/mag-shell'
 import Link from 'next/link'
 
-interface DbLead {
+// Scanner contact from mag_contacts (primary source)
+interface ScannerContact {
+  phone: string
+  display_name: string | null
+  is_casa: boolean | null
+  tier: string | null
+  last_seen: string | null
+  days_since_last: number | null
+  unanswered_inbound: boolean | null
+  business_signals: number | null
+  total_messages: number | null
+  synced_at: string | null
+}
+
+// CRM enrichment from leads (secondary, optional)
+interface CrmLead {
   id: number
-  name: string | null
   phone: string | null
+  name: string | null
   stage: string | null
-  imessage_stage: string | null
-  imessage_last_seen: string | null
-  imessage_analysis: Record<string, unknown> | null
   budget: string | null
   beds: string | null
   area: string | null
   is_casa: boolean | null
-  created_at: string | null
+  imessage_analysis: Record<string, unknown> | null
+}
+
+// Merged view of one contact
+interface Contact {
+  phone: string
+  name: string
+  tier: 'act_today' | 'follow_up' | 'monitor'
+  last_seen: string | null
+  unanswered_inbound: boolean
+  business_signals: number
+  synced_at: string | null
+  // CRM enrichment — null if no CRM record
+  crm_id: number | null
+  crm_stage: string | null
+  crm_budget: string | null
+  crm_beds: string | null
+  crm_area: string | null
+  crm_analysis: Record<string, unknown> | null
+  has_crm: boolean
 }
 
 function timeAgo(iso: string | null): string {
@@ -32,63 +63,91 @@ function timeAgo(iso: string | null): string {
   return 'just now'
 }
 
-function isScannerConnected(leads: DbLead[]) {
-  return leads.some(l => l.imessage_last_seen !== null)
+function mergeContacts(
+  scannerContacts: ScannerContact[],
+  crmLeads: CrmLead[],
+): Contact[] {
+  const crmByPhone = new Map<string, CrmLead>()
+  for (const lead of crmLeads) {
+    if (lead.phone) crmByPhone.set(lead.phone, lead)
+  }
+
+  return scannerContacts.map(sc => {
+    const crm = crmByPhone.get(sc.phone) ?? null
+    const tier = (sc.tier ?? 'monitor') as Contact['tier']
+    return {
+      phone: sc.phone,
+      name: sc.display_name || crm?.name || sc.phone,
+      tier: ['act_today', 'follow_up', 'monitor'].includes(tier) ? tier : 'monitor',
+      last_seen: sc.last_seen,
+      unanswered_inbound: sc.unanswered_inbound ?? false,
+      business_signals: sc.business_signals ?? 0,
+      synced_at: sc.synced_at,
+      crm_id: crm?.id ?? null,
+      crm_stage: crm?.stage ?? null,
+      crm_budget: crm?.budget ?? null,
+      crm_beds: crm?.beds ?? null,
+      crm_area: crm?.area ?? null,
+      crm_analysis: crm?.imessage_analysis ?? null,
+      has_crm: crm !== null,
+    }
+  })
 }
 
-function getTier(lead: DbLead): 'act_today' | 'follow_up' | 'monitor' | 'crm' {
-  const stage = lead.imessage_stage
-  if (stage === 'act_today') return 'act_today'
-  if (stage === 'follow_up') return 'follow_up'
-  if (stage === 'monitor') return 'monitor'
-  return 'crm'
-}
+function ContactRow({ contact }: { contact: Contact }) {
+  const ai = contact.crm_analysis as any
+  const tierColor = contact.tier === 'act_today' ? '#C9A87C' : '#525252'
 
-function ContactRow({ lead }: { lead: DbLead }) {
-  const ai = lead.imessage_analysis as any
-  const tier = getTier(lead)
-  const scannerTime = lead.imessage_last_seen
-  const displayTime = scannerTime
-    ? timeAgo(scannerTime)
-    : ''
-  const hasUnanswered = ai?.unanswered_inbound === true
-  const tierDot = tier === 'act_today' ? '#C9A87C' : tier === 'follow_up' ? '#525252' : '#2a2a2a'
-
-  return (
+  const inner = (
     <div className="bg-[#111111] rounded-2xl border border-[#1f1f1f] overflow-hidden">
-      <Link href={`/mag/clients/${lead.id}`} className="block px-4 pt-4 pb-3 active:bg-[#161616] transition-colors">
+      <div className="px-4 pt-4 pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: tierDot }} />
+            <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: tierColor }} />
             <span className="text-sm font-semibold text-[#f5f5f5] truncate">
-              {lead.name || lead.phone || 'Unknown'}
+              {contact.name}
             </span>
-            {lead.is_casa && (
+            {!contact.has_crm && (
+              <span className="shrink-0 text-[9px] font-semibold tracking-wider text-[#525252] bg-[#1a1a1a] rounded px-1.5 py-0.5 uppercase border border-[#262626]">
+                scanner
+              </span>
+            )}
+            {contact.has_crm && contact.crm_stage === 'Closed Won' && (
               <span className="shrink-0 text-[9px] font-semibold tracking-wider text-[#C9A87C] bg-[#C9A87C]/10 rounded px-1.5 py-0.5 uppercase">
                 client
               </span>
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {hasUnanswered && (
+            {contact.unanswered_inbound && (
               <span className="text-[9px] font-bold text-[#C9A87C] uppercase tracking-wide">reply</span>
             )}
-            {displayTime && (
-              <span className="text-[11px] text-[#404040]">{displayTime}</span>
+            {contact.last_seen && (
+              <span className="text-[11px] text-[#404040]">{timeAgo(contact.last_seen)}</span>
             )}
           </div>
         </div>
 
-        {/* Criteria row */}
-        {(lead.budget || lead.beds || lead.area) && (
+        {/* CRM stage + criteria row */}
+        {contact.has_crm && (contact.crm_budget || contact.crm_beds || contact.crm_area || contact.crm_stage) && (
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2 ml-4">
-            {lead.beds && <span className="text-xs text-[#525252]">{lead.beds} bed</span>}
-            {lead.budget && <span className="text-xs text-[#525252]">{lead.budget}</span>}
-            {lead.area && <span className="text-xs text-[#525252]">{lead.area}</span>}
+            {contact.crm_stage && contact.crm_stage !== 'New Lead' && (
+              <span className="text-xs text-[#525252]">{contact.crm_stage}</span>
+            )}
+            {contact.crm_beds && <span className="text-xs text-[#525252]">{contact.crm_beds} bed</span>}
+            {contact.crm_budget && <span className="text-xs text-[#525252]">{contact.crm_budget}</span>}
+            {contact.crm_area && <span className="text-xs text-[#525252]">{contact.crm_area}</span>}
           </div>
         )}
 
-        {/* AI summary — clearly marked unvalidated */}
+        {/* Scanner-only: show phone since there's no CRM profile yet */}
+        {!contact.has_crm && (
+          <div className="mt-1.5 ml-4">
+            <span className="text-xs text-[#404040]">{contact.phone}</span>
+          </div>
+        )}
+
+        {/* AI summary — only when present, clearly unvalidated */}
         {ai?.summary && (
           <div className="mt-2.5 ml-4 pl-3 border-l border-[#262626]">
             <p className="text-[11px] text-[#737373] leading-snug">{ai.summary}</p>
@@ -97,61 +156,79 @@ function ContactRow({ lead }: { lead: DbLead }) {
             )}
           </div>
         )}
-      </Link>
+      </div>
 
-      {lead.phone && (
-        <div className="flex gap-2 px-4 pb-3">
-          <a
-            href={`sms:${lead.phone}`}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#1c8ef9]/10 text-[#1c8ef9] text-xs font-medium border border-[#1c8ef9]/20 active:opacity-70"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            iMessage
-          </a>
-          <a
-            href={`tel:${lead.phone}`}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#34c759]/10 text-[#34c759] text-xs font-medium border border-[#34c759]/20 active:opacity-70"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.62 4.4 2 2 0 0 1 3.59 2.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.09 6.09l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-            </svg>
-            Call
-          </a>
-        </div>
-      )}
+      <div className="flex gap-2 px-4 pb-3">
+        <a
+          href={`sms:${contact.phone}`}
+          onClick={e => e.stopPropagation()}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#1c8ef9]/10 text-[#1c8ef9] text-xs font-medium border border-[#1c8ef9]/20 active:opacity-70"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          iMessage
+        </a>
+        <a
+          href={`tel:${contact.phone}`}
+          onClick={e => e.stopPropagation()}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#34c759]/10 text-[#34c759] text-xs font-medium border border-[#34c759]/20 active:opacity-70"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.62 4.4 2 2 0 0 1 3.59 2.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.09 6.09l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+          </svg>
+          Call
+        </a>
+      </div>
     </div>
+  )
+
+  // Scanner-only contacts: no profile page yet
+  if (!contact.crm_id) return <div key={contact.phone}>{inner}</div>
+
+  // CRM-matched contacts: link to profile
+  return (
+    <Link key={contact.phone} href={`/mag/clients/${contact.crm_id}`} className="block active:opacity-80">
+      {inner}
+    </Link>
   )
 }
 
 function TodayContent() {
-  const [leads, setLeads] = useState<DbLead[]>([])
+  const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
+  const [syncedAt, setSyncedAt] = useState<string | null>(null)
 
   useEffect(() => {
     const sb = createClient()
-    // All leads — no is_casa filter. Order by scanner recency first, then CRM created date.
-    sb.from('leads')
-      .select('id,name,phone,stage,imessage_stage,imessage_last_seen,imessage_analysis,budget,beds,area,is_casa,created_at')
-      .order('imessage_last_seen', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false })
-      .limit(60)
-      .then(({ data }) => {
-        setLeads(data ?? [])
-        setLoading(false)
-      })
+
+    // Primary: scanner contacts sorted by real conversation recency
+    const scannerQ = sb
+      .from('mag_contacts')
+      .select('phone,display_name,is_casa,tier,last_seen,days_since_last,unanswered_inbound,business_signals,total_messages,synced_at')
+      .order('last_seen', { ascending: false, nullsFirst: false })
+      .limit(100)
+
+    // Secondary: CRM leads for enrichment only (no ordering influence)
+    const crmQ = sb
+      .from('leads')
+      .select('id,phone,name,stage,budget,beds,area,is_casa,imessage_analysis')
+      .not('phone', 'is', null)
+
+    Promise.all([scannerQ, crmQ]).then(([{ data: scanner }, { data: crm }]) => {
+      const merged = mergeContacts(scanner ?? [], crm ?? [])
+      setContacts(merged)
+      // Record sync time from the most recently synced contact
+      const latest = (scanner ?? []).find(s => s.synced_at)
+      setSyncedAt(latest?.synced_at ?? null)
+      setLoading(false)
+    })
   }, [])
 
-  const scannerConnected = isScannerConnected(leads)
-
-  // With scanner data: group by tier. Without: group by stage priority.
-  const actToday = leads.filter(l => getTier(l) === 'act_today')
-  const followUp = leads.filter(l => getTier(l) === 'follow_up')
-  // CRM-only leads (no scanner data): sort by stage priority
-  const crmOnly = leads.filter(l => getTier(l) === 'crm' || getTier(l) === 'monitor')
-  const crmActive = crmOnly.filter(l => ['Active', 'Hot Lead', 'Qualified'].includes(l.stage ?? ''))
-  const crmRest = crmOnly.filter(l => !['Active', 'Hot Lead', 'Qualified'].includes(l.stage ?? ''))
+  const scannerConnected = contacts.length > 0
+  const actToday = contacts.filter(c => c.tier === 'act_today')
+  const followUp = contacts.filter(c => c.tier === 'follow_up')
+  const scannerOnly = contacts.filter(c => !c.has_crm)
 
   const today = new Date()
   const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
@@ -185,18 +262,23 @@ function TodayContent() {
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="text-center">
-            <div className="text-xl font-bold text-[#C9A87C]">{actToday.length || crmActive.length}</div>
-            <div className="text-[10px] text-[#525252] mt-0.5">{scannerConnected ? 'act today' : 'active'}</div>
+            <div className="text-xl font-bold text-[#C9A87C]">{actToday.length}</div>
+            <div className="text-[10px] text-[#525252] mt-0.5">act today</div>
           </div>
           <div className="text-center">
-            <div className="text-xl font-bold text-[#f5f5f5]">{followUp.length || leads.filter(l => l.stage === 'Follow Up').length}</div>
+            <div className="text-xl font-bold text-[#f5f5f5]">{followUp.length}</div>
             <div className="text-[10px] text-[#525252] mt-0.5">follow up</div>
           </div>
           <div className="text-center">
-            <div className="text-xl font-bold text-[#f5f5f5]">{leads.length}</div>
-            <div className="text-[10px] text-[#525252] mt-0.5">total</div>
+            <div className="text-xl font-bold text-[#f5f5f5]">{contacts.length}</div>
+            <div className="text-[10px] text-[#525252] mt-0.5">scanner</div>
           </div>
         </div>
+        {scannerConnected && syncedAt && (
+          <p className="text-[10px] text-[#404040] border-t border-[#1f1f1f] pt-2">
+            Synced {timeAgo(syncedAt)} · {scannerOnly.length} contacts without CRM records
+          </p>
+        )}
         {!scannerConnected && (
           <p className="text-[11px] text-[#404040] leading-snug border-t border-[#1f1f1f] pt-3">
             Run <code className="text-[#C9A87C] bg-[#C9A87C]/10 px-1 rounded">python sync_contacts.py</code> on your Mac to connect real conversation data.
@@ -204,7 +286,7 @@ function TodayContent() {
         )}
       </div>
 
-      {/* Act Today — scanner tier */}
+      {/* Act Today */}
       {actToday.length > 0 && (
         <section className="space-y-2">
           <div className="flex items-center gap-2">
@@ -212,11 +294,11 @@ function TodayContent() {
             <span className="text-[10px] text-[#262626]">·</span>
             <span className="text-[10px] text-[#404040]">{actToday.length}</span>
           </div>
-          {actToday.map(lead => <ContactRow key={lead.id} lead={lead} />)}
+          {actToday.map(c => <ContactRow key={c.phone} contact={c} />)}
         </section>
       )}
 
-      {/* Follow Up — scanner tier */}
+      {/* Follow Up */}
       {followUp.length > 0 && (
         <section className="space-y-2">
           <div className="flex items-center gap-2">
@@ -224,43 +306,20 @@ function TodayContent() {
             <span className="text-[10px] text-[#262626]">·</span>
             <span className="text-[10px] text-[#404040]">{followUp.length}</span>
           </div>
-          {followUp.slice(0, 15).map(lead => <ContactRow key={lead.id} lead={lead} />)}
+          {followUp.slice(0, 15).map(c => <ContactRow key={c.phone} contact={c} />)}
           {followUp.length > 15 && (
             <p className="text-xs text-[#404040] text-center py-2">+{followUp.length - 15} more in People</p>
           )}
         </section>
       )}
 
-      {/* CRM-only: no scanner data yet */}
-      {!scannerConnected && crmActive.length > 0 && (
-        <section className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-[#525252] uppercase tracking-widest">Active Leads</span>
-            <span className="text-[10px] text-[#262626]">·</span>
-            <span className="text-[10px] text-[#404040]">{crmActive.length}</span>
-          </div>
-          {crmActive.map(lead => <ContactRow key={lead.id} lead={lead} />)}
-        </section>
-      )}
-
-      {!scannerConnected && crmRest.length > 0 && (
-        <section className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-[#404040] uppercase tracking-widest">Other Leads</span>
-            <span className="text-[10px] text-[#262626]">·</span>
-            <span className="text-[10px] text-[#404040]">{crmRest.length}</span>
-          </div>
-          {crmRest.slice(0, 10).map(lead => <ContactRow key={lead.id} lead={lead} />)}
-          {crmRest.length > 10 && (
-            <p className="text-xs text-[#404040] text-center py-2">+{crmRest.length - 10} more in People</p>
-          )}
-        </section>
-      )}
-
-      {leads.length === 0 && (
+      {contacts.length === 0 && (
         <div className="text-center py-16 space-y-2">
-          <p className="text-[#525252] text-sm">No leads yet.</p>
-          <p className="text-[#404040] text-xs">Import contacts or run the scanner.</p>
+          <p className="text-[#525252] text-sm">No scanner data yet.</p>
+          <p className="text-[#404040] text-xs leading-relaxed">
+            Run <code className="text-[#C9A87C]">python sync_contacts.py</code> on your Mac,<br />
+            then reload.
+          </p>
         </div>
       )}
     </div>
