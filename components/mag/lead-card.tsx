@@ -54,8 +54,8 @@ export function LeadCard({
   const hasAI = !!aiSummary
 
   return (
-    <Link href={`/mag/clients/${id}`} className="block">
-      <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-3 active:bg-gray-50 transition-colors">
+    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      <Link href={`/mag/clients/${id}`} className="block p-4 space-y-3 active:bg-gray-50 transition-colors">
         {/* Row 1: name + stage + time */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -99,31 +99,31 @@ export function LeadCard({
             )}
           </div>
         )}
+      </Link>
 
-        {/* Row 4: quick actions */}
-        {phone && (
-          <div className="flex gap-2 pt-1" onClick={(e) => e.preventDefault()}>
-            <a
-              href={`sms:${phone}`}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#1c8ef9] text-white text-xs font-medium active:opacity-80"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-              iMessage
-            </a>
-            <a
-              href={`tel:${phone}`}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#34c759] text-white text-xs font-medium active:opacity-80"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.62 4.4 2 2 0 0 1 3.59 2.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.09 6.09l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-              </svg>
-              Call
-            </a>
-          </div>
-        )}
-      </div>
-    </Link>
+      {/* Quick actions — outside the Link to avoid nested <a> tags */}
+      {phone && (
+        <div className="flex gap-2 px-4 pb-4">
+          <a
+            href={`sms:${phone}`}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#1c8ef9] text-white text-xs font-medium active:opacity-80"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            iMessage
+          </a>
+          <a
+            href={`tel:${phone}`}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#34c759] text-white text-xs font-medium active:opacity-80"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.62 4.4 2 2 0 0 1 3.59 2.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.09 6.09l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            Call
+          </a>
+        </div>
+      )}
+    </div>
   )
 }
