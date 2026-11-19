@@ -10,9 +10,9 @@ import { AgentListBar } from '@/components/agent-list-bar'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
-const _archivo = Archivo({ subsets: ["latin"], weight: ['400', '500', '600', '700'], variable: '--font-archivo' });
-const _spaceGrotesk = Space_Grotesk({ subsets: ["latin"], weight: ['400', '500', '600', '700'], variable: '--font-space-grotesk' });
-const _jetBrainsMono = JetBrains_Mono({ subsets: ["latin"], weight: ['500', '600'], variable: '--font-jetbrains-mono' });
+const _archivo = Archivo({ subsets: ["latin"], variable: '--font-archivo' });
+const _spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: '--font-space-grotesk' });
+const _jetBrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: '--font-jetbrains-mono' });
 
 export const viewport: Viewport = {
 }
