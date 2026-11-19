@@ -5,6 +5,12 @@ import { createClient } from '@/lib/supabase/client'
 import { MagShell } from '@/components/mag/mag-shell'
 import Link from 'next/link'
 
+// CRM stages treated as inactive — excluded from Today
+const INACTIVE_STAGES = new Set([
+  'new lead', 'new', '', 'closed won', 'archive', 'leased',
+  'lost', 'dead', 'not qualified', 'applied / signed lease',
+])
+
 // Scanner contact from mag_contacts (primary source)
 interface ScannerContact {
   phone: string
@@ -19,12 +25,14 @@ interface ScannerContact {
   synced_at: string | null
 }
 
-// CRM enrichment from leads (secondary, optional)
+// CRM enrichment from leads (secondary)
 interface CrmLead {
   id: number
   phone: string | null
   name: string | null
   stage: string | null
+  imessage_stage: string | null
+  imessage_last_seen: string | null
   budget: string | null
   beds: string | null
   area: string | null
@@ -41,7 +49,6 @@ interface Contact {
   unanswered_inbound: boolean
   business_signals: number
   synced_at: string | null
-  // CRM enrichment — null if no CRM record
   crm_id: number | null
   crm_stage: string | null
   crm_budget: string | null
@@ -49,6 +56,7 @@ interface Contact {
   crm_area: string | null
   crm_analysis: Record<string, unknown> | null
   has_crm: boolean
+  has_scanner: boolean
 }
 
 function timeAgo(iso: string | null): string {
@@ -72,13 +80,21 @@ function mergeContacts(
     if (lead.phone) crmByPhone.set(lead.phone, lead)
   }
 
-  return scannerContacts.map(sc => {
+  const scannerPhones = new Set<string>()
+  const result: Contact[] = []
+
+  // 1. Scanner contacts (with optional CRM enrichment) — sorted by real iMessage timestamp
+  for (const sc of scannerContacts) {
+    scannerPhones.add(sc.phone)
     const crm = crmByPhone.get(sc.phone) ?? null
-    const tier = (sc.tier ?? 'monitor') as Contact['tier']
-    return {
+    const rawTier = sc.tier ?? 'monitor'
+    const tier = (['act_today', 'follow_up', 'monitor'].includes(rawTier)
+      ? rawTier
+      : 'monitor') as Contact['tier']
+    result.push({
       phone: sc.phone,
       name: sc.display_name || crm?.name || sc.phone,
-      tier: ['act_today', 'follow_up', 'monitor'].includes(tier) ? tier : 'monitor',
+      tier,
       last_seen: sc.last_seen,
       unanswered_inbound: sc.unanswered_inbound ?? false,
       business_signals: sc.business_signals ?? 0,
@@ -90,8 +106,41 @@ function mergeContacts(
       crm_area: crm?.area ?? null,
       crm_analysis: crm?.imessage_analysis ?? null,
       has_crm: crm !== null,
-    }
-  })
+      has_scanner: true,
+    })
+  }
+
+  // 2. Active CRM leads not yet in scanner — visible but unlabeled by iMessage
+  for (const lead of crmLeads) {
+    if (!lead.phone || scannerPhones.has(lead.phone)) continue
+    const stage = (lead.stage ?? '').toLowerCase()
+    if (INACTIVE_STAGES.has(stage)) continue  // hide New Lead / Closed / Archive from Today
+
+    const rawTier = lead.imessage_stage
+    const tier = (['act_today', 'follow_up'].includes(rawTier ?? '')
+      ? rawTier
+      : 'follow_up') as Contact['tier']
+
+    result.push({
+      phone: lead.phone,
+      name: lead.name || lead.phone,
+      tier,
+      last_seen: lead.imessage_last_seen ?? null,
+      unanswered_inbound: false,
+      business_signals: 0,
+      synced_at: null,
+      crm_id: lead.id,
+      crm_stage: lead.stage ?? null,
+      crm_budget: lead.budget ?? null,
+      crm_beds: lead.beds ?? null,
+      crm_area: lead.area ?? null,
+      crm_analysis: lead.imessage_analysis ?? null,
+      has_crm: true,
+      has_scanner: false,
+    })
+  }
+
+  return result
 }
 
 function ContactRow({ contact }: { contact: Contact }) {
@@ -107,9 +156,16 @@ function ContactRow({ contact }: { contact: Contact }) {
             <span className="text-sm font-semibold text-[#f5f5f5] truncate">
               {contact.name}
             </span>
-            {!contact.has_crm && (
+            {/* Scanner-only: no CRM record yet */}
+            {contact.has_scanner && !contact.has_crm && (
               <span className="shrink-0 text-[9px] font-semibold tracking-wider text-[#525252] bg-[#1a1a1a] rounded px-1.5 py-0.5 uppercase border border-[#262626]">
                 scanner
+              </span>
+            )}
+            {/* CRM-only: not yet in iMessage scanner */}
+            {contact.has_crm && !contact.has_scanner && (
+              <span className="shrink-0 text-[9px] font-semibold tracking-wider text-[#404040] bg-[#1a1a1a] rounded px-1.5 py-0.5 uppercase border border-[#262626]">
+                crm
               </span>
             )}
             {contact.has_crm && contact.crm_stage === 'Closed Won' && (
@@ -128,7 +184,7 @@ function ContactRow({ contact }: { contact: Contact }) {
           </div>
         </div>
 
-        {/* CRM stage + criteria row */}
+        {/* CRM stage + criteria */}
         {contact.has_crm && (contact.crm_budget || contact.crm_beds || contact.crm_area || contact.crm_stage) && (
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2 ml-4">
             {contact.crm_stage && contact.crm_stage !== 'New Lead' && (
@@ -141,13 +197,13 @@ function ContactRow({ contact }: { contact: Contact }) {
         )}
 
         {/* Scanner-only: show phone since there's no CRM profile yet */}
-        {!contact.has_crm && (
+        {contact.has_scanner && !contact.has_crm && (
           <div className="mt-1.5 ml-4">
             <span className="text-xs text-[#404040]">{contact.phone}</span>
           </div>
         )}
 
-        {/* AI summary — only when present, clearly unvalidated */}
+        {/* AI summary — only when present */}
         {ai?.summary && (
           <div className="mt-2.5 ml-4 pl-3 border-l border-[#262626]">
             <p className="text-[11px] text-[#737373] leading-snug">{ai.summary}</p>
@@ -183,10 +239,8 @@ function ContactRow({ contact }: { contact: Contact }) {
     </div>
   )
 
-  // Scanner-only contacts: no profile page yet
   if (!contact.crm_id) return <div key={contact.phone}>{inner}</div>
 
-  // CRM-matched contacts: link to profile
   return (
     <Link key={contact.phone} href={`/mag/clients/${contact.crm_id}`} className="block active:opacity-80">
       {inner}
@@ -209,26 +263,26 @@ function TodayContent() {
       .order('last_seen', { ascending: false, nullsFirst: false })
       .limit(100)
 
-    // Secondary: CRM leads for enrichment only (no ordering influence)
+    // Secondary: CRM leads for enrichment and CRM-only pipeline visibility
     const crmQ = sb
       .from('leads')
-      .select('id,phone,name,stage,budget,beds,area,is_casa,imessage_analysis')
+      .select('id,phone,name,stage,imessage_stage,imessage_last_seen,budget,beds,area,is_casa,imessage_analysis')
       .not('phone', 'is', null)
 
     Promise.all([scannerQ, crmQ]).then(([{ data: scanner }, { data: crm }]) => {
       const merged = mergeContacts(scanner ?? [], crm ?? [])
       setContacts(merged)
-      // Record sync time from the most recently synced contact
       const latest = (scanner ?? []).find(s => s.synced_at)
       setSyncedAt(latest?.synced_at ?? null)
       setLoading(false)
     })
   }, [])
 
-  const scannerConnected = contacts.length > 0
+  const scannerConnected = contacts.some(c => c.has_scanner)
   const actToday = contacts.filter(c => c.tier === 'act_today')
   const followUp = contacts.filter(c => c.tier === 'follow_up')
-  const scannerOnly = contacts.filter(c => !c.has_crm)
+  const scannerOnly = contacts.filter(c => c.has_scanner && !c.has_crm)
+  const crmOnly = contacts.filter(c => c.has_crm && !c.has_scanner)
 
   const today = new Date()
   const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
@@ -271,17 +325,17 @@ function TodayContent() {
           </div>
           <div className="text-center">
             <div className="text-xl font-bold text-[#f5f5f5]">{contacts.length}</div>
-            <div className="text-[10px] text-[#525252] mt-0.5">scanner</div>
+            <div className="text-[10px] text-[#525252] mt-0.5">total</div>
           </div>
         </div>
         {scannerConnected && syncedAt && (
           <p className="text-[10px] text-[#404040] border-t border-[#1f1f1f] pt-2">
-            Synced {timeAgo(syncedAt)} · {scannerOnly.length} contacts without CRM records
+            Synced {timeAgo(syncedAt)} · {scannerOnly.length} scanner-only · {crmOnly.length} CRM pipeline
           </p>
         )}
         {!scannerConnected && (
           <p className="text-[11px] text-[#404040] leading-snug border-t border-[#1f1f1f] pt-3">
-            Run <code className="text-[#C9A87C] bg-[#C9A87C]/10 px-1 rounded">python sync_contacts.py</code> on your Mac to connect real conversation data.
+            Run <code className="text-[#C9A87C] bg-[#C9A87C]/10 px-1 rounded">python sync_contacts.py</code> on your Mac to connect iMessage data.
           </p>
         )}
       </div>
@@ -298,7 +352,7 @@ function TodayContent() {
         </section>
       )}
 
-      {/* Follow Up */}
+      {/* Follow Up — scanner contacts first, CRM-only after */}
       {followUp.length > 0 && (
         <section className="space-y-2">
           <div className="flex items-center gap-2">
@@ -306,16 +360,16 @@ function TodayContent() {
             <span className="text-[10px] text-[#262626]">·</span>
             <span className="text-[10px] text-[#404040]">{followUp.length}</span>
           </div>
-          {followUp.slice(0, 15).map(c => <ContactRow key={c.phone} contact={c} />)}
-          {followUp.length > 15 && (
-            <p className="text-xs text-[#404040] text-center py-2">+{followUp.length - 15} more in People</p>
+          {followUp.slice(0, 20).map(c => <ContactRow key={c.phone} contact={c} />)}
+          {followUp.length > 20 && (
+            <p className="text-xs text-[#404040] text-center py-2">+{followUp.length - 20} more in People</p>
           )}
         </section>
       )}
 
       {contacts.length === 0 && (
         <div className="text-center py-16 space-y-2">
-          <p className="text-[#525252] text-sm">No scanner data yet.</p>
+          <p className="text-[#525252] text-sm">No contacts yet.</p>
           <p className="text-[#404040] text-xs leading-relaxed">
             Run <code className="text-[#C9A87C]">python sync_contacts.py</code> on your Mac,<br />
             then reload.
