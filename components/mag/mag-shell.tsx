@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BottomNav } from './bottom-nav'
-import { SyncBadge } from './sync-badge'
+import { QuickAddLead } from './quick-add-lead'
 
 type AuthStatus = 'loading' | 'idle' | 'checking' | 'approved' | 'denied'
 
@@ -16,6 +16,7 @@ export function MagShell({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading')
   const [user, setUser] = useState<User | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showAdd, setShowAdd] = useState(false)
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
   const checkingRef = useRef(false)
 
@@ -130,7 +131,6 @@ export function MagShell({ children }: { children: React.ReactNode }) {
             MAG
           </span>
           <div className="flex items-center gap-3">
-            <SyncBadge />
             <span className="text-[11px] text-[#404040]">{user?.name?.split(' ')[0]}</span>
           </div>
         </div>
@@ -141,6 +141,19 @@ export function MagShell({ children }: { children: React.ReactNode }) {
       </main>
 
       <BottomNav />
+
+      {/* FAB — quick add contact */}
+      <button
+        onClick={() => setShowAdd(true)}
+        className="fixed bottom-24 right-4 z-30 w-12 h-12 rounded-full bg-[#C9A87C] text-[#0a0a0a] flex items-center justify-center shadow-lg active:scale-95 hover:bg-[#d4b88a] transition-all"
+        aria-label="Add contact"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+
+      <QuickAddLead open={showAdd} onClose={() => setShowAdd(false)} />
     </div>
   )
 }
