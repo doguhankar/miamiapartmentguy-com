@@ -16,12 +16,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.externals = [...(config.externals || []), '@sparticuz/chromium', 'puppeteer-core'];
-    }
-    return config;
-  },
+  serverExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
 }
 
 export default nextConfig
