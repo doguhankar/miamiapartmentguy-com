@@ -30,8 +30,14 @@ interface DbLead {
 }
 
 const STAGES = [
-  'New Lead', 'Active', 'Hot Lead', 'Qualified',
-  'Follow Up', 'Application', 'Leased', 'Closed Won', 'Archived',
+  'New Lead',
+  'Tour Scheduled',
+  'Follow Up',
+  'Options Sent',
+  'Discovery Call Made',
+  'Applied / Signed Lease',
+  'Closed Won',
+  'Archive',
 ]
 
 function timeAgo(iso: string | null): string {
@@ -71,6 +77,16 @@ function ProfileContent({ id }: { id: string }) {
   const showToast = (msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(null), 2500)
+  }
+
+  const handleSpokeWith = async () => {
+    if (!lead) return
+    const now = new Date().toISOString()
+    const { error } = await sb.from('leads').update({ spoke_with: now }).eq('id', lead.id)
+    if (!error) {
+      setLead({ ...lead, spoke_with: now })
+      showToast('Logged — contact updated')
+    }
   }
 
   const handleSave = async () => {
@@ -158,22 +174,34 @@ function ProfileContent({ id }: { id: string }) {
       </div>
 
       {/* Quick contact */}
-      {lead.phone && (
-        <div className="flex gap-2">
-          <a href={`sms:${lead.phone}`} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#1c8ef9] text-white text-sm font-medium active:opacity-80">
+      <div className="grid grid-cols-3 gap-2">
+        {lead.phone && (
+          <a href={`sms:${lead.phone}`} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-[#111111] border border-[#1f1f1f] text-[#1c8ef9] text-xs font-medium active:opacity-80">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-            iMessage
+            Text
           </a>
-          <a href={`tel:${lead.phone}`} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#34c759] text-white text-sm font-medium active:opacity-80">
+        )}
+        {lead.phone && (
+          <a href={`tel:${lead.phone}`} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-[#111111] border border-[#1f1f1f] text-[#34c759] text-xs font-medium active:opacity-80">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.62 4.4 2 2 0 0 1 3.59 2.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.09 6.09l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
             </svg>
             Call
           </a>
-        </div>
-      )}
+        )}
+        <button
+          onClick={handleSpokeWith}
+          className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-[#111111] border border-[#1f1f1f] text-[#C9A87C] text-xs font-medium active:opacity-80"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          Spoke With
+        </button>
+      </div>
 
       {/* Stage + criteria */}
       <div className="bg-[#111111] rounded-xl border border-[#1f1f1f] p-4 space-y-3">
@@ -257,36 +285,52 @@ function ProfileContent({ id }: { id: string }) {
         </div>
       )}
 
-      {/* Next action (CRM) */}
+      {/* Next follow-up */}
       <div className="bg-[#111111] rounded-xl border border-[#1f1f1f] p-4 space-y-3">
-        <h2 className="text-xs font-semibold text-[#525252] uppercase tracking-wide">Next Action</h2>
-        {editing ? (
-          <div className="space-y-2">
-            <input
-              value={form.next_action ?? ''}
-              onChange={e => setForm(f => ({ ...f, next_action: e.target.value }))}
-              placeholder="What to do next…"
-              className="w-full text-sm border border-[#262626] rounded-lg px-3 py-2 bg-[#1a1a1a] text-[#f5f5f5] placeholder-[#404040]"
-            />
-            <input
-              type="date"
-              value={form.next_action_date?.split('T')[0] ?? ''}
-              onChange={e => setForm(f => ({ ...f, next_action_date: e.target.value }))}
-              className="w-full text-sm border border-[#262626] rounded-lg px-3 py-2 bg-[#1a1a1a] text-[#f5f5f5]"
-            />
-          </div>
-        ) : (
-          <div>
-            {lead.next_action
-              ? <p className="text-sm text-[#f5f5f5]">{lead.next_action}</p>
-              : <p className="text-sm text-[#404040]">No next action set.</p>}
-            {lead.next_action_date && (
-              <p className="text-xs text-[#525252] mt-1">
-                Due {new Date(lead.next_action_date).toLocaleDateString()}
-              </p>
-            )}
-          </div>
-        )}
+        <h2 className="text-xs font-semibold text-[#525252] uppercase tracking-wide">Next Follow-up</h2>
+        <input
+          value={form.next_action ?? ''}
+          onChange={e => setForm(f => ({ ...f, next_action: e.target.value }))}
+          placeholder="What to do next…"
+          className="w-full text-sm border border-[#262626] rounded-lg px-3 py-2 bg-[#1a1a1a] text-[#f5f5f5] placeholder-[#404040]"
+        />
+        <input
+          type="date"
+          value={form.next_action_date?.split('T')[0] ?? ''}
+          onChange={e => setForm(f => ({ ...f, next_action_date: e.target.value }))}
+          className="w-full text-sm border border-[#262626] rounded-lg px-3 py-2 bg-[#1a1a1a] text-[#f5f5f5]"
+          style={{ colorScheme: 'dark' }}
+        />
+        {/* Quick schedule */}
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            ['Tomorrow', 1],
+            ['1 week', 7],
+            ['1 month', 30],
+          ].map(([label, days]) => {
+            const d = new Date()
+            d.setDate(d.getDate() + Number(days))
+            const iso = d.toISOString().split('T')[0]
+            return (
+              <button
+                key={label}
+                onClick={() => setForm(f => ({ ...f, next_action_date: iso }))}
+                className="text-xs py-1.5 rounded-lg bg-[#1a1a1a] border border-[#262626] text-[#737373] hover:border-[#404040] hover:text-[#f5f5f5] transition-colors"
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+        {form.next_action !== lead.next_action || form.next_action_date !== lead.next_action_date ? (
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full text-xs font-semibold py-2 rounded-lg bg-[#C9A87C] text-black disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : 'Save follow-up'}
+          </button>
+        ) : null}
       </div>
 
       {/* Notes */}

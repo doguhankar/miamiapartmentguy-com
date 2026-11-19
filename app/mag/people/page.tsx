@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { MagShell } from '@/components/mag/mag-shell'
 import Link from 'next/link'
@@ -10,144 +11,93 @@ interface DbLead {
   name: string | null
   phone: string | null
   stage: string | null
-  imessage_stage: string | null
-  imessage_last_seen: string | null
-  imessage_analysis: Record<string, unknown> | null
   budget: string | null
-  beds: string | null
   area: string | null
-  is_casa: boolean | null
-  move_in_timing: string | null
+  next_action: string | null
+  next_action_date: string | null
+  spoke_with: string | null
   created_at: string | null
 }
 
-type Category =
-  | 'active'
-  | 'applying'
-  | 'touring'
-  | 'awaiting'
-  | 'future'
-  | 'dormant'
-  | 'closed'
-  | 'unknown'
+const ARCHIVED_STAGES = ['Closed Won', 'Archive', 'Archived', 'new']
 
-const CATEGORY_LABELS: Record<Category, string> = {
-  active: 'Active',
-  applying: 'Applying',
-  touring: 'Touring',
-  awaiting: 'Awaiting Response',
-  future: 'Future Move-ins',
-  dormant: 'Dormant',
-  closed: 'Closed',
-  unknown: 'New / Unknown',
-}
-
-const CATEGORY_COLORS: Record<Category, string> = {
-  active: '#C9A87C',
-  applying: '#60a5fa',
-  touring: '#a78bfa',
-  awaiting: '#fb923c',
-  future: '#34d399',
-  dormant: '#404040',
-  closed: '#262626',
-  unknown: '#525252',
-}
-
-function categorize(lead: DbLead): Category {
-  const stage = (lead.stage ?? '').toLowerCase()
-  const iStage = (lead.imessage_stage ?? '').toLowerCase()
-  const ai = lead.imessage_analysis as any
-  const hasUnanswered = ai?.unanswered_inbound === true
-  const daysSinceLast = lead.imessage_last_seen
-    ? Math.floor((Date.now() - new Date(lead.imessage_last_seen).getTime()) / 86400000)
-    : null
-  const createdAgo = lead.created_at
-    ? Math.floor((Date.now() - new Date(lead.created_at).getTime()) / 86400000)
-    : 0
-
-  if (['leased', 'closed won', 'lost', 'closed', 'not qualified', 'dead'].some(s => stage.includes(s))) {
-    return 'closed'
-  }
-  if (['touring', 'tour scheduled', 'showing'].some(s => stage.includes(s))) {
-    return 'touring'
-  }
-  if (['qualified', 'application', 'applied', 'applying'].some(s => stage.includes(s))) {
-    return 'applying'
-  }
-  if (stage.includes('future') || (lead.move_in_timing && lead.move_in_timing.toLowerCase().includes('future'))) {
-    return 'future'
-  }
-  if (['active', 'hot lead', 'hot'].some(s => stage.includes(s))) {
-    return 'active'
-  }
-  if (hasUnanswered || stage.includes('follow up') || stage.includes('waiting') || iStage === 'act_today') {
-    return 'awaiting'
-  }
-  if (daysSinceLast !== null && daysSinceLast > 30) return 'dormant'
-  if (createdAgo > 60 && !lead.imessage_last_seen && !stage) return 'dormant'
-  if (stage === '' || stage === 'new lead' || stage === 'lead') return 'unknown'
-
-  return 'unknown'
-}
+type StatusFilter = 'All' | 'Active' | 'Archived'
 
 function timeAgo(iso: string | null): string {
   if (!iso) return ''
   const diff = Date.now() - new Date(iso).getTime()
   const days = Math.floor(diff / 86400000)
-  if (days > 0) return `${days}d`
   const hours = Math.floor(diff / 3600000)
-  if (hours > 0) return `${hours}h`
-  return 'now'
+  if (days > 0) return `${days}d ago`
+  if (hours > 0) return `${hours}h ago`
+  return 'recently'
 }
 
-function PersonRow({ lead, color }: { lead: DbLead; color: string }) {
-  const displayTime = timeAgo(lead.imessage_last_seen)
-  const ai = lead.imessage_analysis as any
+function getStatus(lead: DbLead): StatusFilter {
+  if (ARCHIVED_STAGES.includes(lead.stage ?? '')) return 'Archived'
+  return 'Active'
+}
+
+function ClientCard({ lead }: { lead: DbLead }) {
+  const ago = timeAgo(lead.spoke_with ?? lead.created_at)
+  const isArchived = ARCHIVED_STAGES.includes(lead.stage ?? '')
+  const today = new Date().toISOString().split('T')[0]
+  const isOverdue = lead.next_action_date && lead.next_action_date < today
 
   return (
-    <div className="bg-[#111111] rounded-2xl border border-[#1f1f1f] overflow-hidden">
-      <Link href={`/mag/clients/${lead.id}`} className="block px-4 pt-3.5 pb-3 active:bg-[#161616] transition-colors">
+    <div className="bg-[#151515] rounded-2xl border border-[#222] overflow-hidden">
+      <Link href={`/mag/clients/${lead.id}`} className="block px-4 pt-3.5 pb-3 active:opacity-80 transition-opacity">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-[3px]" style={{ backgroundColor: color }} />
-            <span className="text-sm font-semibold text-[#f5f5f5] truncate">
-              {lead.name || lead.phone || 'Unknown'}
-            </span>
-            {lead.is_casa && (
-              <span className="shrink-0 text-[9px] font-semibold text-[#C9A87C] bg-[#C9A87C]/10 rounded px-1.5 py-0.5 uppercase tracking-wide">
-                client
+          <div className="flex items-center gap-2 min-w-0">
+            <div
+              className="w-1.5 h-1.5 rounded-full shrink-0 mt-[3px]"
+              style={{ backgroundColor: isArchived ? '#333' : lead.stage === 'Tour Scheduled' ? '#a78bfa' : '#D4B68B' }}
+            />
+            <div className="min-w-0">
+              <span className={`text-sm font-semibold truncate block ${isArchived ? 'text-[#555]' : 'text-[#EEE]'}`}>
+                {lead.name || lead.phone || 'Unknown'}
               </span>
-            )}
+              <span className="text-[10px] text-[#555]">{lead.stage}</span>
+            </div>
           </div>
           <div className="shrink-0 flex items-center gap-2">
-            {displayTime && <span className="text-[11px] text-[#404040]">{displayTime}</span>}
-            {lead.stage && (
-              <span className="text-[9px] text-[#525252] border border-[#262626] rounded px-1.5 py-0.5">{lead.stage}</span>
-            )}
+            {ago && <span className="text-[10px] text-[#404040]">{ago}</span>}
+            {lead.budget && <span className="text-xs text-[#D4B68B]">{lead.budget}</span>}
           </div>
         </div>
-        {(lead.budget || lead.beds || lead.area) && (
-          <div className="flex flex-wrap gap-x-3 mt-1.5 ml-4">
-            {lead.beds && <span className="text-[11px] text-[#525252]">{lead.beds} bed</span>}
-            {lead.budget && <span className="text-[11px] text-[#525252]">{lead.budget}</span>}
-            {lead.area && <span className="text-[11px] text-[#525252]">{lead.area}</span>}
+
+        {lead.next_action && (
+          <div className="mt-1.5 ml-3.5 flex items-start gap-1">
+            <span className={`text-[10px] mt-0.5 ${isOverdue ? 'text-red-400' : 'text-[#D4B68B]'}`}>→</span>
+            <span className="text-[10px] text-[#666] leading-snug">
+              {lead.next_action}
+              {lead.next_action_date && (
+                <span className={`ml-1 ${isOverdue ? 'text-red-400' : 'text-[#444]'}`}>
+                  · {new Date(lead.next_action_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+              )}
+            </span>
           </div>
         )}
-        {ai?.next_action && (
-          <p className="text-[11px] text-[#C9A87C] mt-1.5 ml-4">→ {ai.next_action}</p>
-        )}
       </Link>
-      {lead.phone && (
+
+      {lead.phone && !isArchived && (
         <div className="flex gap-2 px-4 pb-3">
-          <a href={`sms:${lead.phone}`} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-[#1c8ef9]/10 text-[#1c8ef9] text-[11px] font-medium border border-[#1c8ef9]/20 active:opacity-70">
+          <a
+            href={`sms:${lead.phone}`}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-[#1c8ef9]/10 text-[#1c8ef9] text-[11px] font-medium border border-[#1c8ef9]/20 active:opacity-70"
+          >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-            iMessage
+            Text
           </a>
-          <a href={`tel:${lead.phone}`} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-[#34c759]/10 text-[#34c759] text-[11px] font-medium border border-[#34c759]/20 active:opacity-70">
+          <a
+            href={`tel:${lead.phone}`}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-[#34c759]/10 text-[#34c759] text-[11px] font-medium border border-[#34c759]/20 active:opacity-70"
+          >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.62 4.4 2 2 0 0 1 3.59 2.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.09 6.09l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+              <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.7 3a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.2-1.3a2 2 0 0 1 2.1-.5l3 .7a2 2 0 0 1 1.7 2z" />
             </svg>
             Call
           </a>
@@ -157,22 +107,19 @@ function PersonRow({ lead, color }: { lead: DbLead; color: string }) {
   )
 }
 
-const CATEGORY_ORDER: Category[] = ['active', 'applying', 'touring', 'awaiting', 'future', 'dormant', 'closed', 'unknown']
-
 function PeopleContent() {
+  const searchParams = useSearchParams()
+  const initialFilter = searchParams.get('filter') === 'archived' ? 'Archived' : 'All'
+
   const [leads, setLeads] = useState<DbLead[]>([])
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
-  const [expanded, setExpanded] = useState<Record<Category, boolean>>({
-    active: true, applying: true, touring: true, awaiting: true,
-    future: false, dormant: false, closed: false, unknown: false,
-  })
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialFilter)
 
   useEffect(() => {
     const sb = createClient()
     sb.from('leads')
-      .select('id,name,phone,stage,imessage_stage,imessage_last_seen,imessage_analysis,budget,beds,area,is_casa,move_in_timing,created_at')
-      .order('imessage_last_seen', { ascending: false, nullsFirst: false })
+      .select('id,name,phone,stage,budget,area,next_action,next_action_date,spoke_with,created_at')
       .order('created_at', { ascending: false })
       .then(({ data }) => {
         setLeads(data ?? [])
@@ -181,32 +128,33 @@ function PeopleContent() {
   }, [])
 
   const filtered = useMemo(() => {
-    if (!q.trim()) return leads
-    const term = q.toLowerCase()
-    return leads.filter(l =>
-      l.name?.toLowerCase().includes(term) ||
-      l.phone?.includes(term) ||
-      l.area?.toLowerCase().includes(term) ||
-      l.stage?.toLowerCase().includes(term)
-    )
-  }, [leads, q])
+    return leads.filter(l => {
+      const matchesFilter =
+        statusFilter === 'All' ||
+        (statusFilter === 'Archived' && ARCHIVED_STAGES.includes(l.stage ?? '')) ||
+        (statusFilter === 'Active' && !ARCHIVED_STAGES.includes(l.stage ?? ''))
 
-  const grouped = useMemo(() => {
-    const g: Record<Category, DbLead[]> = {
-      active: [], applying: [], touring: [], awaiting: [],
-      future: [], dormant: [], closed: [], unknown: [],
-    }
-    for (const lead of filtered) g[categorize(lead)].push(lead)
-    return g
-  }, [filtered])
+      const matchesSearch = !q.trim() || (
+        l.name?.toLowerCase().includes(q.toLowerCase()) ||
+        l.phone?.includes(q) ||
+        l.area?.toLowerCase().includes(q.toLowerCase()) ||
+        l.stage?.toLowerCase().includes(q.toLowerCase())
+      )
 
-  const toggleCategory = (cat: Category) =>
-    setExpanded(prev => ({ ...prev, [cat]: !prev[cat] }))
+      return matchesFilter && matchesSearch
+    })
+  }, [leads, q, statusFilter])
+
+  const counts = useMemo(() => ({
+    all: leads.length,
+    active: leads.filter(l => !ARCHIVED_STAGES.includes(l.stage ?? '')).length,
+    archived: leads.filter(l => ARCHIVED_STAGES.includes(l.stage ?? '')).length,
+  }), [leads])
 
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="w-5 h-5 border-2 border-[#C9A87C] border-t-transparent rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-[#D4B68B] border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -214,8 +162,8 @@ function PeopleContent() {
   return (
     <div className="px-4 py-5 space-y-4">
       <div>
-        <h1 className="text-2xl font-bold text-[#f5f5f5]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>People</h1>
-        <p className="text-[11px] text-[#404040] mt-0.5">{leads.length} contacts</p>
+        <h1 className="text-2xl font-bold text-[#EEE] tracking-tight">All conversations</h1>
+        <p className="text-xs text-[#555] mt-0.5">Nobody disappears when you change their status.</p>
       </div>
 
       {/* Search */}
@@ -227,55 +175,41 @@ function PeopleContent() {
           type="search"
           value={q}
           onChange={e => setQ(e.target.value)}
-          placeholder="Search name, phone, area…"
-          className="w-full pl-8 pr-4 py-2.5 bg-[#111111] border border-[#262626] rounded-xl text-sm text-[#f5f5f5] placeholder-[#404040] outline-none focus:border-[#404040]"
+          placeholder="Search by name, phone, area…"
+          className="w-full pl-8 pr-4 py-2.5 bg-[#151515] border border-[#262626] rounded-xl text-sm text-[#EEE] placeholder-[#404040] outline-none focus:border-[#404040]"
         />
       </div>
 
-      {/* Category sections */}
-      {CATEGORY_ORDER.map(cat => {
-        const people = grouped[cat]
-        if (people.length === 0) return null
-        const color = CATEGORY_COLORS[cat]
-        const isOpen = expanded[cat]
+      {/* Status filter */}
+      <div className="flex gap-2">
+        {(['All', 'Active', 'Archived'] as StatusFilter[]).map(f => (
+          <button
+            key={f}
+            onClick={() => setStatusFilter(f)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              statusFilter === f
+                ? 'bg-[#2a2419] border border-[#D4B68B] text-[#D4B68B]'
+                : 'bg-[#151515] border border-[#222] text-[#777]'
+            }`}
+          >
+            {f} ({f === 'All' ? counts.all : f === 'Active' ? counts.active : counts.archived})
+          </button>
+        ))}
+      </div>
 
-        return (
-          <section key={cat} className="space-y-2">
-            <button
-              onClick={() => toggleCategory(cat)}
-              className="w-full flex items-center justify-between py-1"
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
-                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color }}>
-                  {CATEGORY_LABELS[cat]}
-                </span>
-                <span className="text-[10px] text-[#404040]">{people.length}</span>
-              </div>
-              <svg
-                width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#404040" strokeWidth="2.5"
-                className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
-
-            {isOpen && (
-              <div className="space-y-2">
-                {people.map(lead => (
-                  <PersonRow key={lead.id} lead={lead} color={color} />
-                ))}
-              </div>
-            )}
-          </section>
-        )
-      })}
-
-      {filtered.length === 0 && (
-        <div className="text-center py-16">
-          <p className="text-[#525252] text-sm">{q ? `No results for "${q}"` : 'No contacts yet.'}</p>
-        </div>
-      )}
+      {/* Results */}
+      <div className="space-y-2">
+        {filtered.map(lead => (
+          <ClientCard key={lead.id} lead={lead} />
+        ))}
+        {filtered.length === 0 && (
+          <div className="text-center py-16">
+            <p className="text-[#525252] text-sm">
+              {q ? `No results for "${q}"` : 'No contacts in this group.'}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
