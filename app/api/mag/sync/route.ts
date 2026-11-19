@@ -11,11 +11,13 @@ import { createAdminClient } from '@/lib/supabase/admin'
 //
 // Mode B — bulk scanner contacts (from sync_contacts.py):
 //   { contacts: [{ handle, name, tier, last_seen, ... }] }
-//   UPSERTs every contact into mag_contacts (primary source).
-//   Also updates imessage_stage + imessage_last_seen on matching leads rows.
+//   UPSERTs every approved contact into mag_contacts with owner_email set
+//   from the MAG_OWNER_EMAIL environment variable (never from client input).
+//   Also mirrors tier/recency onto matching leads rows (CRM enrichment).
 //   Contacts without a CRM row are written to mag_contacts and visible in Today.
 //
 // Auth: Authorization: Bearer <MAG_SYNC_SECRET>
+// Owner: MAG_OWNER_EMAIL env var — set in Vercel, never accepted from request body.
 
 function auth(req: NextRequest): boolean {
   const secret = process.env.MAG_SYNC_SECRET
@@ -29,6 +31,12 @@ export async function POST(req: NextRequest) {
   }
   if (!auth(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // owner_email comes from server env only — never from request body
+  const ownerEmail = process.env.MAG_OWNER_EMAIL
+  if (!ownerEmail) {
+    return NextResponse.json({ error: 'MAG_OWNER_EMAIL not configured on server' }, { status: 503 })
   }
 
   let body: unknown
@@ -55,11 +63,12 @@ export async function POST(req: NextRequest) {
       const phone: string | undefined = contact.handle
       if (!phone || typeof phone !== 'string') continue
 
-      // 1. UPSERT into mag_contacts — every approved contact, regardless of CRM presence
+      // 1. UPSERT into mag_contacts scoped to this owner
       const { error: upsertErr } = await supabase
         .from('mag_contacts')
         .upsert({
           phone,
+          owner_email: ownerEmail,          // server-controlled, never from request
           display_name: contact.name || null,
           is_casa: contact.is_casa ?? false,
           tier: contact.tier ?? null,
@@ -71,12 +80,11 @@ export async function POST(req: NextRequest) {
           total_messages: contact.total_messages ?? 0,
           from_them: contact.from_them ?? 0,
           from_me: contact.from_me ?? 0,
-          // Truncate preview to 200 chars; never store full content
           last_message_preview: contact.last_message
             ? String(contact.last_message).slice(0, 200)
             : null,
           synced_at: now,
-        }, { onConflict: 'phone' })
+        }, { onConflict: 'phone,owner_email' })
 
       if (upsertErr) {
         errors.push(`mag_contacts ${phone}: ${upsertErr.message}`)
@@ -84,7 +92,7 @@ export async function POST(req: NextRequest) {
         mag_upserted++
       }
 
-      // 2. Also mirror tier/recency onto leads if a CRM row exists for this phone
+      // 2. Mirror tier/recency onto the CRM leads row if one exists
       const { count } = await supabase
         .from('leads')
         .update({
@@ -127,7 +135,7 @@ export async function POST(req: NextRequest) {
     .update(payload)
     .eq('phone', phone)
 
-  // Also keep mag_contacts in sync if tier or recency changed
+  // Keep mag_contacts in sync for this owner
   if (imessage_stage || imessage_last_seen) {
     await supabase
       .from('mag_contacts')
@@ -137,6 +145,7 @@ export async function POST(req: NextRequest) {
         synced_at: new Date().toISOString(),
       })
       .eq('phone', phone)
+      .eq('owner_email', ownerEmail)
   }
 
   if (error) {
