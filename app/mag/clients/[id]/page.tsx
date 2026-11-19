@@ -112,46 +112,46 @@ function ProfileContent({ id }: { id: string }) {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-[#C9A87C] border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   if (!lead) {
-    return <div className="p-8 text-center text-gray-400 text-sm">Lead not found.</div>
+    return <div className="p-8 text-center text-[#525252] text-sm">Lead not found.</div>
   }
 
   const ai = lead.imessage_analysis as any
   const hasAI = !!ai?.summary
 
   return (
-    <div className="px-4 py-4 space-y-4 pb-8">
+    <div className="px-4 py-4 space-y-4 pb-8 bg-[#0a0a0a] min-h-full">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-black text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg">
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#C9A87C] text-black text-xs font-semibold px-4 py-2 rounded-full shadow-lg">
           {toast}
         </div>
       )}
 
       {/* Back + name */}
       <div className="flex items-center gap-3">
-        <button onClick={() => router.back()} className="p-1 -ml-1 text-gray-400">
+        <button onClick={() => router.back()} className="p-1 -ml-1 text-[#525252]">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-bold truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          <h1 className="text-lg font-bold truncate text-[#f5f5f5]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             {lead.name || lead.phone || 'Unknown'}
           </h1>
-          <p className="text-xs text-gray-400">
-            {lead.is_casa ? 'Confirmed client' : 'Web lead'} · last iMessage {timeAgo(lead.imessage_last_seen)}
+          <p className="text-xs text-[#525252]">
+            {lead.is_casa ? 'Confirmed client' : 'Lead'} · last iMessage {timeAgo(lead.imessage_last_seen)}
           </p>
         </div>
         <button
           onClick={() => editing ? handleSave() : setEditing(true)}
           disabled={saving}
-          className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-black text-white active:opacity-80 disabled:opacity-50"
+          className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#C9A87C] text-black active:opacity-80 disabled:opacity-50"
         >
           {saving ? '…' : editing ? 'Save' : 'Edit'}
         </button>
@@ -176,79 +176,79 @@ function ProfileContent({ id }: { id: string }) {
       )}
 
       {/* Stage + criteria */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Profile</h2>
+      <div className="bg-[#111111] rounded-xl border border-[#1f1f1f] p-4 space-y-3">
+        <h2 className="text-xs font-semibold text-[#525252] uppercase tracking-wide">Profile</h2>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-[10px] text-gray-400 uppercase tracking-wide">Stage</label>
+            <label className="text-[10px] text-[#525252] uppercase tracking-wide">Stage</label>
             {editing ? (
               <select
                 value={form.stage ?? ''}
                 onChange={e => setForm(f => ({ ...f, stage: e.target.value }))}
-                className="mt-1 w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5 bg-white"
+                className="mt-1 w-full text-sm border border-[#262626] rounded-lg px-2 py-1.5 bg-[#1a1a1a] text-[#f5f5f5]"
               >
                 {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             ) : (
-              <p className="mt-1 text-sm font-medium">{lead.stage || '—'}</p>
+              <p className="mt-1 text-sm font-medium text-[#f5f5f5]">{lead.stage || '—'}</p>
             )}
           </div>
           <div>
-            <label className="text-[10px] text-gray-400 uppercase tracking-wide">Budget</label>
-            <p className="mt-1 text-sm font-medium">{lead.budget || '—'}</p>
+            <label className="text-[10px] text-[#525252] uppercase tracking-wide">Budget</label>
+            <p className="mt-1 text-sm font-medium text-[#f5f5f5]">{lead.budget || '—'}</p>
           </div>
           <div>
-            <label className="text-[10px] text-gray-400 uppercase tracking-wide">Beds</label>
-            <p className="mt-1 text-sm font-medium">{lead.beds || '—'}</p>
+            <label className="text-[10px] text-[#525252] uppercase tracking-wide">Beds</label>
+            <p className="mt-1 text-sm font-medium text-[#f5f5f5]">{lead.beds || '—'}</p>
           </div>
           <div>
-            <label className="text-[10px] text-gray-400 uppercase tracking-wide">Area</label>
-            <p className="mt-1 text-sm font-medium">{lead.area || '—'}</p>
+            <label className="text-[10px] text-[#525252] uppercase tracking-wide">Area</label>
+            <p className="mt-1 text-sm font-medium text-[#f5f5f5]">{lead.area || '—'}</p>
           </div>
           <div>
-            <label className="text-[10px] text-gray-400 uppercase tracking-wide">Move-in</label>
-            <p className="mt-1 text-sm font-medium">{lead.move_in_timing || '—'}</p>
+            <label className="text-[10px] text-[#525252] uppercase tracking-wide">Move-in</label>
+            <p className="mt-1 text-sm font-medium text-[#f5f5f5]">{lead.move_in_timing || '—'}</p>
           </div>
           <div>
-            <label className="text-[10px] text-gray-400 uppercase tracking-wide">Source</label>
-            <p className="mt-1 text-sm font-medium capitalize">{lead.source || '—'}</p>
+            <label className="text-[10px] text-[#525252] uppercase tracking-wide">Source</label>
+            <p className="mt-1 text-sm font-medium text-[#f5f5f5] capitalize">{lead.source || '—'}</p>
           </div>
         </div>
-        {lead.phone && <p className="text-xs text-gray-400">{lead.phone}</p>}
-        {lead.email && <p className="text-xs text-gray-400">{lead.email}</p>}
+        {lead.phone && <p className="text-xs text-[#525252]">{lead.phone}</p>}
+        {lead.email && <p className="text-xs text-[#525252]">{lead.email}</p>}
       </div>
 
       {/* AI Analysis — clearly marked as unvalidated */}
       {hasAI && (
-        <div className="bg-gray-50 rounded-xl border border-gray-100 p-4 space-y-3">
+        <div className="bg-[#111111] rounded-xl border border-[#1f1f1f] p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">AI Analysis</h2>
-            <span className="text-[9px] font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">UNVALIDATED</span>
+            <h2 className="text-xs font-semibold text-[#525252] uppercase tracking-wide">AI Analysis</h2>
+            <span className="text-[9px] font-bold text-[#C9A87C] bg-[#C9A87C]/10 px-2 py-0.5 rounded-full uppercase tracking-wide">unvalidated</span>
           </div>
           {ai.urgency && (
             <div className="flex items-center gap-2">
-              <span className={`text-xs font-semibold ${ai.urgency === 'high' ? 'text-red-500' : ai.urgency === 'medium' ? 'text-yellow-500' : 'text-gray-400'}`}>
+              <span className={`text-xs font-semibold ${ai.urgency === 'high' ? 'text-red-400' : ai.urgency === 'medium' ? 'text-amber-400' : 'text-[#525252]'}`}>
                 {ai.urgency === 'high' ? '⚡ High urgency' : ai.urgency === 'medium' ? '◉ Medium urgency' : '○ Low urgency'}
               </span>
               {ai.confidence != null && (
-                <span className="text-xs text-gray-300">{Math.round(ai.confidence * 100)}% confidence</span>
+                <span className="text-xs text-[#404040]">{Math.round(ai.confidence * 100)}%</span>
               )}
             </div>
           )}
-          {ai.summary && <p className="text-sm text-gray-700 leading-relaxed">{ai.summary}</p>}
+          {ai.summary && <p className="text-sm text-[#a3a3a3] leading-relaxed">{ai.summary}</p>}
           {ai.next_action && (
-            <div className="bg-white rounded-lg p-3 border border-gray-100">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Suggested next action</p>
-              <p className="text-sm font-medium mt-1">{ai.next_action}</p>
+            <div className="bg-[#161616] rounded-lg p-3 border border-[#262626]">
+              <p className="text-[10px] font-semibold text-[#525252] uppercase tracking-wide">Suggested action</p>
+              <p className="text-sm font-medium text-[#C9A87C] mt-1">→ {ai.next_action}</p>
             </div>
           )}
           {ai.signals && Array.isArray(ai.signals) && ai.signals.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Evidence</p>
+              <p className="text-[10px] font-semibold text-[#525252] uppercase tracking-wide mb-1.5">Evidence</p>
               <ul className="space-y-1">
                 {(ai.signals as string[]).map((s, i) => (
-                  <li key={i} className="text-xs text-gray-500 flex gap-1.5">
-                    <span className="text-gray-300 shrink-0">·</span>{s}
+                  <li key={i} className="text-xs text-[#525252] flex gap-1.5">
+                    <span className="text-[#404040] shrink-0">·</span>{s}
                   </li>
                 ))}
               </ul>
@@ -258,30 +258,30 @@ function ProfileContent({ id }: { id: string }) {
       )}
 
       {/* Next action (CRM) */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Next Action</h2>
+      <div className="bg-[#111111] rounded-xl border border-[#1f1f1f] p-4 space-y-3">
+        <h2 className="text-xs font-semibold text-[#525252] uppercase tracking-wide">Next Action</h2>
         {editing ? (
           <div className="space-y-2">
             <input
               value={form.next_action ?? ''}
               onChange={e => setForm(f => ({ ...f, next_action: e.target.value }))}
               placeholder="What to do next…"
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
+              className="w-full text-sm border border-[#262626] rounded-lg px-3 py-2 bg-[#1a1a1a] text-[#f5f5f5] placeholder-[#404040]"
             />
             <input
               type="date"
               value={form.next_action_date?.split('T')[0] ?? ''}
               onChange={e => setForm(f => ({ ...f, next_action_date: e.target.value }))}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
+              className="w-full text-sm border border-[#262626] rounded-lg px-3 py-2 bg-[#1a1a1a] text-[#f5f5f5]"
             />
           </div>
         ) : (
           <div>
             {lead.next_action
-              ? <p className="text-sm">{lead.next_action}</p>
-              : <p className="text-sm text-gray-400">No next action set.</p>}
+              ? <p className="text-sm text-[#f5f5f5]">{lead.next_action}</p>
+              : <p className="text-sm text-[#404040]">No next action set.</p>}
             {lead.next_action_date && (
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-[#525252] mt-1">
                 Due {new Date(lead.next_action_date).toLocaleDateString()}
               </p>
             )}
@@ -290,27 +290,27 @@ function ProfileContent({ id }: { id: string }) {
       </div>
 
       {/* Notes */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Notes</h2>
+      <div className="bg-[#111111] rounded-xl border border-[#1f1f1f] p-4 space-y-3">
+        <h2 className="text-xs font-semibold text-[#525252] uppercase tracking-wide">Notes</h2>
         {editing ? (
           <textarea
             value={form.notes ?? ''}
             onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
             rows={4}
             placeholder="Notes…"
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none"
+            className="w-full text-sm border border-[#262626] rounded-lg px-3 py-2 resize-none bg-[#1a1a1a] text-[#f5f5f5] placeholder-[#404040]"
           />
         ) : (
-          <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-            {lead.notes || <span className="text-gray-400">No notes.</span>}
+          <p className="text-sm text-[#a3a3a3] whitespace-pre-wrap leading-relaxed">
+            {lead.notes || <span className="text-[#404040]">No notes.</span>}
           </p>
         )}
       </div>
 
       {/* Quick note + voice */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
+      <div className="bg-[#111111] rounded-xl border border-[#1f1f1f] p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Quick Notes</h2>
+          <h2 className="text-xs font-semibold text-[#525252] uppercase tracking-wide">Quick Notes</h2>
           <VoiceCapture onCapture={handleVoiceNote} />
         </div>
         {editing ? (
@@ -319,33 +319,33 @@ function ProfileContent({ id }: { id: string }) {
             onChange={e => setForm(f => ({ ...f, quick_note: e.target.value }))}
             rows={3}
             placeholder="Quick note…"
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none"
+            className="w-full text-sm border border-[#262626] rounded-lg px-3 py-2 resize-none bg-[#1a1a1a] text-[#f5f5f5] placeholder-[#404040]"
           />
         ) : (
-          <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-            {lead.quick_note || <span className="text-gray-400">No quick notes.</span>}
+          <p className="text-sm text-[#a3a3a3] whitespace-pre-wrap leading-relaxed">
+            {lead.quick_note || <span className="text-[#404040]">No quick notes.</span>}
           </p>
         )}
       </div>
 
       {/* Agent assignment */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Assignment</h2>
+      <div className="bg-[#111111] rounded-xl border border-[#1f1f1f] p-4 space-y-3">
+        <h2 className="text-xs font-semibold text-[#525252] uppercase tracking-wide">Assignment</h2>
         {editing ? (
           <input
             value={form.agent_id ?? ''}
             onChange={e => setForm(f => ({ ...f, agent_id: e.target.value }))}
             placeholder="agent@email.com"
             type="email"
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2"
+            className="w-full text-sm border border-[#262626] rounded-lg px-3 py-2 bg-[#1a1a1a] text-[#f5f5f5] placeholder-[#404040]"
           />
         ) : (
-          <p className="text-sm">{lead.agent_id || <span className="text-gray-400">Unassigned</span>}</p>
+          <p className="text-sm text-[#f5f5f5]">{lead.agent_id || <span className="text-[#404040]">Unassigned</span>}</p>
         )}
       </div>
 
       {/* Meta */}
-      <p className="text-xs text-gray-300 text-center">
+      <p className="text-xs text-[#404040] text-center">
         Added {lead.created_at ? new Date(lead.created_at).toLocaleDateString() : '—'}
       </p>
     </div>

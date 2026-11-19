@@ -52,59 +52,45 @@ function TeamContent() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-[#C9A87C] border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="px-4 py-4 space-y-4">
+    <div className="px-4 py-5 space-y-4">
       <div>
-        <h1 className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Team</h1>
-        <p className="text-xs text-gray-400 mt-0.5">{agents.length} member{agents.length !== 1 ? 's' : ''}</p>
+        <h1 className="text-2xl font-bold text-[#f5f5f5]" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Team</h1>
+        <p className="text-[11px] text-[#404040] mt-0.5">{agents.length} member{agents.length !== 1 ? 's' : ''}</p>
       </div>
 
       <section className="space-y-2">
         {agents.map(agent => {
           const isYou = agent.email === currentUser
           return (
-            <div key={agent.email} className="bg-white rounded-xl border border-gray-100 p-4 flex items-center justify-between">
+            <div key={agent.email} className="bg-[#111111] rounded-xl border border-[#1f1f1f] p-4 flex items-center justify-between">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold">
+                  <span className="text-sm font-semibold text-[#f5f5f5]">
                     {agent.display_name || agent.email.split('@')[0]}
                   </span>
-                  {isYou && <span className="text-[10px] font-medium bg-black text-white rounded px-1.5 py-0.5">you</span>}
+                  {isYou && <span className="text-[9px] font-semibold text-[#C9A87C] bg-[#C9A87C]/10 rounded px-1.5 py-0.5 uppercase tracking-wide">you</span>}
                 </div>
-                <p className="text-xs text-gray-400">{agent.email}</p>
+                <p className="text-xs text-[#525252]">{agent.email}</p>
               </div>
               <div className="text-right">
-                <span className="text-lg font-bold">{stats[agent.email] ?? 0}</span>
-                <p className="text-xs text-gray-400">leads</p>
+                <span className="text-xl font-bold text-[#f5f5f5]">{stats[agent.email] ?? 0}</span>
+                <p className="text-[11px] text-[#525252]">leads</p>
               </div>
             </div>
           )
         })}
 
         {agents.length === 0 && (
-          <p className="text-center py-12 text-sm text-gray-400">
+          <p className="text-center py-12 text-sm text-[#525252]">
             Add team members in the agent_allowlist table.
           </p>
         )}
-      </section>
-
-      {/* Unassigned leads */}
-      <section className="bg-yellow-50 rounded-xl border border-yellow-100 p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold text-yellow-800">Unassigned leads</p>
-            <p className="text-xs text-yellow-600 mt-0.5">Leads without an agent_id</p>
-          </div>
-          <span className="text-lg font-bold text-yellow-700">
-            {/* Calculated from stats vs total */}
-            —
-          </span>
-        </div>
       </section>
     </div>
   )
