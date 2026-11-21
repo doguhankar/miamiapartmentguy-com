@@ -37,7 +37,7 @@ const tabs = [
         <line x1="16" y1="2" x2="16" y2="6"/>
         <line x1="8" y1="2" x2="8" y2="6"/>
         <line x1="3" y1="10" x2="21" y2="10"/>
-        <circle cx="17" cy="17" r="4" fill="#0a0a0a"/>
+        <circle cx="17" cy="17" r="4" fill="var(--mag-bg)"/>
         <line x1="17" y1="15" x2="17" y2="17"/>
         <line x1="17" y1="17" x2="18.5" y2="18"/>
       </svg>
@@ -66,7 +66,10 @@ export function BottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 bg-[#090909] border-t border-[#222] pb-safe z-20">
+    <nav
+      className="fixed bottom-0 inset-x-0 pb-safe z-20"
+      style={{ backgroundColor: 'var(--mag-bg)', borderTop: '1px solid var(--mag-border)' }}
+    >
       <div className="flex">
         {tabs.map((tab) => {
           const active = isActive(tab.href)
@@ -74,12 +77,11 @@ export function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-colors ${
-                active ? 'text-[#D4B68B]' : 'text-[#404040]'
-              }`}
+              className="flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-colors"
+              style={{ color: active ? 'var(--mag-accent)' : 'var(--mag-text-faint)' }}
             >
               {tab.icon(active)}
-              <span className={`text-[10px] font-medium ${active ? 'text-[#D4B68B]' : 'text-[#404040]'}`}>
+              <span className="text-[10px] font-medium">
                 {tab.label}
               </span>
             </Link>

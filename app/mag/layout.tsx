@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { ThemeProvider } from '@/components/mag/theme-provider'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -6,7 +7,10 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#0a0a0a',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#F8F7F4' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
 }
 
 export const metadata: Metadata = {
@@ -15,7 +19,7 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
+    statusBarStyle: 'default',
     title: 'MAG',
   },
   other: {
@@ -24,5 +28,5 @@ export const metadata: Metadata = {
 }
 
 export default function MagLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>
+  return <ThemeProvider>{children}</ThemeProvider>
 }

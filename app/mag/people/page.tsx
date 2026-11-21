@@ -44,35 +44,45 @@ function ClientCard({ lead }: { lead: DbLead }) {
   const today = new Date().toISOString().split('T')[0]
   const isOverdue = lead.next_action_date && lead.next_action_date < today
 
+  const dotColor = isArchived ? 'var(--mag-border-muted)' : lead.stage === 'Tour Scheduled' ? '#a78bfa' : 'var(--mag-accent)'
+
   return (
-    <div className="bg-[#151515] rounded-2xl border border-[#222] overflow-hidden">
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{ backgroundColor: 'var(--mag-surface-2)', border: '1px solid var(--mag-border-muted)' }}
+    >
       <Link href={`/mag/clients/${lead.id}`} className="block px-4 pt-3.5 pb-3 active:opacity-80 transition-opacity">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <div
               className="w-1.5 h-1.5 rounded-full shrink-0 mt-[3px]"
-              style={{ backgroundColor: isArchived ? '#333' : lead.stage === 'Tour Scheduled' ? '#a78bfa' : '#D4B68B' }}
+              style={{ backgroundColor: dotColor }}
             />
             <div className="min-w-0">
-              <span className={`text-sm font-semibold truncate block ${isArchived ? 'text-[#555]' : 'text-[#EEE]'}`}>
+              <span
+                className="text-sm font-semibold truncate block"
+                style={{ color: isArchived ? 'var(--mag-text-dim)' : 'var(--mag-text-high)' }}
+              >
                 {lead.name || lead.phone || 'Unknown'}
               </span>
-              <span className="text-[10px] text-[#555]">{lead.stage}</span>
+              <span className="text-[10px]" style={{ color: 'var(--mag-text-dim)' }}>{lead.stage}</span>
             </div>
           </div>
           <div className="shrink-0 flex items-center gap-2">
-            {ago && <span className="text-[10px] text-[#404040]">{ago}</span>}
-            {lead.budget && <span className="text-xs text-[#D4B68B]">{lead.budget}</span>}
+            {ago && <span className="text-[10px]" style={{ color: 'var(--mag-text-faint)' }}>{ago}</span>}
+            {lead.budget && <span className="text-xs" style={{ color: 'var(--mag-accent)' }}>{lead.budget}</span>}
           </div>
         </div>
 
         {lead.next_action && (
           <div className="mt-1.5 ml-3.5 flex items-start gap-1">
-            <span className={`text-[10px] mt-0.5 ${isOverdue ? 'text-red-400' : 'text-[#D4B68B]'}`}>→</span>
-            <span className="text-[10px] text-[#666] leading-snug">
+            <span className={`text-[10px] mt-0.5 ${isOverdue ? 'text-red-400' : ''}`}
+                  style={isOverdue ? {} : { color: 'var(--mag-accent)' }}>→</span>
+            <span className="text-[10px] leading-snug" style={{ color: 'var(--mag-text-low)' }}>
               {lead.next_action}
               {lead.next_action_date && (
-                <span className={`ml-1 ${isOverdue ? 'text-red-400' : 'text-[#444]'}`}>
+                <span className={`ml-1 ${isOverdue ? 'text-red-400' : ''}`}
+                      style={isOverdue ? {} : { color: 'var(--mag-text-faint)' }}>
                   · {new Date(lead.next_action_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </span>
               )}
@@ -85,7 +95,12 @@ function ClientCard({ lead }: { lead: DbLead }) {
         <div className="flex gap-2 px-4 pb-3">
           <a
             href={`sms:${lead.phone}`}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-[#1c8ef9]/10 text-[#1c8ef9] text-[11px] font-medium border border-[#1c8ef9]/20 active:opacity-70"
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-medium active:opacity-70"
+            style={{
+              backgroundColor: 'rgba(28,142,249,0.1)',
+              color: '#1c8ef9',
+              border: '1px solid rgba(28,142,249,0.2)',
+            }}
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -94,10 +109,15 @@ function ClientCard({ lead }: { lead: DbLead }) {
           </a>
           <a
             href={`tel:${lead.phone}`}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-[#34c759]/10 text-[#34c759] text-[11px] font-medium border border-[#34c759]/20 active:opacity-70"
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-medium active:opacity-70"
+            style={{
+              backgroundColor: 'rgba(52,199,89,0.1)',
+              color: '#34c759',
+              border: '1px solid rgba(52,199,89,0.2)',
+            }}
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.7 3a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.2-1.3a2 2 0 0 1 2.1-.5l3 .7a2 2 0 0 1 1.7 2z" />
+              <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8 10a16 16 0 0 0 6 6l1.2-1.3a2 2 0 0 1 2.1-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
             </svg>
             Call
           </a>
@@ -154,7 +174,10 @@ function PeopleContent() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="w-5 h-5 border-2 border-[#D4B68B] border-t-transparent rounded-full animate-spin" />
+        <div
+          className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
+          style={{ borderColor: 'var(--mag-accent)', borderTopColor: 'transparent' }}
+        />
       </div>
     )
   }
@@ -162,13 +185,13 @@ function PeopleContent() {
   return (
     <div className="px-4 py-5 space-y-4">
       <div>
-        <h1 className="text-2xl font-bold text-[#EEE] tracking-tight">All conversations</h1>
-        <p className="text-xs text-[#555] mt-0.5">Nobody disappears when you change their status.</p>
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--mag-text-high)' }}>All conversations</h1>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--mag-text-dim)' }}>Nobody disappears when you change their status.</p>
       </div>
 
       {/* Search */}
       <div className="relative">
-        <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#404040]" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--mag-text-faint)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
         <input
@@ -176,7 +199,12 @@ function PeopleContent() {
           value={q}
           onChange={e => setQ(e.target.value)}
           placeholder="Search by name, phone, area…"
-          className="w-full pl-8 pr-4 py-2.5 bg-[#151515] border border-[#262626] rounded-xl text-sm text-[#EEE] placeholder-[#404040] outline-none focus:border-[#404040]"
+          className="w-full pl-8 pr-4 py-2.5 rounded-xl text-sm outline-none"
+          style={{
+            backgroundColor: 'var(--mag-surface-2)',
+            border: '1px solid var(--mag-border-muted)',
+            color: 'var(--mag-text-high)',
+          }}
         />
       </div>
 
@@ -186,11 +214,11 @@ function PeopleContent() {
           <button
             key={f}
             onClick={() => setStatusFilter(f)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              statusFilter === f
-                ? 'bg-[#2a2419] border border-[#D4B68B] text-[#D4B68B]'
-                : 'bg-[#151515] border border-[#222] text-[#777]'
-            }`}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+            style={statusFilter === f
+              ? { backgroundColor: 'var(--mag-accent-bg)', border: '1px solid var(--mag-accent)', color: 'var(--mag-accent)' }
+              : { backgroundColor: 'var(--mag-surface-2)', border: '1px solid var(--mag-border-muted)', color: 'var(--mag-text-low)' }
+            }
           >
             {f} ({f === 'All' ? counts.all : f === 'Active' ? counts.active : counts.archived})
           </button>
@@ -204,7 +232,7 @@ function PeopleContent() {
         ))}
         {filtered.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-[#525252] text-sm">
+            <p className="text-sm" style={{ color: 'var(--mag-text-dim)' }}>
               {q ? `No results for "${q}"` : 'No contacts in this group.'}
             </p>
           </div>

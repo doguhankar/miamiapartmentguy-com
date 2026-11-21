@@ -94,7 +94,10 @@ function BusinessContent() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="w-5 h-5 border-2 border-[#D4B68B] border-t-transparent rounded-full animate-spin" />
+        <div
+          className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
+          style={{ borderColor: 'var(--mag-accent)', borderTopColor: 'transparent' }}
+        />
       </div>
     )
   }
@@ -104,59 +107,84 @@ function BusinessContent() {
   return (
     <div className="px-4 py-5 space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-[#EEE] tracking-tight">Business</h1>
-        <p className="text-xs text-[#555] mt-0.5">Pipeline and revenue overview.</p>
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--mag-text-high)' }}>Business</h1>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--mag-text-dim)' }}>Pipeline and revenue overview.</p>
       </div>
 
       {/* Closed revenue */}
-      <div className="bg-[#151515] rounded-2xl border border-[#222] p-4">
-        <p className="text-[10px] text-[#555] uppercase tracking-widest mb-3">Closed revenue</p>
+      <div
+        className="rounded-2xl p-4"
+        style={{ backgroundColor: 'var(--mag-surface-2)', border: '1px solid var(--mag-border-muted)' }}
+      >
+        <p className="text-[10px] uppercase tracking-widest mb-3" style={{ color: 'var(--mag-text-dim)' }}>Closed revenue</p>
         <div className="flex items-end gap-3">
-          <div className="text-3xl font-bold text-[#D4B68B] tracking-tight">
+          <div className="text-3xl font-bold tracking-tight" style={{ color: 'var(--mag-accent)' }}>
             {data.closedGCI > 0 ? money(data.closedGCI) : '—'}
           </div>
         </div>
-        <p className="text-xs text-[#555] mt-1.5">
+        <p className="text-xs mt-1.5" style={{ color: 'var(--mag-text-dim)' }}>
           {data.closedCount} deal{data.closedCount !== 1 ? 's' : ''} closed
           {data.closedGCI === 0 && ' · commission not entered in CRM'}
         </p>
       </div>
 
       {/* Activity */}
-      <div className="bg-[#151515] rounded-2xl border border-[#222] p-4">
-        <p className="text-[10px] text-[#555] uppercase tracking-widest mb-3">Activity</p>
+      <div
+        className="rounded-2xl p-4"
+        style={{ backgroundColor: 'var(--mag-surface-2)', border: '1px solid var(--mag-border-muted)' }}
+      >
+        <p className="text-[10px] uppercase tracking-widest mb-3" style={{ color: 'var(--mag-text-dim)' }}>Activity</p>
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-[#1a1a1a] rounded-xl p-3 text-center">
-            <div className="text-2xl font-bold text-[#EEE]">{data.recentlySpokeWith}</div>
-            <div className="text-[10px] text-[#555] mt-0.5">spoke with (7d)</div>
+          <div
+            className="rounded-xl p-3 text-center"
+            style={{ backgroundColor: 'var(--mag-surface-3)' }}
+          >
+            <div className="text-2xl font-bold" style={{ color: 'var(--mag-text-high)' }}>{data.recentlySpokeWith}</div>
+            <div className="text-[10px] mt-0.5" style={{ color: 'var(--mag-text-dim)' }}>spoke with (7d)</div>
           </div>
-          <div className="bg-[#1a1a1a] rounded-xl p-3 text-center">
-            <div className={`text-2xl font-bold ${data.overdueCount > 0 ? 'text-red-400' : 'text-[#EEE]'}`}>
+          <div
+            className="rounded-xl p-3 text-center"
+            style={{ backgroundColor: 'var(--mag-surface-3)' }}
+          >
+            <div
+              className={`text-2xl font-bold ${data.overdueCount > 0 ? 'text-red-400' : ''}`}
+              style={data.overdueCount > 0 ? {} : { color: 'var(--mag-text-high)' }}
+            >
               {data.overdueCount}
             </div>
-            <div className="text-[10px] text-[#555] mt-0.5">overdue actions</div>
+            <div className="text-[10px] mt-0.5" style={{ color: 'var(--mag-text-dim)' }}>overdue actions</div>
           </div>
         </div>
       </div>
 
       {/* Active pipeline by stage */}
-      <div className="bg-[#151515] rounded-2xl border border-[#222] p-4">
+      <div
+        className="rounded-2xl p-4"
+        style={{ backgroundColor: 'var(--mag-surface-2)', border: '1px solid var(--mag-border-muted)' }}
+      >
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[10px] text-[#555] uppercase tracking-widest">Active pipeline</p>
+          <p className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--mag-text-dim)' }}>Active pipeline</p>
           {data.totalActivePipeline > 0 && (
-            <span className="text-sm font-semibold text-[#D4B68B]">{money(data.totalActivePipeline)}</span>
+            <span className="text-sm font-semibold" style={{ color: 'var(--mag-accent)' }}>{money(data.totalActivePipeline)}</span>
           )}
         </div>
         {data.activeStages.length > 0 ? (
           <div className="space-y-2">
             {data.activeStages.map(s => (
-              <div key={s.stage} className="flex items-center justify-between py-1.5 border-b border-[#1f1f1f] last:border-0">
-                <span className="text-sm text-[#CCC]">{s.stage}</span>
+              <div
+                key={s.stage}
+                className="flex items-center justify-between py-1.5 last:border-0"
+                style={{ borderBottom: '1px solid var(--mag-border)' }}
+              >
+                <span className="text-sm" style={{ color: 'var(--mag-text-mid)' }}>{s.stage}</span>
                 <div className="flex items-center gap-3">
                   {s.pipeline_value > 0 && (
-                    <span className="text-xs text-[#D4B68B]">{money(s.pipeline_value)}</span>
+                    <span className="text-xs" style={{ color: 'var(--mag-accent)' }}>{money(s.pipeline_value)}</span>
                   )}
-                  <span className="text-xs font-semibold text-[#EEE] bg-[#222] rounded-full px-2 py-0.5">
+                  <span
+                    className="text-xs font-semibold rounded-full px-2 py-0.5"
+                    style={{ color: 'var(--mag-text-high)', backgroundColor: 'var(--mag-surface-3)' }}
+                  >
                     {s.count}
                   </span>
                 </div>
@@ -164,11 +192,11 @@ function BusinessContent() {
             ))}
           </div>
         ) : (
-          <p className="text-xs text-[#555]">No active pipeline data.</p>
+          <p className="text-xs" style={{ color: 'var(--mag-text-dim)' }}>No active pipeline data.</p>
         )}
       </div>
 
-      <p className="text-[10px] text-[#333] text-center pb-2">
+      <p className="text-[10px] text-center pb-2" style={{ color: 'var(--mag-text-faint)' }}>
         Commission values reflect data entered in the CRM.
         Open a client profile to add commission details.
       </p>

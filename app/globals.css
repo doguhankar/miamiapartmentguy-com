@@ -116,6 +116,45 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ─── MAG Mobile App theme variables ─────────────────────────────────────── */
+/* Light mode is the default; no data-theme attribute = light */
+html:not([data-theme="dark"]) {
+  --mag-bg: #F8F7F4;
+  --mag-surface-1: #FFFFFF;
+  --mag-surface-2: #FAFAF8;
+  --mag-surface-3: #F5F3EE;
+  --mag-border: #E7E4DD;
+  --mag-border-muted: #EDEBE5;
+  --mag-text-high: #171717;
+  --mag-text-mid: #374151;
+  --mag-text-low: #6B7280;
+  --mag-text-dim: #9CA3AF;
+  --mag-text-faint: #C4BEB4;
+  --mag-accent: #A47C45;
+  --mag-accent-fg: #FFFFFF;
+  --mag-accent-bg: #FBF3E7;
+  --mag-accent-hover: #8C6A39;
+}
+
+html[data-theme="dark"] {
+  --mag-bg: #0a0a0a;
+  --mag-surface-1: #111111;
+  --mag-surface-2: #151515;
+  --mag-surface-3: #1a1a1a;
+  --mag-border: #1e1e1e;
+  --mag-border-muted: #262626;
+  --mag-text-high: #f5f5f5;
+  --mag-text-mid: #DDDDDD;
+  --mag-text-low: #777777;
+  --mag-text-dim: #525252;
+  --mag-text-faint: #404040;
+  --mag-accent: #C9A87C;
+  --mag-accent-fg: #0a0a0a;
+  --mag-accent-bg: #2a2419;
+  --mag-accent-hover: #d4b88a;
+}
+/* ─────────────────────────────────────────────────────────────────────────── */
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -83,20 +83,22 @@ export function QuickAddLead({ open, onClose }: QuickAddLeadProps) {
 
       {/* Sheet — slides up on mobile, centered on desktop */}
       <div
-        className="fixed inset-x-0 bottom-0 z-50 bg-[#111111] border border-[#262626] rounded-t-3xl p-6 space-y-5
+        className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl p-6 space-y-5
                    md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-96 md:rounded-2xl"
+        style={{ backgroundColor: 'var(--mag-surface-1)', border: '1px solid var(--mag-border-muted)' }}
         onKeyDown={handleKeyDown}
       >
         {/* Handle bar (mobile) */}
         <div className="flex justify-center md:hidden -mt-2 mb-1">
-          <div className="w-8 h-1 bg-[#333] rounded-full" />
+          <div className="w-8 h-1 rounded-full" style={{ backgroundColor: 'var(--mag-border-muted)' }} />
         </div>
 
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-[#f5f5f5]">Add Contact</h2>
+          <h2 className="text-base font-semibold" style={{ color: 'var(--mag-text-high)' }}>Add Contact</h2>
           <button
             onClick={onClose}
-            className="text-[#525252] hover:text-[#f5f5f5] p-1 rounded-lg transition-colors"
+            className="p-1 rounded-lg transition-colors"
+            style={{ color: 'var(--mag-text-dim)' }}
             aria-label="Close"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -113,7 +115,12 @@ export function QuickAddLead({ open, onClose }: QuickAddLeadProps) {
             placeholder="Full name *"
             value={name}
             onChange={e => setName(e.target.value)}
-            className="w-full bg-[#1a1a1a] border border-[#262626] focus:border-[#C9A87C]/60 rounded-xl px-4 py-3 text-sm text-[#f5f5f5] placeholder-[#404040] outline-none transition-colors"
+            className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-colors"
+            style={{
+              backgroundColor: 'var(--mag-surface-3)',
+              border: '1px solid var(--mag-border-muted)',
+              color: 'var(--mag-text-high)',
+            }}
           />
 
           <div className="space-y-1.5">
@@ -124,7 +131,12 @@ export function QuickAddLead({ open, onClose }: QuickAddLeadProps) {
               placeholder="Phone number *"
               value={phone}
               onChange={e => setPhone(e.target.value)}
-              className="w-full bg-[#1a1a1a] border border-[#262626] focus:border-[#C9A87C]/60 rounded-xl px-4 py-3 text-sm text-[#f5f5f5] placeholder-[#404040] outline-none transition-colors"
+              className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-colors"
+              style={{
+                backgroundColor: 'var(--mag-surface-3)',
+                border: '1px solid var(--mag-border-muted)',
+                color: 'var(--mag-text-high)',
+              }}
             />
             {duplicate && (
               <div className="flex items-center gap-2 px-1">
@@ -135,7 +147,8 @@ export function QuickAddLead({ open, onClose }: QuickAddLeadProps) {
                 <a
                   href={`/mag/clients/${duplicate.id}`}
                   onClick={onClose}
-                  className="text-xs text-[#C9A87C] hover:underline font-medium"
+                  className="text-xs font-medium hover:underline"
+                  style={{ color: 'var(--mag-accent)' }}
                 >
                   {duplicate.name}
                 </a>
@@ -151,13 +164,13 @@ export function QuickAddLead({ open, onClose }: QuickAddLeadProps) {
         <button
           onClick={handleSubmit}
           disabled={!name.trim() || !phone.trim() || submitting}
-          className="w-full py-3 rounded-xl bg-[#C9A87C] text-[#0a0a0a] text-sm font-semibold
-                     disabled:opacity-30 active:opacity-80 hover:bg-[#d4b88a] transition-colors"
+          className="w-full py-3 rounded-xl text-sm font-semibold disabled:opacity-30 active:opacity-80 transition-colors"
+          style={{ backgroundColor: 'var(--mag-accent)', color: 'var(--mag-accent-fg)' }}
         >
           {submitting ? 'Adding…' : 'Add Contact'}
         </button>
 
-        <p className="text-[10px] text-[#404040] text-center pb-safe">
+        <p className="text-[10px] text-center pb-safe" style={{ color: 'var(--mag-text-faint)' }}>
           Name and phone are required · duplicate check runs automatically
         </p>
       </div>

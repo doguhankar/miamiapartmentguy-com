@@ -52,17 +52,22 @@ function LeadRow({
   const isOverdue = lead.next_action_date && lead.next_action_date < today
 
   return (
-    <div className={`border-t border-[#1e1e1e] px-4 py-3 ${reviewed ? 'opacity-40' : ''}`}>
+    <div
+      className={`px-4 py-3 ${reviewed ? 'opacity-40' : ''}`}
+      style={{ borderTop: '1px solid var(--mag-border)' }}
+    >
       <div className="flex items-center gap-3">
         <button
           onClick={() => onToggleReviewed(lead.id)}
-          className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
-            reviewed ? 'bg-[#D4B68B] border-[#D4B68B]' : 'border-[#3a3a3a] hover:border-[#D4B68B]'
-          }`}
+          className="w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all"
+          style={reviewed
+            ? { backgroundColor: 'var(--mag-accent)', borderColor: 'var(--mag-accent)' }
+            : { borderColor: 'var(--mag-border-muted)' }
+          }
           aria-label={`Mark ${lead.name ?? ''} reviewed`}
         >
           {reviewed && (
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--mag-accent-fg)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           )}
@@ -70,15 +75,24 @@ function LeadRow({
 
         <Link href={`/mag/clients/${lead.id}`} className="flex-1 min-w-0 active:opacity-70">
           <div className="flex items-center justify-between gap-2">
-            <span className={`text-[13px] font-semibold truncate ${reviewed ? 'line-through text-[#525252]' : 'text-[#EEEEEE]'}`}>
+            <span
+              className="text-[13px] font-semibold truncate"
+              style={{
+                color: reviewed ? 'var(--mag-text-dim)' : 'var(--mag-text-high)',
+                textDecoration: reviewed ? 'line-through' : 'none',
+              }}
+            >
               {lead.name || lead.phone || 'Unknown'}
             </span>
             {lead.budget && (
-              <span className="text-[12px] text-[#D4B68B] shrink-0 font-medium">{lead.budget}</span>
+              <span className="text-[12px] shrink-0 font-medium" style={{ color: 'var(--mag-accent)' }}>{lead.budget}</span>
             )}
           </div>
           {lead.next_action && (
-            <p className={`text-[11px] mt-0.5 truncate ${isOverdue ? 'text-red-400/80' : 'text-[#555]'}`}>
+            <p
+              className={`text-[11px] mt-0.5 truncate ${isOverdue ? 'text-red-400/80' : ''}`}
+              style={isOverdue ? {} : { color: 'var(--mag-text-faint)' }}
+            >
               {lead.next_action_date
                 ? new Date(lead.next_action_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                 : ''}{lead.next_action_date ? ' · ' : ''}{lead.next_action}
@@ -89,24 +103,15 @@ function LeadRow({
 
       {!reviewed && lead.phone && (
         <div className="flex items-center gap-3 mt-2 ml-8">
-          <a
-            href={`sms:${lead.phone}`}
-            className="text-[11px] text-[#777] hover:text-[#D4B68B] transition-colors active:opacity-70"
-          >
+          <a href={`sms:${lead.phone}`} className="text-[11px] transition-colors active:opacity-70" style={{ color: 'var(--mag-text-low)' }}>
             Text
           </a>
-          <span className="text-[#2a2a2a] text-[11px]">·</span>
-          <a
-            href={`tel:${lead.phone}`}
-            className="text-[11px] text-[#777] hover:text-[#D4B68B] transition-colors active:opacity-70"
-          >
+          <span className="text-[11px]" style={{ color: 'var(--mag-border)' }}>·</span>
+          <a href={`tel:${lead.phone}`} className="text-[11px] transition-colors active:opacity-70" style={{ color: 'var(--mag-text-low)' }}>
             Call
           </a>
-          <span className="text-[#2a2a2a] text-[11px]">·</span>
-          <Link
-            href={`/mag/clients/${lead.id}`}
-            className="text-[11px] text-[#777] hover:text-[#D4B68B] transition-colors active:opacity-70"
-          >
+          <span className="text-[11px]" style={{ color: 'var(--mag-border)' }}>·</span>
+          <Link href={`/mag/clients/${lead.id}`} className="text-[11px] transition-colors active:opacity-70" style={{ color: 'var(--mag-text-low)' }}>
             Manage
           </Link>
         </div>
@@ -136,19 +141,22 @@ function StageSection({
   const visible = hideDone ? remaining : leads
 
   return (
-    <div className="bg-[#111111] rounded-2xl border border-[#1e1e1e] overflow-hidden">
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{ backgroundColor: 'var(--mag-surface-1)', border: '1px solid var(--mag-border)' }}
+    >
       <button
         onClick={onToggle}
         className="w-full flex items-center justify-between gap-3 px-4 py-3.5 active:opacity-70"
       >
         <div className="flex items-center gap-2 min-w-0">
           <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: stage.color }} />
-          <span className="text-[13px] font-semibold text-[#DDD] truncate">{stage.name}</span>
-          <span className="text-[11px] text-[#444] ml-0.5">{remaining.length}</span>
+          <span className="text-[13px] font-semibold truncate" style={{ color: 'var(--mag-text-mid)' }}>{stage.name}</span>
+          <span className="text-[11px] ml-0.5" style={{ color: 'var(--mag-text-faint)' }}>{remaining.length}</span>
         </div>
         <svg
-          width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#444"
-          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          width="13" height="13" viewBox="0 0 24 24" fill="none"
+          stroke="var(--mag-text-faint)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
           className={`flex-shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
         >
           <polyline points="6 9 12 15 18 9" />
@@ -167,7 +175,10 @@ function StageSection({
                 />
               ))
             : (
-              <div className="border-t border-[#1e1e1e] px-4 py-3 text-[11px] text-[#444]">
+              <div
+                className="px-4 py-3 text-[11px]"
+                style={{ borderTop: '1px solid var(--mag-border)', color: 'var(--mag-text-faint)' }}
+              >
                 All reviewed for today.
               </div>
             )}
@@ -249,7 +260,10 @@ function TodayContent() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="w-5 h-5 border-2 border-[#D4B68B] border-t-transparent rounded-full animate-spin" />
+        <div
+          className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
+          style={{ borderColor: 'var(--mag-accent)', borderTopColor: 'transparent' }}
+        />
       </div>
     )
   }
@@ -259,15 +273,20 @@ function TodayContent() {
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
         <div>
-          <p className="text-[13px] font-bold tracking-[0.15em] text-[#EEE]">
+          <p className="text-[13px] font-bold tracking-[0.15em]" style={{ color: 'var(--mag-text-high)' }}>
             <span className="font-black">MAG.</span>
             <span className="font-light ml-1 tracking-[0.2em]">CONCIERGE</span>
           </p>
-          <p className="text-[10px] text-[#444] uppercase tracking-[0.12em] mt-0.5">{dateStr}</p>
+          <p className="text-[10px] uppercase tracking-[0.12em] mt-0.5" style={{ color: 'var(--mag-text-faint)' }}>{dateStr}</p>
         </div>
         <button
           onClick={() => setShowAdd(true)}
-          className="w-8 h-8 rounded-full bg-[#1e1e1e] border border-[#2a2a2a] flex items-center justify-center text-[#999] hover:text-[#D4B68B] hover:border-[#D4B68B] transition-colors active:opacity-70"
+          className="w-8 h-8 rounded-full flex items-center justify-center transition-colors active:opacity-70"
+          style={{
+            backgroundColor: 'var(--mag-surface-2)',
+            border: '1px solid var(--mag-border-muted)',
+            color: 'var(--mag-text-low)',
+          }}
           aria-label="Add new lead"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -279,50 +298,68 @@ function TodayContent() {
       <div className="px-5 space-y-5">
         {/* Hero heading */}
         <div>
-          <h1 className="text-[26px] font-bold text-[#EEEEEE] tracking-tight leading-tight">Your focus today.</h1>
-          <p className="text-[13px] text-[#555] mt-1">One conversation at a time.</p>
+          <h1 className="text-[26px] font-bold tracking-tight leading-tight" style={{ color: 'var(--mag-text-high)' }}>
+            Your focus today.
+          </h1>
+          <p className="text-[13px] mt-1" style={{ color: 'var(--mag-text-faint)' }}>One conversation at a time.</p>
         </div>
 
         {/* Financial metrics */}
-        <div className="bg-[#111111] rounded-2xl border border-[#1e1e1e] p-5">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#444]">Active Opportunity Value</p>
-          <p className="text-[32px] font-bold text-[#D4B68B] mt-1 tracking-tight leading-none">
+        <div
+          className="rounded-2xl p-5"
+          style={{ backgroundColor: 'var(--mag-surface-1)', border: '1px solid var(--mag-border)' }}
+        >
+          <p className="text-[9px] font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--mag-text-faint)' }}>
+            Active Opportunity Value
+          </p>
+          <p className="text-[32px] font-bold mt-1 tracking-tight leading-none" style={{ color: 'var(--mag-accent)' }}>
             {formatMoney(activeValue)}
           </p>
-          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[#1a1a1a]">
+          <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: '1px solid var(--mag-border)' }}>
             <div>
-              <p className="text-[9px] uppercase tracking-[0.12em] text-[#444]">Future opportunities</p>
-              <p className="text-[13px] font-semibold text-[#777] mt-0.5">{formatMoney(futureValue)}</p>
+              <p className="text-[9px] uppercase tracking-[0.12em]" style={{ color: 'var(--mag-text-faint)' }}>Future opportunities</p>
+              <p className="text-[13px] font-semibold mt-0.5" style={{ color: 'var(--mag-text-low)' }}>{formatMoney(futureValue)}</p>
             </div>
-            <div className="w-px h-6 bg-[#1e1e1e]" />
+            <div className="w-px h-6" style={{ backgroundColor: 'var(--mag-border)' }} />
             <div>
-              <p className="text-[9px] uppercase tracking-[0.12em] text-[#444]">Combined potential</p>
-              <p className="text-[13px] font-semibold text-[#777] mt-0.5">{formatMoney(combinedValue)}</p>
+              <p className="text-[9px] uppercase tracking-[0.12em]" style={{ color: 'var(--mag-text-faint)' }}>Combined potential</p>
+              <p className="text-[13px] font-semibold mt-0.5" style={{ color: 'var(--mag-text-low)' }}>{formatMoney(combinedValue)}</p>
             </div>
           </div>
         </div>
 
         {/* Daily priority review */}
-        <div className="bg-[#111111] rounded-2xl border border-[#1e1e1e] p-4">
+        <div
+          className="rounded-2xl p-4"
+          style={{ backgroundColor: 'var(--mag-surface-1)', border: '1px solid var(--mag-border)' }}
+        >
           <div className="flex items-center justify-between">
-            <span className="text-[13px] font-semibold text-[#CCC]">Daily priority review</span>
-            <span className="text-[13px] font-semibold text-[#D4B68B]">{reviewedCount}/{priorityLeads.length}</span>
+            <span className="text-[13px] font-semibold" style={{ color: 'var(--mag-text-mid)' }}>Daily priority review</span>
+            <span className="text-[13px] font-semibold" style={{ color: 'var(--mag-accent)' }}>{reviewedCount}/{priorityLeads.length}</span>
           </div>
-          <div className="h-[3px] bg-[#1e1e1e] rounded-full mt-3 mb-2.5 overflow-hidden">
-            <div className="h-full bg-[#D4B68B] rounded-full transition-all" style={{ width: `${progress}%` }} />
+          <div className="h-[3px] rounded-full mt-3 mb-2.5 overflow-hidden" style={{ backgroundColor: 'var(--mag-border)' }}>
+            <div
+              className="h-full rounded-full transition-all"
+              style={{ width: `${progress}%`, backgroundColor: 'var(--mag-accent)' }}
+            />
           </div>
-          <p className="text-[11px] text-[#444]">{priorityLeads.length - reviewedCount} priority clients remaining</p>
+          <p className="text-[11px]" style={{ color: 'var(--mag-text-faint)' }}>
+            {priorityLeads.length - reviewedCount} priority clients remaining
+          </p>
         </div>
 
         {/* Worklist header */}
         <div className="flex items-center justify-between pt-1">
-          <span className="text-[9px] font-bold text-[#444] uppercase tracking-[0.18em]">Your active worklist</span>
-          <label className="flex items-center gap-1.5 text-[11px] text-[#555] cursor-pointer select-none">
+          <span className="text-[9px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--mag-text-faint)' }}>
+            Your active worklist
+          </span>
+          <label className="flex items-center gap-1.5 text-[11px] cursor-pointer select-none" style={{ color: 'var(--mag-text-dim)' }}>
             <input
               type="checkbox"
               checked={hideDone}
               onChange={e => setHideDone(e.target.checked)}
-              className="accent-[#D4B68B] w-3 h-3"
+              className="w-3 h-3"
+              style={{ accentColor: 'var(--mag-accent)' }}
             />
             Hide reviewed
           </label>
@@ -350,18 +387,22 @@ function TodayContent() {
 
         {leads.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-[#444] text-[13px]">No active leads.</p>
+            <p className="text-[13px]" style={{ color: 'var(--mag-text-faint)' }}>No active leads.</p>
           </div>
         )}
 
         {/* Archived link */}
-        <div className="border-t border-[#141414] pt-4">
-          <Link href="/mag/people?filter=archived" className="flex items-center justify-between py-2.5 px-3.5 bg-[#0e0e0e] rounded-xl border border-[#1a1a1a] active:opacity-70">
+        <div className="pt-4" style={{ borderTop: '1px solid var(--mag-border)' }}>
+          <Link
+            href="/mag/people?filter=archived"
+            className="flex items-center justify-between py-2.5 px-3.5 rounded-xl active:opacity-70"
+            style={{ backgroundColor: 'var(--mag-surface-2)', border: '1px solid var(--mag-border)' }}
+          >
             <div>
-              <span className="text-[12px] text-[#555]">Closed &amp; Archived</span>
-              <span className="text-[10px] text-[#333] block mt-0.5">Retained records</span>
+              <span className="text-[12px]" style={{ color: 'var(--mag-text-dim)' }}>Closed &amp; Archived</span>
+              <span className="text-[10px] block mt-0.5" style={{ color: 'var(--mag-text-faint)' }}>Retained records</span>
             </div>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--mag-text-faint)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </Link>

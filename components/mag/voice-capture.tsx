@@ -42,7 +42,7 @@ export function VoiceCapture({ onCapture }: VoiceCaptureProps) {
 
   if (!supported) {
     return (
-      <span className="text-xs text-gray-300">voice not supported</span>
+      <span className="text-xs" style={{ color: 'var(--mag-text-dim)' }}>voice not supported</span>
     )
   }
 
@@ -51,11 +51,11 @@ export function VoiceCapture({ onCapture }: VoiceCaptureProps) {
       onPointerDown={startListening}
       onPointerUp={stopListening}
       onPointerLeave={stopListening}
-      className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
-        listening
-          ? 'bg-red-50 text-red-600 border border-red-200'
-          : 'bg-gray-100 text-gray-600 active:bg-gray-200'
-      }`}
+      className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+      style={listening
+        ? { backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }
+        : { backgroundColor: 'var(--mag-surface-3)', color: 'var(--mag-text-low)', border: '1px solid var(--mag-border)' }
+      }
     >
       <svg width="12" height="12" viewBox="0 0 24 24" fill={listening ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
