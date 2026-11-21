@@ -10,6 +10,7 @@ export type DossierLead = {
   last: string
   phone: string
   email: string
+  notes: string
   budget: string
   beds: string
   move: string
@@ -86,6 +87,11 @@ function formatPhone(value: string) {
   if (digits.length < 7) return `+1 (${digits.slice(0, 3)}) ${digits.slice(3)}`
   return `+1 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
 }
+function smsHref(value: string) {
+  const digits = value.replace(/\D/g, '')
+  if (digits.length < 10) return null
+  return `sms:${digits.length === 10 ? '+1' : '+'}${digits}`
+}
 function ordinal(day: number) { const mod = day % 100; return `${day}${mod >= 11 && mod <= 13 ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[day % 10] ?? 'th'}` }
 function formatMove(value: string) { const date = new Date(value); return Number.isNaN(date.getTime()) ? value || 'Not specified' : `${date.toLocaleString('en-US', { month: 'short' })} ${ordinal(date.getDate())}, ${date.getFullYear()}` }
 function ago(date: Date) { const days = Math.floor((Date.now() - date.getTime()) / 86400000); return days <= 0 ? 'today' : `${days}d ago` }
@@ -138,6 +144,8 @@ export default function AgentLeadDossier({
   const [saveError, setSaveError] = useState<string | null>(null)
   const [closeNotice, setCloseNotice] = useState<string | null>(null)
   const [closing, setClosing] = useState(false)
+  const [notes, setNotes] = useState(lead.notes ?? '')
+  useEffect(() => { setNotes(lead.notes ?? '') }, [lead.id])
 
   useEffect(() => {
     setDeal(lead.deal)
@@ -259,6 +267,14 @@ export default function AgentLeadDossier({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       <span style={{ color: '#717171', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
         <span aria-hidden>{icon}</span> {label}
+        {label === 'Phone' && smsHref(lead.phone) && (
+          <a
+            href={smsHref(lead.phone)!}
+            style={{ marginLeft: 'auto', textDecoration: 'none', borderRadius: 999, padding: '3px 10px', background: '#E7F7F1', color: '#0F6E56', fontSize: 11.5, fontWeight: 700 }}
+          >
+            💬 Text
+          </a>
+        )}
       </span>
       {editable ? (
         <input
@@ -353,6 +369,20 @@ export default function AgentLeadDossier({
             {field('Move-in', '🗓️', formatMove(lead.move), 'Not specified')}
             {field('Area', '📍', lead.area, 'Not specified')}
             {field('Beds', '🛏️', lead.beds, 'Not specified')}
+          </div>
+
+          <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ color: '#717171', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span aria-hidden>📝</span> Notes
+            </span>
+            <textarea
+              aria-label="Notes"
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              onBlur={() => { if (notes !== (lead.notes ?? '')) onUpdate({ notes }) }}
+              placeholder="Add notes..."
+              style={{ width: '100%', boxSizing: 'border-box', minHeight: 84, padding: '10px 12px', background: '#FBFBFA', border: '1px solid #EBEBEB', borderRadius: 12, fontSize: 14, color: '#222222', outline: 'none', resize: 'vertical', fontFamily: 'inherit' }}
+            />
           </div>
         </section>
 
