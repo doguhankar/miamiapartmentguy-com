@@ -838,6 +838,9 @@ export default function AgentPage() {
           <span style={{ fontSize: '11px', color: '#B0B0B0', marginLeft: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>Your Pipeline</span>
           <a href="/agent/inbox" style={{ fontSize: '11px', color: '#E0447B', marginLeft: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700, textDecoration: 'none' }}>Inbox →</a>
           <a href="/agent/invoices" style={{ fontSize: '11px', color: '#E0447B', marginLeft: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700, textDecoration: 'none' }}>Invoices →</a>
+          {user?.email?.toLowerCase() === 'doguhankar1@gmail.com' && (
+            <a href="/agent/team" style={{ fontSize: '11px', color: '#E0447B', marginLeft: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700, textDecoration: 'none' }}>Team →</a>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <input
