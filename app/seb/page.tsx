@@ -7,7 +7,7 @@ export default function SebPage() {
   return (
     <Suspense fallback={null}>
       <AgentMapExperience
-        agentId="sebastian@miamiapartmentguy.com"
+        agentId="seb@miamiapartmentguy.com"
         source="Seb Landing Page"
         slackChannel="leads-seb"
         skipAgentSelection
