@@ -224,6 +224,7 @@ type AuthStatus = 'idle' | 'loading' | 'checking' | 'denied' | 'approved'
 export default function AgentPage() {
   const [authStatus, setAuthStatus] = useState<AuthStatus>('loading')
   const [user, setUser] = useState<{ email?: string; name?: string } | null>(null)
+  const [viewingAs, setViewingAs] = useState<string | null>(null)
   const [leads, setLeads] = useState<Lead[]>([])
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -266,10 +267,16 @@ export default function AgentPage() {
     const sb = supabaseRef.current
 
     const fetchLeads = async () => {
-      const { data, error } = await sb
-        .from('leads')
-        .select('*')
-        .order('created_at', { ascending: false })
+      // Owner can open a teammate's CRM with /agent?as=seb (RLS only allows this for the owner login).
+      const { data: u } = await sb.auth.getUser()
+      const me = (u.user?.email ?? '').toLowerCase()
+      const viewingSeb = me === 'doguhankar1@gmail.com' && new URLSearchParams(window.location.search).get('as') === 'seb'
+      setViewingAs(viewingSeb ? 'Seb' : null)
+      let q = sb.from('leads').select('*')
+      q = viewingSeb
+        ? q.in('agent_id', ['seb@miamiapartmentguy.com', 'sebastian@miamiapartmentguy.com'])
+        : q.eq('agent_id', u.user?.email ?? '')
+      const { data, error } = await q.order('created_at', { ascending: false })
       if (!error && data) {
     const mapped = (data as DbLead[]).map(dbLeadToLead)
     const withStatuses = await Promise.all(mapped.map(async lead => {
@@ -835,9 +842,12 @@ export default function AgentPage() {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '2px' }}>
           <span style={{ fontFamily: '"Archivo", sans-serif', fontWeight: 900, fontSize: '17px', letterSpacing: '-0.01em', color: '#111111' }}>MIAMI APARTMENT</span>
           <span style={{ fontFamily: '"Archivo", sans-serif', fontWeight: 900, fontSize: '17px', letterSpacing: '-0.01em', color: '#E0447B' }}>GUY</span>
-          <span style={{ fontSize: '11px', color: '#B0B0B0', marginLeft: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>Your Pipeline</span>
+          <span style={{ fontSize: '11px', color: viewingAs ? '#E0447B' : '#B0B0B0', marginLeft: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>{viewingAs ? `${viewingAs}'s Pipeline (owner view)` : 'Your Pipeline'}</span>
           <a href="/agent/inbox" style={{ fontSize: '11px', color: '#E0447B', marginLeft: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700, textDecoration: 'none' }}>Inbox →</a>
           <a href="/agent/invoices" style={{ fontSize: '11px', color: '#E0447B', marginLeft: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700, textDecoration: 'none' }}>Invoices →</a>
+          {user?.email?.toLowerCase() === 'doguhankar1@gmail.com' && (
+            <a href={viewingAs ? '/agent' : '/agent?as=seb'} style={{ fontSize: '11px', color: '#E0447B', marginLeft: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700, textDecoration: 'none' }}>{viewingAs ? '← My CRM' : "Seb's CRM →"}</a>
+          )}
           {user?.email?.toLowerCase() === 'doguhankar1@gmail.com' && (
             <a href="/agent/team" style={{ fontSize: '11px', color: '#E0447B', marginLeft: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700, textDecoration: 'none' }}>Team →</a>
           )}
