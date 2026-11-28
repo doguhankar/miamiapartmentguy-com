@@ -851,10 +851,14 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
 
   // Auto-open the intake modal once per browser session
   useEffect(() => {
-    if (!sessionStorage.getItem('mwd_shown')) {
+    if (sessionStorage.getItem('mwd_shown')) return;
+    // On phones, let renters see the map first; open the intake after a short browse.
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+    const timer = window.setTimeout(() => {
       setShowMoveWithDonModal(true);
       sessionStorage.setItem('mwd_shown', '1');
-    }
+    }, isMobile ? 20000 : 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   // Fetch building images for mobile cards
@@ -1629,7 +1633,7 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                       <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 10 }}>
                         {building.address}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                         <MobileCardPrice
                           building={building}
                           units={pricingInventory[String(building.id)]?.units ?? []}
@@ -1637,12 +1641,13 @@ export function AgentMapExperience({ agentId, source, slackChannel, skipAgentSel
                         />
                         {hasSpecial && (
                           <span style={{
-                            display: 'inline-flex', alignItems: 'center',
+                            alignItems: 'center',
                             background: '#FFF6E5', color: '#92660B',
                             fontSize: 9.5, fontWeight: 700, letterSpacing: '0.02em',
                             padding: '4px 9px', borderRadius: 6, whiteSpace: 'nowrap',
-                            textTransform: 'uppercase',
-                          }}>
+                            textTransform: 'uppercase', minWidth: 0, maxWidth: '100%',
+                            overflow: 'hidden', textOverflow: 'ellipsis', display: 'block',
+                          }} title={building.concession}>
                             {building.concession}
                           </span>
                         )}

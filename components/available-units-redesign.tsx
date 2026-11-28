@@ -137,7 +137,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
 
   return (
     <div style={{ marginBottom: 20 }}>
-      <style>{`@media (max-width: 768px) { .aur-plan-expanded { grid-column: 1 / -1; } }`}</style>
+      <style>{`@media (max-width: 768px) { .aur-plan-expanded { grid-column: 1 / -1; } } @media (max-width: 480px) { .aur-grid { grid-template-columns: minmax(0, 1fr) !important; } .aur-plan-img { height: 160px !important; } .aur-plan-body { padding: 14px 16px 16px !important; } }`}</style>
       <div style={{ paddingTop: 14 }}>
       {groups.length > 0 && (
         <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
@@ -168,7 +168,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, alignItems: 'start' }}>
+      <div className="aur-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, alignItems: 'start' }}>
         {loading ? (
           <div style={{ padding: 14, color: MUTED, fontSize: 12 }}>Loading floor plans…</div>
         ) : filteredGroups.length === 0 ? (
@@ -191,7 +191,7 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
                   aria-expanded={Boolean(expandedPlans[group.code])}
                   style={{ width: '100%', cursor: 'pointer', textAlign: 'left' }}
                 >
-                  <div style={{ position: 'relative', width: '100%', height: 196, background: '#ffffff' }}>
+                  <div className="aur-plan-img" style={{ position: 'relative', width: '100%', height: 196, background: '#ffffff' }}>
                     <button
                       type="button"
                       onClick={(event) => { event.stopPropagation(); setSelectedImage(group.floorPlanImage || '/placeholder.svg') }}
@@ -207,12 +207,12 @@ export function AvailableUnitsRedesign({ buildingId }: { buildingId: string }) {
                     </button>
                     {(() => { const availability = formatAvail(group.units[0]?.availabilityDate); return <span style={{ position: 'absolute', top: 14, left: 14, padding: '5px 11px', borderRadius: 999, background: availability.now ? '#EAF5DC' : '#FFF2D6', color: availability.now ? AVAIL_NOW : AVAIL_LATER, fontSize: 12, fontWeight: 700 }}>{availability.label}</span> })()}
                   </div>
-                  <div style={{ padding: '18px 20px 20px' }}>
+                  <div className="aur-plan-body" style={{ padding: '18px 20px 20px' }}>
                     <div style={{ fontFamily: 'var(--font-archivo)', fontSize: 18, fontWeight: 700, color: TEXT }}>Plan {group.code}</div>
                     <div style={{ marginTop: 5, fontSize: 15, color: MUTED }}>{group.sqft ? `${group.sqft.toLocaleString()} sqft · ` : ''}{group.units.length} available</div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', columnGap: 10, rowGap: 6, marginTop: 14 }}>
                       <span style={{ fontFamily: 'var(--font-archivo)', fontSize: 22, fontWeight: 800, color: TEAL }}>{prices.length ? fmt(Math.min(...prices)) : 'Contact'}<span style={{ marginLeft: 4, fontFamily: 'inherit', fontSize: 15, fontWeight: 400, color: MUTED }}>{prices.length ? '/mo' : ''}</span></span>
-                      <span style={{ color: TEXT, fontSize: 14, fontWeight: 600, textDecoration: 'underline' }}>View units</span>
+                      <span style={{ color: TEXT, fontSize: 14, fontWeight: 600, textDecoration: 'underline', whiteSpace: 'nowrap' }}>View units</span>
                     </div>
                   </div>
                 </div>
